@@ -132,6 +132,17 @@ typedef struct {
   size_t offset;
 } ConfigSectionLine;
 
+static void section_append_entry(char *out, size_t *out_len,
+                                 const char *enc_key, const char *enc_val) {
+  memcpy(out + *out_len, enc_key, strlen(enc_key));
+  *out_len += strlen(enc_key);
+  memcpy(out + *out_len, " = ", 3);
+  *out_len += 3;
+  memcpy(out + *out_len, enc_val, strlen(enc_val));
+  *out_len += strlen(enc_val);
+  out[(*out_len)++] = '\n';
+}
+
 static bool section_apply(const char *path, const char *section,
                           const char *name, const char *value, bool is_clear) {
   if (!section_is_bare_key(section) ||
@@ -321,24 +332,12 @@ static bool section_apply(const char *path, const char *section,
     if (is_clear && i == replace_idx)
       continue;
     if (!is_clear && i == replace_idx) {
-      memcpy(out + out_len, enc_key, strlen(enc_key));
-      out_len += strlen(enc_key);
-      memcpy(out + out_len, " = ", 3);
-      out_len += 3;
-      memcpy(out + out_len, enc_val, strlen(enc_val));
-      out_len += strlen(enc_val);
-      out[out_len++] = '\n';
+      section_append_entry(out, &out_len, enc_key, enc_val);
       continue;
     }
     if (!is_clear && sec_header != SIZE_MAX && i == sec_end &&
         replace_idx == SIZE_MAX) {
-      memcpy(out + out_len, enc_key, strlen(enc_key));
-      out_len += strlen(enc_key);
-      memcpy(out + out_len, " = ", 3);
-      out_len += 3;
-      memcpy(out + out_len, enc_val, strlen(enc_val));
-      out_len += strlen(enc_val);
-      out[out_len++] = '\n';
+      section_append_entry(out, &out_len, enc_key, enc_val);
     }
     memcpy(out + out_len, orig + lines[i].offset, lines[i].count);
     out_len += lines[i].count;
@@ -355,21 +354,9 @@ static bool section_apply(const char *path, const char *section,
     memcpy(out + out_len, header, strlen(header));
     out_len += strlen(header);
     out[out_len++] = '\n';
-    memcpy(out + out_len, enc_key, strlen(enc_key));
-    out_len += strlen(enc_key);
-    memcpy(out + out_len, " = ", 3);
-    out_len += 3;
-    memcpy(out + out_len, enc_val, strlen(enc_val));
-    out_len += strlen(enc_val);
-    out[out_len++] = '\n';
+    section_append_entry(out, &out_len, enc_key, enc_val);
   } else if (!is_clear && replace_idx == SIZE_MAX && sec_end == line_count) {
-    memcpy(out + out_len, enc_key, strlen(enc_key));
-    out_len += strlen(enc_key);
-    memcpy(out + out_len, " = ", 3);
-    out_len += 3;
-    memcpy(out + out_len, enc_val, strlen(enc_val));
-    out_len += strlen(enc_val);
-    out[out_len++] = '\n';
+    section_append_entry(out, &out_len, enc_key, enc_val);
   }
 
   char tmp[512];

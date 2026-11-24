@@ -519,6 +519,16 @@ PromptEditbox *editbox_registry_find(PromptState *state, const char *name) {
   return NULL;
 }
 
+EditBox *editbox_registry_lookup(PromptState *state, const char *name) {
+  if (!state)
+    return NULL;
+  if (name && name[0]) {
+    PromptEditbox *entry = editbox_registry_find(state, name);
+    return entry ? &entry->eb : NULL;
+  }
+  return state->eb;
+}
+
 int editbox_registry_place(PromptState *state, const char *name, char *buffer,
                            size_t buffer_size, int x, int y, int w, int h) {
   if (!state || !name || !name[0])

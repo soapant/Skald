@@ -236,3 +236,12 @@ bool feature_path_resolve_asset_path(void *caller, const char *name, char *out,
   }
   return Platform_ResolveAssetFile(stem, rel, out, out_len);
 }
+
+const char *feature_path_resolve_asset_or_path(void *caller, const char *path,
+                                               char *asset,
+                                               size_t asset_cap) {
+  if (path && (path[0] == '/' || path[0] == '\\') &&
+      feature_path_resolve_asset_path(caller, path, asset, asset_cap))
+    return asset;
+  return path;
+}

@@ -154,11 +154,11 @@ void x11_draw_prompt_user_listbox(Display *dpy, Window *win,
   XftDrawDestroy(xd);
 }
 
-static bool prompt_render_fallback(Display *dpy, Window *win,
-                                   PromptState *state, int w, int h) {
-  x11_draw_background(dpy, *win, w, h);
-  x11_set_draw_context(dpy, NULL, NULL, 0);
-  if (state->callbacks && state->callbacks->render) {
+static void prompt_render_frame(Display *dpy, Window *win, XftDraw *xd,
+                                Visual *vis, Colormap cmap, PromptState *state,
+                                bool custom_render, bool on_draw,
+                                bool clear_ctx) {
+  if (custom_render) {
     prompt_state_update_delta(state);
     checkbox_frame_begin();
     slider_frame_begin();
@@ -166,7 +166,8 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
                       state->height - prompt_list_top() -
                           prompt_list_bottom_margin());
     editbox_registry_register_focus(state);
-    x11_set_draw_context(dpy, NULL, NULL, 0);
+    if (clear_ctx)
+      x11_set_draw_context(dpy, NULL, NULL, 0);
     prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
@@ -183,12 +184,28 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
     editbox_registry_register_focus(state);
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    if (state->lb)
-      x11_draw_prompt_user_listbox(dpy, win, state);
-    x11_draw_prompt_user_edit_control(dpy, win, state);
+    if (state->lb) {
+      if (on_draw)
+        x11_draw_prompt_user_listbox_on_draw(dpy, xd, vis, cmap, state);
+      else
+        x11_draw_prompt_user_listbox(dpy, win, state);
+    }
+    if (on_draw)
+      x11_draw_prompt_user_edit_control_on_draw(dpy, xd, vis, cmap, state);
+    else
+      x11_draw_prompt_user_edit_control(dpy, win, state);
     draw_state_get()->suppress_separators = sep_prev;
     focus_frame_end();
   }
+}
+
+static bool prompt_render_fallback(Display *dpy, Window *win,
+                                   PromptState *state, int w, int h) {
+  x11_draw_background(dpy, *win, w, h);
+  x11_set_draw_context(dpy, NULL, NULL, 0);
+  prompt_render_frame(dpy, win, NULL, NULL, 0, state,
+                      state->callbacks && state->callbacks->render, false,
+                      true);
   XFlush(dpy);
   return true;
 }
@@ -240,37 +257,8 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     XFreeGC(dpy, clear_gc);
   }
   x11_set_draw_context(dpy, xdDbl, vis, cmap);
-  if (state->callbacks->render != NULL) {
-    prompt_state_update_delta(state);
-    checkbox_frame_begin();
-    slider_frame_begin();
-    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
-                      state->height - prompt_list_top() -
-                          prompt_list_bottom_margin());
-    editbox_registry_register_focus(state);
-    prompt_band_take_placed();
-    bool sep_prev = draw_state_get()->suppress_separators;
-    draw_state_get()->suppress_separators = state->no_separators;
-    editbox_registry_tick(state);
-    editbox_registry_begin_frame(state);
-    state->callbacks->render(state);
-    prompt_band_commit_placed();
-    focus_frame_end();
-    draw_state_get()->suppress_separators = sep_prev;
-  } else {
-    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
-                      state->height - prompt_list_top() -
-                          prompt_list_bottom_margin());
-    editbox_registry_register_focus(state);
-    bool sep_prev = draw_state_get()->suppress_separators;
-    draw_state_get()->suppress_separators = state->no_separators;
-    if (state->lb) {
-      x11_draw_prompt_user_listbox_on_draw(dpy, xdDbl, vis, cmap, state);
-    }
-    x11_draw_prompt_user_edit_control_on_draw(dpy, xdDbl, vis, cmap, state);
-    draw_state_get()->suppress_separators = sep_prev;
-    focus_frame_end();
-  }
+  prompt_render_frame(dpy, win, xdDbl, vis, cmap, state,
+                      state->callbacks->render != NULL, true, false);
   x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();
   x11_draw_window_border(dpy, dbl, vis, w, h, state && state->no_bg);

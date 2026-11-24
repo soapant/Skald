@@ -545,6 +545,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec);
 bool ski_draw_image(const SkImageSpec *spec);
 SkSize ski_get_image_size(const char *path, int *w, int *h);
 #define sk_get_image_size(path) ski_get_image_size((path), NULL, NULL)
+
 bool ski_place_editbox(const SkEditSpec *spec);
 const char *sk_editbox_text(const char *name);
 bool sk_editbox_set_text(const char *name, const char *text);

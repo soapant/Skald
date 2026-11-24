@@ -12,5 +12,8 @@ bool feature_path_resolve_data_path(void *caller, const char *name, char *out,
                                     size_t out_len);
 bool feature_path_resolve_asset_path(void *caller, const char *name, char *out,
                                      size_t out_len);
+const char *feature_path_resolve_asset_or_path(void *caller, const char *path,
+                                               char *asset,
+                                               size_t asset_cap);
 
 #endif

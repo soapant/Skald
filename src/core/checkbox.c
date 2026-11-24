@@ -18,23 +18,12 @@
 #define CHECKBOX_BASE 16
 #define CHECKBOX_ICON_PATH "resources/check.png"
 
-static ColorRef widget_accent(void) {
-  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.66f);
-}
-
-static ColorRef widget_neutral(void) {
-  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.30f);
-}
 #define CHECKBOX_DARK_GRAY RGB(14, 14, 14)
 
 static CheckboxSpec **checkboxes;
 #define checkbox_count arrlenu(checkboxes)
 
-static struct {
-  bool valid;
-  int mx, my;
-  bool down;
-} cb_mouse;
+static WidgetMouseState cb_mouse;
 
 void checkbox_frame_begin(void) { cb_mouse.valid = false; }
 
@@ -47,48 +36,6 @@ static void checkbox_focus_activate(void *owner) {
     cb->checked = !cb->checked;
   if (cb->on_click)
     cb->on_click();
-}
-
-static void checkbox_mouse(int *out_x, int *out_y, bool *out_down) {
-
-  if (!cb_mouse.valid) {
-    int mx = 0, my = 0;
-    if (Platform_GetMousePos(&mx, &my)) {
-      int wx = 0, wy = 0;
-      WindowManager *wm = WindowManager_Get();
-      Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-      bool have_origin = false;
-      if (top)
-        have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
-      if (!have_origin) {
-        have_origin = Platform_WindowToRoot(
-            SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
-      }
-      if (have_origin) {
-        mx -= wx;
-        my -= wy;
-      }
-      {
-        int dx = 0, dy = 0;
-        get_draw_offset(&dx, &dy);
-        mx -= dx;
-        my -= dy;
-      }
-      cb_mouse.mx = mx;
-      cb_mouse.my = my;
-    } else {
-      cb_mouse.mx = -9999;
-      cb_mouse.my = -9999;
-    }
-    cb_mouse.down = input_mouse_state_down(MOUSE_BTN_LEFT);
-    cb_mouse.valid = true;
-  }
-  if (out_x)
-    *out_x = cb_mouse.mx;
-  if (out_y)
-    *out_y = cb_mouse.my;
-  if (out_down)
-    *out_down = cb_mouse.down;
 }
 
 static CheckboxSpec *checkbox_find(const char *name, int kind) {
@@ -320,7 +267,7 @@ bool checkbox_place(const CheckboxSpec *spec) {
 
   int mx = 0, my = 0;
   bool down = false;
-  checkbox_mouse(&mx, &my, &down);
+  widget_mouse_poll(&cb_mouse, &mx, &my, &down);
 
   bool hovered = (mx >= x && mx < x + w && my >= y && my < y + h);
   bool hover_changed = (hovered != cb->hovered);

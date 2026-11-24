@@ -20,14 +20,6 @@
 
 static float slider_snap(const SliderSpec *sl, float v);
 
-static ColorRef widget_accent(void) {
-  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.66f);
-}
-
-static ColorRef widget_neutral(void) {
-  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.30f);
-}
-
 static ColorRef widget_thumb(void) {
   return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.92f);
 }
@@ -35,11 +27,7 @@ static ColorRef widget_thumb(void) {
 static SliderSpec **sliders;
 #define slider_count arrlenu(sliders)
 
-static struct {
-  bool valid;
-  int mx, my;
-  bool down;
-} sl_mouse;
+static WidgetMouseState sl_mouse;
 
 void slider_frame_begin(void) { sl_mouse.valid = false; }
 
@@ -67,48 +55,6 @@ static void slider_focus_step(void *owner, int dir) {
 }
 
 static void slider_focus_activate(void *owner) { slider_focus_step(owner, 1); }
-
-static void slider_mouse(int *out_x, int *out_y, bool *out_down) {
-
-  if (!sl_mouse.valid) {
-    int mx = 0, my = 0;
-    if (Platform_GetMousePos(&mx, &my)) {
-      int wx = 0, wy = 0;
-      WindowManager *wm = WindowManager_Get();
-      Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-      bool have_origin = false;
-      if (top)
-        have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
-      if (!have_origin) {
-        have_origin = Platform_WindowToRoot(
-            SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
-      }
-      if (have_origin) {
-        mx -= wx;
-        my -= wy;
-      }
-      {
-        int dx = 0, dy = 0;
-        get_draw_offset(&dx, &dy);
-        mx -= dx;
-        my -= dy;
-      }
-    } else {
-      mx = -9999;
-      my = -9999;
-    }
-    sl_mouse.mx = mx;
-    sl_mouse.my = my;
-    sl_mouse.down = input_mouse_state_down(MOUSE_BTN_LEFT);
-    sl_mouse.valid = true;
-  }
-  if (out_x)
-    *out_x = sl_mouse.mx;
-  if (out_y)
-    *out_y = sl_mouse.my;
-  if (out_down)
-    *out_down = sl_mouse.down;
-}
 
 static SliderSpec *slider_find(const char *name) {
 
@@ -453,7 +399,7 @@ bool slider_place(const SliderSpec *spec) {
 
   int mx = 0, my = 0;
   bool down = false;
-  slider_mouse(&mx, &my, &down);
+  widget_mouse_poll(&sl_mouse, &mx, &my, &down);
 
   bool hovered = (mx >= x && mx < x + w && my >= y && my < y + h);
   bool hover_changed = (hovered != sl->hovered);

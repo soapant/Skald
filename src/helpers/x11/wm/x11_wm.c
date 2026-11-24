@@ -25,6 +25,9 @@ static int _x11_err = 0;
 static Window _x11_last_min = None;
 static int ewmh_move_works = -1;
 
+static bool x11_close_window(Display *display, Window w);
+static bool x11_state_toggle(const char *atom1, const char *atom2);
+
 static int x11_err_handler(Display *dpy, XErrorEvent *ev) {
 
   (void)dpy;
@@ -33,6 +36,25 @@ static int x11_err_handler(Display *dpy, XErrorEvent *ev) {
   {
     return 0;
   }
+}
+
+static bool x11_send_client_msg(Display *dpy, Window win, Atom type,
+                                const long data[5]) {
+  _x11_err = 0;
+  XErrorHandler old = XSetErrorHandler(x11_err_handler);
+  XEvent ev;
+  memset(&ev, 0, sizeof(ev));
+  ev.xclient.type = ClientMessage;
+  ev.xclient.window = win;
+  ev.xclient.message_type = type;
+  ev.xclient.format = 32;
+  for (int i = 0; i < 5; i++)
+    ev.xclient.data.l[i] = data[i];
+  XSendEvent(dpy, DefaultRootWindow(dpy), False,
+             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+  XSync(dpy, False);
+  XSetErrorHandler(old);
+  return _x11_err == 0;
 }
 
 static char *x11_get_text_prop(Display *dpy, Window w) {
@@ -150,30 +172,21 @@ static bool x11_window_geom(Display *dpy, Window w, int *out_x, int *out_y,
   return true;
 }
 
+static bool x11_read_geometry(Display *dpy, Window w, DrawRect *out) {
+  if (!out)
+    return false;
+  return x11_window_geom(dpy, w, &out->x, &out->y, &out->w, &out->h);
+}
+
 static bool x11_moveresize_window(Display *dpy, Window w, int x, int y, int cw,
                                   int ch) {
 
   if (!dpy || w == None)
     return false;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   Atom mrs = XInternAtom(dpy, "_NET_MOVERESIZE_WINDOW", False);
-  XEvent ev;
-  memset(&ev, 0, sizeof(ev));
-  ev.xclient.type = ClientMessage;
-  ev.xclient.window = w;
-  ev.xclient.message_type = mrs;
-  ev.xclient.format = 32;
-  ev.xclient.data.l[0] = (2L << 12) | (1L << 8) | (3L << 4) | (3L << 2) | 10L;
-  ev.xclient.data.l[1] = x;
-  ev.xclient.data.l[2] = y;
-  ev.xclient.data.l[3] = cw;
-  ev.xclient.data.l[4] = ch;
-  XSendEvent(dpy, DefaultRootWindow(dpy), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-  XSync(dpy, False);
-  XSetErrorHandler(old);
-  if (!_x11_err)
+  long data[5] = {(2L << 12) | (1L << 8) | (3L << 4) | (3L << 2) | 10L, x, y,
+                  cw, ch};
+  if (x11_send_client_msg(dpy, w, mrs, data))
     return true;
   XMoveResizeWindow(dpy, w, x, y, cw > 0 ? (unsigned)cw : 1,
                     ch > 0 ? (unsigned)ch : 1);
@@ -185,22 +198,9 @@ static bool x11_activate_window(Display *dpy, Window w) {
 
   if (!dpy || w == None)
     return false;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
   Atom active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
-  XEvent ev;
-  memset(&ev, 0, sizeof(ev));
-  ev.xclient.type = ClientMessage;
-  ev.xclient.window = w;
-  ev.xclient.message_type = active;
-  ev.xclient.format = 32;
-  ev.xclient.data.l[0] = 2L;
-  ev.xclient.data.l[1] = (long)CurrentTime;
-  XSendEvent(dpy, DefaultRootWindow(dpy), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-  XSync(dpy, False);
-  XSetErrorHandler(old);
-  return _x11_err == 0;
+  long data[5] = {2L, (long)CurrentTime, 0, 0, 0};
+  return x11_send_client_msg(dpy, w, active, data);
 }
 
 static int x11_keycode_for(Display *dpy, KeySym ks, int *need_shift) {
@@ -329,8 +329,9 @@ char *x11_paste(const char *content) {
   return strdup("");
 }
 
-unsigned long x11_find_window_by_id(const char *id) {
-  if (!id || !id[0])
+static unsigned long x11_find_window_by_field(const char *needle,
+                                               bool use_id) {
+  if (!needle || !needle[0])
     return 0;
   Display *display = x11_get_display();
   if (!display)
@@ -343,47 +344,27 @@ unsigned long x11_find_window_by_id(const char *id) {
   }
   unsigned long found = 0;
   for (int i = 0; i < nclients; i++) {
-    char *cls = x11_get_res_class(display, clients[i]);
-    if (!cls)
+    char *value = use_id ? x11_get_res_class(display, clients[i])
+                         : x11_get_text_prop(display, clients[i]);
+    if (!value)
       continue;
-    if (strcasestr(cls, id)) {
+    if (strcasestr(value, needle)) {
       found = (unsigned long)clients[i];
-      free(cls);
+      free(value);
       break;
     }
-    free(cls);
+    free(value);
   }
   free(clients);
   return found;
 }
 
+unsigned long x11_find_window_by_id(const char *id) {
+  return x11_find_window_by_field(id, true);
+}
+
 unsigned long x11_find_window_by_title(const char *title) {
-  if (!title || !title[0])
-    return 0;
-  Display *display = x11_get_display();
-  if (!display)
-    return 0;
-  int nclients = 0;
-  Window *clients = x11_client_list(display, &nclients);
-  if (!clients || nclients <= 0) {
-    if (clients)
-      free(clients);
-    return 0;
-  }
-  unsigned long found = 0;
-  for (int i = 0; i < nclients; i++) {
-    char *wt = x11_get_text_prop(display, clients[i]);
-    if (!wt)
-      continue;
-    if (strcasestr(wt, title)) {
-      found = (unsigned long)clients[i];
-      free(wt);
-      break;
-    }
-    free(wt);
-  }
-  free(clients);
-  return found;
+  return x11_find_window_by_field(title, false);
 }
 
 bool x11_focus_window_title(const char *title) {
@@ -492,22 +473,7 @@ bool x11_close_active_window(void) {
   Window focus = x11_focused_window(display);
   if (focus == None)
     return false;
-  Atom close_atom = XInternAtom(display, "_NET_CLOSE_WINDOW", False);
-  XEvent ev;
-  memset(&ev, 0, sizeof(ev));
-  ev.xclient.type = ClientMessage;
-  ev.xclient.window = focus;
-  ev.xclient.message_type = close_atom;
-  ev.xclient.format = 32;
-  ev.xclient.data.l[0] = CurrentTime;
-  ev.xclient.data.l[1] = 2;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XSendEvent(display, DefaultRootWindow(display), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-  XSync(display, False);
-  XSetErrorHandler(old);
-  if (_x11_err) {
+  if (!x11_close_window(display, focus)) {
     XKillClient(display, focus);
     XSync(display, False);
   }
@@ -521,25 +487,7 @@ bool x11_toggle_fullscreen_active(void) {
   Window focus = x11_focused_window(display);
   if (focus == None)
     return false;
-  Atom state_atom = XInternAtom(display, "_NET_WM_STATE", False);
-  Atom fs_atom = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
-  XEvent ev;
-  memset(&ev, 0, sizeof(ev));
-  ev.xclient.type = ClientMessage;
-  ev.xclient.window = focus;
-  ev.xclient.message_type = state_atom;
-  ev.xclient.format = 32;
-  ev.xclient.data.l[0] = 2;
-  ev.xclient.data.l[1] = (long)fs_atom;
-  ev.xclient.data.l[2] = 0;
-  ev.xclient.data.l[3] = 1;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XSendEvent(display, DefaultRootWindow(display), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-  XSync(display, False);
-  XSetErrorHandler(old);
-  return _x11_err == 0;
+  return x11_state_toggle("_NET_WM_STATE_FULLSCREEN", NULL);
 }
 
 static bool x11_activate_neighbor_dir(bool vertical, bool positive) {
@@ -606,6 +554,27 @@ static bool x11_activate_neighbor_vertical(bool down) {
   return x11_activate_neighbor_dir(true, down);
 }
 
+static bool x11_crtc_geometry(Display *dpy, XRRScreenResources *res, int idx,
+                              int *ox, int *oy, int *ow, int *oh) {
+  XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[idx]);
+  if (!ci)
+    return false;
+  if (ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
+    XRRFreeCrtcInfo(ci);
+    return false;
+  }
+  if (ox)
+    *ox = ci->x;
+  if (oy)
+    *oy = ci->y;
+  if (ow)
+    *ow = (int)ci->width;
+  if (oh)
+    *oh = (int)ci->height;
+  XRRFreeCrtcInfo(ci);
+  return true;
+}
+
 bool x11_move_active_window_to_monitor(bool right) {
   Display *display = x11_get_display();
   if (!display)
@@ -620,15 +589,9 @@ bool x11_move_active_window_to_monitor(bool right) {
   int n = 0;
   int ox[64], oy[64], ow[64], oh[64];
   for (int c = 0; c < res->ncrtc && n < 64; c++) {
-    XRRCrtcInfo *ci = XRRGetCrtcInfo(display, res, res->crtcs[c]);
-    if (!ci)
+    int cx = 0, cy = 0, cw = 0, chh = 0;
+    if (!x11_crtc_geometry(display, res, c, &cx, &cy, &cw, &chh))
       continue;
-    if (ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
-      XRRFreeCrtcInfo(ci);
-      continue;
-    }
-    int cx = ci->x, cy = ci->y, cw = (int)ci->width, chh = (int)ci->height;
-    XRRFreeCrtcInfo(ci);
     bool dup = false;
     for (int i = 0; i < n; i++) {
       if (ox[i] == cx && oy[i] == cy && ow[i] == cw && oh[i] == chh) {
@@ -836,23 +799,8 @@ static bool x11_state_toggle(const char *atom1, const char *atom2) {
   Atom state_atom = XInternAtom(display, "_NET_WM_STATE", False);
   Atom a1 = atom1 ? XInternAtom(display, atom1, False) : None;
   Atom a2 = atom2 ? XInternAtom(display, atom2, False) : None;
-  XEvent ev;
-  memset(&ev, 0, sizeof(ev));
-  ev.xclient.type = ClientMessage;
-  ev.xclient.window = focus;
-  ev.xclient.message_type = state_atom;
-  ev.xclient.format = 32;
-  ev.xclient.data.l[0] = 2;
-  ev.xclient.data.l[1] = (long)a1;
-  ev.xclient.data.l[2] = (long)a2;
-  ev.xclient.data.l[3] = 1;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XSendEvent(display, DefaultRootWindow(display), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-  XSync(display, False);
-  XSetErrorHandler(old);
-  return _x11_err == 0;
+  long data[5] = {2, (long)a1, (long)a2, 1, 0};
+  return x11_send_client_msg(display, focus, state_atom, data);
 }
 
 bool x11_toggle_maximize_active(void) {
@@ -864,7 +812,7 @@ bool x11_toggle_always_on_top_active(void) {
   return x11_state_toggle("_NET_WM_STATE_ABOVE", NULL);
 }
 
-bool x11_raise_active_window(void) {
+static bool x11_restack_active(bool raise) {
   Display *display = x11_get_display();
   if (!display)
     return false;
@@ -873,26 +821,18 @@ bool x11_raise_active_window(void) {
     return false;
   _x11_err = 0;
   XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XRaiseWindow(display, focus);
+  if (raise)
+    XRaiseWindow(display, focus);
+  else
+    XLowerWindow(display, focus);
   XSync(display, False);
   XSetErrorHandler(old);
   return _x11_err == 0;
 }
 
-bool x11_lower_active_window(void) {
-  Display *display = x11_get_display();
-  if (!display)
-    return false;
-  Window focus = x11_focused_window(display);
-  if (focus == None)
-    return false;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XLowerWindow(display, focus);
-  XSync(display, False);
-  XSetErrorHandler(old);
-  return _x11_err == 0;
-}
+bool x11_raise_active_window(void) { return x11_restack_active(true); }
+
+bool x11_lower_active_window(void) { return x11_restack_active(false); }
 
 static bool x11_monitor_for_rect(Display *display, int wx, int wy, int ww,
                                  int wh, int *ox, int *oy, int *ow, int *oh) {
@@ -907,15 +847,9 @@ static bool x11_monitor_for_rect(Display *display, int wx, int wy, int ww,
   int bx = 0, by = 0, bw = 0, bh = 0;
   int best_d = 1 << 30;
   for (int c = 0; c < res->ncrtc; c++) {
-    XRRCrtcInfo *ci = XRRGetCrtcInfo(display, res, res->crtcs[c]);
-    if (!ci)
+    int mx = 0, my = 0, mw = 0, mh = 0;
+    if (!x11_crtc_geometry(display, res, c, &mx, &my, &mw, &mh))
       continue;
-    if (ci->noutput == 0 || ci->width == 0 || ci->height == 0) {
-      XRRFreeCrtcInfo(ci);
-      continue;
-    }
-    int mx = ci->x, my = ci->y, mw = (int)ci->width, mh = (int)ci->height;
-    XRRFreeCrtcInfo(ci);
     if (cx >= mx && cx < mx + mw && cy >= my && cy < my + mh) {
       bx = mx;
       by = my;
@@ -946,20 +880,30 @@ static bool x11_monitor_for_rect(Display *display, int wx, int wy, int ww,
   return true;
 }
 
+static bool x11_active_in_monitor(Display *display, Window *out_win,
+                                  DrawRect *win, DrawRect *mon) {
+  Window focus = x11_focused_window(display);
+  if (focus == None)
+    return false;
+  if (!x11_read_geometry(display, focus, win))
+    return false;
+  if (!x11_monitor_for_rect(display, win->x, win->y, win->w, win->h, &mon->x,
+                            &mon->y, &mon->w, &mon->h))
+    return false;
+  if (out_win)
+    *out_win = focus;
+  return true;
+}
+
 bool x11_snap_active_window(SnapPreset preset) {
   Display *display = x11_get_display();
   if (!display)
     return false;
-  Window focus = x11_focused_window(display);
-  if (focus == None)
+  Window focus = None;
+  DrawRect win = {0}, mon = {0};
+  if (!x11_active_in_monitor(display, &focus, &win, &mon))
     return false;
-  int fgx = 0, fgy = 0, fw = 0, fh = 0;
-  if (!x11_window_geom(display, focus, &fgx, &fgy, &fw, &fh))
-    return false;
-  int mx, my, mw, mh;
-  if (!x11_monitor_for_rect(display, fgx, fgy, fw, fh, &mx, &my, &mw, &mh))
-    return false;
-  SnapRect r = wm_snap_rect(mx, my, mw, mh, preset);
+  SnapRect r = wm_snap_rect(mon.x, mon.y, mon.w, mon.h, preset);
   return x11_moveresize_window(display, focus, r.x, r.y, r.w, r.h);
 }
 
@@ -967,17 +911,12 @@ bool x11_center_active_window(void) {
   Display *display = x11_get_display();
   if (!display)
     return false;
-  Window focus = x11_focused_window(display);
-  if (focus == None)
+  Window focus = None;
+  DrawRect win = {0}, mon = {0};
+  if (!x11_active_in_monitor(display, &focus, &win, &mon))
     return false;
-  int fgx = 0, fgy = 0, fw = 0, fh = 0;
-  if (!x11_window_geom(display, focus, &fgx, &fgy, &fw, &fh))
-    return false;
-  int mx, my, mw, mh;
-  if (!x11_monitor_for_rect(display, fgx, fgy, fw, fh, &mx, &my, &mw, &mh))
-    return false;
-  int x = mx + (mw - fw) / 2, y = my + (mh - fh) / 2;
-  return x11_moveresize_window(display, focus, x, y, fw, fh);
+  int x = mon.x + (mon.w - win.w) / 2, y = mon.y + (mon.h - win.h) / 2;
+  return x11_moveresize_window(display, focus, x, y, win.w, win.h);
 }
 
 long x11_get_active_window_pid(void) {
@@ -1009,28 +948,21 @@ long x11_get_active_window_pid(void) {
   return pid;
 }
 
+static bool x11_set_desktop(Display *dpy, Window win, const char *atom_name,
+                            int index) {
+  Atom atom = XInternAtom(dpy, atom_name, False);
+  long data[5] = {(long)(index - 1), (long)CurrentTime, 0, 0, 0};
+  return x11_send_client_msg(dpy, win, atom, data);
+}
+
 bool x11_switch_to_workspace(int index) {
   if (index < 1)
     return false;
   Display *display = x11_get_display();
   if (!display)
     return false;
-  Atom cd = XInternAtom(display, "_NET_CURRENT_DESKTOP", False);
-  XEvent ev;
-  memset(&ev, 0, sizeof(ev));
-  ev.xclient.type = ClientMessage;
-  ev.xclient.window = DefaultRootWindow(display);
-  ev.xclient.message_type = cd;
-  ev.xclient.format = 32;
-  ev.xclient.data.l[0] = (long)(index - 1);
-  ev.xclient.data.l[1] = CurrentTime;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XSendEvent(display, DefaultRootWindow(display), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-  XSync(display, False);
-  XSetErrorHandler(old);
-  return _x11_err == 0;
+  return x11_set_desktop(display, DefaultRootWindow(display),
+                         "_NET_CURRENT_DESKTOP", index);
 }
 
 bool x11_move_active_window_to_workspace(int index) {
@@ -1042,45 +974,34 @@ bool x11_move_active_window_to_workspace(int index) {
   Window focus = x11_focused_window(display);
   if (focus == None)
     return false;
-  Atom wd = XInternAtom(display, "_NET_WM_DESKTOP", False);
-  XEvent ev;
-  memset(&ev, 0, sizeof(ev));
-  ev.xclient.type = ClientMessage;
-  ev.xclient.window = focus;
-  ev.xclient.message_type = wd;
-  ev.xclient.format = 32;
-  ev.xclient.data.l[0] = (long)(index - 1);
-  ev.xclient.data.l[1] = CurrentTime;
+  return x11_set_desktop(display, focus, "_NET_WM_DESKTOP", index);
+}
+
+static bool x11_set_opacity(Display *dpy, Window w, int percent) {
+  if (percent < 0)
+    percent = 0;
+  if (percent > 100)
+    percent = 100;
+  Atom op = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
+  unsigned long v =
+      (unsigned long)(((double)percent / 100.0) * 4294967295.0 + 0.5);
   _x11_err = 0;
   XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XSendEvent(display, DefaultRootWindow(display), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-  XSync(display, False);
+  XChangeProperty(dpy, w, op, XA_CARDINAL, 32, PropModeReplace,
+                  (unsigned char *)&v, 1);
+  XSync(dpy, False);
   XSetErrorHandler(old);
   return _x11_err == 0;
 }
 
 bool x11_set_active_window_opacity(int percent) {
-  if (percent < 0)
-    percent = 0;
-  if (percent > 100)
-    percent = 100;
   Display *display = x11_get_display();
   if (!display)
     return false;
   Window focus = x11_focused_window(display);
   if (focus == None)
     return false;
-  Atom op = XInternAtom(display, "_NET_WM_WINDOW_OPACITY", False);
-  unsigned long v =
-      (unsigned long)(((double)percent / 100.0) * 4294967295.0 + 0.5);
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XChangeProperty(display, focus, op, XA_CARDINAL, 32, PropModeReplace,
-                  (unsigned char *)&v, 1);
-  XSync(display, False);
-  XSetErrorHandler(old);
-  return _x11_err == 0;
+  return x11_set_opacity(display, focus, percent);
 }
 
 WindowHandle x11_get_active_window_handle(void) {
@@ -1151,14 +1072,7 @@ bool x11_get_active_window_geometry(DrawRect *out) {
   Window focus = x11_focused_window(display);
   if (focus == None)
     return false;
-  int x = 0, y = 0, w = 0, h = 0;
-  if (!x11_window_geom(display, focus, &x, &y, &w, &h))
-    return false;
-  out->x = x;
-  out->y = y;
-  out->w = w;
-  out->h = h;
-  return true;
+  return x11_read_geometry(display, focus, out);
 }
 
 bool x11_get_window_geometry_xid(unsigned long xid, DrawRect *out) {
@@ -1168,14 +1082,7 @@ bool x11_get_window_geometry_xid(unsigned long xid, DrawRect *out) {
   Display *display = x11_get_display();
   if (!display)
     return false;
-  int x = 0, y = 0, w = 0, h = 0;
-  if (!x11_window_geom(display, (Window)xid, &x, &y, &w, &h))
-    return false;
-  out->x = x;
-  out->y = y;
-  out->w = w;
-  out->h = h;
-  return true;
+  return x11_read_geometry(display, (Window)xid, out);
 }
 
 bool x11_move_window_xid(unsigned long xid, int x, int y) {
@@ -1205,23 +1112,10 @@ bool x11_set_window_size_xid(unsigned long xid, int w, int h) {
 bool x11_set_window_opacity_xid(unsigned long xid, int percent) {
   if (xid == 0)
     return false;
-  if (percent < 0)
-    percent = 0;
-  if (percent > 100)
-    percent = 100;
   Display *display = x11_get_display();
   if (!display)
     return false;
-  Atom op = XInternAtom(display, "_NET_WM_WINDOW_OPACITY", False);
-  unsigned long v =
-      (unsigned long)(((double)percent / 100.0) * 4294967295.0 + 0.5);
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XChangeProperty(display, (Window)xid, op, XA_CARDINAL, 32, PropModeReplace,
-                  (unsigned char *)&v, 1);
-  XSync(display, False);
-  XSetErrorHandler(old);
-  return _x11_err == 0;
+  return x11_set_opacity(display, (Window)xid, percent);
 }
 
 bool x11_set_window_geometry_xid(unsigned long xid, DrawRect rect) {
@@ -1236,21 +1130,8 @@ bool x11_set_window_geometry_xid(unsigned long xid, DrawRect rect) {
 
 static bool x11_close_window(Display *display, Window w) {
   Atom close_atom = XInternAtom(display, "_NET_CLOSE_WINDOW", False);
-  XEvent ev;
-  memset(&ev, 0, sizeof(ev));
-  ev.xclient.type = ClientMessage;
-  ev.xclient.window = w;
-  ev.xclient.message_type = close_atom;
-  ev.xclient.format = 32;
-  ev.xclient.data.l[0] = CurrentTime;
-  ev.xclient.data.l[1] = 2;
-  _x11_err = 0;
-  XErrorHandler old = XSetErrorHandler(x11_err_handler);
-  XSendEvent(display, DefaultRootWindow(display), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-  XSync(display, False);
-  XSetErrorHandler(old);
-  return _x11_err == 0;
+  long data[5] = {(long)CurrentTime, 2, 0, 0, 0};
+  return x11_send_client_msg(display, w, close_atom, data);
 }
 
 static bool x11_close_windows_where(const char *needle, bool use_id) {

@@ -9,7 +9,9 @@
 #include "helpers/helpers_key.h"
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_input_state.h"
+#include "core/context.h"
 #include "core/types/keys.h"
+#include "core/window_manager.h"
 #include "platform/platform.h"
 #include "platform/lib.h"
 #include "deps/log.h"
@@ -63,6 +65,69 @@ unsigned int color_lerp(unsigned int a, unsigned int b, float t) {
   unsigned int rg = (unsigned int)(ag + (bg - ag) * t + 0.5f);
   unsigned int rb = (unsigned int)(ab + (bb - ab) * t + 0.5f);
   return (rr << 16) | (rg << 8) | rb;
+}
+
+ColorRef color_lerp_bgr(ColorRef a, ColorRef b, float t) {
+  if (t < 0)
+    t = 0;
+  if (t > 1)
+    t = 1;
+  int ar = (int)(a & 0xFF), ag = (int)((a >> 8) & 0xFF),
+      ab = (int)((a >> 16) & 0xFF);
+  int br = (int)(b & 0xFF), bg = (int)((b >> 8) & 0xFF),
+      bb = (int)((b >> 16) & 0xFF);
+  unsigned int rr = (unsigned int)(ar + (br - ar) * t + 0.5f);
+  unsigned int rg = (unsigned int)(ag + (bg - ag) * t + 0.5f);
+  unsigned int rb = (unsigned int)(ab + (bb - ab) * t + 0.5f);
+  return (ColorRef)(rr | (rg << 8) | (rb << 16));
+}
+
+ColorRef widget_accent(void) {
+  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.66f);
+}
+
+ColorRef widget_neutral(void) {
+  return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.30f);
+}
+
+void widget_mouse_poll(WidgetMouseState *state, int *out_x, int *out_y,
+                       bool *out_down) {
+  if (!state->valid) {
+    int mx = 0, my = 0;
+    if (Platform_GetMousePos(&mx, &my)) {
+      int wx = 0, wy = 0;
+      WindowManager *wm = WindowManager_Get();
+      Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+      bool have_origin = false;
+      if (top)
+        have_origin = Platform_WindowToRoot(top->handle, &wx, &wy);
+      if (!have_origin) {
+        have_origin = Platform_WindowToRoot(
+            SkaldContext_Get()->window.hPopupWnd, &wx, &wy);
+      }
+      if (have_origin) {
+        mx -= wx;
+        my -= wy;
+      }
+      int dx = 0, dy = 0;
+      get_draw_offset(&dx, &dy);
+      mx -= dx;
+      my -= dy;
+    } else {
+      mx = -9999;
+      my = -9999;
+    }
+    state->mx = mx;
+    state->my = my;
+    state->down = input_mouse_state_down(MOUSE_BTN_LEFT);
+    state->valid = true;
+  }
+  if (out_x)
+    *out_x = state->mx;
+  if (out_y)
+    *out_y = state->my;
+  if (out_down)
+    *out_down = state->down;
 }
 
 int monitor_count(void) {

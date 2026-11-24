@@ -12,6 +12,7 @@ unsigned long rgb_to_hex(unsigned long win_color);
 unsigned short opacity_alpha16(void);
 
 unsigned int color_lerp(unsigned int a, unsigned int b, float t);
+ColorRef color_lerp_bgr(ColorRef a, ColorRef b, float t);
 
 bool cover_scale(int sw, int sh, int tw, int th, int *dw, int *dh);
 
@@ -116,6 +117,18 @@ void end_measure(int *out_w, int *out_h);
 void get_last_measure_origin(int *out_x, int *out_y);
 void set_draw_offset(int dx, int dy);
 void get_draw_offset(int *out_x, int *out_y);
+
+ColorRef widget_accent(void);
+ColorRef widget_neutral(void);
+
+typedef struct {
+  bool valid;
+  int mx, my;
+  bool down;
+} WidgetMouseState;
+
+void widget_mouse_poll(WidgetMouseState *state, int *out_x, int *out_y,
+                       bool *out_down);
 
 bool is_popup_active(WindowHandle hPopupWnd);
 void UI_SetSelection(ListBox *lb, int index);

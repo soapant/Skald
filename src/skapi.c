@@ -1995,31 +1995,15 @@ bool ski_place_editbox(const SkEditSpec *spec) {
 }
 
 const char *sk_editbox_text(const char *name) {
-  PromptState *state = sk_current_prompt_state();
-  if (!state)
-    return NULL;
-  if (name && name[0]) {
-    PromptEditbox *entry = editbox_registry_find(state, name);
-    return entry ? entry->eb.filter : NULL;
-  }
-  return state->eb ? state->eb->filter : NULL;
+  EditBox *eb = editbox_registry_lookup(sk_current_prompt_state(), name);
+  return eb ? eb->filter : NULL;
 }
 
 bool sk_editbox_set_text(const char *name, const char *text) {
   if (!text)
     return false;
   PromptState *state = sk_current_prompt_state();
-  if (!state)
-    return false;
-  EditBox *eb = NULL;
-  if (name && name[0]) {
-    PromptEditbox *entry = editbox_registry_find(state, name);
-    if (!entry)
-      return false;
-    eb = &entry->eb;
-  } else {
-    eb = state->eb;
-  }
+  EditBox *eb = editbox_registry_lookup(state, name);
   if (!eb)
     return false;
   safe_copy(eb->filter, sizeof(eb->filter), text);
@@ -2069,12 +2053,8 @@ bool ski_draw_image(const SkImageSpec *spec) {
   if (!spec->path || !spec->path[0])
     return false;
   char asset[MAX_PATH];
-  const char *path = spec->path;
-  if ((path[0] == '/' || path[0] == '\\') &&
-      feature_path_resolve_asset_path(__builtin_return_address(0), path, asset,
-                                      sizeof(asset))) {
-    path = asset;
-  }
+  const char *path = feature_path_resolve_asset_or_path(
+      __builtin_return_address(0), spec->path, asset, sizeof(asset));
   return Platform_DrawImageAt(path, spec->x, spec->y, w, h);
 }
 
@@ -2176,18 +2156,7 @@ int sk_get_text_height(int font_size) {
 }
 
 ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t) {
-  if (t < 0)
-    t = 0;
-  if (t > 1)
-    t = 1;
-  int ar = (int)(a & 0xFF), ag = (int)((a >> 8) & 0xFF),
-      ab = (int)((a >> 16) & 0xFF);
-  int br = (int)(b & 0xFF), bg = (int)((b >> 8) & 0xFF),
-      bb = (int)((b >> 16) & 0xFF);
-  unsigned int rr = (unsigned int)(ar + (br - ar) * t + 0.5f);
-  unsigned int rg = (unsigned int)(ag + (bg - ag) * t + 0.5f);
-  unsigned int rb = (unsigned int)(ab + (bb - ab) * t + 0.5f);
-  return (ColorRef)(rr | (rg << 8) | (rb << 16));
+  return color_lerp_bgr(a, b, t);
 }
 
 void ski_set_draw_offset(int dx, int dy) { set_draw_offset(dx, dy); }

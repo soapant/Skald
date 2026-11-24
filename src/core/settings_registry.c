@@ -61,6 +61,20 @@ static const char *settings_config_find(const char *key) {
   return NULL;
 }
 
+static bool settings_config_update_value(const char *key, const char *value) {
+  const char *existing = settings_config_find(key);
+  if (!existing)
+    return false;
+  for (size_t i = 0; i < settings_config_count; i++) {
+    if (settings_config_entries[i].value == existing) {
+      free(settings_config_entries[i].value);
+      settings_config_entries[i].value = strdup(value);
+      break;
+    }
+  }
+  return true;
+}
+
 static bool settings_config_apply(const ConfigTomlEntry *entry, void *ud) {
   (void)ud;
   if (!entry || strcmp(entry->section, "settings") != 0)
@@ -68,17 +82,8 @@ static bool settings_config_apply(const ConfigTomlEntry *entry, void *ud) {
   char value[SETTINGS_CONFIG_VALUE_MAX];
   if (!config_toml_decode_string(entry->raw, value, sizeof(value)))
     return true;
-  const char *existing = settings_config_find(entry->key);
-  if (existing) {
-    for (size_t i = 0; i < settings_config_count; i++) {
-      if (settings_config_entries[i].value == existing) {
-        free(settings_config_entries[i].value);
-        settings_config_entries[i].value = strdup(value);
-        break;
-      }
-    }
+  if (settings_config_update_value(entry->key, value))
     return true;
-  }
   SettingsConfigEntry *out = arraddnptr(settings_config_entries, 1);
   out->key = strdup(entry->key);
   out->value = strdup(value);
@@ -144,16 +149,7 @@ static bool settings_config_set(const char *key, const char *value) {
   if (!key || !key[0] || !value)
     return false;
   settings_config_init();
-  const char *existing = settings_config_find(key);
-  if (existing) {
-    for (size_t i = 0; i < settings_config_count; i++) {
-      if (settings_config_entries[i].value == existing) {
-        free(settings_config_entries[i].value);
-        settings_config_entries[i].value = strdup(value);
-        break;
-      }
-    }
-  } else {
+  if (!settings_config_update_value(key, value)) {
     SettingsConfigEntry *out = arraddnptr(settings_config_entries, 1);
     out->key = strdup(key);
     out->value = strdup(value);
@@ -204,6 +200,14 @@ static void settings_config_migrate(const char *from, const char *to) {
 
 static bool settings_capturing(void) { return search_index_current() != NULL; }
 
+static bool settings_capture_text(const char *text) {
+  if (!settings_capturing())
+    return false;
+  if (text && text[0])
+    search_index_add_text(NULL, text, SEARCH_KIND_TEXT, NULL, NULL);
+  return true;
+}
+
 static unsigned long settings_color(unsigned long color) {
   if (color == 0 || color == COLOR_AUTO)
     color = COLOR_TEXT;
@@ -211,18 +215,7 @@ static unsigned long settings_color(unsigned long color) {
 }
 
 static ColorRef settings_color_lerp(ColorRef a, ColorRef b, float t) {
-  if (t < 0)
-    t = 0;
-  if (t > 1)
-    t = 1;
-  int ar = (int)(a & 0xFF), ag = (int)((a >> 8) & 0xFF),
-      ab = (int)((a >> 16) & 0xFF);
-  int br = (int)(b & 0xFF), bg = (int)((b >> 8) & 0xFF),
-      bb = (int)((b >> 16) & 0xFF);
-  unsigned int rr = (unsigned int)(ar + (br - ar) * t + 0.5f);
-  unsigned int rg = (unsigned int)(ag + (bg - ag) * t + 0.5f);
-  unsigned int rb = (unsigned int)(ab + (bb - ab) * t + 0.5f);
-  return (ColorRef)(rr | (rg << 8) | (rb << 16));
+  return color_lerp_bgr(a, b, t);
 }
 
 static int settings_text_width(const char *text, int font_size) {
@@ -274,11 +267,8 @@ typedef struct {
 static bool settings_draw_text_local(const SettingsDrawTextSpec *spec) {
   if (!spec || !spec->text)
     return false;
-  if (settings_capturing()) {
-    if (spec->text[0])
-      search_index_add_text(NULL, spec->text, SEARCH_KIND_TEXT, NULL, NULL);
+  if (settings_capture_text(spec->text))
     return true;
-  }
   const char *align = spec->align ? spec->align : "LEFT";
   return Platform_DrawTextRaw(
       (DrawTextRawSpec){.x = spec->x,
@@ -293,11 +283,8 @@ static bool
 settings_draw_text_centered_local(const SettingsDrawTextCenteredSpec *spec) {
   if (!spec || !spec->text)
     return false;
-  if (settings_capturing()) {
-    if (spec->text[0])
-      search_index_add_text(NULL, spec->text, SEARCH_KIND_TEXT, NULL, NULL);
+  if (settings_capture_text(spec->text))
     return true;
-  }
   Platform_DrawTextCentered(
       (DrawTextCenteredSpec){.x = spec->x,
                              .y = spec->y,
@@ -315,11 +302,8 @@ static bool settings_draw_image_local(const SettingsDrawImageSpec *spec) {
   if (settings_capturing())
     return true;
   char asset[MAX_PATH];
-  const char *path = spec->path;
-  if ((path[0] == '/' || path[0] == '\\') &&
-      feature_path_resolve_asset_path(__builtin_return_address(0), path, asset,
-                                      sizeof(asset)))
-    path = asset;
+  const char *path = feature_path_resolve_asset_or_path(
+      __builtin_return_address(0), spec->path, asset, sizeof(asset));
   return Platform_DrawImageAt(path, spec->x, spec->y, spec->w, spec->h);
 }
 
@@ -338,31 +322,16 @@ static bool settings_draw_line_local(const Line *spec) {
 }
 
 static const char *settings_editbox_text(const char *name) {
-  PromptState *state = prompt_popup_get_top_prompt_state();
-  if (!state)
-    return NULL;
-  if (name && name[0]) {
-    PromptEditbox *entry = editbox_registry_find(state, name);
-    return entry ? entry->eb.filter : NULL;
-  }
-  return state->eb ? state->eb->filter : NULL;
+  EditBox *eb =
+      editbox_registry_lookup(prompt_popup_get_top_prompt_state(), name);
+  return eb ? eb->filter : NULL;
 }
 
 static bool settings_editbox_set_text(const char *name, const char *text) {
   if (!text)
     return false;
   PromptState *state = prompt_popup_get_top_prompt_state();
-  if (!state)
-    return false;
-  EditBox *eb = NULL;
-  if (name && name[0]) {
-    PromptEditbox *entry = editbox_registry_find(state, name);
-    if (!entry)
-      return false;
-    eb = &entry->eb;
-  } else {
-    eb = state->eb;
-  }
+  EditBox *eb = editbox_registry_lookup(state, name);
   if (!eb)
     return false;
   snprintf(eb->filter, sizeof(eb->filter), "%s", text);
