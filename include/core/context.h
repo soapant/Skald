@@ -15,6 +15,14 @@ typedef struct {
 } SubwindowInfo;
 
 typedef struct {
+  bool active;
+  bool capturing;
+  bool spec_valid;
+  PromptSpec spec;
+  PromptState *state;
+} HeadlessDispatch;
+
+typedef struct {
   WindowHandle hPopupWnd;
   bool selection_complete;
   bool editbox_placed;
@@ -24,6 +32,7 @@ typedef struct {
   char *current_feature;
   const char *title;
   PromptCallbacks prompt_callbacks;
+  HeadlessDispatch headless;
   SubwindowInfo subwindow;
   long long last_popup_pop_ms;
 } WindowContext;

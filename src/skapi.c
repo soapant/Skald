@@ -41,15 +41,11 @@
 #include "core/skapi.h"
 #include "core/listbox_hover.h"
 
-static bool g_headless_active;
-static bool g_headless_capturing;
-static bool g_headless_spec_valid;
-static PromptSpec g_headless_spec;
-static PromptState *g_headless_state;
-
 static PromptState *sk_current_prompt_state(void) {
-  return g_headless_state ? g_headless_state
-                          : prompt_popup_get_top_prompt_state();
+  SkaldContext *ctx = SkaldContext_Get();
+  return (ctx && ctx->window.headless.state)
+             ? ctx->window.headless.state
+             : prompt_popup_get_top_prompt_state();
 }
 #include "core/config_section.h"
 #include "core/listbox_hover.h"
@@ -1063,7 +1059,8 @@ void sk_message_fmt(const SkMessageSpec *spec, const char *fmt, ...) {
 }
 
 void ski_message(const SkMessageSpec *spec) {
-  if (g_headless_active || !MessagesEnabled)
+  SkaldContext *ctx = SkaldContext_Get();
+  if ((ctx && ctx->window.headless.active) || !MessagesEnabled)
     return;
   if (!spec)
     return;
@@ -3695,11 +3692,12 @@ const char *sk_alias_for(const char *target) {
 }
 
 void ski_window(const SkPromptSpec *spec) {
-  if (g_headless_active) {
-    if (g_headless_capturing && spec) {
-      g_headless_spec = *spec;
-      g_headless_spec_valid = true;
-      g_headless_capturing = false;
+  SkaldContext *ctx = SkaldContext_Get();
+  if (ctx && ctx->window.headless.active) {
+    if (ctx->window.headless.capturing && spec) {
+      ctx->window.headless.spec = *spec;
+      ctx->window.headless.spec_valid = true;
+      ctx->window.headless.capturing = false;
     }
     return;
   }
@@ -4295,18 +4293,22 @@ static bool feature_shortcut_run(const char *name) {
   PromptCallbacks base_callbacks =
       ctx ? ctx->window.prompt_callbacks : (PromptCallbacks){0};
 
-  g_headless_active = true;
-  g_headless_capturing = true;
-  g_headless_spec_valid = false;
+  HeadlessDispatch *headless = ctx ? &ctx->window.headless : NULL;
+  if (!headless)
+    goto done;
+  headless->active = true;
+  headless->capturing = true;
+  headless->spec_valid = false;
+  headless->state = NULL;
   target->on_action();
-  g_headless_capturing = false;
-  if (!g_headless_spec_valid) {
+  headless->capturing = false;
+  if (!headless->spec_valid) {
     log_error("feature_shortcut: feature '%s' did not call sk_window", feature);
     goto done;
   }
   log_info("feature_shortcut: captured sk_window spec");
 
-  PromptSpec spec = g_headless_spec;
+  PromptSpec spec = headless->spec;
   PromptState *live = prompt_popup_get_top_prompt_state();
   log_info("feature_shortcut: live prompt %s", live ? "found" : "missing");
   if (!live || !live->eb) {
@@ -4320,12 +4322,10 @@ static bool feature_shortcut_run(const char *name) {
   live->window_title = (char *)spec.title;
   snprintf(live->eb->filter, sizeof(live->eb->filter), "%s", filter);
   live->eb->cursor = (size_t)strlen(filter);
-  if (ctx) {
-    ctx->window.prompt_callbacks = cb;
-    ctx->window.current_feature = (char *)feature;
-    ctx->window.title = spec.title;
-  }
-  g_headless_state = live;
+  ctx->window.prompt_callbacks = cb;
+  ctx->window.current_feature = (char *)feature;
+  ctx->window.title = spec.title;
+  headless->state = live;
   if (cb.refresh)
     cb.refresh(live);
   feature_shortcut_select(live->lb, filter);
@@ -4336,20 +4336,22 @@ static bool feature_shortcut_run(const char *name) {
     should_close = cb.enter(live);
   log_info("feature_shortcut: enter done close=%d filter='%s'", should_close,
            live->eb->filter);
-  g_headless_state = NULL;
+  headless->state = NULL;
   UI_RequestPopupRepaint();
   log_info("feature_shortcut: installed callbacks into live prompt");
   if (should_close) {
-    if (ctx)
-      ctx->window.selection_complete = true;
+    ctx->window.selection_complete = true;
     if (spec.on_close)
       spec.on_close();
   }
 
 done:
   log_info("feature_shortcut: dispatch end close=%d", should_close);
-  g_headless_active = false;
-  g_headless_spec_valid = false;
+  if (ctx) {
+    ctx->window.headless.active = false;
+    ctx->window.headless.spec_valid = false;
+    ctx->window.headless.state = NULL;
+  }
   return should_close;
 }
 
