@@ -21,6 +21,7 @@ typedef struct {
 
 static RtCallback *callbacks;
 static RtCallback *pending;
+static __thread RtCallback *snap;
 #define count arrlenu(callbacks)
 #define pending_count arrlenu(pending)
 
@@ -46,21 +47,18 @@ static void rt_run_pending(void) {
 void render_thread_main(void) {
   is_thread = true;
   while (!atomic_load_explicit(&g_quit, memory_order_acquire)) {
-    RtCallback *snap = NULL;
     size_t n = 0;
     Platform_RenderThreadLock();
     n = count;
-    if (n > 0) {
-      RtCallback *dst = arraddnptr(snap, n);
-      memcpy(dst, callbacks, sizeof(*dst) * n);
-    }
+    arrsetlen(snap, n);
+    if (n > 0)
+      memcpy(snap, callbacks, sizeof(*snap) * n);
     Platform_RenderThreadUnlock();
     rt_run_pending();
     for (size_t i = 0; i < n; i++) {
       if (snap[i].fn)
         snap[i].fn(snap[i].ud);
     }
-    arrfree(snap);
 
     int fps = atomic_load_explicit(&g_frame_rate, memory_order_relaxed);
     long us = (n == 0) ? RT_IDLE_SLEEP_US
@@ -73,6 +71,8 @@ void render_thread_main(void) {
       Platform_RenderThreadWaitTimed(us);
     Platform_RenderThreadUnlock();
   }
+  arrfree(snap);
+  snap = NULL;
 }
 
 bool render_thread_ensure_started(int fps) {

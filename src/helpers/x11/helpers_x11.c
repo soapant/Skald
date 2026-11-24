@@ -103,17 +103,165 @@ static int xft_width(Display *dpy, XftFont *xf, const char *text, int len) {
   return ext.xOff;
 }
 
-#define X11_FB_CACHE 24
+#define X11_FB_CACHE 512
+#define X11_FB_FAMILY_MAX 64
+#define X11_FB_FONT_CACHE 24
+
+typedef struct {
+  FcChar32 cp;
+  bool valid;
+  char family[X11_FB_FAMILY_MAX];
+} X11FbSlot;
+
 typedef struct {
   Display *dpy;
-  FcChar32 cp;
   int px;
+  char family[X11_FB_FAMILY_MAX];
   XftFont *f;
-} X11FbSlot;
+  unsigned long stamp;
+} X11FbFontSlot;
+
 static X11FbSlot fb_cache[X11_FB_CACHE];
-static int fb_next = 0;
+static X11FbFontSlot fb_fonts[X11_FB_FONT_CACHE];
+static unsigned long fb_font_stamp;
 static FcConfig *fb_config = NULL;
 static pthread_mutex_t fb_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+static size_t x11_fb_slot_index(FcChar32 cp) {
+  return ((uint32_t)cp * 2654435761u) % X11_FB_CACHE;
+}
+
+static const char *x11_fb_family_find(FcChar32 cp) {
+  size_t start = x11_fb_slot_index(cp);
+  for (int i = 0; i < X11_FB_CACHE; i++) {
+    X11FbSlot *s = &fb_cache[(start + (size_t)i) % X11_FB_CACHE];
+    if (s->valid && s->cp == cp)
+      return s->family;
+  }
+  return NULL;
+}
+
+static void x11_fb_family_store(FcChar32 cp, const char *family) {
+  if (!family || !family[0])
+    return;
+  size_t start = x11_fb_slot_index(cp);
+  for (int i = 0; i < X11_FB_CACHE; i++) {
+    X11FbSlot *s = &fb_cache[(start + (size_t)i) % X11_FB_CACHE];
+    if (!s->valid || s->cp == cp) {
+      s->valid = true;
+      s->cp = cp;
+      snprintf(s->family, sizeof(s->family), "%s", family);
+      return;
+    }
+  }
+  X11FbSlot *s = &fb_cache[start];
+  s->valid = true;
+  s->cp = cp;
+  snprintf(s->family, sizeof(s->family), "%s", family);
+}
+
+static XftFont *x11_fb_font_get_locked(Display *dpy, const char *family,
+                                       int px) {
+  for (int i = 0; i < X11_FB_FONT_CACHE; i++) {
+    X11FbFontSlot *s = &fb_fonts[i];
+    if (s->f && s->dpy == dpy && s->px == px &&
+        strcmp(s->family, family) == 0) {
+      s->stamp = ++fb_font_stamp;
+      return s->f;
+    }
+  }
+  int screen = DefaultScreen(dpy);
+  XLockDisplay(dpy);
+  XftFont *f = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, family,
+                           FC_PIXEL_SIZE, FcTypeDouble, (double)px, NULL);
+  if (!f)
+    f = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, "sans-serif",
+                    FC_PIXEL_SIZE, FcTypeDouble, (double)px, NULL);
+  XUnlockDisplay(dpy);
+  if (!f)
+    return NULL;
+  X11FbFontSlot *victim = &fb_fonts[0];
+  for (int i = 0; i < X11_FB_FONT_CACHE; i++) {
+    X11FbFontSlot *s = &fb_fonts[i];
+    if (!s->f) {
+      victim = s;
+      break;
+    }
+    if (s->stamp < victim->stamp)
+      victim = s;
+  }
+  if (victim->f) {
+    XLockDisplay(victim->dpy);
+    XftFontClose(victim->dpy, victim->f);
+    XUnlockDisplay(victim->dpy);
+  }
+  victim->dpy = dpy;
+  victim->px = px;
+  snprintf(victim->family, sizeof(victim->family), "%s", family);
+  victim->f = f;
+  victim->stamp = ++fb_font_stamp;
+  return f;
+}
+
+static void x11_fb_font_put_locked(Display *dpy, const char *family, int px,
+                                   XftFont *f) {
+  if (!f || !family)
+    return;
+  for (int i = 0; i < X11_FB_FONT_CACHE; i++) {
+    X11FbFontSlot *s = &fb_fonts[i];
+    if (s->f && s->dpy == dpy && s->px == px &&
+        strcmp(s->family, family) == 0) {
+      if (s->f != f) {
+        XLockDisplay(s->dpy);
+        XftFontClose(s->dpy, s->f);
+        XUnlockDisplay(s->dpy);
+      }
+      s->f = f;
+      s->stamp = ++fb_font_stamp;
+      return;
+    }
+  }
+  X11FbFontSlot *victim = &fb_fonts[0];
+  for (int i = 0; i < X11_FB_FONT_CACHE; i++) {
+    X11FbFontSlot *s = &fb_fonts[i];
+    if (!s->f) {
+      victim = s;
+      break;
+    }
+    if (s->stamp < victim->stamp)
+      victim = s;
+  }
+  if (victim->f) {
+    XLockDisplay(victim->dpy);
+    XftFontClose(victim->dpy, victim->f);
+    XUnlockDisplay(victim->dpy);
+  }
+  victim->dpy = dpy;
+  victim->px = px;
+  snprintf(victim->family, sizeof(victim->family), "%s", family);
+  victim->f = f;
+  victim->stamp = ++fb_font_stamp;
+}
+
+void x11_fallback_font_cache_free_all(void) {
+  pthread_mutex_lock(&fb_mtx);
+  for (int i = 0; i < X11_FB_FONT_CACHE; i++) {
+    X11FbFontSlot *s = &fb_fonts[i];
+    if (s->f) {
+      XLockDisplay(s->dpy);
+      XftFontClose(s->dpy, s->f);
+      XUnlockDisplay(s->dpy);
+    }
+  }
+  memset(fb_fonts, 0, sizeof(fb_fonts));
+  memset(fb_cache, 0, sizeof(fb_cache));
+  fb_font_stamp = 0;
+  if (fb_config) {
+    FcConfigDestroy(fb_config);
+    fb_config = NULL;
+  }
+  pthread_mutex_unlock(&fb_mtx);
+}
 
 static int x11_utf8_cp(const unsigned char *s, const unsigned char *end,
                        int *clen) {
@@ -211,7 +359,15 @@ static int x11_font_px(XftFont *xf, int px) {
 }
 
 static XftFont *x11_open_fallback_at_locked(Display *dpy, FcChar32 cp, int px) {
+  const char *cached_family = x11_fb_family_find(cp);
+  bool had_family = cached_family != NULL;
+  if (cached_family) {
+    XftFont *fb = x11_fb_font_get_locked(dpy, cached_family, px);
+    if (fb && x11_font_has(fb, cp))
+      return fb;
+  }
   XftFont *fb = NULL;
+  char matched_family[X11_FB_FAMILY_MAX] = {0};
   FcCharSet *cs = FcCharSetCreate();
   FcPattern *pat = FcPatternCreate();
   if (cs && pat) {
@@ -224,6 +380,12 @@ static XftFont *x11_open_fallback_at_locked(Display *dpy, FcChar32 cp, int px) {
     FcResult res = FcResultNoMatch;
     FcPattern *match = FcFontMatch(fb_config, pat, &res);
     if (match) {
+      FcChar8 *fc_family = NULL;
+      if (FcPatternGetString(match, FC_FAMILY, 0, &fc_family) ==
+              FcResultMatch &&
+          fc_family)
+        snprintf(matched_family, sizeof(matched_family), "%s",
+                 (const char *)fc_family);
       XLockDisplay(dpy);
       fb = XftFontOpenPattern(dpy, match);
       XUnlockDisplay(dpy);
@@ -235,6 +397,14 @@ static XftFont *x11_open_fallback_at_locked(Display *dpy, FcChar32 cp, int px) {
     FcPatternDestroy(pat);
   if (cs)
     FcCharSetDestroy(cs);
+  if (fb && matched_family[0]) {
+    bool family_changed =
+        !had_family || strcmp(matched_family, cached_family) != 0;
+    if (family_changed) {
+      x11_fb_font_put_locked(dpy, matched_family, px, fb);
+      x11_fb_family_store(cp, matched_family);
+    }
+  }
   return fb;
 }
 
@@ -243,26 +413,15 @@ static XftFont *x11_fallback_for_locked(Display *dpy, FcChar32 cp, int px) {
     fb_config = FcInitLoadConfigAndFonts();
   if (!fb_config)
     return NULL;
-  for (int i = 0; i < X11_FB_CACHE; i++) {
-    if (fb_cache[i].f && fb_cache[i].dpy == dpy && fb_cache[i].cp == cp &&
-        fb_cache[i].px == px)
-      return fb_cache[i].f;
+  if (px <= 0)
+    px = FontSize;
+  const char *family = x11_fb_family_find(cp);
+  if (family) {
+    XftFont *fb = x11_fb_font_get_locked(dpy, family, px);
+    if (fb && x11_font_has(fb, cp))
+      return fb;
   }
-  XftFont *fb = x11_open_fallback_at_locked(dpy, cp, px > 0 ? px : FontSize);
-  if (!fb)
-    return NULL;
-  if (fb_cache[fb_next].f) {
-    Display *odpy = fb_cache[fb_next].dpy;
-    XLockDisplay(odpy);
-    XftFontClose(odpy, fb_cache[fb_next].f);
-    XUnlockDisplay(odpy);
-  }
-  fb_cache[fb_next].dpy = dpy;
-  fb_cache[fb_next].cp = cp;
-  fb_cache[fb_next].px = px;
-  fb_cache[fb_next].f = fb;
-  fb_next = (fb_next + 1) % X11_FB_CACHE;
-  return fb;
+  return x11_open_fallback_at_locked(dpy, cp, px);
 }
 
 static XftFont *x11_fallback_for(Display *dpy, FcChar32 cp, int px) {

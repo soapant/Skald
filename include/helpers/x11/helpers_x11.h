@@ -17,6 +17,7 @@
 
 void x11_img_cache_free_all(void);
 void x11_border_cache_free_all(void);
+void x11_fallback_font_cache_free_all(void);
 bool x11_prewarm_image(Display *dpy, const char *path);
 
 #endif
