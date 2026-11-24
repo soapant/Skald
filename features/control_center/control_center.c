@@ -88,10 +88,10 @@ typedef enum {
 } CcRunMode;
 
 static CcEntry *cc_entries;
-static int cc_entry_count;
-static int cc_entry_cap;
 static int cc_entry_base;
 static const CcEntry *cc_fallback_entry;
+
+static int cc_entry_total(void) { return (int)sk_array_len(cc_entries); }
 
 static atomic_bool cc_entries_dirty = true;
 static atomic_bool cc_stopping;
@@ -109,28 +109,22 @@ static bool cc_run_pending(void);
 static const CcEntry *cc_find(const char *label);
 
 static CcEntry *cc_entry_new(void) {
-  if (cc_entry_count >= cc_entry_cap) {
-    int cap = cc_entry_cap ? cc_entry_cap * 2 : 128;
-    CcEntry *grown =
-        (CcEntry *)realloc(cc_entries, (size_t)cap * sizeof(CcEntry));
-    if (!grown)
-      return NULL;
-    cc_entries = grown;
-    cc_entry_cap = cap;
-  }
-  CcEntry *e = &cc_entries[cc_entry_count++];
-  memset(e, 0, sizeof(*e));
-  return e;
+  CcEntry blank = {0};
+  cc_entries = sk_array_push(cc_entries, sizeof(blank), &blank);
+  if (!cc_entries)
+    return NULL;
+  return &cc_entries[sk_array_len(cc_entries) - 1];
 }
 
 static CcEntry *cc_entry_add(const char *label, const char *type,
                              const char *payload, const char *icon) {
-  if (!label || !label[0] || cc_entry_count >= MAX_VISIBLE_ITEMS)
+  if (!label || !label[0] || cc_entry_total() >= MAX_VISIBLE_ITEMS)
     return NULL;
   CcEntry *e = cc_entry_new();
   if (!e)
     return NULL;
-  if (!icon) icon = "./resources/Skald.png";
+  if (!icon)
+    icon = "./resources/Skald.png";
   cc_copy(e->label, sizeof(e->label), label);
   cc_copy(e->type, sizeof(e->type), type);
   e->payload = payload;
@@ -171,7 +165,7 @@ static void cc_build(void) {
   atomic_store(&cc_entries_dirty, false);
   cc_quicklinks_clear();
   cc_feature_shortcuts_clear();
-  cc_entry_count = 0;
+  cc_entries = sk_array_set_len(cc_entries, sizeof(*cc_entries), 0);
 
   cc_fill_applications(MAX_VISIBLE_ITEMS - sk_cc_entry_count() -
                        sk_config_quicklink_count() -
@@ -181,14 +175,14 @@ static void cc_build(void) {
   cc_fill_add_feature_shortcut();
   cc_fill_quicklinks();
   cc_fill_feature_shortcuts();
-  cc_entry_base = cc_entry_count;
+  cc_entry_base = cc_entry_total();
   cc_register_config_hotkeys();
 }
 
 static const CcEntry *cc_find(const char *label) {
   if (!label || !label[0])
     return NULL;
-  for (int i = 0; i < cc_entry_count; i++)
+  for (int i = 0; i < cc_entry_total(); i++)
     if (strcmp(cc_entries[i].label, label) == 0)
       return &cc_entries[i];
   return NULL;
@@ -204,7 +198,7 @@ static const CcEntry *cc_entry_for_row(const ListBox *lb, int row) {
   if (row >= lb->total_matches)
     return NULL;
   int raw = lb->matching_indices[row];
-  if (raw < 0 || raw >= cc_entry_count)
+  if (raw < 0 || raw >= cc_entry_total())
     return NULL;
   return &cc_entries[raw];
 }
@@ -295,7 +289,7 @@ static void cc_config_hotkey_cb(void *ud) {
 }
 
 static void cc_register_config_hotkeys(void) {
-  for (int i = 0; i < cc_entry_count; i++) {
+  for (int i = 0; i < cc_entry_total(); i++) {
     CcEntry *e = &cc_entries[i];
     if (!e->label[0])
       continue;
@@ -332,9 +326,9 @@ typedef struct {
 } CcApp;
 
 static CcApp *cc_apps;
-static size_t cc_app_count;
-static size_t cc_app_cap;
 static atomic_bool cc_apps_ready;
+
+static size_t cc_app_total(void) { return sk_array_len(cc_apps); }
 
 typedef struct {
   const char *path;
@@ -362,29 +356,23 @@ static const CcScanPath cc_scan_paths[] = {
 };
 
 static void cc_apps_free(void) {
-  for (size_t i = 0; i < cc_app_count; i++) {
+  size_t count = cc_app_total();
+  for (size_t i = 0; i < count; i++) {
     free(cc_apps[i].name);
     free(cc_apps[i].path);
     free(cc_apps[i].icon);
   }
-  free(cc_apps);
+  sk_array_free(cc_apps);
   cc_apps = NULL;
-  cc_app_count = 0;
-  cc_app_cap = 0;
 }
 
 static bool cc_apps_push(char *name, char *path, char *icon) {
   if (!name || !path || !icon)
     goto fail;
-  if (cc_app_count >= cc_app_cap) {
-    size_t cap = cc_app_cap ? cc_app_cap * 2 : 128;
-    CcApp *grown = (CcApp *)realloc(cc_apps, cap * sizeof(CcApp));
-    if (!grown)
-      goto fail;
-    cc_apps = grown;
-    cc_app_cap = cap;
-  }
-  cc_apps[cc_app_count++] = (CcApp){name, path, icon};
+  CcApp app = {name, path, icon};
+  cc_apps = sk_array_push(cc_apps, sizeof(app), &app);
+  if (!cc_apps)
+    goto fail;
   return true;
 fail:
   free(name);
@@ -441,17 +429,18 @@ static bool cc_apps_load_cache(bool *needs_save) {
       break;
   }
   sk_free_string_list(&lines);
-  return cc_app_count > 0;
+  return cc_app_total() > 0;
 }
 
 static void cc_apps_save_cache(void) {
-  if (cc_app_count == 0)
+  size_t count = cc_app_total();
+  if (count == 0)
     return;
-  char **lines = (char **)calloc(cc_app_count + 1, sizeof(char *));
+  char **lines = (char **)calloc(count + 1, sizeof(char *));
   if (!lines)
     return;
   int n = 0;
-  for (size_t i = 0; i < cc_app_count; i++) {
+  for (size_t i = 0; i < count; i++) {
     const CcApp *a = &cc_apps[i];
     if (!a->name[0] || !a->path[0])
       continue;
@@ -580,12 +569,12 @@ static void cc_load_apps(void) {
   atomic_store(&cc_entries_dirty, true);
 }
 
-static void *cc_prewarm_apps() {
+static void cc_prewarm_apps(void) {
   cc_load_apps();
-  size_t n = cc_app_count < 48 ? cc_app_count : 48;
+  size_t total = cc_app_total();
+  size_t n = total < 48 ? total : 48;
   for (size_t i = 0; i < n; i++)
     sk_prewarm_image(cc_apps[i].icon);
-  return NULL;
 }
 
 static bool cc_launch_app(void) {
@@ -699,31 +688,23 @@ static bool cc_run_feature_shortcut(void) {
 }
 
 static char **cc_feature_shortcut_names;
-static size_t cc_feature_shortcut_name_count;
-static size_t cc_feature_shortcut_name_cap;
 
 static void cc_feature_shortcuts_clear(void) {
-  for (size_t i = 0; i < cc_feature_shortcut_name_count; i++)
+  size_t count = sk_array_len(cc_feature_shortcut_names);
+  for (size_t i = 0; i < count; i++)
     free(cc_feature_shortcut_names[i]);
-  free(cc_feature_shortcut_names);
+  sk_array_free(cc_feature_shortcut_names);
   cc_feature_shortcut_names = NULL;
-  cc_feature_shortcut_name_count = 0;
-  cc_feature_shortcut_name_cap = 0;
 }
 
 static const char *cc_feature_shortcut_track(char *name) {
-  if (cc_feature_shortcut_name_count == cc_feature_shortcut_name_cap) {
-    size_t cap = cc_feature_shortcut_name_cap ? cc_feature_shortcut_name_cap * 2
-                                              : 8;
-    char **grown = realloc(cc_feature_shortcut_names,
-                           cap * sizeof(*grown));
-    if (!grown)
-      return NULL;
-    cc_feature_shortcut_names = grown;
-    cc_feature_shortcut_name_cap = cap;
-  }
-  cc_feature_shortcut_names[cc_feature_shortcut_name_count++] = name;
-  return name;
+  if (!name)
+    return NULL;
+  cc_feature_shortcut_names =
+      sk_array_push(cc_feature_shortcut_names, sizeof(name), &name);
+  if (!cc_feature_shortcut_names)
+    return NULL;
+  return cc_feature_shortcut_names[sk_array_len(cc_feature_shortcut_names) - 1];
 }
 
 static void cc_fill_feature_shortcuts(void) {
@@ -752,29 +733,23 @@ static bool cc_launch_quicklink(void) {
 }
 
 static char **cc_quicklink_targets;
-static size_t cc_quicklink_target_count;
-static size_t cc_quicklink_target_cap;
 
 static void cc_quicklinks_clear(void) {
-  for (size_t i = 0; i < cc_quicklink_target_count; i++)
+  size_t count = sk_array_len(cc_quicklink_targets);
+  for (size_t i = 0; i < count; i++)
     free(cc_quicklink_targets[i]);
-  free(cc_quicklink_targets);
+  sk_array_free(cc_quicklink_targets);
   cc_quicklink_targets = NULL;
-  cc_quicklink_target_count = 0;
-  cc_quicklink_target_cap = 0;
 }
 
 static const char *cc_quicklink_track(char *target) {
-  if (cc_quicklink_target_count == cc_quicklink_target_cap) {
-    size_t cap = cc_quicklink_target_cap ? cc_quicklink_target_cap * 2 : 8;
-    char **grown = (char **)realloc(cc_quicklink_targets, cap * sizeof(*grown));
-    if (!grown)
-      return NULL;
-    cc_quicklink_targets = grown;
-    cc_quicklink_target_cap = cap;
-  }
-  cc_quicklink_targets[cc_quicklink_target_count++] = target;
-  return target;
+  if (!target)
+    return NULL;
+  cc_quicklink_targets =
+      sk_array_push(cc_quicklink_targets, sizeof(target), &target);
+  if (!cc_quicklink_targets)
+    return NULL;
+  return cc_quicklink_targets[sk_array_len(cc_quicklink_targets) - 1];
 }
 
 static void cc_fill_quicklinks(void) {
@@ -804,7 +779,8 @@ static void cc_fill_applications(int limit) {
   if (!atomic_load(&cc_apps_ready)) {
     cc_load_apps();
   }
-  for (size_t i = 0; i < cc_app_count && (int)i < limit; i++) {
+  size_t total = cc_app_total();
+  for (size_t i = 0; i < total && (int)i < limit; i++) {
     CcEntry *e = cc_entry_add(cc_apps[i].name, "Application", cc_apps[i].path,
                               cc_apps[i].icon);
     if (!e)
@@ -863,7 +839,7 @@ static const CcUnit *cc_find_unit(const char *input) {
   if (len == 0)
     return NULL;
 
-  for (size_t i = 0; i < sizeof(cc_units) / sizeof(cc_units[0]); i++) {
+  for (size_t i = 0; i < ARRAY_LEN(cc_units); i++) {
     if (sk_string_equals_ci(s, cc_units[i].name))
       return &cc_units[i];
     for (int j = 0; cc_units[i].aliases[j]; j++)
@@ -873,7 +849,7 @@ static const CcUnit *cc_find_unit(const char *input) {
   if (len < 3)
     return NULL;
 
-  for (size_t i = 0; i < sizeof(cc_units) / sizeof(cc_units[0]); i++)
+  for (size_t i = 0; i < ARRAY_LEN(cc_units); i++)
     for (int j = 0; cc_units[i].aliases[j]; j++)
       if (sk_string_starts_with_ci(cc_units[i].aliases[j], s))
         return &cc_units[i];
@@ -881,7 +857,7 @@ static const CcUnit *cc_find_unit(const char *input) {
   const CcUnit *best = NULL;
   int best_d = 999;
   int max_d = len >= 6 ? 2 : 1;
-  for (size_t i = 0; i < sizeof(cc_units) / sizeof(cc_units[0]); i++)
+  for (size_t i = 0; i < ARRAY_LEN(cc_units); i++)
     for (int j = 0; cc_units[i].aliases[j]; j++) {
       int d = cc_edit_distance(s, cc_units[i].aliases[j]);
       if (d < best_d && d <= max_d) {
@@ -1193,7 +1169,7 @@ static bool cc_filter_match(const char *item, const char *filter) {
 }
 
 static int cc_item_rank(int index) {
-  if (index < 0 || index >= cc_entry_count)
+  if (index < 0 || index >= cc_entry_total())
     return 1;
   return strcmp(cc_entries[index].type, "Feature") == 0 ? 0 : 1;
 }
@@ -1201,13 +1177,15 @@ static int cc_item_rank(int index) {
 static void cc_refresh(PromptState *state) {
   cc_update_compact_size(state);
   cc_fallback_entry = NULL;
-  if (atomic_load(&cc_entries_dirty))
+  if (atomic_load(&cc_entries_dirty)) {
     cc_build();
-  else
-    cc_entry_count = cc_entry_base;
+  } else {
+    cc_entries = sk_array_set_len(cc_entries, sizeof(*cc_entries),
+                                  (size_t)cc_entry_base);
+  }
 
-  int n =
-      cc_entry_count < MAX_VISIBLE_ITEMS ? cc_entry_count : MAX_VISIBLE_ITEMS;
+  int total = cc_entry_total();
+  int n = total < MAX_VISIBLE_ITEMS ? total : MAX_VISIBLE_ITEMS;
   for (int i = 0; i < n; i++)
     cc_names[i] = cc_entries[i].label;
   if (n < MAX_VISIBLE_ITEMS && cc_calc_build_label(state->eb->filter))
@@ -1374,7 +1352,7 @@ static void cc_on_actions_render(SkPlaceState state) {
   if (state.hovered)
     sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2,
                  .w = hover_w, .h = state.rect.h, .filled = true,
-                 .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.2f), .radius = 6);
+                 .color = sk_color_lerp(COLOR_BG, SK_BLACK, 0.3f), .radius = 6);
 
   cursor_x = start_x;
   for (size_t i = 0; i < keys.count; i++) {
@@ -1407,18 +1385,18 @@ static void cc_render(PromptState *state) {
   cc_height = state->height;
 
   sk_place_editbox();
-  if (!cc_compact_mode || cc_compact_expanded)
-    if (state->lb->selected_index != -1) {
-      int parts = 1;
-      for (const char *p = ActionsHotkey; *p; p++)
-        if (*p == '+')
-          parts++;
-      int btn_w = parts > 2 ? 210 : 180;
-      sk_place_button(.name = "Actions", .x = state->width - btn_w - 25,
-                      .y = state->height - 30, .w = btn_w,
-                      .render = cc_on_actions_render,
-                      .on_click = cc_open_actions_window);
-    }
+  if ((!cc_compact_mode || cc_compact_expanded) &&
+      state->lb->selected_index != -1) {
+    int parts = 1;
+    for (const char *p = ActionsHotkey; *p; p++)
+      if (*p == '+')
+        parts++;
+    int btn_w = parts > 2 ? 210 : 180;
+    sk_place_button(.name = "Actions", .x = state->width - btn_w - 25,
+                    .y = state->height - 30, .w = btn_w,
+                    .render = cc_on_actions_render,
+                    .on_click = cc_open_actions_window);
+  }
 
   if (sk_hotkey_down(sk_hotkey_from_string(ActionsHotkey)))
     cc_open_actions_window();
@@ -1626,18 +1604,20 @@ static void cc_open_register_window(int kind) {
   if (kind != 0 && kind != 1)
     return;
   cc_copy(cc_register_target, sizeof(cc_register_target), cc_selected_text);
+  int x = cc_sub_x();
+  int y = cc_sub_y() + cc_sub_h() * 2 + 30;
+  int w = cc_sub_w();
+  int h = cc_sub_h();
   if (kind == 0) {
     sk_hotkey_capture_begin();
-    sk_subwindow(.title = "Hotkey Reg", .x = cc_sub_x(),
-                 .y = cc_sub_y() + cc_sub_h() * 2 + 30, .w = cc_sub_w(),
-                 .h = cc_sub_h(), .render = cc_hotkey_capture_render,
+    sk_subwindow(.title = "Hotkey Reg", .x = x, .y = y, .w = w, .h = h,
+                 .render = cc_hotkey_capture_render,
                  .on_close = cc_hotkey_capture_close);
   } else {
     sk_disable_global_hotkeys();
-    sk_subwindow(.title = "Alias Reg", .x = cc_sub_x(),
-                 .y = cc_sub_y() + cc_sub_h() * 2 + 30, .w = cc_sub_w(),
-                 .h = cc_sub_h(), .render = cc_alias_render,
-                 .enter = cc_alias_enter, .on_close = cc_alias_close);
+    sk_subwindow(.title = "Alias Reg", .x = x, .y = y, .w = w, .h = h,
+                 .render = cc_alias_render, .enter = cc_alias_enter,
+                 .on_close = cc_alias_close);
   }
 }
 
@@ -1647,7 +1627,7 @@ SKALD_FEATURE_INIT {
   atomic_store(&cc_stopping, false);
   atomic_store(&cc_apps_ready, false);
   atomic_store(&cc_entries_dirty, true);
-  cc_entry_count = 0;
+  cc_entries = sk_array_set_len(cc_entries, sizeof(*cc_entries), 0);
   cc_entry_base = 0;
 
   cc_prewarm_apps();
@@ -1660,9 +1640,7 @@ SKALD_FEATURE_INIT {
 SKALD_FEATURE_SHUTDOWN {
   atomic_store(&cc_stopping, true);
   cc_apps_free();
-  free(cc_entries);
+  sk_array_free(cc_entries);
   cc_entries = NULL;
-  cc_entry_count = 0;
-  cc_entry_cap = 0;
   cc_entry_base = 0;
 }

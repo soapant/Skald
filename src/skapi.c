@@ -82,6 +82,42 @@ static PromptState *sk_current_prompt_state(void) {
 #include "core/types/keys.h"
 #include "core/types/window.h"
 
+void *sk_array_grow(void *arr, size_t elem_size, size_t add, size_t min_cap) {
+  return stbds_arrgrowf(arr, elem_size, add, min_cap);
+}
+
+size_t sk_array_len(const void *arr) {
+  return arr ? stbds_header((char **)arr)->length : 0;
+}
+
+void *sk_array_set_len(void *arr, size_t elem_size, size_t len) {
+  size_t old = sk_array_len(arr);
+  if (len > old)
+    arr = stbds_arrgrowf(arr, elem_size, len - old, 0);
+  if (arr)
+    stbds_header((char **)arr)->length = len;
+  return arr;
+}
+
+void *sk_array_push(void *arr, size_t elem_size, const void *item) {
+  size_t len = sk_array_len(arr);
+  arr = stbds_arrgrowf(arr, elem_size, 1, 0);
+  if (!arr)
+    return NULL;
+  stbds_header((char **)arr)->length = len + 1;
+  char *slot = (char *)arr + len * elem_size;
+  if (item)
+    memcpy(slot, item, elem_size);
+  else
+    memset(slot, 0, elem_size);
+  return arr;
+}
+
+void sk_array_free(void *arr) {
+  if (arr)
+    stbds_arrfreef(arr);
+}
+
 size_t sk_clipboard_history_count(void) {
   return clipboard_history_count_platform();
 }

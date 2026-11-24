@@ -140,6 +140,12 @@ bool ski_dir_scan(const SkDirScanSpec *spec);
 
 SkStringList sk_load_file_list(const char *filepath);
 
+void *sk_array_grow(void *arr, size_t elem_size, size_t add, size_t min_cap);
+size_t sk_array_len(const void *arr);
+void *sk_array_set_len(void *arr, size_t elem_size, size_t len);
+void *sk_array_push(void *arr, size_t elem_size, const void *item);
+void sk_array_free(void *arr);
+
 char *sk_load_file(const char *filepath);
 
 char *sk_read_file_to_string(const char *path, size_t *out_len);
