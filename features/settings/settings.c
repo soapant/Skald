@@ -79,7 +79,8 @@ static void settings_render(PromptState *state) {
                .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16);
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H,
+                   .font_size = 16, .placeholder = "Search settings");
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
                .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W - 2,
@@ -105,8 +106,7 @@ static void settings_render(PromptState *state) {
 }
 
 static void trigger_settings(void) {
-  sk_window(.title = "Settings", .placeholder = "Search settings",
-            .refresh = settings_refresh, .enter = settings_enter,
+  sk_window(.title = "Settings", .refresh = settings_refresh, .enter = settings_enter,
             .ctrl_enter = settings_ctrl_enter, .render = settings_render,
             .no_separators = true,.w=900,.h=640);
 }

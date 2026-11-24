@@ -27,6 +27,7 @@ typedef struct {
   WindowHandle hPopupWnd;
   bool selection_complete;
   bool auto_enter_pending;
+  const char *initial_text_pending;
   bool editbox_placed;
   bool listbox_placed;
   bool band_active;

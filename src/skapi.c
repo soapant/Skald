@@ -1237,6 +1237,17 @@ static bool popup_enter(PromptState *state) {
   return true;
 }
 
+typedef struct {
+  const char *placeholder;
+  const char *initial_text;
+} SkTextPromptRenderData;
+
+static void sk_text_prompt_render(PromptState *state) {
+  const SkTextPromptRenderData *data = state ? state->render_data : NULL;
+  sk_place_editbox(.placeholder = data ? data->placeholder : NULL,
+                   .initial_text = data ? data->initial_text : NULL,.y=state->height /2 - 17);
+}
+
 char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   if (!spec)
     return NULL;
@@ -1244,7 +1255,7 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   int x = spec->x ? spec->x : 0;
   int y = spec->y ? spec->y : 0;
   int w = spec->w ? spec->w : 600;
-  int h = spec->h ? spec->h : 50;
+  int h = spec->h ? spec->h : 40;
   ListBox *lb = spec ? spec->lb : NULL;
   int *out_index = spec ? spec->out_index : NULL;
   int idx = lb ? lb->selected_index : -1;
@@ -1256,9 +1267,11 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   WindowManager *wm = WindowManager_Get();
   if (!wm)
     return NULL;
+  SkTextPromptRenderData render_data = {NULL, initial_text};
   PromptSpec pspec = {0};
-  pspec.initial_text = initial_text;
   pspec.enter = popup_enter;
+  pspec.render = sk_text_prompt_render;
+  pspec.render_data = &render_data;
   pspec.x = x;
   pspec.y = y;
   pspec.w = w;
@@ -1499,9 +1512,14 @@ char *ski_popup(const PopupSpec *spec) {
   WindowManager *wm = WindowManager_Get();
   if (!wm)
     return NULL;
+  const char *placeholder = spec->placeholder;
+  if (spec->password_mode && (!placeholder || !placeholder[0]))
+    placeholder = "Enter Password:";
+  SkTextPromptRenderData render_data = {placeholder, NULL};
   PromptSpec pspec = {0};
-  pspec.placeholder = spec->placeholder;
   pspec.enter = popup_enter;
+  pspec.render = sk_text_prompt_render;
+  pspec.render_data = &render_data;
   pspec.password_mode = spec->password_mode;
   pspec.x = spec->x;
   pspec.y = spec->y;
@@ -1984,6 +2002,7 @@ bool ski_place_editbox(const SkEditSpec *spec) {
   }
   if (state && (!name || !name[0]))
     name = PROMPT_PRIMARY_EDITBOX_NAME;
+  bool fresh = state && name && name[0] && !editbox_registry_find(state, name);
   if (state && name && name[0]) {
     int dx = 0, dy = 0;
     get_draw_offset(&dx, &dy);
@@ -1996,12 +2015,31 @@ bool ski_place_editbox(const SkEditSpec *spec) {
         state->active_editbox = idx;
       entry->primary = primary;
       entry->no_tab = spec->no_tab;
-      if (primary && (!copy.placeholder || !copy.placeholder[0])) {
-        const char *ph = state->default_eb->placeholder;
-        if (!entry->eb.placeholder || !ph ||
-            strcmp(entry->eb.placeholder, ph) != 0) {
+      const char *ph = copy.placeholder;
+      if (primary && (!ph || !ph[0]) && state->default_eb)
+        ph = state->default_eb->placeholder;
+      if (ph && ph[0]) {
+        if (!entry->eb.placeholder || strcmp(entry->eb.placeholder, ph) != 0) {
           free(entry->eb.placeholder);
-          entry->eb.placeholder = ph ? strdup(ph) : NULL;
+          entry->eb.placeholder = strdup(ph);
+        }
+      } else {
+        free(entry->eb.placeholder);
+        entry->eb.placeholder = NULL;
+      }
+      copy.placeholder = entry->eb.placeholder;
+      if (fresh && copy.initial_text && copy.initial_text[0]) {
+        size_t cap = buffer && buffer_size ? buffer_size
+                                            : sizeof(entry->eb.filter);
+        size_t n = strnlen(copy.initial_text, cap - 1);
+        if (n >= sizeof(entry->eb.filter))
+          n = sizeof(entry->eb.filter) - 1;
+        memcpy(entry->eb.filter, copy.initial_text, n);
+        entry->eb.filter[n] = '\0';
+        entry->eb.cursor = (int)n;
+        if (buffer && buffer_size) {
+          memcpy(buffer, copy.initial_text, n);
+          buffer[n] = '\0';
         }
       }
       copy.buffer = entry->eb.filter;
@@ -4353,7 +4391,7 @@ static bool feature_shortcut_run(const char *name) {
     for (const char *p = filter; *p; p++)
       arrput(headless->filter, *p);
     arrput(headless->filter, '\0');
-    spec.initial_text = headless->filter;
+    ctx->window.initial_text_pending = headless->filter;
     spec.subwindow = false;
     headless->active = false;
     headless->capturing = false;

@@ -23,6 +23,7 @@ typedef struct {
   int w;
   int h;
   const char *placeholder;
+  const char *initial_text;
   ColorRef color_bg;
   ColorRef color_text;
   FontHandle font;

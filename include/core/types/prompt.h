@@ -142,8 +142,6 @@ typedef struct {
   FilterCallback filter;
   HelpCallback help;
   CloseCallback on_close;
-  const char *placeholder;
-  const char *initial_text;
   void *render_data;
   int fps;
   bool auto_scale;

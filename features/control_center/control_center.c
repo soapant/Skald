@@ -1384,7 +1384,7 @@ static void cc_render(PromptState *state) {
   cc_width = state->width;
   cc_height = state->height;
 
-  sk_place_editbox();
+  sk_place_editbox(.placeholder = "Search For Something...");
   if ((!cc_compact_mode || cc_compact_expanded) &&
       state->lb->selected_index != -1) {
     int parts = 1;
@@ -1491,7 +1491,7 @@ static void cc_open_control(void) {
   atomic_store(&cc_entries_dirty, true);
   cc_compact_mode = CompactMode;
   cc_compact_expanded = false;
-  sk_window(.title = "Control", .placeholder = "Search For Something...",
+  sk_window(.title = "Control",
             .h = cc_compact_mode ? CC_COMPACT_HEIGHT : PromptH,
             .anchor_y_to_prompt_h = cc_compact_mode,
             .refresh = cc_refresh, .enter = cc_enter,

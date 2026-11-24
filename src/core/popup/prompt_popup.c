@@ -80,16 +80,16 @@ static void prompt_popup_on_show(Popup *self) {
   data->state->window_title = (char *)title;
   data->state->render_data = data->spec.render_data;
   data->state->eb->filter[0] = '\0';
-  if (data->spec.initial_text && data->spec.initial_text[0]) {
-    safe_copy(data->state->eb->filter, sizeof(data->state->eb->filter),
-              data->spec.initial_text);
-    data->state->eb->cursor = (int)strlen(data->state->eb->filter);
-  }
-  if (data->spec.password_mode &&
-      (!data->spec.placeholder || !data->spec.placeholder[0])) {
-    data->state->eb->placeholder = strdup("Enter Password:");
-  } else if (data->spec.placeholder && data->spec.placeholder[0]) {
-    data->state->eb->placeholder = strdup(data->spec.placeholder);
+  {
+    SkaldContext *ctx = SkaldContext_Get();
+    const char *pending = ctx ? ctx->window.initial_text_pending : NULL;
+    if (pending && pending[0]) {
+      safe_copy(data->state->eb->filter, sizeof(data->state->eb->filter),
+                pending);
+      data->state->eb->cursor = (int)strlen(data->state->eb->filter);
+    }
+    if (ctx)
+      ctx->window.initial_text_pending = NULL;
   }
   if (data->spec.items || data->spec.refresh || data->spec.render) {
     data->state->lb = calloc(1, sizeof(ListBox));
