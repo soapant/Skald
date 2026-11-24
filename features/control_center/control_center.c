@@ -1324,30 +1324,82 @@ static void cc_open_register_window(int kind);
 static void cc_on_actions_render(SkPlaceState state) {
   char hotkey[64];
   cc_copy(hotkey, sizeof(hotkey), ActionsHotkey);
-  char *plus = strchr(hotkey, '+');
-  if (plus)
-    *plus = ' ';
+  SkStringList string_list = sk_string_split(hotkey, "+");
+  float spacing = string_list.count > 2 ? 4.0f : 6.0f;
+  float font_size = 20;
+  float caps_w = 0.0f;
+  for (size_t i = 0; i < string_list.count; i++) {
+    int tw = sk_get_text_width(string_list.items[i], (int)font_size);
+    if (tw < 15)
+      tw = 15;
+    caps_w += tw;
+  }
+  if (string_list.count > 1)
+    caps_w += (float)(string_list.count - 1) * spacing;
+  float cap_left = state.rect.x + sk_get_text_width("Actions", 16);
+  float cap_right = state.rect.x + state.rect.w - caps_w + 12;
+  float start_x = state.rect.x + (state.rect.w / 2.0f) + 10.0f;
+  if (start_x < cap_left)
+    start_x = cap_left;
+  if (start_x > cap_right)
+    start_x = cap_right;
+  float cursor_x = start_x;
 
-  sk_draw_rect(.x = state.rect.x + 95, .y = state.rect.y - 2,
-               .w = state.rect.w - 95, .h = state.rect.h, .filled = true,
-               .color = CC_TYPE_COLOR, .radius = 6);
+  for (size_t i = 0; i < string_list.count; i++) {
+    const char *key = string_list.items[i];
+    SkRect bounds = sk_text_bounds(.text = key, .font_size = font_size,
+                                   .x = cursor_x, .y = state.rect.y,
+                                   .align = "LEFT");
+    SkRect box = bounds;
+    box.filled = true;
+    box.color = CC_TYPE_COLOR;
+    box.radius = 6;
+    box.y -= 0.5f;
+    if (box.w < 15.0f) {
+      box.w = 15.0f;
+      box.radius = 4;
+    }
+    ski_draw_rect(&box);
+    cursor_x += box.w + spacing;
+  }
+
+  int hover_w = (int)(cursor_x - spacing + 10.0f) - (state.rect.x + 15);
+  if (hover_w < state.rect.w - 15)
+    hover_w = state.rect.w - 15;
   if (state.hovered)
     sk_draw_rect(.x = state.rect.x + 15, .y = state.rect.y - 2,
-                 .w = state.rect.w - 15, .h = state.rect.h, .filled = true,
+                 .w = hover_w, .h = state.rect.h, .filled = true,
                  .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.2f), .radius = 6);
+
+  cursor_x = start_x;
+  for (size_t i = 0; i < string_list.count; i++) {
+    const char *key = string_list.items[i];
+    SkRect bounds = sk_text_bounds(.text = key, .font_size = font_size,
+                                   .x = cursor_x, .y = state.rect.y,
+                                   .align = "LEFT");
+    SkRect box = bounds;
+    box.radius = 6;
+    box.y -= 0.5f;
+    if (box.w < 15.0f) {
+      box.w = 15.0f;
+      box.radius = 2;
+    }
+    float text_y = box.y + (box.h - bounds.h) / 2.0f - 2.0f;
+    sk_draw_text(.x = bounds.x, .y = text_y, .text = key, .align = "LEFT",
+                 .font_size = font_size,
+                 .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.32f));
+    cursor_x += box.w + spacing;
+  }
+
   int h = state.rect.h;
   int lh_title = sk_get_text_height(16);
-  int lh_hotkey = sk_get_text_height(20);
-  sk_draw_text(.x = state.rect.x + 20,
+  sk_draw_text(.x = state.rect.x + 16,
                .y = state.rect.y - 2 + (h - lh_title) / 2, .text = "Actions",
                .align = "LEFT",
-               .color = CC_TYPE_COLOR,
+               .color = sk_color_lerp(COLOR_BG, SK_GRAY, 0.52f),
                .font_size = 16);
 
-  sk_draw_text(.x = state.rect.x + 100,
-               .y = state.rect.y - 2 + (h - lh_hotkey) / 2, .text = hotkey,
-               .align = "LEFT", .font_size = 20,
-               .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.32f), );
+  sk_string_list_free(&string_list);
 }
 
 static void cc_render(PromptState *state) {
@@ -1362,10 +1414,17 @@ static void cc_render(PromptState *state) {
 
   sk_place_editbox();
   if (!cc_compact_mode || cc_compact_expanded)
-    sk_place_button(.name = "Actions", .x = state->width - 200,
-                    .y = state->height - 30, .w = 180,
-                    .render = cc_on_actions_render,
-                    .on_click = cc_open_actions_window);
+    if (state->lb->selected_index != -1) {
+      int parts = 1;
+      for (const char *p = ActionsHotkey; *p; p++)
+        if (*p == '+')
+          parts++;
+      int btn_w = parts > 2 ? 210 : 180;
+      sk_place_button(.name = "Actions", .x = state->width - btn_w - 25,
+                      .y = state->height - 30, .w = btn_w,
+                      .render = cc_on_actions_render,
+                      .on_click = cc_open_actions_window);
+    }
 
   if (sk_hotkey_down(sk_hotkey_from_string(ActionsHotkey)))
     cc_open_actions_window();
@@ -1492,7 +1551,7 @@ static void cc_actions_render(PromptState *state) {
   sk_draw_line(.x1 = 0, .y1 = 55, .x2 = state->width, .y2 = 55,
                .color = COLOR_BORDER);
   while (sk_listbox_next(&ctx)) {
-    sk_draw_text(.y = ctx.y - 3, .text = ctx.text, .align = "LEFT", .pad = 10,
+    sk_draw_text(.y = ctx.y - 1, .text = ctx.text, .align = "LEFT", .pad = 10,
                  .font_size = 20);
   }
   sk_listbox_end();
@@ -1537,7 +1596,7 @@ static void cc_hotkey_capture_render(PromptState *state) {
                .filled = true);
 
   if (preview[0] || cc_flashing)
-    sk_draw_text(.x = 27, .y = state->height / 2,
+    sk_draw_text(.x = 27, .y = state->height / 2 + 5,
                  .text = preview[0] ? preview : cc_captured_hotkey,
                  .font_size = 22,
                  .color = cc_flashing ? SK_DARK_GREEN : SK_GRAY,
