@@ -11,5 +11,6 @@ bool path_next_entry(const char **cursor, char sep, char *out, size_t out_cap);
 const char *compiler_find_usable(const char *const candidates[],
                                  bool (*probe)(const char *));
 size_t compiler_argv_base(const char *cc, const char *argv[]);
+void *lazy_mutex_get(void **slot);
 
 #endif

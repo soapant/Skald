@@ -7,6 +7,7 @@
 #include "core/types/keys.h"
 #include "core/timer.h"
 #include "helpers/helpers_owner.h"
+#include "helpers/helpers_misc.h"
 
 static bool down_map[256] = {0};
 static bool pressed[256] = {0};
@@ -193,10 +194,7 @@ static KeyEvent gkeys[GLOBAL_KEY_RING];
 static int gkey_head = 0, gkey_tail = 0;
 static unsigned long gkey_dropped = 0;
 static void *gkey_mutex = NULL;
-static void gkey_lock_init(void) {
-  if (!gkey_mutex)
-    gkey_mutex = Platform_MutexCreate();
-}
+static void gkey_lock_init(void) { lazy_mutex_get(&gkey_mutex); }
 #define GKEY_LOCK()                                                            \
   do {                                                                         \
     gkey_lock_init();                                                          \
@@ -276,10 +274,7 @@ static int gmouse_head = 0, gmouse_tail = 0;
 static unsigned long gmouse_dropped = 0;
 static bool mbtn_down[MOUSE_BTN_MAX] = {0};
 static void *gmouse_mutex = NULL;
-static void gmouse_lock_init(void) {
-  if (!gmouse_mutex)
-    gmouse_mutex = Platform_MutexCreate();
-}
+static void gmouse_lock_init(void) { lazy_mutex_get(&gmouse_mutex); }
 #define GMOUSE_LOCK()                                                          \
   do {                                                                         \
     gmouse_lock_init();                                                        \
@@ -371,10 +366,7 @@ static ScrollEvent gscrolls[GLOBAL_SCROLL_RING];
 static int gscroll_head = 0, gscroll_tail = 0;
 static unsigned long gscroll_dropped = 0;
 static void *gscroll_mutex = NULL;
-static void gscroll_lock_init(void) {
-  if (!gscroll_mutex)
-    gscroll_mutex = Platform_MutexCreate();
-}
+static void gscroll_lock_init(void) { lazy_mutex_get(&gscroll_mutex); }
 #define GSCROLL_LOCK()                                                         \
   do {                                                                         \
     gscroll_lock_init();                                                       \

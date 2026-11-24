@@ -1,6 +1,7 @@
 #include "config_values.h"
 #include "helpers/helpers_ui.h"
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +13,21 @@
 #include "platform/platform.h"
 #include "platform/lib.h"
 #include "deps/log.h"
+
+static atomic_flag lazy_mutex_flag = ATOMIC_FLAG_INIT;
+
+void *lazy_mutex_get(void **slot) {
+  if (!slot)
+    return NULL;
+  while (atomic_flag_test_and_set_explicit(&lazy_mutex_flag,
+                                           memory_order_acquire)) {
+  }
+  if (!*slot)
+    *slot = Platform_MutexCreate();
+  void *mutex = *slot;
+  atomic_flag_clear_explicit(&lazy_mutex_flag, memory_order_release);
+  return mutex;
+}
 
 unsigned long rgb_to_hex(unsigned long win_color) {
 #if defined(__linux__)

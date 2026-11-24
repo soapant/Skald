@@ -16,6 +16,11 @@
 #include "core/types/color.h"
 #include "core/config_toml.h"
 #include "helpers/helpers_ui.h"
+#include "helpers/helpers_misc.h"
+
+#define X(type, name, def) type name = def;
+CONFIG_VALUES(X)
+#undef X
 
 #define CONFIG_SRC "config/config.toml"
 #define CONFIG_START_MARK "# <skald-config-generated>"
@@ -35,54 +40,25 @@ typedef struct {
   void *slot;
 } ConfigEntry;
 
+#define CONFIG_KIND_OF(type)                                                   \
+  _Generic((type){0},                                                          \
+      bool: CONFIG_BOOL,                                                       \
+      int: CONFIG_INT,                                                         \
+      float: CONFIG_FLOAT,                                                     \
+      const char *: CONFIG_STRING,                                             \
+      ColorRef: CONFIG_COLORREF)
+#define CONFIG_MAKE_ENTRY(type, name, def)                                     \
+  {#name, CONFIG_KIND_OF(type), &name},
 static const ConfigEntry config_entries[] = {
-    {"Tray", CONFIG_BOOL, &Tray},
-    {"RememberLastIndex", CONFIG_BOOL, &RememberLastIndex},
-    {"MessageAfterEachHotkey", CONFIG_BOOL, &MessageAfterEachHotkey},
-    {"TimeOutForMessages", CONFIG_INT, &TimeOutForMessages},
-    {"HotkeyRepeatDelayMs", CONFIG_INT, &HotkeyRepeatDelayMs},
-    {"DebugMode", CONFIG_BOOL, &DebugMode},
-    {"CompactMode", CONFIG_BOOL, &CompactMode},
-    {"RoundedCorners", CONFIG_BOOL, &RoundedCorners},
-    {"CornerRadius", CONFIG_INT, &CornerRadius},
-    {"MessageScreenGap", CONFIG_INT, &MessageScreenGap},
-    {"WindowOpacity", CONFIG_FLOAT, &WindowOpacity},
-    {"UsedFont", CONFIG_STRING, &UsedFont},
-    {"FontSize", CONFIG_INT, &FontSize},
-    {"IconSize", CONFIG_INT, &IconSize},
-    {"EnableIcons", CONFIG_BOOL, &EnableIcons},
-    {"WidgetGap", CONFIG_INT, &WidgetGap},
-    {"PromptW", CONFIG_INT, &PromptW},
-    {"PromptH", CONFIG_INT, &PromptH},
-    {"PromptX", CONFIG_INT, &PromptX},
-    {"PromptY", CONFIG_INT, &PromptY},
-    {"UsedTerminal", CONFIG_STRING, &UsedTerminal},
-    {"UsedShell", CONFIG_STRING, &UsedShell},
-    {"UsedBrowser", CONFIG_STRING, &UsedBrowser},
-    {"UsedSearchEngine", CONFIG_STRING, &UsedSearchEngine},
-    {"FeaturePath", CONFIG_STRING, &FeaturePath},
-    {"IconPath", CONFIG_STRING, &IconPath},
-    {"ControlHotkey", CONFIG_STRING, &ControlHotkey},
-    {"SettingsHotkey", CONFIG_STRING, &SettingsHotkey},
-    {"ReloadFeaturesHotkey", CONFIG_STRING, &ReloadFeaturesHotkey},
-    {"ActionsHotkey", CONFIG_STRING, &ActionsHotkey},
-    {"RegHotkey", CONFIG_STRING, &RegHotkey},
-    {"RegAliasHotkey", CONFIG_STRING, &RegAliasHotkey},
-    {"Theme", CONFIG_STRING, &Theme},
-    {"BackgroundImage", CONFIG_STRING, &BackgroundImage},
-    {"MessagesEnabled", CONFIG_BOOL, &MessagesEnabled},
-    {"EnableAutoPairing", CONFIG_BOOL, &EnableAutoPairing},
-    {"EnableBorders", CONFIG_BOOL, &EnableBorders},
-    {"WindowTitleText", CONFIG_BOOL, &WindowTitleText},
-    {"CloseOnLossOfFocus", CONFIG_BOOL, &CloseOnLossOfFocus},
-    {"COLOR_BG", CONFIG_COLORREF, &COLOR_BG},
-    {"COLOR_TEXT", CONFIG_COLORREF, &COLOR_TEXT},
-    {"COLOR_SELECTED_TEXT", CONFIG_COLORREF, &COLOR_SELECTED_TEXT},
-    {"COLOR_CURSOR", CONFIG_COLORREF, &COLOR_CURSOR},
-    {"COLOR_BORDER", CONFIG_COLORREF, &COLOR_BORDER},
-};
+    CONFIG_VALUES(CONFIG_MAKE_ENTRY)};
+#undef CONFIG_MAKE_ENTRY
+#undef CONFIG_KIND_OF
 #define CONFIG_ENTRY_COUNT                                                     \
   ((int)(sizeof(config_entries) / sizeof(config_entries[0])))
+#define CONFIG_COUNT_ONE(type, name, def) +1
+_Static_assert(0 CONFIG_VALUES(CONFIG_COUNT_ONE) == CONFIG_ENTRY_COUNT,        \
+               "config_entries is out of sync with config_defs.h");
+#undef CONFIG_COUNT_ONE
 
 static char *config_owned[CONFIG_ENTRY_COUNT];
 
@@ -281,8 +257,7 @@ static long long config_last_reload_ms = 0;
 static void *config_reload_mutex = NULL;
 
 static void config_reload_lock(void) {
-  if (!config_reload_mutex)
-    config_reload_mutex = Platform_MutexCreate();
+  lazy_mutex_get(&config_reload_mutex);
   if (config_reload_mutex)
     Platform_MutexLock(config_reload_mutex);
 }

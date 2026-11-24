@@ -8,6 +8,7 @@
 #include "core/types/window.h"
 #include "platform/platform.h"
 #include "deps/log.h"
+#include "helpers/helpers_misc.h"
 
 typedef struct {
   void *ctx;
@@ -22,7 +23,7 @@ static bool thread_mtx_failed = false;
 
 static void thread_reg_lock(void) {
   if (!thread_mtx && !thread_mtx_failed) {
-    thread_mtx = Platform_MutexCreate();
+    thread_mtx = lazy_mutex_get(&thread_mtx);
     if (!thread_mtx) {
       thread_mtx_failed = true;
       log_error("thread_registry: mutex creation failed; registry will run "

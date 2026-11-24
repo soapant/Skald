@@ -5,9 +5,11 @@
 #include "helpers/helpers_text.h"
 
 #include <stdio.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include <utime.h>
 
 #include "deps/log.h"
@@ -30,6 +32,7 @@
 #include "helpers/helpers_fs.h"
 #include "helpers/helpers_input_state.h"
 #include "deps/stb_ds.h"
+#include "helpers/helpers_misc.h"
 
 static void (**deferred_inits)(void);
 #define deferred_count arrlenu(deferred_inits)
@@ -221,10 +224,7 @@ static void sweep_retired_libs(void) {
   retired_count = n;
 }
 
-static void feature_mutex_init(void) {
-  if (!feature_mutex)
-    feature_mutex = Platform_MutexCreate();
-}
+static void feature_mutex_init(void) { lazy_mutex_get(&feature_mutex); }
 #define LOCK()                                                                 \
   do {                                                                         \
     feature_mutex_init();                                                      \
@@ -264,35 +264,69 @@ static bool manifest_path(const char *name, char *out, size_t n) {
   char dir[512];
   if (!feature_dir(name, dir, sizeof(dir)))
     return false;
-  snprintf(out, n, "%s/manifest.toml", dir);
+  return safe_copy(out, n, dir) && safe_cat(out, n, "/manifest.toml");
+}
+
+static atomic_uint manifest_tmp_seq = 0;
+
+static bool manifest_write_full(const char *name, const FeatureManifest *m) {
+  char path[512];
+  if (!manifest_path(name, path, sizeof(path)))
+    return false;
+  char tmp[600];
+  char suffix[32];
+  snprintf(suffix, sizeof(suffix), ".tmp.%d.%u", (int)getpid(),
+           atomic_fetch_add_explicit(&manifest_tmp_seq, 1,
+                                     memory_order_relaxed));
+  if (!safe_copy(tmp, sizeof(tmp), path) || !safe_cat(tmp, sizeof(tmp), suffix))
+    return false;
+  FILE *f = fopen(tmp, "wb");
+  if (!f) {
+    log_error("manifest write: open %s failed (%s)", tmp, strerror(errno));
+    return false;
+  }
+  char enc[512];
+  bool ok = true;
+  config_toml_encode_string(m->name, enc, sizeof(enc));
+  ok = fprintf(f, "name = %s\n", enc) >= 0;
+  config_toml_encode_string(m->description, enc, sizeof(enc));
+  if (ok)
+    ok = fprintf(f, "description = %s\n\n", enc) >= 0;
+  if (ok)
+    ok = fputs("[provides]\n\n", f) >= 0;
+  for (int i = 0; ok && i < m->provide_count; i++) {
+    config_toml_encode_string(m->provides[i], enc, sizeof(enc));
+    ok = fprintf(f, "%s\n", enc) >= 0;
+  }
+  if (ok)
+    ok = fputs("\n[depends]\n\n", f) >= 0;
+  for (int i = 0; ok && i < m->dep_count; i++) {
+    config_toml_encode_string(m->deps[i], enc, sizeof(enc));
+    ok = fprintf(f, "%s\n", enc) >= 0;
+  }
+  if (fclose(f) != 0)
+    ok = false;
+  if (!ok) {
+    remove(tmp);
+    return false;
+  }
+  if (!Platform_AtomicRename(tmp, path)) {
+    remove(tmp);
+    log_error("manifest write: rename %s failed", tmp);
+    return false;
+  }
   return true;
 }
 
 static void manifest_write_baseline(const char *name) {
-  char path[512];
-  if (!manifest_path(name, path, sizeof(path)))
-    return;
-  FILE *f = fopen(path, "rb");
-  if (f) {
-    fclose(f);
-    return;
-  }
-
   char dir[512];
   if (!feature_dir(name, dir, sizeof(dir)))
     return;
   Platform_MkdirIfNotExists(dir);
-  f = fopen(path, "wb");
-  if (!f) {
-    log_error("manifest baseline: open %s for write failed (%s)", path,
-              strerror(errno));
-    return;
-  }
-  fprintf(f, "name = \"%s\"\n", name);
-  fprintf(f, "description = \"\"\n\n");
-  fprintf(f, "[provides]\n\n");
-  fprintf(f, "[depends]\n\n");
-  fclose(f);
+  FeatureManifest m;
+  memset(&m, 0, sizeof(m));
+  safe_copy(m.name, sizeof(m.name), name);
+  manifest_write_full(name, &m);
   log_info("manifest created for feature '%s'", name);
 }
 
@@ -314,133 +348,44 @@ void feature_loader_owner_feature_name(const char *owner_path, char *out,
     *dot = '\0';
 }
 
-typedef struct {
-  bool found_section;
-  bool found_entry;
-  size_t insert_at;
-} ManifestSectionScan;
-
-static void manifest_scan_section(const char *buf, size_t len,
-                                  const char *section, const char *entry,
-                                  ManifestSectionScan *out) {
-  memset(out, 0, sizeof(*out));
-  bool in_section = false;
-  size_t off = 0;
-  while (off < len) {
-    const char *nl = memchr(buf + off, '\n', len - off);
-    size_t line_len = nl ? (size_t)(nl - (buf + off)) : (len - off);
-    size_t line_end = off + line_len + (nl ? 1 : 0);
-    char line[512];
-    size_t cl = line_len < sizeof(line) - 1 ? line_len : sizeof(line) - 1;
-    memcpy(line, buf + off, cl);
-    line[cl] = '\0';
-
-    char work[512];
-    safe_copy(work, sizeof(work), line);
-    manifest_trim(work);
-
-    if (work[0] == '[') {
-      in_section = strstr(work, section) != NULL;
-      if (in_section && !out->found_section) {
-        out->found_section = true;
-        out->insert_at = line_end;
-      }
-      off = line_end;
-      continue;
-    }
-
-    if (in_section && work[0] != '\0' && work[0] != '#') {
-      char e[512];
-      safe_copy(e, sizeof(e), work);
-      manifest_unquote(e);
-      if (strcmp(e, entry) == 0)
-        out->found_entry = true;
-    }
-    off = line_end;
-  }
-}
-
-static bool manifest_read_or_create(const char *name, char *buf, size_t cap,
-                                    size_t *out_len) {
-  char path[512];
-  if (!manifest_path(name, path, sizeof(path)))
-    return false;
-  FILE *f = fopen(path, "rb");
-  if (!f) {
-    manifest_write_baseline(name);
-    f = fopen(path, "rb");
-    if (!f) {
-      log_error("manifest add: cannot open %s even after baseline create",
-                path);
-      return false;
-    }
-  }
-  size_t len = 0;
-  if (fseek(f, 0, SEEK_END) == 0) {
-    long sz = ftell(f);
-    if (sz >= 0 && (size_t)sz >= cap) {
-      log_error("manifest '%s' is %ld bytes, too large to rewrite (%zu)", path,
-                sz, cap - 1);
-      fclose(f);
-      return false;
-    }
-    rewind(f);
-  }
-  len = fread(buf, 1, cap - 1, f);
-  fclose(f);
-  buf[len] = '\0';
-  *out_len = len;
-  return true;
-}
-
 static void manifest_add_entry(const char *name, const char *section,
                                const char *entry) {
-  char buf[16384];
-  size_t len = 0;
-  if (!manifest_read_or_create(name, buf, sizeof(buf), &len))
-    return;
-
-  ManifestSectionScan scan;
-  manifest_scan_section(buf, len, section, entry, &scan);
-  if (scan.found_entry)
-    return;
-
-  char new_line[128];
-  int nl_len = snprintf(new_line, sizeof(new_line), "%s\n", entry);
-  if (nl_len <= 0)
-    return;
-  size_t add = (size_t)nl_len;
-
-  if (!scan.found_section) {
-    char header[64];
-    int hn = snprintf(header, sizeof(header), "\n[%s]\n", section);
-    if (hn <= 0 || len + (size_t)hn + add >= sizeof(buf))
-      return;
-    memcpy(buf + len, header, (size_t)hn);
-    len += (size_t)hn;
-    memcpy(buf + len, new_line, add);
-    len += add;
-  } else {
-    if (len + add > sizeof(buf))
-      return;
-    memmove(buf + scan.insert_at + add, buf + scan.insert_at,
-            len - scan.insert_at);
-    memcpy(buf + scan.insert_at, new_line, add);
-    len += add;
-  }
-
   char path[512];
   if (!manifest_path(name, path, sizeof(path)))
     return;
-  FILE *f = fopen(path, "wb");
-  if (!f) {
-    log_error("manifest add: open %s for write failed (%s)", path,
-              strerror(errno));
+  FeatureManifest m;
+  ConfigTomlStatus st = manifest_parse_file_ex(path, name, &m, NULL);
+  if (st == CONFIG_TOML_ERR_IO) {
+    manifest_write_baseline(name);
+    st = manifest_parse_file_ex(path, name, &m, NULL);
+  }
+  if (st != CONFIG_TOML_OK) {
+    log_error("manifest add: cannot parse %s (%s)", path,
+              config_toml_status_name(st));
     return;
   }
-  if (fwrite(buf, 1, len, f) != len)
-    log_error("manifest add: write %s incomplete (%s)", path, strerror(errno));
-  fclose(f);
+
+  bool provides = strcmp(section, "provides") == 0;
+  char value[96];
+  if (!safe_copy(value, sizeof(value), entry))
+    return;
+  int count = provides ? m.provide_count : m.dep_count;
+  char *items = provides ? (char *)m.provides : (char *)m.deps;
+  size_t item_size = provides ? sizeof(m.provides[0]) : sizeof(m.deps[0]);
+  for (int i = 0; i < count; i++) {
+    if (strcmp((char *)items + (size_t)i * item_size, value) == 0)
+      return;
+  }
+  if (count >= MANIFEST_LIST_MAX) {
+    log_warn("manifest add: %s is full in %s", path, section);
+    return;
+  }
+  safe_copy((char *)items + (size_t)count * item_size, item_size, value);
+  if (provides)
+    m.provide_count++;
+  else
+    m.dep_count++;
+  manifest_write_full(name, &m);
   log_info("manifest '%s' %s += %s", name, section, entry);
 }
 void feature_loader_manifest_add_provides(const char *owner_path,
@@ -471,7 +416,9 @@ static bool load_single(const char *dir, const char *filename) {
   if (!ensure_feature_capacity(feature_count + 1))
     return false;
   char full[1024];
-  snprintf(full, sizeof(full), "%s/%s", dir, filename);
+  safe_copy(full, sizeof(full), dir);
+  safe_cat(full, sizeof(full), "/");
+  safe_cat(full, sizeof(full), filename);
   char name[64];
   fl_copy(name, sizeof(name), filename);
   char *dot = strrchr(name, '.');
@@ -507,7 +454,8 @@ static bool load_single(const char *dir, const char *filename) {
 
 static bool load_named(const char *dir, const char *ext, const char *name) {
   char filename[128];
-  snprintf(filename, sizeof(filename), "%s%s", name, ext);
+  safe_copy(filename, sizeof(filename), name);
+  safe_cat(filename, sizeof(filename), ext);
   return load_single(dir, filename);
 }
 
@@ -693,10 +641,7 @@ static unsigned build_seq = 0;
 static void *build_worker;
 static bool build_worker_failed;
 
-static void build_mutex_init(void) {
-  if (!build_mutex)
-    build_mutex = Platform_MutexCreate();
-}
+static void build_mutex_init(void) { lazy_mutex_get(&build_mutex); }
 #define B_LOCK()                                                               \
   do {                                                                         \
     build_mutex_init();                                                        \

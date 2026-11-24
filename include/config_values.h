@@ -8,7 +8,7 @@
 #include "config_defs.h"
 
 #define X(type, name, def) extern type name;
-SKALD_CONFIG_VALUES(X)
+CONFIG_VALUES(X)
 #undef X
 
 #endif

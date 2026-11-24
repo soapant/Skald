@@ -7,6 +7,7 @@
 #include "core/window_manager.h"
 #include "helpers/helpers_ui.h"
 #include "platform/platform.h"
+#include "helpers/helpers_misc.h"
 #include "deps/stb_ds.h"
 
 #define SCROLL_STALE_LIMIT 256
@@ -43,10 +44,7 @@ static ScrollDrawFrame *g_draw_stack;
 static unsigned long g_seq = 0;
 static void *g_scroll_mutex = NULL;
 
-static void scroll_lock_init(void) {
-  if (!g_scroll_mutex)
-    g_scroll_mutex = Platform_MutexCreate();
-}
+static void scroll_lock_init(void) { lazy_mutex_get(&g_scroll_mutex); }
 
 #define SCROLL_LOCK()                                                          \
   do {                                                                         \

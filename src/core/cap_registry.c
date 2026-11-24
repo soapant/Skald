@@ -6,6 +6,7 @@
 #include "helpers/helpers_owner.h"
 #include "platform/platform.h"
 #include "deps/stb_ds.h"
+#include "helpers/helpers_misc.h"
 
 typedef struct {
   char key[CAP_KEY_LEN];
@@ -21,8 +22,7 @@ static volatile unsigned cap_gen = 1;
 static void *cap_mutex = NULL;
 
 static void cap_lock(void) {
-  if (!cap_mutex)
-    cap_mutex = Platform_MutexCreate();
+  lazy_mutex_get(&cap_mutex);
   if (cap_mutex)
     Platform_MutexLock(cap_mutex);
   else

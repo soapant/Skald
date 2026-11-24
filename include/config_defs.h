@@ -1,7 +1,7 @@
 #ifndef CONFIG_DEFS_H
 #define CONFIG_DEFS_H
 
-#define SKALD_CONFIG_VALUES(X)                                                 \
+#define CONFIG_VALUES(X)                                                 \
   X(bool, Tray, true)                                                          \
   X(bool, RememberLastIndex, true)                                             \
   X(bool, MessageAfterEachHotkey, false)                                       \

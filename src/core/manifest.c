@@ -71,6 +71,8 @@ bool manifest_parse_string(const char *name, const char *data,
       toml_unquote(val);
       if (strcmp(key, "name") == 0)
         safe_copy(out->name, sizeof(out->name), val);
+      if (strcmp(key, "description") == 0)
+        safe_copy(out->description, sizeof(out->description), val);
       section = 0;
       continue;
     }

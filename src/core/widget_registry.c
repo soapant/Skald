@@ -17,6 +17,7 @@
 #include "config_values.h"
 #include "core/types/window.h"
 #include "deps/stb_ds.h"
+#include "helpers/helpers_misc.h"
 
 static Widget **widgets;
 #define widget_count arrlenu(widgets)
@@ -24,10 +25,7 @@ static int widget_seq = 0;
 static unsigned widget_gen = 1;
 
 static void *widget_mutex = NULL;
-static void widget_mutex_init(void) {
-  if (!widget_mutex)
-    widget_mutex = Platform_MutexCreate();
-}
+static void widget_mutex_init(void) { lazy_mutex_get(&widget_mutex); }
 #define W_LOCK()                                                               \
   do {                                                                         \
     widget_mutex_init();                                                       \

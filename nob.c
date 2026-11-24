@@ -701,7 +701,7 @@ static bool emit_release_config(const char *dst_path) {
       float: emit_float_toml,                                                  \
       const char *: emit_str_toml,                                             \
       ColorRef: emit_skip_toml)(outf, #name, def);
-  SKALD_CONFIG_VALUES(EMIT_ROOT)
+  CONFIG_VALUES(EMIT_ROOT)
 #undef EMIT_ROOT
   fprintf(outf, "\n[color]\n");
 #define EMIT_COLOR(type, name, def)                                            \
@@ -711,7 +711,7 @@ static bool emit_release_config(const char *dst_path) {
       float: emit_skip_toml,                                                   \
       const char *: emit_skip_toml,                                            \
       ColorRef: emit_color_toml)(outf, #name + 6, def);
-  SKALD_CONFIG_VALUES(EMIT_COLOR)
+  CONFIG_VALUES(EMIT_COLOR)
 #undef EMIT_COLOR
   fprintf(outf, "# </skald-config-generated>\n");
   if (fclose(outf) != 0) {

@@ -61,6 +61,7 @@ static PromptState *sk_current_prompt_state(void) {
 #include "core/feature_path.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
+#include "helpers/helpers_misc.h"
 
 #include "platform/widget.h"
 #include "core/hover_widget.h"
@@ -1045,8 +1046,10 @@ static void hover_popup_ctx_free(void *ud) {
   char buf[1024];                                                              \
   va_list args;                                                                \
   va_start(args, fmt);                                                         \
-  vsnprintf(buf, sizeof(buf), fmt, args);                                      \
-  va_end(args)
+  int sk_fmt_len = vsnprintf(buf, sizeof(buf), fmt, args);                     \
+  va_end(args);                                                                \
+  if (sk_fmt_len < 0 || (size_t)sk_fmt_len >= sizeof(buf))                     \
+    log_warn("formatted string truncated to %zu bytes", sizeof(buf) - 1)
 
 void sk_message_fmt(const SkMessageSpec *spec, const char *fmt, ...) {
   SK_FMT_BUFFER();
@@ -3765,8 +3768,7 @@ static SkRunEveryEntry *run_every_head = NULL;
 static void *run_every_mtx = NULL;
 
 static void run_every_lock(void) {
-  if (!run_every_mtx)
-    run_every_mtx = Platform_MutexCreate();
+  lazy_mutex_get(&run_every_mtx);
   if (run_every_mtx)
     Platform_MutexLock(run_every_mtx);
 }
@@ -3979,8 +3981,7 @@ static char sk_config_path[1024];
 static bool sk_config_loaded = false;
 
 static void sk_config_lock(void) {
-  if (!sk_config_mutex)
-    sk_config_mutex = Platform_MutexCreate();
+  lazy_mutex_get(&sk_config_mutex);
   if (sk_config_mutex)
     Platform_MutexLock(sk_config_mutex);
 }

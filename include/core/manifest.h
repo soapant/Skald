@@ -10,6 +10,7 @@
 
 typedef struct {
   char name[64];
+  char description[256];
   char deps[MANIFEST_LIST_MAX][64];
   int dep_count;
   char provides[MANIFEST_LIST_MAX][96];

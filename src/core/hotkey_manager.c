@@ -21,6 +21,7 @@
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_owner.h"
+#include "helpers/helpers_misc.h"
 #include "config_values.h"
 #include "core/types/keys.h"
 
@@ -79,8 +80,7 @@ static void hotkey_wake(void) {
 }
 
 static void hotkey_queue_init(void) {
-  if (!q_mutex)
-    q_mutex = Platform_MutexCreate();
+  q_mutex = lazy_mutex_get(&q_mutex);
   hotkey_wake_fd();
 }
 #define HOTKEY_Q_LOCK()                                                        \
