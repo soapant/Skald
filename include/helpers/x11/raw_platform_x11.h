@@ -51,6 +51,7 @@ extern pthread_mutex_t g_font_cache_mtx;
 
 bool x11_font_is_cached(Display *dpy, XftFont *xft);
 bool x11_font_was_retired(Display *dpy, XftFont *xft);
+void x11_font_cache_free_all(void);
 void x11_cleanup_per_feature_edit_map(void);
 int x11_button(int button);
 unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask);

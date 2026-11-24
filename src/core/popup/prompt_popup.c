@@ -198,6 +198,7 @@ static void prompt_popup_destroy(Popup *self) {
   Platform_PromptPopupDestroyWindow(self);
   if (data->state) {
     listbox_info_free(data->state->lb);
+    free(data->state->lb);
     for (int i = 0; i < data->state->editbox_count; i++)
       free(data->state->editboxes[i].eb.placeholder);
     EditBox *def =

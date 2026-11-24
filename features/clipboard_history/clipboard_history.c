@@ -112,10 +112,11 @@ static void ch_save(void) {
     lines = malloc((size_t)ch_count * sizeof(char *));
     if (lines) {
       for (int i = 0; i < ch_count; i++) {
-        lines[i] = malloc(CH_MAX_TEXT * 2);
+        size_t cap = strlen(ch_items[i]) * 2 + 1;
+        lines[i] = malloc(cap);
         if (!lines[i])
           break;
-        ch_escape(ch_items[i], lines[i], CH_MAX_TEXT * 2);
+        ch_escape(ch_items[i], lines[i], cap);
         count++;
       }
     }

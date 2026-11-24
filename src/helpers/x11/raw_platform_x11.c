@@ -1,11 +1,12 @@
 #include <X11/extensions/XTest.h>
+#include <stdatomic.h>
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
 #include "helpers/x11/raw_platform_x11.h"
 #include "helpers/x11/drawing_x11.h"
 
-static bool s_bundled_font_done = false;
+static atomic_bool s_bundled_font_done = false;
 
 static bool x11_is_bundled_face(const char *face_name) {
   return face_name && (strcasecmp(face_name, "0xProto Nerd Font") == 0 ||
@@ -13,16 +14,16 @@ static bool x11_is_bundled_face(const char *face_name) {
 }
 
 static bool x11_register_bundled_font(void) {
-  if (s_bundled_font_done)
+  if (atomic_load(&s_bundled_font_done))
     return true;
   const char *path = "resources/fonts/0xProtoNerdFont-Regular.ttf";
   FILE *f = fopen(path, "rb");
   if (!f)
     return false;
   fclose(f);
-  FcBool ok = FcConfigAppFontAddFile(NULL, (const FcChar8 *)path);
-  s_bundled_font_done = (ok == FcTrue);
-  return s_bundled_font_done;
+  if (!atomic_exchange(&s_bundled_font_done, true))
+    FcConfigAppFontAddFile(NULL, (const FcChar8 *)path);
+  return true;
 }
 
 typedef struct {
@@ -83,6 +84,13 @@ static void x11_font_slot_clear(X11FontSlot *s) {
   s->name = NULL;
   s->xft = NULL;
   s->last_used = 0;
+}
+
+void x11_font_cache_free_all(void) {
+  pthread_mutex_lock(&g_font_cache_mtx);
+  for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++)
+    x11_font_slot_clear(&font_slots[i]);
+  pthread_mutex_unlock(&g_font_cache_mtx);
 }
 
 bool x11_font_is_cached(Display *dpy, XftFont *xft) {

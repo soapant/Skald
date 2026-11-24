@@ -355,6 +355,19 @@ XftFont *x11_line_font(Display *dpy, int size) {
   return xf;
 }
 
+void x11_line_font_cache_free_all(void) {
+  for (int i = 0; i < X11_LINE_FONT_SLOTS; i++) {
+    if (!line_slots[i].f)
+      continue;
+    XftFontClose(line_slots[i].dpy, line_slots[i].f);
+    line_slots[i].f = NULL;
+    line_slots[i].dpy = NULL;
+    line_slots[i].size = 0;
+    line_slots[i].stamp = 0;
+  }
+  x11_bump_measure_epoch();
+}
+
 int x11_editbox_measure(const char *text, int len, void *user) {
   EditboxX11Metrics *m = (EditboxX11Metrics *)user;
   if (!m || !m->dpy || !m->xf || !text || len <= 0)

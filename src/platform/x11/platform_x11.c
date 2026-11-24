@@ -9,6 +9,7 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_fs.h"
 #include "helpers/x11/raw_platform_x11.h"
+#include "helpers/x11/raw_draw_x11.h"
 #include "helpers/x11/drawing_x11.h"
 #include "helpers/helpers_misc.h"
 #include "helpers/x11/clipboard_backend_x11.h"
@@ -1395,7 +1396,10 @@ int Platform_InitializeTrayIcon(void) { return 0; }
 
 void Platform_InitUI(void) {}
 
-void Platform_ShutdownUI(void) {}
+void Platform_ShutdownUI(void) {
+  x11_font_cache_free_all();
+  x11_line_font_cache_free_all();
+}
 
 RgbColor Platform_GetPixelColor(int x, int y) {
   RgbColor out = {0, 0, 0};
