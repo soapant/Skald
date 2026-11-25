@@ -235,6 +235,8 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
                                             .ascent = ascent,
                                             .descent = descent,
                                             .font = spec->font});
+  eb.text_y += spec->text_y;
+  eb.caret_y += spec->text_y;
 
   bool prev_lb = draw_state_get()->win32_listbox_surface;
   draw_state_get()->win32_listbox_surface = false;

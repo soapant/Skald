@@ -306,6 +306,8 @@ bool sk_place_editbox_platform(const SkEditSpec *spec) {
                                             .ascent = xf ? xf->ascent : 0,
                                             .descent = xf ? xf->descent : 0,
                                             .font = fh});
+  eb.text_y += spec->text_y;
+  eb.caret_y += spec->text_y;
   eb.measure = x11_editbox_measure;
   eb.measure_user = &metrics;
 

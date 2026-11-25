@@ -33,6 +33,7 @@ typedef struct {
   int caret_x;
   int caret_y;
   int caret_pos;
+  int text_y;
   bool hide_caret;
   bool primary;
   bool no_tab;
