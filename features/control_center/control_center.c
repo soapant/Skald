@@ -1180,8 +1180,9 @@ static void cc_draw_hotkey_chip(const char *hotkey, int right_x, int y) {
   r.filled = true;
   r.radius = 4;
   r.color = CC_TYPE_COLOR;
+  r.w += 4.5f;
   ski_draw_rect(&r);
-  sk_draw_text(.x = right_x, .y = y, .text = hotkey, .align = "RIGHT", .pad = 0,
+  sk_draw_text(.x = right_x + 2, .y = y, .text = hotkey, .align = "RIGHT", .pad = 0,
                .color = SK_GRAY, .font_size = font);
 }
 
