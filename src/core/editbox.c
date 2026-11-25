@@ -276,6 +276,10 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   spec->placeholder = state->eb->placeholder;
   spec->text_color = rgb_to_hex(COLOR_TEXT);
   spec->font = font;
+  int edit_h = ascent + descent;
+  if (edit_h <= 0)
+    edit_h = FontSize > 0 ? FontSize : 16;
+  editbox_legacy_tick(state, 0, edit_y, state->width, edit_h, FontSize);
 }
 
 void editbox_resolve_selection(PromptState *state, int text_len,
@@ -1092,6 +1096,29 @@ void editbox_registry_tick(PromptState *state) {
   }
   editbox_registry_register_focus(state);
   editbox_registry_begin(state);
+}
+
+void editbox_legacy_tick(PromptState *state, int x, int y, int w, int h,
+                         int font_size) {
+  if (!state || !state->eb)
+    return;
+  int idx = editbox_registry_place(state, PROMPT_PRIMARY_EDITBOX_NAME,
+                                   state->eb->filter,
+                                   sizeof(state->eb->filter), x, y, w, h);
+  if (idx < 0)
+    return;
+  PromptEditbox *entry = &state->editboxes[idx];
+  entry->font_size = font_size > 0 ? font_size : FontSize;
+  entry->primary = true;
+  entry->eb = *state->eb;
+  EditBox *saved_eb = state->eb;
+  int saved_active = state->active_editbox;
+  state->eb = &entry->eb;
+  state->active_editbox = idx;
+  editbox_registry_tick(state);
+  *saved_eb = *state->eb;
+  state->eb = saved_eb;
+  state->active_editbox = saved_active;
 }
 
 void editbox_registry_sync(PromptState *state) {

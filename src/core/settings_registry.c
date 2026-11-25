@@ -453,13 +453,16 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
   get_draw_offset(&dx, &dy);
   int idx =
       editbox_registry_place(state, name, spec->buffer, spec->buffer_size,
-                             spec->x + dx, spec->y + dy, spec->w, spec->h);
+                             spec->x + dx, spec->y + dy + 2, spec->w, spec->h);
   if (idx < 0)
     return false;
   PromptEditbox *entry = &state->editboxes[idx];
   if (state->active_editbox < 0)
     state->active_editbox = idx;
   entry->no_tab = spec->no_tab;
+  entry->font_size = spec->font_size > 0 ? spec->font_size : FontSize;
+  entry->primary = true;
+  entry->wrapped = false;
   bool active = state->active_editbox == idx;
   EditBox *saved = state->eb;
   int saved_active = state->active_editbox;

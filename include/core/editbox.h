@@ -205,6 +205,8 @@ int editbox_registry_place(PromptState *state, const char *name, char *buffer,
 PromptEditbox *editbox_registry_find(PromptState *state, const char *name);
 EditBox *editbox_registry_lookup(PromptState *state, const char *name);
 void editbox_registry_tick(PromptState *state);
+void editbox_legacy_tick(PromptState *state, int x, int y, int w, int h,
+                         int font_size);
 void editbox_registry_register_focus(PromptState *state);
 void editbox_registry_sync(PromptState *state);
 void editbox_registry_set_active(PromptState *state, const char *name);
