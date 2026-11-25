@@ -551,6 +551,7 @@ static const char *sdk_files[] = {
     "core/types/prompt.h",
     "core/types/skapi_types.h",
     "core/types/window.h",
+    "core/owner_registry.h",
     "core/widget_registry.h",
     "core/window_manager.h",
     "helpers/helpers_owner.h",

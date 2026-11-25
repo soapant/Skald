@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "core/owner_registry.h"
 
 typedef void (*SnippetFireFn)(int binding_index, int delete_count);
 
@@ -13,7 +14,7 @@ typedef struct {
   bool whitelist;
   char **windows;
   int window_count;
-  char owner[512];
+  OwnerTag tag;
 } SnippetBinding;
 
 bool snippet_register_internal(const char *trigger, const char *text,

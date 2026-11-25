@@ -1,6 +1,7 @@
 #include "helpers/helpers_text.h"
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"
+#include "core/owner_registry.h"
 #include "platform/platform.h"
 #include "core/types/keys.h"
 #include "deps/log.h"
@@ -44,6 +45,7 @@ static void snippet_free_binding(SnippetBinding *b) {
   b->text = NULL;
   b->windows = NULL;
   b->window_count = 0;
+  owner_tag_clear(&b->tag);
 }
 
 bool snippet_register_internal(const char *trigger, const char *text,
@@ -103,7 +105,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
       snippets[i].whitelist = whitelist;
       snippets[i].windows = nwindows;
       snippets[i].window_count = nwindows ? nwin : 0;
-      snprintf(snippets[i].owner, sizeof(snippets[i].owner), "%s", owner);
+      owner_tag_set(&snippets[i].tag, owner, 0);
       snippet_reset_buffer();
       return true;
     }
@@ -123,7 +125,6 @@ bool snippet_register_internal(const char *trigger, const char *text,
   b->whitelist = whitelist;
   b->windows = NULL;
   b->window_count = 0;
-  snprintf(b->owner, sizeof(b->owner), "%s", owner);
   if (windows) {
     int n = 0;
     while (windows[n])
@@ -149,6 +150,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
       b->window_count = n;
     }
   }
+  owner_tag_set(&b->tag, owner, 0);
   arrput(snippets, nb);
   snippet_reset_buffer();
   return true;
@@ -168,22 +170,17 @@ bool snippet_unregister_internal(const char *trigger) {
   return false;
 }
 
-void snippet_purge_owner(const char *path_a, const char *path_b) {
-  if (owner_purge_inactive(path_a, path_b))
-    return;
+static void snippet_destroy_cb(void *element) {
+  SnippetBinding *b = (SnippetBinding *)element;
+  log_info("snippet '%s' purged (owner unloaded)",
+           b->trigger ? b->trigger : "?");
+  snippet_free_binding(b);
+}
 
-  size_t dropped = 0;
-  for (size_t i = 0; i < snippet_count;) {
-    if (owner_module_matches(snippets[i].owner, path_a, path_b)) {
-      log_info("snippet '%s' purged (owner unloaded)",
-               snippets[i].trigger ? snippets[i].trigger : "?");
-      snippet_free_binding(&snippets[i]);
-      arrdel(snippets, i);
-      dropped++;
-      continue;
-    }
-    i++;
-  }
+void snippet_purge_owner(const char *path_a, const char *path_b) {
+  size_t dropped = owner_purge_array(snippets, sizeof(SnippetBinding),
+                                     offsetof(SnippetBinding, tag), path_a,
+                                     path_b, 0, snippet_destroy_cb);
   if (dropped > 0) {
     log_info("snippet purged %zu binding%s", dropped,
              dropped == 1 ? "" : "s");

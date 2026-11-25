@@ -6,6 +6,7 @@
 #include "platform/platform.h"
 #include "core/types/keys.h"
 #include "core/timer.h"
+#include "core/owner_registry.h"
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_misc.h"
 
@@ -14,7 +15,7 @@ static bool pressed[256] = {0};
 static bool released[256] = {0};
 static void (*key_cb)(int vk, bool down, int mods, void *ud) = NULL;
 static void *key_ud = NULL;
-static char cb_owner[OWNER_PATH_MAX] = {0};
+static OwnerTag cb_tag = {0};
 static char char_queue[32] = {0};
 static int char_head = 0, char_tail = 0;
 static int last_mods = 0;
@@ -102,16 +103,16 @@ void input_set_key_callback(void (*cb)(int vk, bool down, int mods, void *ud),
                             void *ud) {
   key_cb = cb;
   key_ud = ud;
-  cb_owner[0] = '\0';
+  owner_tag_clear(&cb_tag);
   if (key_cb)
-    owner_resolve_for_func((void *)key_cb, cb_owner, sizeof(cb_owner));
+    owner_tag_set_for_func(&cb_tag, (void *)(uintptr_t)key_cb, 0);
 }
 
 void key_callback_purge_owner(const char *path_a, const char *path_b) {
-  if (key_cb && owner_module_matches(cb_owner, path_a, path_b)) {
+  if (key_cb && owner_tag_matches(&cb_tag, path_a, path_b)) {
     key_cb = NULL;
     key_ud = NULL;
-    cb_owner[0] = '\0';
+    owner_tag_clear(&cb_tag);
   }
 }
 

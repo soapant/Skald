@@ -16,7 +16,7 @@ typedef struct {
   bool no_bg;
   void (*render)(void *ud);
   void *render_data;
-  char render_owner[OWNER_PATH_MAX];
+  char *render_owner;
   double timeout;
   ULONGLONG deadline_ms;
   char name[64];

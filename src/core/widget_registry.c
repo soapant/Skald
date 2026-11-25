@@ -181,33 +181,6 @@ static void widget_render_frame(void *ud) {
   }
 }
 
-static void widget_owner_path(void *addr, char *out, size_t n) {
-  Platform_GetModuleOwnerPath(addr, out, n);
-}
-
-static bool widget_owner_matches(const Widget *widget, const char *a,
-                                 const char *b) {
-  if (!widget->owner)
-    return false;
-  if (a && a[0] && strcmp(widget->owner, a) == 0)
-    return true;
-  if (b && b[0] && strcmp(widget->owner, b) == 0)
-    return true;
-  char ab[512], bb[512], wb[512];
-  owner_module_basename(widget->owner, wb, sizeof(wb));
-  if (a && a[0]) {
-    owner_module_basename(a, ab, sizeof(ab));
-    if (strcmp(wb, ab) == 0)
-      return true;
-  }
-  if (b && b[0]) {
-    owner_module_basename(b, bb, sizeof(bb));
-    if (strcmp(wb, bb) == 0)
-      return true;
-  }
-  return false;
-}
-
 static void widget_destroy_window(void *ud) {
   Widget *widget = (Widget *)ud;
   if (!widget)
@@ -230,12 +203,10 @@ static void widget_reap(void *ud) {
   Widget *w = (Widget *)ud;
   if (!w)
     return;
+  owner_tag_clear(&w->tag);
   W_LOCK();
   for (size_t i = 0; i < widget_count;) {
     if (widgets[i] == w) {
-      if (w->owner)
-        free(w->owner);
-      w->owner = NULL;
       arrdel(widgets, i);
       continue;
     }
@@ -260,9 +231,7 @@ void widget_destroy(Widget *widget) {
     W_LOCK();
     for (size_t i = 0; i < widget_count;) {
       if (widgets[i] == widget) {
-        if (widget->owner)
-          free(widget->owner);
-        widget->owner = NULL;
+        owner_tag_clear(&widget->tag);
         arrdel(widgets, i);
         continue;
       }
@@ -275,70 +244,71 @@ void widget_destroy(Widget *widget) {
   Platform_Widget_FlushDestruction();
 }
 
+static void widget_purge_destroy(void *ud) {
+  Widget *w = (Widget *)ud;
+  if (!w)
+    return;
+  w->dead = true;
+  hover_widget_hide(w->name);
+  render_thread_remove_frame_callback(widget_render_frame, w);
+  if (!render_thread_post(widget_destroy_window, w)) {
+    log_error("widget_purge_owner: failed to enqueue destroy for '%s'",
+              w->name ? w->name : "?");
+  }
+  if (!render_thread_post(widget_reap, w)) {
+    log_error("widget_purge_owner: failed to enqueue reap for '%s'",
+              w->name ? w->name : "?");
+  }
+}
+
 void widget_purge_owner(const char *path_a, const char *path_b,
                         unsigned generation) {
   if (owner_purge_inactive(path_a, path_b))
     return;
-
-  bool matched = false;
+  char *a = owner_strdup(path_a);
+  char *b = owner_strdup(path_b);
   W_LOCK();
-  for (size_t i = 0; i < widget_count; i++) {
-    Widget *w = widgets[i];
-    if (!w)
-      continue;
-    if (!widget_owner_matches(w, path_a, path_b))
-      continue;
-    if (w->gen > generation)
-      continue;
-    w->dead = true;
-    matched = true;
-    hover_widget_hide(w->name);
-    render_thread_remove_frame_callback(widget_render_frame, w);
-    if (!render_thread_post(widget_destroy_window, w)) {
-      log_error("widget_purge_owner: failed to enqueue destroy for '%s'",
-                w->name ? w->name : "?");
-    }
-    if (!render_thread_post(widget_reap, w)) {
-      log_error("widget_purge_owner: failed to enqueue reap for '%s'",
-                w->name ? w->name : "?");
-    }
-  }
+  size_t removed = owner_purge_pointers((void **)widgets, offsetof(Widget, tag),
+                                        a, b, generation, widget_purge_destroy);
   W_UNLOCK();
 
-  if (!matched)
+  if (removed == 0) {
+    owner_strfree(&a);
+    owner_strfree(&b);
     return;
+  }
 
   render_thread_sync();
 
   W_LOCK();
-  for (size_t i = 0; i < widget_count;) {
+  bool matched = false;
+  for (size_t i = 0; i < widget_count; i++) {
     Widget *w = widgets[i];
-    if (w && widget_owner_matches(w, path_a, path_b) &&
-        w->gen <= generation) {
-      arrdel(widgets, i);
+    if (!w)
       continue;
+    if (owner_tag_matches(&w->tag, a, b) && w->tag.gen <= generation) {
+      matched = true;
+      break;
     }
-    i++;
   }
+  bool has_widgets = widget_count > 0;
   W_UNLOCK();
-  if (widget_count > 0)
+
+  if (has_widgets && (matched || removed > 0))
     widget_relayout();
   Platform_Widget_FlushDestruction();
+  owner_strfree(&a);
+  owner_strfree(&b);
 }
 
 bool widget_owner_active(const char *path) {
   if (!path || !path[0])
     return false;
   W_LOCK();
-  for (size_t i = 0; i < widget_count; i++) {
-    const Widget *w = widgets[i];
-    if (w && widget_owner_matches(w, path, NULL)) {
-      W_UNLOCK();
-      return true;
-    }
-  }
+  bool active = owner_pointers_have_active((void *const *)widgets, widget_count,
+                                           offsetof(Widget, tag), path);
   W_UNLOCK();
-  return false;
+  return active;
 }
 
 static void widget_attach_window(void *ud) {
@@ -471,18 +441,8 @@ Widget *widget_create(const WidgetSpec *spec) {
     return NULL;
   }
 
-  {
-    char owner_path[512];
-    widget_owner_path(__builtin_return_address(0), owner_path,
-                      sizeof(owner_path));
-    if (owner_path[0]) {
-      if (widget->owner)
-        free(widget->owner);
-      widget->owner = strdup(owner_path);
-    }
-  }
+  owner_tag_set_for_func(&widget->tag, __builtin_return_address(0), widget_gen);
 
-  widget->gen = widget_gen;
   widget->has_bg = spec->color != 0;
   widget->bg_color = widget->has_bg ? spec->color : 0;
   widget->no_bg = spec->no_bg;

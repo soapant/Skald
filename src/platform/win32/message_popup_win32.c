@@ -6,12 +6,12 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
   for (int i = g_msg_slot_count - 1; i >= 0; i--) {
     HWND h = g_msg_slots[i];
     FadeWindowData *fd = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
-    if (!fd || fd->render_owner[0] == '\0')
+    if (!fd || !fd->render_owner)
       continue;
     if (!owner_module_matches(fd->render_owner, path_a, path_b))
       continue;
     fd->render = NULL;
-    fd->render_owner[0] = '\0';
+    owner_strfree(&fd->render_owner);
     KillTimer(h, 999);
     DestroyWindow(h);
   }
@@ -260,10 +260,9 @@ void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec) {
   pWndData->no_bg = no_bg;
   pWndData->render = render;
   pWndData->render_data = render_data;
-  pWndData->render_owner[0] = '\0';
+  pWndData->render_owner = NULL;
   if (render)
-    owner_resolve_for_func((void *)render, pWndData->render_owner,
-                           sizeof(pWndData->render_owner));
+    pWndData->render_owner = owner_resolve_for_func_alloc((void *)render);
   if (name && name[0])
     snprintf(pWndData->name, sizeof(pWndData->name), "%s", name);
   else
@@ -299,6 +298,7 @@ void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec) {
     s_msg_rounded = true;
     s_msg_radius = CornerRadius;
     Platform_DestroyFont(pWndData->hFont);
+    owner_strfree(&pWndData->render_owner);
     free((void *)pWndData->message);
     free(pWndData);
     return;

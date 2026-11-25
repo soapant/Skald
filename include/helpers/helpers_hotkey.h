@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "core/types.h"
+#include "core/owner_registry.h"
 
 typedef void (*HotkeyCallback)(void);
 typedef void (*HotkeyCallbackUd)(void *);
@@ -21,7 +22,7 @@ typedef struct {
   HotkeyCondition hotkey_condition;
   bool hold;
   void *user_ud;
-  char owner[512];
+  OwnerTag tag;
 } HotkeyBinding;
 
 #define HOTKEY_HOLD_MIN_INTERVAL_MS 10

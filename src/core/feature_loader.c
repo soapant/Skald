@@ -22,6 +22,7 @@
 #include "helpers/helpers_hotkey.h"
 #include "core/thread_registry.h"
 #include "core/owner_purge.h"
+#include "core/owner_registry.h"
 #include "helpers/helpers_ui.h"
 
 #include "core/cc_registry.h"
@@ -62,9 +63,9 @@ static void fl_copy(char *dst, size_t dst_size, const char *src) {
 #define MAX_PINS 16
 
 typedef struct {
-  char name[64];
-  char path[512];
-  char uniq[512];
+  char *name;
+  char *path;
+  char *uniq;
   LibHandle handle;
 } LoadedFeature;
 
@@ -93,9 +94,8 @@ static bool ensure_feature_capacity(int needed) {
 
 typedef struct {
   LibHandle handle;
-  char uniq[512];
-  char owner[512];
-  unsigned owner_gen;
+  char *uniq;
+  OwnerTag tag;
   Popup *pins[MAX_PINS];
   int npins;
 } RetiredLib;
@@ -126,14 +126,12 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
     return;
   WindowManager *wm = WindowManager_Get();
   RetiredLib r;
+  memset(&r, 0, sizeof(r));
   r.handle = handle;
-  r.uniq[0] = '\0';
-  if (uniq && uniq[0])
-    fl_copy(r.uniq, sizeof(r.uniq), uniq);
-  r.owner_gen = widget_current_generation();
-  r.owner[0] = '\0';
-  if (owner && owner[0])
-    fl_copy(r.owner, sizeof(r.owner), owner);
+  r.uniq = (uniq && uniq[0]) ? owner_strdup(uniq) : NULL;
+  owner_tag_set_owned(&r.tag,
+                      (owner && owner[0]) ? owner_strdup(owner) : NULL,
+                      widget_current_generation());
   r.npins = 0;
   if (wm && wm->popup_count > MAX_PINS) {
     r.npins = -1;
@@ -144,6 +142,8 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
   if (!ensure_retired_capacity(retired_count + 1)) {
     log_error("retire: cannot track lib %s, leaving it loaded",
               owner ? owner : "?");
+    owner_strfree(&r.uniq);
+    owner_tag_clear(&r.tag);
     return;
   }
   retired[retired_count++] = r;
@@ -151,8 +151,8 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
 
 typedef struct {
   LibHandle handle;
-  char uniq[512];
-  char owner[512];
+  char *uniq;
+  char *owner;
 } DeferredUnload;
 
 static DeferredUnload *defer_unloads;
@@ -170,10 +170,12 @@ void feature_loader_drain_retired_unloads(void) {
   Platform_MutexLock(feature_mutex);
   for (size_t i = 0; i < defer_unload_count; i++) {
     log_info("draining deferred unload of retired lib %s",
-             defer_unloads[i].owner);
+             defer_unloads[i].owner ? defer_unloads[i].owner : "");
     Platform_UnloadLibrary(defer_unloads[i].handle);
-    if (defer_unloads[i].uniq[0])
+    if (defer_unloads[i].uniq)
       file_remove_path(defer_unloads[i].uniq);
+    owner_strfree(&defer_unloads[i].uniq);
+    owner_strfree(&defer_unloads[i].owner);
   }
   arrfree(defer_unloads);
   Platform_MutexUnlock(feature_mutex);
@@ -185,23 +187,19 @@ static void defer_unload(LibHandle handle, const char *uniq,
     return;
   DeferredUnload *u = arraddnptr(defer_unloads, 1);
   u->handle = handle;
-  u->uniq[0] = '\0';
-  u->owner[0] = '\0';
-  if (uniq && uniq[0])
-    safe_copy(u->uniq, sizeof(u->uniq), uniq);
-  if (owner && owner[0])
-    safe_copy(u->owner, sizeof(u->owner), owner);
+  u->uniq = (uniq && uniq[0]) ? owner_strdup(uniq) : NULL;
+  u->owner = (owner && owner[0]) ? owner_strdup(owner) : NULL;
 }
 
 static void sweep_retired_libs(void) {
   const WindowManager *wm = WindowManager_Get();
   int n = 0;
   for (int i = 0; i < retired_count; i++) {
+    const char *owner = retired[i].tag.owner;
     bool alive = false;
-    if (retired[i].owner[0] && widget_owner_active(retired[i].owner))
+    if (owner && owner[0] && widget_owner_active(owner))
       alive = true;
-    else if (retired[i].owner[0] &&
-             thread_registry_owner_active(retired[i].owner))
+    else if (owner && owner[0] && thread_registry_owner_active(owner))
       alive = true;
     else if (wm && retired[i].npins >= 0) {
       for (int a = 0; a < retired[i].npins && !alive; a++) {
@@ -216,9 +214,14 @@ static void sweep_retired_libs(void) {
     if (alive) {
       retired[n++] = retired[i];
     } else {
-      purge_owner_set(retired[i].owner, NULL, retired[i].owner_gen);
-      log_info("deferring unload of retired lib %s", retired[i].owner);
-      defer_unload(retired[i].handle, retired[i].uniq, retired[i].owner);
+      char *owner_copy = owner_strdup(owner);
+      purge_owner_set(owner_copy, NULL, retired[i].tag.gen);
+      log_info("deferring unload of retired lib %s",
+               owner_copy ? owner_copy : "");
+      defer_unload(retired[i].handle, retired[i].uniq, owner);
+      owner_strfree(&owner_copy);
+      owner_strfree(&retired[i].uniq);
+      owner_tag_clear(&retired[i].tag);
     }
   }
   retired_count = n;
@@ -425,7 +428,7 @@ static bool load_single(const char *dir, const char *filename) {
     *dot = '\0';
 
   for (int i = 0; i < feature_count; i++)
-    if (strcmp(features[i].name, name) == 0)
+    if (features[i].name && strcmp(features[i].name, name) == 0)
       return true;
 
   LibHandle h = Platform_LoadLibrary(full);
@@ -445,8 +448,10 @@ static bool load_single(const char *dir, const char *filename) {
 
   LoadedFeature *f = &features[feature_count++];
   memset(f, 0, sizeof(*f));
-  safe_copy(f->name, sizeof(f->name), name);
-  safe_copy(f->path, sizeof(f->path), full);
+  owner_strfree(&f->name);
+  f->name = owner_strdup(name);
+  owner_strfree(&f->path);
+  f->path = owner_strdup(full);
   f->handle = h;
   return true;
 }
@@ -905,19 +910,27 @@ void feature_loader_shutdown(void) {
   LOCK();
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
-      purge_owner_set(NULL, features[i].path, widget_bump_generation());
+      char *path_copy = owner_strdup(features[i].path);
+      purge_owner_set(NULL, path_copy, widget_bump_generation());
+      owner_strfree(&path_copy);
       Platform_UnloadLibrary(features[i].handle);
-      if (features[i].uniq[0])
+      if (features[i].uniq)
         file_remove_path(features[i].uniq);
       features[i].handle = 0;
-      features[i].uniq[0] = '\0';
     }
+    owner_strfree(&features[i].name);
+    owner_strfree(&features[i].path);
+    owner_strfree(&features[i].uniq);
   }
   for (int i = 0; i < retired_count; i++) {
-    purge_owner_set(retired[i].owner, NULL, retired[i].owner_gen);
+    char *owner_copy = owner_strdup(retired[i].tag.owner);
+    purge_owner_set(owner_copy, NULL, retired[i].tag.gen);
+    owner_strfree(&owner_copy);
     Platform_UnloadLibrary(retired[i].handle);
-    if (retired[i].uniq[0])
+    if (retired[i].uniq)
       file_remove_path(retired[i].uniq);
+    owner_strfree(&retired[i].uniq);
+    owner_tag_clear(&retired[i].tag);
   }
   free(retired);
   retired = NULL;
@@ -941,15 +954,16 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
   LOCK();
   sweep_retired_libs();
   for (int i = 0; i < feature_count; i++) {
-    if (strcmp(features[i].name, name) == 0) {
-      char path_copy[512];
-      fl_copy(path_copy, sizeof(path_copy), features[i].path);
-      const char *src = (src_path && src_path[0]) ? src_path : path_copy;
+    if (features[i].name && strcmp(features[i].name, name) == 0) {
+      char *path_copy = owner_strdup(features[i].path);
+      const char *base = path_copy ? path_copy : "";
+      const char *src = (src_path && src_path[0]) ? src_path : base;
       LibHandle old = features[i].handle;
       char *uniquepath =
-          reload_lib_unique_copy(src, path_copy, ++reload_seq, NULL);
+          reload_lib_unique_copy(src, base, ++reload_seq, NULL);
       if (!uniquepath) {
         log_error("reload %s: copy failed (keeping old)", name);
+        owner_strfree(&path_copy);
         UNLOCK();
         return false;
       }
@@ -961,6 +975,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
                   Platform_GetLoadError());
         file_remove_path(uniquepath);
         free(uniquepath);
+        owner_strfree(&path_copy);
         UNLOCK();
         return false;
       }
@@ -973,6 +988,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
         Platform_UnloadLibrary(h);
         file_remove_path(uniquepath);
         free(uniquepath);
+        owner_strfree(&path_copy);
         UNLOCK();
         return false;
       }
@@ -982,17 +998,21 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       if (shut)
         shut();
       unsigned retire_gen = widget_current_generation();
-      char retire_owner[512];
-      fl_copy(retire_owner, sizeof(retire_owner),
-              features[i].uniq[0] ? features[i].uniq : features[i].path);
+      char *retire_owner = owner_strdup(
+          (features[i].uniq && features[i].uniq[0]) ? features[i].uniq
+                                                    : features[i].path);
       retire_old_lib(old, features[i].uniq, retire_owner);
       widget_bump_generation();
       log_info("feature_reload: %s (constructor ran at dlopen)", name);
       features[i].handle = h;
-      fl_copy(features[i].path, sizeof(features[i].path), uniquepath);
-      fl_copy(features[i].uniq, sizeof(features[i].uniq), uniquepath);
+      owner_strfree(&features[i].path);
+      features[i].path = owner_strdup(uniquepath);
+      owner_strfree(&features[i].uniq);
+      features[i].uniq = owner_strdup(uniquepath);
       free(uniquepath);
       purge_owner_set(retire_owner, path_copy, retire_gen);
+      owner_strfree(&retire_owner);
+      owner_strfree(&path_copy);
       sweep_retired_libs();
       UNLOCK();
       deferred_init_run_all();
@@ -1043,9 +1063,12 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
     }
     LoadedFeature *f = &features[feature_count++];
     memset(f, 0, sizeof(*f));
-    safe_copy(f->name, sizeof(f->name), name);
-    safe_copy(f->path, sizeof(f->path), uniquepath);
-    safe_copy(f->uniq, sizeof(f->uniq), uniquepath);
+    owner_strfree(&f->name);
+    f->name = owner_strdup(name);
+    owner_strfree(&f->path);
+    f->path = owner_strdup(uniquepath);
+    owner_strfree(&f->uniq);
+    f->uniq = owner_strdup(uniquepath);
     f->handle = h;
     feature_init_count++;
     {
@@ -1078,15 +1101,16 @@ void feature_loader_reload_all(void) {
   for (int i = 0; i < feature_count; i++) {
     if (features[i].handle) {
       call_feature_shutdown(features[i].handle);
-      {
-        char loaded[512];
-        fl_copy(loaded, sizeof(loaded),
-                features[i].uniq[0] ? features[i].uniq : features[i].path);
-        retire_old_lib(features[i].handle, features[i].uniq, loaded);
-      }
+      char *loaded = owner_strdup(
+          (features[i].uniq && features[i].uniq[0]) ? features[i].uniq
+                                                    : features[i].path);
+      retire_old_lib(features[i].handle, features[i].uniq, loaded);
+      owner_strfree(&loaded);
       features[i].handle = 0;
-      features[i].uniq[0] = '\0';
     }
+    owner_strfree(&features[i].name);
+    owner_strfree(&features[i].path);
+    owner_strfree(&features[i].uniq);
   }
   feature_count = 0;
   sweep_retired_libs();

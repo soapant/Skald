@@ -56,6 +56,7 @@ static PromptState *sk_current_prompt_state(void) {
 #include "core/feature_loader.h"
 #include "core/feature_path.h"
 #include "core/cap_registry.h"
+#include "core/owner_registry.h"
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_misc.h"
 
@@ -642,7 +643,7 @@ typedef struct {
   char name[128];
   void (*cb)(void);
   char icon[512];
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
 } FeatureReg;
 
 static FeatureReg **feature_order = NULL;
@@ -685,7 +686,7 @@ static bool feature_list_add(const char *name, void (*cb)(void),
   snprintf(reg->name, sizeof(reg->name), "%s", name);
   reg->cb = cb;
   snprintf(reg->icon, sizeof(reg->icon), "%s", icon ? icon : "");
-  snprintf(reg->owner, sizeof(reg->owner), "%s", owner ? owner : "");
+  owner_tag_set(&reg->tag, owner, 0);
   return true;
 }
 
@@ -694,7 +695,8 @@ void feature_list_purge_owner(const char *path_a, const char *path_b) {
     return;
   int n = 0;
   for (int i = 0; i < feature_order_count; i++) {
-    if (owner_module_matches(feature_order[i]->owner, path_a, path_b)) {
+    if (owner_tag_matches(&feature_order[i]->tag, path_a, path_b)) {
+      owner_tag_clear(&feature_order[i]->tag);
       free(feature_order[i]);
       continue;
     }
@@ -2660,17 +2662,17 @@ void *sk_library_symbol(SkLibrary lib, const char *name) {
 void sk_library_close(SkLibrary lib) {
   if (!lib)
     return;
-  char caller[MAX_PATH];
-  owner_resolve_for_func((void *)__builtin_return_address(0), caller,
-                         sizeof(caller));
+  char *caller =
+      owner_resolve_for_func_alloc((void *)__builtin_return_address(0));
   char canon_caller[MAX_PATH];
-  bool have_caller = caller[0] && sk_lib_canonical_path(caller, canon_caller,
-                                                        sizeof(canon_caller));
+  bool have_caller =
+      caller && sk_lib_canonical_path(caller, canon_caller, sizeof(canon_caller));
   for (size_t i = 0; i < ski_lib_track_count; i++) {
     if (ski_lib_track[i].lib == lib && have_caller &&
         sk_lib_path_equal(ski_lib_track[i].canon, canon_caller)) {
       log_error(
           "sk_library_close: refusing to unload the caller's own library");
+      owner_strfree(&caller);
       return;
     }
   }
@@ -2681,6 +2683,7 @@ void sk_library_close(SkLibrary lib) {
     }
   }
   Platform_UnloadLibrary((LibHandle)lib);
+  owner_strfree(&caller);
 }
 
 const char *sk_library_error(void) { return Platform_GetLoadError(); }
@@ -2688,7 +2691,7 @@ const char *sk_library_error(void) { return Platform_GetLoadError(); }
 typedef struct {
   SkThreadFunc fn;
   void *arg;
-  char owner[512];
+  OwnerTag tag;
 } SkThreadCtx;
 
 static void *thread_trampoline(void *p) {
@@ -2697,6 +2700,7 @@ static void *thread_trampoline(void *p) {
   void *arg = ctx->arg;
   void *ret = fn ? fn(arg) : NULL;
   thread_registry_finish(ctx);
+  owner_tag_clear(&ctx->tag);
   free(ctx);
   return ret;
 }
@@ -2709,13 +2713,14 @@ static SkThread thread_create_ex(SkThreadFunc fn, void *arg, void *owner_src) {
     return NULL;
   ctx->fn = fn;
   ctx->arg = arg;
-  ctx->owner[0] = '\0';
-  Platform_GetModuleOwnerPath(owner_src ? owner_src : (void *)(uintptr_t)fn,
-                              ctx->owner, sizeof(ctx->owner));
-  thread_registry_add(ctx, ctx->owner);
+  memset(&ctx->tag, 0, sizeof(ctx->tag));
+  owner_tag_set_for_func(
+      &ctx->tag, owner_src ? owner_src : (void *)(uintptr_t)fn, 0);
+  thread_registry_add(ctx, ctx->tag.owner ? ctx->tag.owner : "");
   void *thread = Platform_ThreadCreate(thread_trampoline, ctx);
   if (!thread) {
     thread_registry_finish(ctx);
+    owner_tag_clear(&ctx->tag);
     free(ctx);
     return NULL;
   }
@@ -3408,7 +3413,7 @@ typedef struct {
   char internal_name[1024];
   char icon[1024];
   char type[128];
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
 } SkCcEntry;
 
 static SkCcEntry *cc_entries;
@@ -3424,19 +3429,44 @@ static void cc_rebind_all(void) {
   }
 }
 
-static char (*cc_dep_owners)[OWNER_PATH_MAX];
+static char **cc_dep_owners;
 #define cc_dep_owner_count arrlenu(cc_dep_owners)
 
 static bool cc_dep_seen(const char *owner) {
+  if (!owner)
+    return false;
   for (size_t i = 0; i < cc_dep_owner_count; i++)
-    if (strcmp(cc_dep_owners[i], owner) == 0)
+    if (cc_dep_owners[i] && strcmp(cc_dep_owners[i], owner) == 0)
       return true;
   return false;
 }
 
 static void cc_dep_mark(const char *owner) {
-  char (*e)[OWNER_PATH_MAX] = arraddnptr(cc_dep_owners, 1);
-  snprintf(*e, OWNER_PATH_MAX, "%s", owner);
+  char *copy = owner_strdup(owner);
+  if (!copy)
+    return;
+  arrput(cc_dep_owners, copy);
+}
+
+static void cc_dep_unmark(const char *owner) {
+  if (!owner)
+    return;
+  for (size_t i = 0; i < cc_dep_owner_count;) {
+    if (cc_dep_owners[i] && strcmp(cc_dep_owners[i], owner) == 0) {
+      owner_strfree(&cc_dep_owners[i]);
+      arrdel(cc_dep_owners, i);
+      continue;
+    }
+    i++;
+  }
+}
+
+static void cc_entry_destroy(void *element) {
+  SkCcEntry *e = (SkCcEntry *)element;
+  if (!e)
+    return;
+  cc_dep_unmark(e->tag.owner);
+  owner_tag_clear(&e->tag);
 }
 
 static const char *cc_dup(char *dst, size_t cap, const char *src) {
@@ -3460,6 +3490,7 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
     arrput(cc_entries, (SkCcEntry){0});
   }
   SkCcEntry *e = &cc_entries[slot];
+  owner_tag_clear(&e->tag);
   memset(e, 0, sizeof(*e));
   e->pub.on_enter = spec->on_enter;
   e->pub.on_ctrl_enter = spec->on_ctrl_enter;
@@ -3502,13 +3533,14 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
     anchor = (void *)(uintptr_t)spec->on_tab;
   if (!anchor)
     anchor = (void *)(uintptr_t)spec->on_action;
-  owner_resolve_for_func(anchor, e->owner, sizeof(e->owner));
-  if (e->owner[0] && !cc_dep_seen(e->owner)) {
-    cc_dep_mark(e->owner);
-    cc_add_dep("control_center.c", e->owner);
+  owner_tag_set_for_func(&e->tag, anchor, 0);
+  const char *owner = e->tag.owner ? e->tag.owner : "";
+  if (owner[0] && !cc_dep_seen(owner)) {
+    cc_dep_mark(owner);
+    cc_add_dep("control_center.c", owner);
   }
   if (spec->type && strcmp(spec->type, "Feature") == 0)
-    feature_list_add(spec->display_name, spec->on_action, spec->icon, e->owner);
+    feature_list_add(spec->display_name, spec->on_action, spec->icon, owner);
   cc_rebind_all();
   return true;
 }
@@ -3597,13 +3629,8 @@ const SkCcEntrySpec *sk_cc_entry_at(int index) {
 void cc_registry_purge_owner(const char *path_a, const char *path_b) {
   if (!path_a && !path_b)
     return;
-  for (size_t i = 0; i < cc_entry_count;) {
-    if (owner_module_matches(cc_entries[i].owner, path_a, path_b)) {
-      arrdel(cc_entries, i);
-      continue;
-    }
-    i++;
-  }
+  owner_purge_array(cc_entries, sizeof(SkCcEntry), offsetof(SkCcEntry, tag),
+                    path_a, path_b, 0, cc_entry_destroy);
   cc_rebind_all();
 }
 
@@ -3719,7 +3746,7 @@ typedef struct {
 typedef struct SkRunEveryEntry {
   SkRunEveryArgs *args;
   void *thread;
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
   struct SkRunEveryEntry *next;
 } SkRunEveryEntry;
 
@@ -3776,15 +3803,14 @@ void sk_run_every(double seconds, void (*callback)(void)) {
     return;
   }
   entry->args = args;
-  entry->owner[0] = '\0';
+  memset(&entry->tag, 0, sizeof(entry->tag));
+  owner_tag_set_for_func(&entry->tag, (void *)(uintptr_t)callback, 0);
   entry->next = NULL;
-  Platform_GetModuleOwnerPath((void *)(uintptr_t)callback, entry->owner,
-                              sizeof(entry->owner));
-  entry->owner[sizeof(entry->owner) - 1] = '\0';
   entry->thread =
       thread_create_ex(run_every_thread, args, (void *)(uintptr_t)callback);
   if (!entry->thread) {
     log_error("sk_run_every: thread creation failed");
+    owner_tag_clear(&entry->tag);
     free(entry);
     free(args);
     return;
@@ -3801,7 +3827,7 @@ void run_every_purge_owner(const char *path_a, const char *path_b) {
   SkRunEveryEntry **pp = &run_every_head;
   while (*pp) {
     SkRunEveryEntry *e = *pp;
-    if (owner_module_matches(e->owner, path_a, path_b)) {
+    if (owner_tag_matches(&e->tag, path_a, path_b)) {
       *pp = e->next;
       e->next = mine;
       mine = e;
@@ -3816,6 +3842,7 @@ void run_every_purge_owner(const char *path_a, const char *path_b) {
     __atomic_store_n(&e->args->stop, 1, __ATOMIC_RELAXED);
     if (e->thread)
       Platform_ThreadJoin(e->thread);
+    owner_tag_clear(&e->tag);
     free(e->args);
     free(e);
   }
@@ -3926,7 +3953,7 @@ typedef struct {
   HotkeyCallbackUd cb_ud;
   void *ud;
   bool (*should_swallow)(void);
-  char *owner;
+  OwnerTag tag;
 } ConfigHotkeyBinding;
 
 static ConfigHotkeyBinding *config_hotkey_bindings;
@@ -4546,13 +4573,14 @@ static void config_hotkey_strings_copy(char ***out, const char *const *src) {
     arrput(*out, strdup(src[i]));
 }
 
-static void config_hotkey_binding_free(ConfigHotkeyBinding *b) {
+static void config_hotkey_binding_free(void *ptr) {
+  ConfigHotkeyBinding *b = (ConfigHotkeyBinding *)ptr;
   if (!b)
     return;
   free(b->display_name);
   free(b->key);
   free(b->default_hotkey);
-  free(b->owner);
+  owner_tag_clear(&b->tag);
   config_hotkey_strings_free(b->whitelist);
   config_hotkey_strings_free(b->blacklist);
 }
@@ -4576,9 +4604,7 @@ static void config_hotkey_register_bound(const char *name, const char *hotkey,
   b.default_hotkey = strdup(hotkey);
   b.cb_ud = (HotkeyCallbackUd)cb;
   b.ud = ud;
-  char owner[OWNER_PATH_MAX];
-  owner_resolve_for_func((void *)(uintptr_t)cb, owner, sizeof(owner));
-  b.owner = strdup(owner);
+  owner_tag_set_for_func(&b.tag, (void *)(uintptr_t)cb, 0);
   arrput(config_hotkey_bindings, b);
 }
 
@@ -4653,9 +4679,7 @@ bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec) {
     anchor = (void *)(uintptr_t)spec->cb;
   else if (spec->cb_ud)
     anchor = (void *)(uintptr_t)spec->cb_ud;
-  char owner[OWNER_PATH_MAX];
-  owner_resolve_for_func(anchor, owner, sizeof(owner));
-  b.owner = strdup(owner);
+  owner_tag_set_for_func(&b.tag, anchor, 0);
 
   arrput(config_hotkey_bindings, b);
   int index = (int)config_hotkey_binding_count - 1;
@@ -4675,14 +4699,9 @@ void sk_init_all_hotkeys(void) {
 
 void config_hotkey_registry_purge_owner(const char *path_a,
                                         const char *path_b) {
-  if (owner_purge_inactive(path_a, path_b))
-    return;
-  for (int i = (int)config_hotkey_binding_count - 1; i >= 0; i--) {
-    if (!owner_module_matches(config_hotkey_bindings[i].owner, path_a, path_b))
-      continue;
-    config_hotkey_binding_free(&config_hotkey_bindings[i]);
-    arrdel(config_hotkey_bindings, i);
-  }
+  owner_purge_array(config_hotkey_bindings, sizeof(ConfigHotkeyBinding),
+                    offsetof(ConfigHotkeyBinding, tag), path_a, path_b, 0,
+                    config_hotkey_binding_free);
 }
 
 bool sk_config_set_alias(const char *target, const char *alias) {

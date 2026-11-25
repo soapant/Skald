@@ -87,7 +87,7 @@ TEST(purge_owner_removes_binding_and_pending) {
   }
   ASSERT_TRUE(found >= 0);
   ASSERT_TRUE(hotkey_process(TEST_VK_D, 0));
-  hotkey_purge_owner(hotkey_get(found)->owner, NULL);
+  hotkey_purge_owner(hotkey_get(found)->tag.owner, NULL);
   ASSERT_FALSE(hotkey_is_taken(TEST_VK_D, 0));
   reset_counters();
   hotkey_drain_pending();

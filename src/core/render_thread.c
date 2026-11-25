@@ -47,6 +47,7 @@ static void rt_run_pending(void) {
 void render_thread_main(void) {
   is_thread = true;
   while (!atomic_load_explicit(&g_quit, memory_order_acquire)) {
+    rt_run_pending();
     size_t n = 0;
     Platform_RenderThreadLock();
     n = count;
@@ -54,7 +55,6 @@ void render_thread_main(void) {
     if (n > 0)
       memcpy(snap, callbacks, sizeof(*snap) * n);
     Platform_RenderThreadUnlock();
-    rt_run_pending();
     for (size_t i = 0; i < n; i++) {
       if (snap[i].fn)
         snap[i].fn(snap[i].ud);

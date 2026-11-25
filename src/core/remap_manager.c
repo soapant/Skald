@@ -1,5 +1,6 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_owner.h"
+#include "core/owner_registry.h"
 #include "core/remap_manager.h"
 #include "core/types/keys.h"
 #include "core/types/window.h"
@@ -21,7 +22,7 @@ typedef struct {
   bool whitelist;
   char *windows[REMAP_MAX_WINDOWS];
   int window_count;
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
 } RemapBinding;
 
 static RemapBinding *remaps;
@@ -72,7 +73,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
     return false;
   RemapBinding b = {0};
   b.whitelist = whitelist;
-  owner_resolve_for_func(caller, b.owner, sizeof(b.owner));
+  owner_tag_set_for_func(&b.tag, caller, 0);
   if (windows) {
     for (int i = 0; windows[i] != NULL && b.window_count < REMAP_MAX_WINDOWS;
          i++) {
@@ -92,6 +93,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
     log_warn("remap '%s' -> '%s': no trigger keys parsed, refusing", src, dst);
     for (int k = 0; k < b.window_count; k++)
       free(b.windows[k]);
+    owner_tag_clear(&b.tag);
     return false;
   }
   b.src_mods = tmp_mods;
@@ -108,6 +110,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
              dst);
     for (int k = 0; k < b.window_count; k++)
       free(b.windows[k]);
+    owner_tag_clear(&b.tag);
     return false;
   }
   b.dst_mods = dst_mods;
@@ -120,7 +123,9 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
     if (e->src_mods == b.src_mods && e->dst_mods == b.dst_mods &&
         e->dst_vk == b.dst_vk && e->src_vk_count == b.src_vk_count &&
         e->whitelist == b.whitelist && e->window_count == b.window_count &&
-        strcmp(e->owner, b.owner) == 0) {
+        (e->tag.owner == b.tag.owner ||
+          (e->tag.owner && b.tag.owner &&
+           strcmp(e->tag.owner, b.tag.owner) == 0))) {
       bool same = true;
       for (int k = 0; k < b.src_vk_count; k++)
         if (e->src_vks[k] != b.src_vks[k]) {
@@ -135,6 +140,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
                  remap_count);
         for (int k = 0; k < b.window_count; k++)
           free(b.windows[k]);
+        owner_tag_clear(&b.tag);
         return true;
       }
     }
@@ -497,19 +503,15 @@ bool remap_should_swallow_vk(int vk_code, int value) {
   return remap_handle_vk(vk_code, value);
 }
 
+static void remap_destroy_cb(void *element) {
+  RemapBinding *b = (RemapBinding *)element;
+  remap_release_binding(b, true);
+  for (int k = 0; k < b->window_count; k++)
+    free(b->windows[k]);
+  owner_tag_clear(&b->tag);
+}
+
 void remap_purge_owner(const char *path_a, const char *path_b) {
-  if (owner_purge_inactive(path_a, path_b))
-    return;
-  size_t n = 0;
-  for (size_t i = 0; i < remap_count; i++) {
-    if (owner_module_matches(remaps[i].owner, path_a, path_b)) {
-      remap_release_binding(&remaps[i], true);
-      for (int k = 0; k < remaps[i].window_count; k++)
-        free(remaps[i].windows[k]);
-      continue;
-    }
-    remaps[n++] = remaps[i];
-  }
-  if (n < remap_count)
-    arrsetlen(remaps, n);
+  owner_purge_array(remaps, sizeof(RemapBinding), offsetof(RemapBinding, tag),
+                    path_a, path_b, 0, remap_destroy_cb);
 }

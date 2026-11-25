@@ -212,21 +212,20 @@ bool key_is_super_pressed(void) {
 }
 
 static KeyInterceptorFn key_interceptor = NULL;
-static char key_interceptor_owner[OWNER_PATH_MAX] = {0};
+static char *key_interceptor_owner = NULL;
 
 void key_register_interceptor(KeyInterceptorFn fn) {
   key_interceptor = fn;
-  key_interceptor_owner[0] = '\0';
+  owner_strfree(&key_interceptor_owner);
   if (fn)
-    owner_resolve_for_func((void *)fn, key_interceptor_owner,
-                           sizeof(key_interceptor_owner));
+    key_interceptor_owner = owner_resolve_for_func_alloc((void *)fn);
 }
 
 void key_purge_interceptor_owner(const char *path_a, const char *path_b) {
   if (key_interceptor &&
       owner_module_matches(key_interceptor_owner, path_a, path_b)) {
     key_interceptor = NULL;
-    key_interceptor_owner[0] = '\0';
+    owner_strfree(&key_interceptor_owner);
   }
 }
 
@@ -234,6 +233,39 @@ bool key_invoke_interceptor(const PopupKeyEvent *key) {
   if (!key_interceptor)
     return false;
   return key_interceptor(key);
+}
+
+char *owner_strdup(const char *src) {
+  if (!src || !src[0])
+    return NULL;
+  size_t n = strlen(src);
+  char *out = (char *)malloc(n + 1);
+  if (!out)
+    return NULL;
+  memcpy(out, src, n + 1);
+  return out;
+}
+
+void owner_strfree(char **src) {
+  if (!src || !*src)
+    return;
+  free(*src);
+  *src = NULL;
+}
+
+char *owner_module_basename_alloc(const char *p) {
+  if (!p || !p[0])
+    return NULL;
+  const char *s = p;
+  for (const char *q = p; *q; q++)
+    if (*q == '/' || *q == '\\')
+      s = q + 1;
+  size_t n = strlen(s);
+  char *out = (char *)malloc(n + 1);
+  if (!out)
+    return NULL;
+  memcpy(out, s, n + 1);
+  return out;
 }
 
 void owner_module_basename(const char *p, char *out, size_t n) {
@@ -257,19 +289,32 @@ bool owner_module_matches(const char *owner, const char *a, const char *b) {
     return true;
   if (b && b[0] && strcmp(owner, b) == 0)
     return true;
-  char ob[OWNER_PATH_MAX], ab[OWNER_PATH_MAX], bb[OWNER_PATH_MAX];
-  owner_module_basename(owner, ob, sizeof(ob));
+  char *ob = owner_module_basename_alloc(owner);
+  if (!ob)
+    return false;
+  bool match = false;
   if (a && a[0]) {
-    owner_module_basename(a, ab, sizeof(ab));
-    if (strcmp(ob, ab) == 0)
-      return true;
+    char *ab = owner_module_basename_alloc(a);
+    if (ab) {
+      match = strcmp(ob, ab) == 0;
+      free(ab);
+    }
   }
-  if (b && b[0]) {
-    owner_module_basename(b, bb, sizeof(bb));
-    if (strcmp(ob, bb) == 0)
-      return true;
+  if (!match && b && b[0]) {
+    char *bb = owner_module_basename_alloc(b);
+    if (bb) {
+      match = strcmp(ob, bb) == 0;
+      free(bb);
+    }
   }
-  return false;
+  free(ob);
+  return match;
+}
+
+char *owner_resolve_for_func_alloc(void *fn) {
+  if (!fn)
+    return NULL;
+  return Platform_GetModuleOwnerPathAlloc(fn);
 }
 
 void owner_resolve_for_func(void *fn, char *out, size_t n) {

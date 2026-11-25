@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "core/types.h"
+#include "core/owner_registry.h"
 #include "platform/widget.h"
 
 #define WIDGET_NAME_MAX 64
@@ -82,8 +83,7 @@ struct Widget {
   WidgetRenderFn render;
   unsigned long frame;
   Timer created_at;
-  char *owner;
-  unsigned gen;
+  OwnerTag tag;
   int monitor;
   void (*on_click)(void);
   void (*on_hover)(void);

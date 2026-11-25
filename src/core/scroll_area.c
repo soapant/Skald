@@ -5,6 +5,7 @@
 
 #include "core/context.h"
 #include "core/window_manager.h"
+#include "core/owner_registry.h"
 #include "helpers/helpers_ui.h"
 #include "platform/platform.h"
 #include "helpers/helpers_misc.h"
@@ -27,7 +28,7 @@ typedef struct {
   int content_w;
   int content_h;
   int wheel_px;
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
   unsigned long seq;
 } ScrollSlot;
 
@@ -68,8 +69,10 @@ static void scroll_purge_stale(void) {
   unsigned long cutoff =
       g_seq > SCROLL_STALE_LIMIT ? g_seq - SCROLL_STALE_LIMIT : 0;
   for (size_t i = 0; i < g_slot_count; i++) {
-    if (g_slots[i]->used && g_slots[i]->seq < cutoff)
+    if (g_slots[i]->used && g_slots[i]->seq < cutoff) {
+      owner_tag_clear(&g_slots[i]->tag);
       memset(g_slots[i], 0, sizeof(*g_slots[i]));
+    }
   }
 }
 
@@ -144,6 +147,7 @@ bool scroll_area_begin(const ScrollAreaSpec *spec) {
     index = scroll_slot_alloc();
   ScrollSlot *slot = g_slots[index];
 
+  owner_tag_clear(&slot->tag);
   memset(slot, 0, sizeof(*slot));
   slot->used = true;
   if (spec->name && spec->name[0])
@@ -160,8 +164,7 @@ bool scroll_area_begin(const ScrollAreaSpec *spec) {
   slot->content_h = spec->content_h;
   slot->wheel_px =
       spec->wheel_px > 0 ? spec->wheel_px : SCROLL_DEFAULT_WHEEL_PX;
-  if (spec->owner)
-    snprintf(slot->owner, sizeof(slot->owner), "%s", spec->owner);
+  owner_tag_set(&slot->tag, spec->owner, 0);
   slot->seq = ++g_seq;
 
   ScrollDrawFrame *frame = arraddnptr(g_draw_stack, 1);
@@ -225,14 +228,15 @@ bool scroll_area_dispatch_wheel(int root_x, int root_y, int dx, int dy) {
   return consumed;
 }
 
+static void scroll_slot_destroy(void *element) {
+  ScrollSlot *slot = (ScrollSlot *)element;
+  owner_tag_clear(&slot->tag);
+  memset(slot, 0, sizeof(*slot));
+}
+
 void scroll_area_purge_owner(const char *path_a, const char *path_b) {
   SCROLL_LOCK();
-  for (size_t i = 0; i < g_slot_count; i++) {
-    ScrollSlot *slot = g_slots[i];
-    if (!slot->used)
-      continue;
-    if (owner_module_matches(slot->owner, path_a, path_b))
-      memset(slot, 0, sizeof(*slot));
-  }
+  owner_purge_pointers((void **)g_slots, offsetof(ScrollSlot, tag), path_a,
+                       path_b, 0, scroll_slot_destroy);
   SCROLL_UNLOCK();
 }

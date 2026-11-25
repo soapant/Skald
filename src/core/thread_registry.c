@@ -1,18 +1,17 @@
 #include "core/thread_registry.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "core/types/window.h"
+#include "core/owner_registry.h"
 #include "platform/platform.h"
 #include "deps/log.h"
 #include "helpers/helpers_misc.h"
 
 typedef struct {
   void *ctx;
-  char owner[512];
+  OwnerTag tag;
 } ThreadEntry;
 
 static ThreadEntry *threads = NULL;
@@ -39,28 +38,6 @@ static void thread_reg_unlock(void) {
     Platform_MutexUnlock(thread_mtx);
 }
 
-static void basename_of(const char *path, char *out, size_t n) {
-  const char *base = path;
-  for (const char *p = path; *p; p++)
-    if (*p == '/' || *p == '\\')
-      base = p + 1;
-  size_t i = 0;
-  for (; base[i] && i + 1 < n; i++)
-    out[i] = (char)tolower((unsigned char)base[i]);
-  out[i] = '\0';
-}
-
-static bool owner_matches(const char *a, const char *b) {
-  if (!a[0] || !b[0])
-    return false;
-  if (strcmp(a, b) == 0)
-    return true;
-  char ab[256], bb[256];
-  basename_of(a, ab, sizeof(ab));
-  basename_of(b, bb, sizeof(bb));
-  return strcmp(ab, bb) == 0;
-}
-
 void thread_registry_add(void *ctx, const char *owner_path) {
   if (!ctx)
     return;
@@ -75,11 +52,9 @@ void thread_registry_add(void *ctx, const char *owner_path) {
     threads = grown;
     thread_cap = cap;
   }
+  memset(&threads[thread_count], 0, sizeof(threads[thread_count]));
   threads[thread_count].ctx = ctx;
-  threads[thread_count].owner[0] = '\0';
-  if (owner_path && owner_path[0])
-    snprintf(threads[thread_count].owner, sizeof(threads[thread_count].owner),
-             "%s", owner_path);
+  owner_tag_set(&threads[thread_count].tag, owner_path, 0);
   thread_count++;
   thread_reg_unlock();
 }
@@ -90,7 +65,11 @@ void thread_registry_finish(const void *ctx) {
   thread_reg_lock();
   for (int i = 0; i < thread_count; i++) {
     if (threads[i].ctx == ctx) {
-      threads[i] = threads[thread_count - 1];
+      owner_tag_clear(&threads[i].tag);
+      if (i != thread_count - 1) {
+        threads[i] = threads[thread_count - 1];
+        threads[thread_count - 1].tag.owner = NULL;
+      }
       thread_count--;
       thread_reg_unlock();
       return;
@@ -103,12 +82,13 @@ bool thread_registry_owner_active(const char *owner_path) {
   if (!owner_path || !owner_path[0])
     return false;
   thread_reg_lock();
+  bool active = false;
   for (int i = 0; i < thread_count; i++) {
-    if (owner_matches(threads[i].owner, owner_path)) {
-      thread_reg_unlock();
-      return true;
+    if (owner_tag_active(&threads[i].tag, owner_path)) {
+      active = true;
+      break;
     }
   }
   thread_reg_unlock();
-  return false;
+  return active;
 }

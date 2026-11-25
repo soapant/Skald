@@ -1,6 +1,7 @@
 #include "platform/lib.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <windows.h>
 
 LibHandle Platform_LoadLibrary(const char *path) {
@@ -52,4 +53,32 @@ bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n) {
   }
   out[n - 1] = '\0';
   return out[0] != '\0';
+}
+
+char *Platform_GetModuleOwnerPathAlloc(void *addr) {
+  if (!addr)
+    return NULL;
+  HMODULE mod = NULL;
+  if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                              GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                          (LPCSTR)addr, &mod)) {
+    return NULL;
+  }
+  DWORD cap = 512;
+  for (;;) {
+    char *buf = (char *)malloc(cap);
+    if (!buf)
+      return NULL;
+    DWORD got = GetModuleFileNameA(mod, buf, cap);
+    if (got == 0) {
+      free(buf);
+      return NULL;
+    }
+    if (got < cap)
+      return buf;
+    free(buf);
+    if (cap >= 64u * 1024u)
+      return NULL;
+    cap *= 2;
+  }
 }

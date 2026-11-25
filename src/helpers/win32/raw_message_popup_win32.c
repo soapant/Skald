@@ -205,6 +205,7 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (data) {
       if (data->message)
         free((void *)data->message);
+      owner_strfree(&data->render_owner);
       if (FH_TO_HFONT(data->hFont))
         Platform_DestroyFont(data->hFont);
       free(data);

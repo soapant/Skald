@@ -141,7 +141,7 @@ TEST(owner_falls_back_to_caller_when_no_func) {
   ASSERT_TRUE(b != NULL);
   if (!b)
     return;
-  ASSERT_TRUE(b->owner[0] != '\0');
+  ASSERT_TRUE(b->tag.owner && b->tag.owner[0]);
 }
 
 int main(void) {

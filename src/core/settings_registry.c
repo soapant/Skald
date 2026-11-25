@@ -30,6 +30,7 @@
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "core/settings_registry.h"
+#include "core/owner_registry.h"
 #include "deps/stb_ds.h"
 
 #define SETTINGS_CONFIG_KEY_MAX 384
@@ -649,7 +650,7 @@ struct SettingsEntry {
   SettingsEntrySpec pub;
   char name[256];
   char icon[1024];
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
   char desc[512];
   int block_count;
   int scroll_y;
@@ -725,11 +726,12 @@ SettingsEntry *settings_entry_add(const SettingsEntrySpec *spec) {
   arrfree(e->blocks);
   arrfree(e->block_match);
   e->block_count = 0;
+  owner_tag_clear(&e->tag);
   memset(e, 0, sizeof(*e));
   st_dup(e->name, sizeof(e->name), spec->name);
   st_dup(e->desc, sizeof(e->desc), spec->desc ? spec->desc : "");
   st_dup(e->icon, sizeof(e->icon), spec->icon);
-  st_dup(e->owner, sizeof(e->owner), spec->owner);
+  owner_tag_set(&e->tag, spec->owner, 0);
   e->pub.name = e->name;
   e->pub.icon = e->icon;
   e->pub.desc = e->desc;
@@ -791,8 +793,8 @@ static int settings_entry_add_block_typed(SettingsEntry *entry, int type,
   SettingsEntry *e = settings_entry_resolve(entry);
   if (!e || !settings_block_title_ok(title))
     return -1;
-  if (e->owner[0] == '\0' && anchor)
-    owner_resolve_for_func(anchor, e->owner, sizeof(e->owner));
+  if (!e->tag.owner && anchor)
+    owner_tag_set_for_func(&e->tag, anchor, 0);
   SettingsBlock *b = arraddnptr(e->blocks, 1);
   memset(b, 0, sizeof(*b));
   b->type = (unsigned char)type;
@@ -1103,7 +1105,7 @@ SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
     snprintf(dst->name, sizeof(dst->name), "%s", src->name);
     snprintf(dst->label, sizeof(dst->label), "%s",
              src->label ? src->label : src->name);
-    const char *prefix = e->owner[0] ? e->owner : e->name;
+    const char *prefix = e->tag.owner ? e->tag.owner : e->name;
     size_t key_len = strnlen(prefix, sizeof(dst->key) - 1);
     memcpy(dst->key, prefix, key_len);
     if (key_len + 1 < sizeof(dst->key)) {
@@ -1220,28 +1222,25 @@ const SettingsEntrySpec *settings_entry_at(int index) {
   return &settings_entries[index]->pub;
 }
 
+static void settings_destroy_cb(void *element) {
+  SettingsEntry *e = (SettingsEntry *)element;
+  search_index_destroy(e->search);
+  settings_entry_free_editbox_buffers(e);
+  for (size_t k = 0; k < (size_t)e->block_count; k++)
+    arrfree(e->blocks[k].fields);
+  arrfree(e->blocks);
+  arrfree(e->block_match);
+  if (s_settings_scroll_entry == e)
+    s_settings_scroll_entry = NULL;
+  if (s_dispatch_entry == e)
+    s_dispatch_entry = NULL;
+  owner_tag_clear(&e->tag);
+  free(e);
+}
+
 void settings_registry_purge_owner(const char *path_a, const char *path_b) {
-  if (!path_a && !path_b)
-    return;
-  for (size_t i = 0; i < settings_entry_total;) {
-    SettingsEntry *e = settings_entries[i];
-    if (owner_module_matches(e->owner, path_a, path_b)) {
-      search_index_destroy(e->search);
-      settings_entry_free_editbox_buffers(e);
-      for (size_t k = 0; k < (size_t)e->block_count; k++)
-        arrfree(e->blocks[k].fields);
-      arrfree(e->blocks);
-      arrfree(e->block_match);
-      if (s_settings_scroll_entry == e)
-        s_settings_scroll_entry = NULL;
-      if (s_dispatch_entry == e)
-        s_dispatch_entry = NULL;
-      free(e);
-      arrdel(settings_entries, i);
-      continue;
-    }
-    i++;
-  }
+  owner_purge_pointers((void **)settings_entries, offsetof(SettingsEntry, tag),
+                       path_a, path_b, 0, settings_destroy_cb);
   arrfree(s_focus_ctx);
 }
 
@@ -1469,7 +1468,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
         .content_h = SETTINGS_ROW_LEAD + match_count * SETTINGS_ROW_STEP,
         .off_y = &entry->scroll_y,
         .wheel_px = SETTINGS_ROW_STEP,
-        .owner = entry->owner,
+        .owner = entry->tag.owner ? entry->tag.owner : "",
     };
     scrolled = scroll_area_begin(&scroll_spec);
     view_top = SETTINGS_VIEW_TOP + (scrolled ? entry->scroll_y : 0);
@@ -1666,7 +1665,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
           .content_h = open_count * row_h,
           .off_y = &open_block->dropdown_scroll_y,
           .wheel_px = row_h,
-          .owner = open_entry->owner,
+          .owner = open_entry->tag.owner ? open_entry->tag.owner : "",
       };
       bool dropdown_scrolled = scroll_area_begin(&dropdown_scroll);
       checkbox_frame_begin();

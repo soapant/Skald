@@ -17,7 +17,9 @@
 #include "core/window_manager.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
+#include "core/owner_registry.h"
 #include "deps/log.h"
+#include "deps/stb_ds.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_owner.h"
@@ -26,8 +28,6 @@
 #include "core/types/keys.h"
 
 static HotkeyBinding *hotkeys = NULL;
-static int hotkey_total = 0;
-static int hotkey_capacity = 0;
 static bool hotkeys_suspended = false;
 
 static void hotkey_binding_free_window_list(HotkeyBinding *b) {
@@ -40,6 +40,14 @@ static void hotkey_binding_free_window_list(HotkeyBinding *b) {
   b->window_count = 0;
 }
 
+static void hotkey_destroy_cb(void *element) {
+  HotkeyBinding *b = (HotkeyBinding *)element;
+  log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)", b->vk_code,
+           b->modifiers);
+  hotkey_binding_free_window_list(b);
+  owner_tag_clear(&b->tag);
+}
+
 void hotkey_set_suspended(bool suspended) { hotkeys_suspended = suspended; }
 
 #define HOTKEY_PENDING_MAX 64
@@ -47,7 +55,7 @@ typedef struct {
   HotkeyCallback fn;
   HotkeyCallbackUd fn_ud;
   void *ud;
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
 } PendingHotkey;
 static PendingHotkey pending_hotkeys[HOTKEY_PENDING_MAX];
 static int pending_head = 0;
@@ -100,7 +108,7 @@ static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
     slot->fn = fn;
     slot->fn_ud = fn_ud;
     slot->ud = ud;
-    snprintf(slot->owner, sizeof(slot->owner), "%s", owner ? owner : "");
+    owner_tag_set(&slot->tag, owner, 0);
     pending_tail = nxt;
     hotkey_wake();
   } else {
@@ -215,7 +223,7 @@ static void hotkey_tick_holds(void) {
     int vk = hold_slots[i].vk;
     int mods = hold_slots[i].modifiers;
     HotkeyBinding *b = NULL;
-    for (int k = 0; k < hotkey_total; k++) {
+    for (int k = 0; k < arrlen(hotkeys); k++) {
       if (hotkeys[k].vk_code == vk && hotkeys[k].modifiers == mods &&
           hotkeys[k].hold) {
         b = &hotkeys[k];
@@ -233,7 +241,7 @@ static void hotkey_tick_holds(void) {
     hold_slots[i].next_fire_ms =
         now + (unsigned long long)hotkey_repeat_interval_ms();
     hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud, b->user_ud,
-                   b->owner);
+                   b->tag.owner);
   }
 }
 
@@ -263,7 +271,7 @@ void hotkey_drain_pending(void) {
 }
 
 bool hotkey_has_mouse_binding(void) {
-  for (int i = 0; i < hotkey_total; i++) {
+  for (int i = 0; i < arrlen(hotkeys); i++) {
     int vk = hotkeys[i].vk_code;
     if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1)
       return true;
@@ -272,7 +280,7 @@ bool hotkey_has_mouse_binding(void) {
 }
 
 bool hotkey_has_keyboard_binding(void) {
-  for (int i = 0; i < hotkey_total; i++) {
+  for (int i = 0; i < arrlen(hotkeys); i++) {
     int vk = hotkeys[i].vk_code;
     if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1)
       continue;
@@ -297,7 +305,7 @@ bool hotkey_mouse_button_bound(int btn) {
   if (btn <= 0 || btn > MOUSE_BTN_MAX)
     return false;
   int vk = MOUSE_VK(btn);
-  for (int i = 0; i < hotkey_total; i++) {
+  for (int i = 0; i < arrlen(hotkeys); i++) {
     if (hotkeys[i].vk_code != vk || hotkeys[i].modifiers != 0)
       continue;
     const HotkeyBinding *b = &hotkeys[i];
@@ -319,10 +327,10 @@ bool hotkey_mouse_button_bound(int btn) {
   return false;
 }
 
-int hotkey_count(void) { return hotkey_total; }
+int hotkey_count(void) { return arrlen(hotkeys); }
 
 const HotkeyBinding *hotkey_get(int index) {
-  if (index < 0 || index >= hotkey_total)
+  if (index < 0 || index >= arrlen(hotkeys))
     return NULL;
   return &hotkeys[index];
 }
@@ -330,7 +338,7 @@ const HotkeyBinding *hotkey_get(int index) {
 const HotkeyBinding *hotkey_find_by_ud(const void *ud) {
   if (!ud)
     return NULL;
-  for (int i = 0; i < hotkey_total; i++)
+  for (int i = 0; i < arrlen(hotkeys); i++)
     if (hotkeys[i].user_ud == ud)
       return &hotkeys[i];
   return NULL;
@@ -339,93 +347,76 @@ const HotkeyBinding *hotkey_find_by_ud(const void *ud) {
 const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb) {
   if (!cb)
     return NULL;
-  for (int i = 0; i < hotkey_total; i++)
+  for (int i = 0; i < arrlen(hotkeys); i++)
     if (hotkeys[i].hotkey_callback == cb)
       return &hotkeys[i];
   return NULL;
 }
 
 bool hotkey_is_taken(int vk_code, int modifiers) {
-  for (int i = 0; i < hotkey_total; i++)
+  for (int i = 0; i < arrlen(hotkeys); i++)
     if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers)
       return true;
   return false;
 }
 
 bool hotkey_register_internal(HotkeyBinding binding) {
-  char owner[OWNER_PATH_MAX];
-  owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_callback, owner,
-                         sizeof(owner));
-  if (!owner[0])
-    owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_callback_ud, owner,
-                           sizeof(owner));
-  if (!owner[0])
-    owner_resolve_for_func((void *)(uintptr_t)binding.hotkey_condition, owner,
-                           sizeof(owner));
-  snprintf(binding.owner, sizeof(binding.owner), "%s", owner);
+  owner_tag_set_for_func(&binding.tag,
+                         (void *)(uintptr_t)binding.hotkey_callback, 0);
+  if (!binding.tag.owner)
+    owner_tag_set_for_func(
+        &binding.tag, (void *)(uintptr_t)binding.hotkey_callback_ud, 0);
+  if (!binding.tag.owner)
+    owner_tag_set_for_func(&binding.tag,
+                           (void *)(uintptr_t)binding.hotkey_condition, 0);
 
-  for (int i = 0; i < hotkey_total; i++) {
+  for (int i = 0; i < arrlen(hotkeys); i++) {
     if (hotkeys[i].vk_code == binding.vk_code &&
         hotkeys[i].modifiers == binding.modifiers) {
       hotkey_binding_free_window_list(&hotkeys[i]);
+      owner_tag_clear(&hotkeys[i].tag);
       hotkeys[i] = binding;
       return true;
     }
   }
-  if (hotkey_total >= hotkey_capacity) {
-    int new_cap = hotkey_capacity == 0 ? 16 : hotkey_capacity * 2;
-    HotkeyBinding *new_arr = realloc(hotkeys, new_cap * sizeof(HotkeyBinding));
-    if (!new_arr)
-      return false;
-    hotkeys = new_arr;
-    hotkey_capacity = new_cap;
-  }
-  hotkeys[hotkey_total++] = binding;
+  arrput(hotkeys, binding);
   return true;
 }
 
 bool hotkey_unregister_internal(int vk_code, int modifiers) {
   int n = 0;
   bool found = false;
-  for (int i = 0; i < hotkey_total; i++) {
+  for (int i = 0; i < arrlen(hotkeys); i++) {
     if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers) {
       hotkey_binding_free_window_list(&hotkeys[i]);
+      owner_tag_clear(&hotkeys[i].tag);
       found = true;
       continue;
     }
     hotkeys[n++] = hotkeys[i];
   }
-  hotkey_total = n;
+  arrsetlen(hotkeys, n);
   return found;
 }
 
 void hotkey_purge_owner(const char *path_a, const char *path_b) {
   if (owner_purge_inactive(path_a, path_b))
     return;
-
-  int n = 0;
-  for (int i = 0; i < hotkey_total; i++) {
-    if (owner_module_matches(hotkeys[i].owner, path_a, path_b)) {
-      log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)",
-               hotkeys[i].vk_code, hotkeys[i].modifiers);
-      hotkey_binding_free_window_list(&hotkeys[i]);
-      continue;
-    }
-    hotkeys[n++] = hotkeys[i];
-  }
-  int dropped = hotkey_total - n;
-  hotkey_total = n;
+  char *a = owner_strdup(path_a);
+  char *b = owner_strdup(path_b);
+  int dropped = (int)owner_purge_array(hotkeys, sizeof(HotkeyBinding),
+                                       offsetof(HotkeyBinding, tag), a, b, 0,
+                                       hotkey_destroy_cb);
   if (dropped > 0)
     log_info("hotkey purged %d binding%s", dropped, dropped == 1 ? "" : "s");
-
   HOTKEY_Q_LOCK();
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
     if (!hold_slots[i].active)
       continue;
-    for (int k = 0; k < hotkey_total; k++) {
+    for (int k = 0; k < arrlen(hotkeys); k++) {
       if (hotkeys[k].vk_code == hold_slots[i].vk &&
           hotkeys[k].modifiers == hold_slots[i].modifiers &&
-          owner_module_matches(hotkeys[k].owner, path_a, path_b)) {
+          owner_tag_matches(&hotkeys[k].tag, a, b)) {
         hold_slots[i].active = false;
         break;
       }
@@ -433,16 +424,18 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
   }
   int qn = pending_head;
   while (qn != pending_tail) {
-    if (owner_module_matches(pending_hotkeys[qn].owner, path_a, path_b)) {
+    if (owner_tag_matches(&pending_hotkeys[qn].tag, a, b)) {
       log_info("hotkey pending entry dropped (owner unloaded)");
       pending_hotkeys[qn].fn = NULL;
       pending_hotkeys[qn].fn_ud = NULL;
       pending_hotkeys[qn].ud = NULL;
-      pending_hotkeys[qn].owner[0] = '\0';
+      owner_tag_clear(&pending_hotkeys[qn].tag);
     }
     qn = (qn + 1) % HOTKEY_PENDING_MAX;
   }
   HOTKEY_Q_UNLOCK();
+  owner_strfree(&a);
+  owner_strfree(&b);
 }
 
 static int hotkey_strip_self_mod(int vk_code, int mods) {
@@ -504,7 +497,7 @@ bool hotkey_process(int vk_code, int modifiers) {
   if (hotkeys_suspended)
     return false;
   int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
-  for (int i = 0; i < hotkey_total; i++) {
+  for (int i = 0; i < arrlen(hotkeys); i++) {
     HotkeyBinding *b = &hotkeys[i];
 
     if (b->vk_code != vk_code) {
@@ -524,7 +517,7 @@ bool hotkey_process(int vk_code, int modifiers) {
         swallow = false;
       }
     }
-    hotkey_enqueue(cb, b->hotkey_callback_ud, b->user_ud, b->owner);
+    hotkey_enqueue(cb, b->hotkey_callback_ud, b->user_ud, b->tag.owner);
     char buf[2556];
     char hotkey_buf[2422];
     hotkey_string_format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},
@@ -549,14 +542,14 @@ bool hotkey_process(int vk_code, int modifiers) {
 
 bool hotkey_execute(int vk_code, int modifiers) {
   int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
-  for (int i = 0; i < hotkey_total; i++) {
+  for (int i = 0; i < arrlen(hotkeys); i++) {
     HotkeyBinding *b = &hotkeys[i];
     if (b->vk_code != vk_code)
       continue;
     if (hotkey_strip_self_mod(b->vk_code, b->modifiers) != eff_modifiers)
       continue;
     hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud, b->user_ud,
-                   b->owner);
+                   b->tag.owner);
     return true;
   }
   return false;

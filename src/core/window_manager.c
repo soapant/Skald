@@ -7,6 +7,7 @@
 #include "core/types/prompt.h"
 #include "deps/log.h"
 #include "core/window_manager.h"
+#include "core/owner_registry.h"
 #include "config_values.h"
 
 #include "platform/platform.h"
@@ -214,7 +215,7 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec) {
 
 struct EventSlot {
   EventCallback cb;
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
 };
 static struct EventSlot *event_registry[2];
 
@@ -228,12 +229,15 @@ void event_bus_register(Event event, EventCallback cb) {
       break;
     }
   }
-  if (!slot)
+  if (!slot) {
     slot = arraddnptr(event_registry[event], 1);
+    memset(slot, 0, sizeof(*slot));
+  } else {
+    owner_tag_clear(&slot->tag);
+  }
   slot->cb = NULL;
-  slot->owner[0] = '\0';
-  owner_resolve_for_func((void *)cb, slot->owner, sizeof(slot->owner));
-  if (slot->owner[0] == '\0') {
+  owner_tag_set_for_func(&slot->tag, cb, 0);
+  if (!slot->tag.owner) {
     log_warn("event_bus_register: cannot resolve owner, dropping callback");
     return;
   }
@@ -246,24 +250,25 @@ void event_bus_unregister(Event event, EventCallback cb) {
   for (size_t i = 0; i < arrlenu(event_registry[event]); ++i) {
     if (event_registry[event][i].cb == cb) {
       event_registry[event][i].cb = NULL;
-      event_registry[event][i].owner[0] = '\0';
+      owner_tag_clear(&event_registry[event][i].tag);
       return;
     }
   }
 }
 
+static void event_slot_destroy(void *element) {
+  struct EventSlot *slot = (struct EventSlot *)element;
+  slot->cb = NULL;
+  owner_tag_clear(&slot->tag);
+}
+
 void event_bus_purge_owner(const char *path_a, const char *path_b) {
   if (owner_purge_inactive(path_a, path_b))
     return;
-  for (int e = 0; e < 2; ++e) {
-    for (size_t i = 0; i < arrlenu(event_registry[e]); ++i) {
-      if (event_registry[e][i].cb &&
-          owner_module_matches(event_registry[e][i].owner, path_a, path_b)) {
-        event_registry[e][i].cb = NULL;
-        event_registry[e][i].owner[0] = '\0';
-      }
-    }
-  }
+  for (int e = 0; e < 2; ++e)
+    owner_purge_array(event_registry[e], sizeof(struct EventSlot),
+                      offsetof(struct EventSlot, tag), path_a, path_b, 0,
+                      event_slot_destroy);
 }
 
 void event_bus_trigger(Event event) {

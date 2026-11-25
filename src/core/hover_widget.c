@@ -7,6 +7,7 @@
 #include "platform/platform.h"
 #include "platform/widget.h"
 #include "core/hover_widget.h"
+#include "core/owner_registry.h"
 #include "core/widget_registry.h"
 #include "helpers/helpers_render_thread.h"
 #include "helpers/helpers_owner.h"
@@ -19,7 +20,7 @@ typedef struct {
   void *ud;
   void (*release)(void *ud);
   void *release_ud;
-  char owner[OWNER_PATH_MAX];
+  OwnerTag tag;
   int fps;
   bool no_bg;
   unsigned long bg_hex;
@@ -79,6 +80,7 @@ static void hover_widget_destroy_slot(HoverWidgetSlot *s) {
     Platform_Widget_Destroy(w);
     Platform_Widget_FlushDestruction();
   }
+  owner_tag_clear(&s->tag);
   free(s);
   if (release)
     release(release_ud);
@@ -97,9 +99,10 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
     s->ud = ud;
     s->release = release;
     s->release_ud = release_ud;
-    s->owner[0] = '\0';
-    owner_resolve_for_func(owner_src ? owner_src : (void *)render, s->owner,
-                           sizeof(s->owner));
+    char owner[OWNER_PATH_MAX];
+    owner_resolve_for_func(owner_src ? owner_src : (void *)render, owner,
+                           sizeof(owner));
+    owner_tag_set(&s->tag, owner, 0);
     bool geom_changed =
         (s->x != x || s->y != y || s->w_px != w || s->h_px != h);
     s->x = x;
@@ -154,9 +157,10 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
   Platform_Widget_SetNoBg(pw, no_bg);
   widget_set_frame_callback(pw, hover_widget_frame, s);
-  s->owner[0] = '\0';
-  owner_resolve_for_func(owner_src ? owner_src : (void *)render, s->owner,
-                         sizeof(s->owner));
+  char owner[OWNER_PATH_MAX];
+  owner_resolve_for_func(owner_src ? owner_src : (void *)render, owner,
+                         sizeof(owner));
+  owner_tag_set(&s->tag, owner, 0);
 }
 
 static void hover_widget_hide_apply(const char *key) {
@@ -177,7 +181,7 @@ void hover_widget_purge_owner(const char *path_a, const char *path_b) {
     if (!s->w || s->dead) {
       continue;
     }
-    if (owner_module_matches(s->owner, path_a, path_b)) {
+    if (owner_tag_matches(&s->tag, path_a, path_b)) {
       s->dead = true;
       any = true;
     }

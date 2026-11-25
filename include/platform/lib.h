@@ -12,5 +12,6 @@ void Platform_UnloadLibrary(LibHandle lib);
 const char *Platform_LibExtension(void);
 const char *Platform_GetLoadError(void);
 bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n);
+char *Platform_GetModuleOwnerPathAlloc(void *addr);
 
 #endif
