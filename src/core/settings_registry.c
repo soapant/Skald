@@ -485,7 +485,6 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
       .text = place.buf, .len = place.text_len, .font_size = fs});
   int line_h = Platform_GetTextLineHeight(fs);
   EditboxUiSpec ui = {.color_text = COLOR_TEXT,
-                      .color_bg = COLOR_BG,
                       .placeholder = spec->placeholder,
                       .caret_h = spec->caret_h};
   EditboxSpec eb;

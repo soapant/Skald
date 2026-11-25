@@ -147,8 +147,7 @@ void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args) {
   out->descent = args->descent;
   out->text_color =
       args->text_color ? rgb_to_hex(args->text_color) : rgb_to_hex(COLOR_TEXT);
-  out->bg_color =
-      args->bg_color ? rgb_to_hex(args->bg_color) : rgb_to_hex(COLOR_BG);
+  out->bg_color = args->bg_color ? rgb_to_hex(args->bg_color) : 0UL;
   out->placeholder = args->placeholder;
   out->caret_h = args->caret_h;
   out->caret_w = args->caret_w;
