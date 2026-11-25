@@ -87,6 +87,23 @@ typedef enum {
   CC_RUN_SHIFT_ALT,
 } CcRunMode;
 
+typedef enum {
+  CC_STATE_LAUNCHER,
+  CC_STATE_ADD_QUICKLINK,
+  CC_STATE_ADD_SHORTCUT,
+} CcState;
+
+static CcState cc_state = CC_STATE_LAUNCHER;
+static bool cc_state_changed;
+
+static void cc_set_state(CcState state) {
+  if (cc_state == state)
+    return;
+  cc_state = state;
+  cc_state_changed = true;
+  sk_request_refresh();
+}
+
 static CcEntry *cc_entries;
 static int cc_entry_base;
 static const CcEntry *cc_fallback_entry;
@@ -589,70 +606,28 @@ static bool cc_launch_app_as_admin(void) {
   return true;
 }
 
-typedef struct {
-  char name[512];
-  char url[512];
-} Quicklink;
-
-static Quicklink cc_quicklink_draft = {0};
-
-static void cc_quicklinksub_render(PromptState *state) { sk_place_editbox(); }
-
-static bool cc_quicklinksub_enter(PromptState *state) {
-  Quicklink *quicklink = state->render_data;
-  if (quicklink && state->eb->filter[0] != '\0')
-    cc_copy(quicklink->name, sizeof(quicklink->name), state->eb->filter);
-  bool ok =
-      quicklink && sk_config_set_quicklink(quicklink->name, quicklink->url);
-  if (!ok) {
-    sk_message(.message = "Failed To Save Quicklink");
-    return false;
-  }
-  atomic_store(&cc_entries_dirty, true);
-  return true;
+static void cc_add_quicklink_render(PromptState *state) {
 }
 
-static bool cc_quicklink_enter(PromptState *state) {
-  static char buf[800];
-  if (!sk_string_starts_with(state->eb->filter, "https://"))
-    return false;
-
-  char *temp_after = sk_string_cut_after(state->eb->filter, ':');
-  if (!temp_after)
-    return false;
-  temp_after += 2;
-
-  char *website_name = sk_string_cut_before(temp_after, '.');
-  if (!website_name)
-    return false;
-
-  char default_name[256];
-  snprintf(default_name, sizeof(default_name), "%s", website_name);
-
-  if (default_name[0] != '\0') {
-    default_name[0] = toupper((unsigned char)default_name[0]);
-  }
-
-  cc_copy(cc_quicklink_draft.url, sizeof(cc_quicklink_draft.url),
-          state->eb->filter);
-  cc_copy(cc_quicklink_draft.name, sizeof(cc_quicklink_draft.name),
-          default_name);
-  snprintf(buf, sizeof(buf), "Enter Name For Url (%s) (Default:%s)",
-           state->eb->filter, default_name);
-  sk_subwindow(.title = "QuicklinkSub", .h = 60, .placeholder = buf,
-               .render = cc_quicklinksub_render, .enter = cc_quicklinksub_enter,
-               .render_data = &cc_quicklink_draft);
-
-  free(website_name);
-  return true;
+static bool cc_add_quicklink_enter(PromptState *state) {
+  (void)state;
+  return false;
 }
 
-static void cc_quicklink_render(PromptState *state) { sk_place_editbox(); }
+static void cc_add_shortcut_render(PromptState *state) { (void)state; }
 
-static bool cc_add_quicklink(void) {
-  sk_subwindow(.title = "Quicklink", .h = 60, .enter = cc_quicklink_enter,
-               .render = cc_quicklink_render,
-               .placeholder = "Enter Quicklink Url");
+static bool cc_add_shortcut_enter(PromptState *state) {
+  (void)state;
+  return false;
+}
+
+static bool cc_open_quicklink_state(void) {
+  cc_set_state(CC_STATE_ADD_QUICKLINK);
+  return false;
+}
+
+static bool cc_open_shortcut_state(void) {
+  cc_set_state(CC_STATE_ADD_SHORTCUT);
   return false;
 }
 
@@ -660,23 +635,15 @@ static void cc_fill_add_quicklink(void) {
   CcEntry *e =
       cc_entry_add("Add Quicklink", "Quicklink", NULL, "/internet.svg");
   if (e) {
-    e->on_enter = cc_add_quicklink;
+    e->on_enter = cc_open_quicklink_state;
     e->keep_open = true;
   }
-}
-
-static void cc_feature_shortcut_render(PromptState *state) { (void)state; }
-
-static bool cc_add_feature_shortcut(void) {
-  sk_subwindow(.title = "Feature Shortcut", .h = 60,
-               .render = cc_feature_shortcut_render);
-  return false;
 }
 
 static void cc_fill_add_feature_shortcut(void) {
   CcEntry *e = cc_entry_add("Add Shortcut", "Shortcut", NULL, NULL);
   if (e) {
-    e->on_enter = cc_add_feature_shortcut;
+    e->on_enter = cc_open_shortcut_state;
     e->keep_open = true;
   }
 }
@@ -1174,8 +1141,7 @@ static int cc_item_rank(int index) {
   return strcmp(cc_entries[index].type, "Feature") == 0 ? 0 : 1;
 }
 
-static void cc_refresh(PromptState *state) {
-  cc_update_compact_size(state);
+static void cc_launcher_refresh(PromptState *state) {
   cc_fallback_entry = NULL;
   if (atomic_load(&cc_entries_dirty)) {
     cc_build();
@@ -1374,16 +1340,7 @@ static void cc_on_actions_render(SkPlaceState state) {
   sk_string_list_free(&keys);
 }
 
-static void cc_render(PromptState *state) {
-  if (state->lb && state->lb->selected_index != -1) {
-    snprintf(cc_selected_text, sizeof(cc_selected_text), "%s",
-             state->lb->selected_text);
-  } else if (state->eb) {
-    cc_copy(cc_selected_text, sizeof(cc_selected_text), state->eb->filter);
-  }
-  cc_width = state->width;
-  cc_height = state->height;
-
+static void cc_launcher_render(PromptState *state) {
   sk_place_editbox(.placeholder = "Search For Something...");
   if ((!cc_compact_mode || cc_compact_expanded) &&
       state->lb->selected_index != -1) {
@@ -1426,7 +1383,7 @@ static bool cc_copy_calc_result(const PromptState *state) {
   return true;
 }
 
-static bool cc_enter(PromptState *state) {
+static bool cc_launcher_enter(PromptState *state) {
   if (cc_copy_calc_result(state))
     return true;
   if (sk_is_selected(state->lb)) {
@@ -1442,7 +1399,7 @@ static bool cc_enter(PromptState *state) {
   return true;
 }
 
-static bool cc_enter_with(PromptState *state, CcRunMode mode) {
+static bool cc_launcher_enter_with(PromptState *state, CcRunMode mode) {
   if (!sk_is_selected(state->lb)) {
     sk_query_browser(state->eb->filter);
     return true;
@@ -1456,6 +1413,82 @@ static bool cc_enter_with(PromptState *state, CcRunMode mode) {
   return true;
 }
 
+static void cc_state_reset_prompt(PromptState *state) {
+  if (!cc_state_changed)
+    return;
+  cc_state_changed = false;
+  if (state->eb) {
+    state->eb->filter[0] = '\0';
+    state->eb->cursor = 0;
+  }
+  if (state->lb) {
+    state->lb->selected_index = -1;
+    state->lb->selected_text = NULL;
+  }
+  cc_calc_label[0] = '\0';
+}
+
+static void cc_state_empty_refresh(PromptState *state) {
+  sk_populate_listbox(.lb = state->lb, .filter = "", .items = NULL, .count = 0);
+}
+
+static void cc_refresh(PromptState *state) {
+  cc_state_reset_prompt(state);
+  cc_update_compact_size(state);
+  switch (cc_state) {
+  case CC_STATE_ADD_QUICKLINK:
+  case CC_STATE_ADD_SHORTCUT:
+    cc_state_empty_refresh(state);
+    break;
+  case CC_STATE_LAUNCHER:
+  default:
+    cc_launcher_refresh(state);
+    break;
+  }
+}
+
+static void cc_render(PromptState *state) {
+  if (state->lb && state->lb->selected_index != -1) {
+    snprintf(cc_selected_text, sizeof(cc_selected_text), "%s",
+             state->lb->selected_text);
+  } else if (state->eb) {
+    cc_copy(cc_selected_text, sizeof(cc_selected_text), state->eb->filter);
+  }
+  cc_width = state->width;
+  cc_height = state->height;
+  switch (cc_state) {
+  case CC_STATE_ADD_QUICKLINK:
+    cc_add_quicklink_render(state);
+    break;
+  case CC_STATE_ADD_SHORTCUT:
+    cc_add_shortcut_render(state);
+    break;
+  case CC_STATE_LAUNCHER:
+  default:
+    cc_launcher_render(state);
+    break;
+  }
+}
+
+static bool cc_enter(PromptState *state) {
+  switch (cc_state) {
+  case CC_STATE_ADD_QUICKLINK:
+    return cc_add_quicklink_enter(state);
+  case CC_STATE_ADD_SHORTCUT:
+    return cc_add_shortcut_enter(state);
+  case CC_STATE_LAUNCHER:
+  default:
+    return cc_launcher_enter(state);
+  }
+}
+
+static bool cc_enter_with(PromptState *state, CcRunMode mode) {
+  switch (cc_state) {
+  default:
+    return cc_launcher_enter_with(state,mode);
+  }
+}
+
 #define CC_DEFINE_ENTER(fn, mode)                                              \
   static bool fn(PromptState *state) { return cc_enter_with(state, mode); }
 CC_DEFINE_ENTER(cc_ctrl_enter, CC_RUN_CTRL)
@@ -1465,6 +1498,8 @@ CC_DEFINE_ENTER(cc_ctrl_alt_enter, CC_RUN_CTRL_ALT)
 CC_DEFINE_ENTER(cc_shift_alt_enter, CC_RUN_SHIFT_ALT)
 
 static void cc_on_close(void) {
+  cc_state = CC_STATE_LAUNCHER;
+  cc_state_changed = false;
   cc_compact_mode = false;
   cc_compact_expanded = false;
   cc_run_pending();
@@ -1489,10 +1524,11 @@ static void cc_reload(void) {
 
 static void cc_open_control(void) {
   atomic_store(&cc_entries_dirty, true);
+  cc_state = CC_STATE_LAUNCHER;
+  cc_state_changed = false;
   cc_compact_mode = CompactMode;
   cc_compact_expanded = false;
-  sk_window(.title = "Control",
-            .h = cc_compact_mode ? CC_COMPACT_HEIGHT : PromptH,
+  sk_window(.title = "Control", .h = cc_compact_mode ? CC_COMPACT_HEIGHT : PromptH,
             .anchor_y_to_prompt_h = cc_compact_mode,
             .refresh = cc_refresh, .enter = cc_enter,
             .ctrl_enter = cc_ctrl_enter, .shift_enter = cc_shift_enter,
