@@ -2512,9 +2512,33 @@ bool sk_click_button_at_rel(SkPos pos, int button) {
 
 void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
 
-bool ski_replay_hotkey(SkKey key) { 
+bool ski_replay_hotkey(SkKey key) {
   int mods = key.mods ? key.mods : 0;
-  return hotkey_process(key.vk_code,mods); 
+  return hotkey_process(key.vk_code, mods);
+}
+
+bool ski_execute_hotkey(SkKey key) {
+  bool handled = hotkey_execute(key.vk_code, key.mods);
+  PromptState *state = sk_current_prompt_state();
+  if (!state)
+    return handled;
+
+  PopupKeyEvent ev = {0};
+  ev.vk = key.vk_code;
+  ev.ctrl = (key.mods & HOTKEY_MOD_CTRL) != 0;
+  ev.shift = (key.mods & HOTKEY_MOD_SHIFT) != 0;
+  ev.alt = (key.mods & HOTKEY_MOD_ALT) != 0;
+  if (prompt_handle_key(state, &ev))
+    return true;
+
+  if (!ev.ctrl && !ev.alt && !(key.mods & HOTKEY_MOD_SUPER) &&
+      key.vk_code >= 32 && key.vk_code < 127) {
+    ev.text[0] = (char)key.vk_code;
+    ev.text_len = 1;
+    prompt_insert_text(state, ev.text, ev.text_len);
+    return true;
+  }
+  return handled;
 }
 
 static bool type_text_common(const char *s) {

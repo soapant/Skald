@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "test.h"
 
 #include "core/hotkey_manager.h"
+#include "core/skapi.h"
 #include "core/types.h"
 #include "helpers/helpers_hotkey.h"
 
@@ -116,6 +118,49 @@ TEST(suspended_hotkeys_do_not_dispatch) {
   hotkey_unregister_internal(0xF4, 0);
 }
 
+TEST(direct_execute_dispatches_callback) {
+  reset_counters();
+  int marker = 0x5678;
+  HotkeyBinding b = make_binding(0xF5, HOTKEY_MOD_CTRL, ud_cb, &marker, NULL);
+  ASSERT_TRUE(hotkey_register_internal(b));
+  ASSERT_TRUE(hotkey_execute(0xF5, HOTKEY_MOD_CTRL));
+  hotkey_drain_pending();
+  ASSERT_EQ_INT(ud_calls, 1);
+  ASSERT_EQ_INT(ud_seen == &marker, 1);
+  ASSERT_TRUE(hotkey_unregister_internal(0xF5, HOTKEY_MOD_CTRL));
+}
+
+static bool blocked_condition(void) { return false; }
+
+TEST(direct_execute_ignores_os_context_filters) {
+  reset_counters();
+  char **windows = malloc(sizeof(char *));
+  windows[0] = strdup("some_window");
+  HotkeyBinding b = make_binding(0xF6, 0, ud_cb, NULL, NULL);
+  b.window_list = windows;
+  b.window_count = 1;
+  b.hotkey_condition = blocked_condition;
+  ASSERT_TRUE(hotkey_register_internal(b));
+  hotkey_set_suspended(true);
+  ASSERT_TRUE(hotkey_execute(0xF6, 0));
+  hotkey_set_suspended(false);
+  hotkey_drain_pending();
+  ASSERT_EQ_INT(ud_calls, 1);
+  ASSERT_TRUE(hotkey_unregister_internal(0xF6, 0));
+}
+
+TEST(sk_execute_hotkey_dispatches_callback) {
+  reset_counters();
+  int marker = 0x9ABC;
+  HotkeyBinding b = make_binding(0xF7, HOTKEY_MOD_ALT, ud_cb, &marker, NULL);
+  ASSERT_TRUE(hotkey_register_internal(b));
+  ASSERT_TRUE(sk_execute_hotkey(.vk_code = 0xF7, .mods = HOTKEY_MOD_ALT));
+  hotkey_drain_pending();
+  ASSERT_EQ_INT(ud_calls, 1);
+  ASSERT_EQ_INT(ud_seen == &marker, 1);
+  ASSERT_TRUE(hotkey_unregister_internal(0xF7, HOTKEY_MOD_ALT));
+}
+
 int main(void) {
   RUN(register_and_drain_ud_callback);
   RUN(register_and_drain_legacy_callback);
@@ -123,5 +168,8 @@ int main(void) {
   RUN(purge_owner_removes_binding_and_pending);
   RUN(keyboard_binding_detection_ignores_mouse);
   RUN(suspended_hotkeys_do_not_dispatch);
+  RUN(direct_execute_dispatches_callback);
+  RUN(direct_execute_ignores_os_context_filters);
+  RUN(sk_execute_hotkey_dispatches_callback);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

@@ -22,6 +22,7 @@ bool hotkey_is_taken(int vk_code, int modifiers);
 const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb);
 const HotkeyBinding *hotkey_find_by_ud(const void *ud);
 bool hotkey_process(int vk_code, int modifiers);
+bool hotkey_execute(int vk_code, int modifiers);
 void hotkey_drain_pending(void);
 int hotkey_wake_fd(void);
 void hotkey_set_suspended(bool suspended);

@@ -546,3 +546,18 @@ bool hotkey_process(int vk_code, int modifiers) {
   }
   return false;
 }
+
+bool hotkey_execute(int vk_code, int modifiers) {
+  int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
+  for (int i = 0; i < hotkey_total; i++) {
+    HotkeyBinding *b = &hotkeys[i];
+    if (b->vk_code != vk_code)
+      continue;
+    if (hotkey_strip_self_mod(b->vk_code, b->modifiers) != eff_modifiers)
+      continue;
+    hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud, b->user_ud,
+                   b->owner);
+    return true;
+  }
+  return false;
+}

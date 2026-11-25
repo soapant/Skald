@@ -1210,6 +1210,7 @@ bool ski_register_remapping(const SkRemappingSpec *spec);
   ski_register_remapping(&(SkRemappingSpec){__VA_ARGS__})
 
 bool ski_replay_hotkey(SkKey key);
+bool ski_execute_hotkey(SkKey key);
 
 #define sk_replay_hotkey(...)                                             \
   ski_replay_hotkey((SkKey){__VA_ARGS__})
