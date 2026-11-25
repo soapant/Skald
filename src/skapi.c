@@ -1898,6 +1898,7 @@ bool ski_place_editbox(const SkEditSpec *spec) {
       entry->primary = primary;
       entry->no_tab = spec->no_tab;
       entry->wrapped = spec->wrapped;
+      entry->font_size = spec->font_size > 0 ? spec->font_size : FontSize;
       const char *ph = copy.placeholder;
       if (primary && (!ph || !ph[0]) && state->default_eb)
         ph = state->default_eb->placeholder;

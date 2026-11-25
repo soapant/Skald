@@ -67,6 +67,7 @@ typedef struct {
   bool primary;
   bool no_tab;
   bool wrapped;
+  int font_size;
   EditboxWrapCache wrap_cache;
 } PromptEditbox;
 

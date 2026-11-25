@@ -930,6 +930,140 @@ void editbox_registry_cycle(PromptState *state, int dir) {
   }
 }
 
+static void editbox_single_click_to_caret(PromptState *state,
+                                          PromptEditbox *entry, int mx) {
+  const char *text = entry->eb.filter;
+  int len = (int)strlen(text);
+  int font_size = entry->font_size > 0 ? entry->font_size : FontSize;
+  int text_w = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+      .text = text, .len = len, .font_size = font_size});
+  int inset = text_w > 0 && entry->w < text_w + PROMPT_EDIT_SCROLL_PAD + 16
+                  ? EDITBOX_TIGHT_INSET
+                  : PROMPT_EDIT_INSET;
+  int target_x = mx - entry->x - inset + entry->eb.scroll_offset;
+  int best = 0;
+  int best_dist = INT_MAX;
+  for (int i = 0; i < len;) {
+    if (text[i] == '\n') {
+      i++;
+      continue;
+    }
+    int glen = utf8_lead_len((unsigned char)text[i]);
+    if (i + glen > len)
+      glen = len - i;
+    int before = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+        .text = text, .len = i, .font_size = font_size});
+    int after = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+        .text = text, .len = i + glen, .font_size = font_size});
+    int before_dist = before - target_x;
+    if (before_dist < 0)
+      before_dist = -before_dist;
+    int after_dist = after - target_x;
+    if (after_dist < 0)
+      after_dist = -after_dist;
+    if (before_dist <= after_dist) {
+      if (before_dist < best_dist) {
+        best_dist = before_dist;
+        best = i;
+      }
+    } else if (after_dist < best_dist) {
+      best_dist = after_dist;
+      best = i + glen;
+    }
+    i += glen;
+  }
+  edit_state_end_selection();
+  state->eb->cursor = best;
+}
+
+static bool editbox_wrap_caret_from_point(PromptState *state,
+                                          PromptEditbox *entry, int mx,
+                                          int my) {
+  if (!state || !entry || !entry->wrapped)
+    return false;
+  EditboxWrapCache *cache = &entry->wrap_cache;
+  if (cache->count <= 0 || cache->line_h <= 0)
+    return false;
+  const char *text = entry->eb.filter;
+  int len = (int)strlen(text);
+  int max_width = entry->w > PROMPT_EDIT_SCROLL_PAD
+                      ? entry->w - PROMPT_EDIT_SCROLL_PAD
+                      : 40;
+  uint64_t key = editbox_wrap_key(text, len, cache->line_h, max_width);
+  if (cache->key != key || cache->len != len ||
+      cache->max_width != max_width)
+    return false;
+  int line_h = cache->line_h;
+  int x0 = entry->x + PROMPT_EDIT_INSET;
+  int y0 = (entry->y > 0 ? entry->y : PROMPT_EDIT_INSET) +
+           Platform_EditboxPlaceholderOffset();
+  int cursor = state->eb->cursor;
+  if (cursor < 0)
+    cursor = 0;
+  if (cursor > len)
+    cursor = len;
+  int caret_idx = cursor < cache->count ? cursor : cache->count - 1;
+  int caret_line = cache->positions[caret_idx].y / line_h;
+  int line_count = 1;
+  for (int i = 0; i < cache->count; i++) {
+    int line = cache->positions[i].y / line_h;
+    if (line >= line_count)
+      line_count = line + 1;
+  }
+  int visible = entry->h > 0 ? entry->h / line_h : 1;
+  if (visible < 1)
+    visible = 1;
+  int scroll_y = caret_line >= visible ? (caret_line - visible + 1) * line_h
+                                       : 0;
+  int target_y = my - y0 + scroll_y;
+  int target_line = target_y / line_h;
+  if (target_line < 0)
+    target_line = 0;
+  if (target_line >= line_count)
+    target_line = line_count - 1;
+  int target_x = mx - x0;
+  int font_size = line_h > 4 ? line_h - 4 : FontSize;
+  int best = 0;
+  int best_dist = INT_MAX;
+  for (int i = 0; i < cache->count && i < len; i++) {
+    if (text[i] == '\n' || ((unsigned char)text[i] & 0xC0) == 0x80)
+      continue;
+    if (cache->positions[i].y / line_h != target_line)
+      continue;
+    int glen = utf8_lead_len((unsigned char)text[i]);
+    if (i + glen > len)
+      glen = len - i;
+    int before = cache->positions[i].x;
+    int after;
+    int next = i + glen;
+    if (next < cache->count &&
+        cache->positions[next].y == cache->positions[i].y) {
+      after = cache->positions[next].x;
+    } else {
+      after = before + Platform_MeasureTextWidth((MeasureTextWidthSpec){
+                           .text = text + i,
+                           .len = glen,
+                           .font_size = font_size});
+    }
+    int dx = before - target_x;
+    int dy = cache->positions[i].y - target_y;
+    int dist = dx * dx + dy * dy;
+    if (dist < best_dist) {
+      best_dist = dist;
+      best = i;
+    }
+    dx = after - target_x;
+    dist = dx * dx + dy * dy;
+    if (dist < best_dist) {
+      best_dist = dist;
+      best = next;
+    }
+  }
+  edit_state_end_selection();
+  state->eb->cursor = best;
+  return true;
+}
+
 void editbox_registry_tick(PromptState *state) {
   if (!state)
     return;
@@ -947,6 +1081,10 @@ void editbox_registry_tick(PromptState *state) {
                 my < entry->y + entry->h;
     if (down && !entry->was_down && over) {
       editbox_focus_set(state, i);
+      if (entry->wrapped)
+        editbox_wrap_caret_from_point(state, entry, mx, my);
+      else
+        editbox_single_click_to_caret(state, entry, mx);
       log_info("editbox tick: clicked '%s' idx=%d rect=%d,%d %dx%d",
                entry->name, i, entry->x, entry->y, entry->w, entry->h);
     }
