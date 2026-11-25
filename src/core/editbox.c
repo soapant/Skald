@@ -124,6 +124,7 @@ void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
   EditboxInit ebi;
   editbox_init_from_spec(&ebi, &init_args);
   editbox_build_spec(out, &ebi);
+  out->draw_bg = ui->color_bg != 0;
   out->wrap_cache = editbox_prompt_wrap_cache(state);
 }
 
@@ -604,6 +605,17 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
   if (!spec || !layout) {
     return;
   }
+  if (spec->draw_bg && (parts & EDITBOX_PART_TINT))
+    Platform_DrawRectRaw((DrawRectRawSpec){.x = spec->x,
+                                           .y = spec->y,
+                                           .w = spec->w,
+                                           .h = spec->h,
+                                           .color = spec->bg_color,
+                                           .radius = 0,
+                                           .rounded = false,
+                                           .opaque = true,
+                                           .thickness = 1,
+                                           .filled = true});
   unsigned long bg = spec->bg_color ? spec->bg_color : rgb_to_hex(COLOR_BG);
 
   if (spec->wrapped) {

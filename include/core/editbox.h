@@ -34,6 +34,7 @@ typedef struct {
   int cursor;
   bool password_mode;
   bool wrapped;
+  bool draw_bg;
 
   int sel_start;
   int sel_end;

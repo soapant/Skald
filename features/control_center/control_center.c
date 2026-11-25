@@ -607,6 +607,11 @@ static bool cc_launch_app_as_admin(void) {
 }
 
 static void cc_add_quicklink_render(PromptState *state) {
+  char* initial_text = "";
+  int starting_x = state->width / 2 - 200;
+  if (sk_string_contains(sk_get_last_clipboard_entry(),"https://")) initial_text = sk_get_last_clipboard_entry();
+  sk_draw_text(.text="Link",.color=CC_TYPE_COLOR,.x=starting_x,.y=40);
+  sk_place_editbox_wrapped(.x=starting_x + 60,.y=40,.w=400,.h=300,.placeholder="Enter URL or Link",.initial_text=initial_text,.color_bg=CC_TYPE_COLOR,.radius=6);
 }
 
 static bool cc_add_quicklink_enter(PromptState *state) {
