@@ -1204,12 +1204,18 @@ typedef struct {
   const char *blacklist[16];
 } SkRemappingSpec;
 
+bool ski_register_remapping(const SkRemappingSpec *spec);
+
 #define sk_register_remapping(...)                                             \
   ski_register_remapping(&(SkRemappingSpec){__VA_ARGS__})
 
-bool ski_register_remapping(const SkRemappingSpec *spec);
+bool ski_replay_hotkey(SkKey key);
 
-bool sk_replay_hotkey(int vk, int mods);
+#define sk_replay_hotkey(...)                                             \
+  ski_replay_hotkey((SkKey){__VA_ARGS__})
+
+#define sk_execute_hotkey(...)                                             \
+  ski_execute_hotkey((SkKey){__VA_ARGS__})
 
 typedef void (*SkSnippetFunc)(void);
 

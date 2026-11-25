@@ -2512,12 +2512,16 @@ bool sk_click_button_at_rel(SkPos pos, int button) {
 
 void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
 
-bool sk_replay_hotkey(int vk, int mods) { return hotkey_process(vk, mods); }
+bool ski_replay_hotkey(SkKey key) { 
+  int mods = key.mods ? key.mods : 0;
+  return hotkey_process(key.vk_code,mods); 
+}
+
 static bool type_text_common(const char *s) {
   if (!s)
     return false;
-  char *old = Platform_GetClipboardEntry();
   // yes this is literally just ctrl c ctrl v
+  char *old = Platform_GetClipboardEntry();
   Platform_CopyToClipboard(s);
   Platform_EmitKey(VK_LCONTROL, 1);
   Platform_EmitKey('V', 1);
