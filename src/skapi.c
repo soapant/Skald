@@ -219,7 +219,7 @@ unsigned sk_cap_generation(void) { return cap_generation(); }
 void ski_cap_register(const char *key, void *fn) {
   cap_register_abi(key, CAP_ABI_V1, fn);
 }
-void *ski_cap_resolve(const char *key) {
+void *sk_cap_resolve(const char *key) {
   return cap_resolve_abi(key, CAP_ABI_V1);
 }
 void sk_cap_register_abi(const char *key, unsigned abi, void *fn) {
@@ -634,7 +634,7 @@ bool ski_register_snippet(const SkSnippetSpec *spec) {
                                    (void *)__builtin_return_address(0));
 }
 
-bool ski_unregister_snippet(const char *trigger) {
+bool sk_unregister_snippet(const char *trigger) {
   return snippet_unregister_internal(trigger);
 }
 
@@ -721,7 +721,7 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   return hotkey_register_internal(binding);
 }
 
-bool ski_unregister_hotkey(const char *hotkey) {
+bool sk_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
   HotkeyBinding binding = hotkey_convert_into_binding((char *)hotkey, NULL,
@@ -2487,12 +2487,12 @@ bool sk_click_button_at_rel(SkPos pos, int button) {
 
 void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
 
-bool ski_replay_hotkey(SkKey key) {
+bool sk_replay_hotkey(SkKey key) {
   int mods = key.mods ? key.mods : 0;
   return hotkey_process(key.vk_code, mods);
 }
 
-bool ski_execute_hotkey(SkKey key) {
+bool sk_execute_hotkey(SkKey key) {
   bool handled = hotkey_execute(key.vk_code, key.mods);
   PromptState *state = sk_current_prompt_state();
   if (!state)
@@ -3594,23 +3594,23 @@ typedef struct {
 static SkAliasEntry *sk_alias_entries;
 #define alias_count arrlenu(sk_alias_entries)
 
-bool ski_add_alias(const SkAliasSpec *spec) {
-  if (!spec || !spec->alias || !spec->target)
+bool sk_register_alias(const char *alias, const char *target) {
+  if (!alias || !target)
     return false;
   for (size_t i = 0; i < alias_count; i++) {
-    if (strcmp(sk_alias_entries[i].target, spec->target) == 0) {
+    if (strcmp(sk_alias_entries[i].target, target) == 0) {
       free(sk_alias_entries[i].alias);
-      sk_alias_entries[i].alias = strdup(spec->alias);
+      sk_alias_entries[i].alias = strdup(alias);
       return true;
     }
   }
   SkAliasEntry *e = arraddnptr(sk_alias_entries, 1);
-  e->alias = strdup(spec->alias);
-  e->target = strdup(spec->target);
+  e->alias = strdup(alias);
+  e->target = strdup(target);
   return true;
 }
 
-bool ski_remove_alias(const char *alias) {
+bool sk_remove_alias(const char *alias) {
   if (!alias)
     return false;
   for (size_t i = 0; i < alias_count;) {
@@ -4353,8 +4353,7 @@ static void sk_config_init_locked(void) {
     sk_config_migrate_hotkeys_txt(dir);
 
   for (size_t i = 0; i < alias_entry_count; i++)
-    sk_register_alias(.alias = alias_entries[i].alias,
-                      .target = alias_entries[i].target);
+    sk_register_alias(alias_entries[i].alias, alias_entries[i].target);
 }
 
 void sk_config_init(void) {
@@ -4665,12 +4664,11 @@ void config_hotkey_registry_purge_owner(const char *path_a,
   }
 }
 
-bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
-  if (!spec || !spec->target || !spec->target[0])
+bool sk_config_set_alias(const char *target, const char *alias) {
+  if (!target || !target[0])
     return false;
-  if (strlen(spec->target) >= SK_CONFIG_TARGET_MAX)
+  if (strlen(target) >= SK_CONFIG_TARGET_MAX)
     return false;
-  const char *alias = spec->alias;
   bool clearing = !alias || !alias[0];
   if (!clearing && strlen(alias) >= SK_CONFIG_ALIAS_MAX)
     return false;
@@ -4678,16 +4676,16 @@ bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
   sk_config_lock();
   sk_config_init_locked();
   if (clearing) {
-    int i = alias_index_of(spec->target);
+    int i = alias_index_of(target);
     if (i >= 0) {
-      const char *cur = sk_alias_for(spec->target);
+      const char *cur = sk_alias_for(target);
       if (cur)
         sk_remove_alias(cur);
       alias_entries_remove(i);
       if (sk_config_ready())
-        config_section_clear(sk_config_path, "aliases", spec->target);
+        config_section_clear(sk_config_path, "aliases", target);
     } else {
-      const char *cur = sk_alias_for(spec->target);
+      const char *cur = sk_alias_for(target);
       if (cur)
         sk_remove_alias(cur);
     }
@@ -4695,11 +4693,11 @@ bool ski_config_set_alias(const SkConfigAliasSpec *spec) {
     return true;
   }
 
-  alias_entries_set(spec->target, alias);
+  alias_entries_set(target, alias);
   if (!sk_config_ready() ||
-      !config_section_set(sk_config_path, "aliases", spec->target, alias))
+      !config_section_set(sk_config_path, "aliases", target, alias))
     log_error("sk_config: failed to save %s", sk_config_path);
-  sk_register_alias(.alias = alias, .target = spec->target);
+  sk_register_alias(alias, target);
   sk_config_unlock();
   return true;
 }
@@ -4718,8 +4716,7 @@ char *sk_config_get_alias(const char *target) {
 bool sk_config_clear_alias(const char *target) {
   if (!target)
     return false;
-  SkConfigAliasSpec spec = {.target = target, .alias = NULL};
-  return ski_config_set_alias(&spec);
+  return sk_config_set_alias(target, NULL);
 }
 
 int sk_config_alias_count(void) {

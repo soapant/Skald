@@ -1630,7 +1630,7 @@ static bool cc_alias_enter(PromptState *state) {
   char alias[256];
   cc_trim_copy(state->eb->filter, alias, sizeof(alias));
   if (alias[0])
-    sk_config_set_alias(.target = cc_register_target, .alias = alias);
+    sk_config_set_alias(cc_register_target, alias);
   return true;
 }
 

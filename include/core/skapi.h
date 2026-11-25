@@ -1040,16 +1040,8 @@ int sk_settings_editbox_right_offset(int pane_w, int width);
 
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 
-typedef struct {
-  const char *alias;
-  const char *target;
-} SkAliasSpec;
-
-#define sk_register_alias(...) ski_add_alias(&(SkAliasSpec){__VA_ARGS__})
-
-bool ski_add_alias(const SkAliasSpec *spec);
-bool ski_remove_alias(const char *alias);
-#define sk_remove_alias(alias) ski_remove_alias((alias))
+bool sk_register_alias(const char *alias, const char *target);
+bool sk_remove_alias(const char *alias);
 
 const char *sk_alias_for(const char *target);
 
@@ -1065,17 +1057,10 @@ typedef struct {
 #define sk_config_set_hotkey(...)                                              \
   ski_config_set_hotkey(&(SkConfigHotkeySpec){__VA_ARGS__})
 
-typedef struct {
-  const char *target;
-  const char *alias;
-} SkConfigAliasSpec;
-
-#define sk_config_set_alias(...)                                               \
-  ski_config_set_alias(&(SkConfigAliasSpec){__VA_ARGS__})
-
 void sk_config_init(void);
 
 bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec);
+bool sk_config_set_alias(const char *target, const char *alias);
 char *sk_config_get_hotkey(const char *name);
 bool sk_config_clear_hotkey(const char *name);
 
@@ -1086,7 +1071,6 @@ char *sk_config_hotkey_name_at(int index);
 char *sk_config_hotkey_display_name_at(int index);
 char *sk_config_hotkey_value_at(int index);
 
-bool ski_config_set_alias(const SkConfigAliasSpec *spec);
 char *sk_config_get_alias(const char *target);
 bool sk_config_clear_alias(const char *target);
 
@@ -1131,8 +1115,7 @@ typedef struct {
   ski_register_hotkey(&(SkHotkeySpec){__VA_ARGS__})
 
 bool ski_register_hotkey(const SkHotkeySpec *spec);
-bool ski_unregister_hotkey(const char *hotkey);
-#define sk_unregister_hotkey(hk) ski_unregister_hotkey((hk))
+bool sk_unregister_hotkey(const char *hotkey);
 
 typedef struct {
   const char *name;
@@ -1180,14 +1163,8 @@ bool ski_register_remapping(const SkRemappingSpec *spec);
 #define sk_register_remapping(...)                                             \
   ski_register_remapping(&(SkRemappingSpec){__VA_ARGS__})
 
-bool ski_replay_hotkey(SkKey key);
-bool ski_execute_hotkey(SkKey key);
-
-#define sk_replay_hotkey(...)                                             \
-  ski_replay_hotkey((SkKey){__VA_ARGS__})
-
-#define sk_execute_hotkey(...)                                             \
-  ski_execute_hotkey((SkKey){__VA_ARGS__})
+bool sk_replay_hotkey(SkKey key);
+bool sk_execute_hotkey(SkKey key);
 
 typedef void (*SkSnippetFunc)(void);
 
@@ -1203,8 +1180,7 @@ typedef struct {
   ski_register_snippet(&(SkSnippetSpec){__VA_ARGS__})
 
 bool ski_register_snippet(const SkSnippetSpec *spec);
-bool ski_unregister_snippet(const char *trigger);
-#define sk_unregister_snippet(trigger) ski_unregister_snippet((trigger))
+bool sk_unregister_snippet(const char *trigger);
 
 void sk_reload_feature(const char *name);
 int sk_reload_all_features(void);
@@ -1227,13 +1203,11 @@ void sk_cap_register_abi(const char *key, unsigned abi, void *fn);
 void *sk_cap_resolve_abi(const char *key, unsigned abi);
 
 void ski_cap_register(const char *key, void *fn);
-void *ski_cap_resolve(const char *key);
+void *sk_cap_resolve(const char *key);
 unsigned sk_cap_generation(void);
 void sk_cap_bind_declare(const char *key, void *consumer);
 
 #define sk_cap_register(key, fn) ski_cap_register((key), (void *)(fn))
-
-#define sk_cap_resolve(key) ski_cap_resolve((key))
 
 #define sk_cap_bind(var, key, type)                                            \
   static type var##_fn;                                                        \
