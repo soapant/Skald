@@ -44,6 +44,9 @@ typedef Line SkLine;
 typedef Circle SkCircle;
 typedef Pos SkPos;
 typedef ListSpec SkListSpec;
+
+#define SK_POS(px, py) ((SkPos){.x = (px), .y = (py)})
+#define SK_COLOR(cr, cg, cb) ((SkColor){.r = (cr), .g = (cg), .b = (cb)})
 typedef WindowList SkWindowList;
 typedef struct {
   const char *name;
@@ -221,8 +224,6 @@ char *sk_hotkey_to_string(SkKey key);
 
 SkKey sk_hotkey_from_string(const char *str);
 
-bool ski_hotkey_down(int vk_code, int mods);
-
 bool sk_hotkey_down(SkKey key);
 
 bool sk_launch_browser(const char *url);
@@ -237,7 +238,7 @@ SkWindowHandle sk_find_window_by_id(const char *id);
 
 SkWindowHandle sk_get_held_window(void);
 
-bool sk_move_window(SkWindowHandle window, int x, int y);
+bool sk_move_window(SkWindowHandle window, SkPos pos);
 bool sk_set_window_size(SkWindowHandle window, int w, int h);
 bool sk_set_window_opacity(SkWindowHandle window, int percent);
 SkRect sk_get_window_geometry(SkWindowHandle window);
@@ -456,7 +457,7 @@ typedef struct {
 
 typedef int (*SkWrapMeasureFn)(void *ctx, const char *text, int len);
 
-int ski_text_wrap_layout(const char *text, int x0, int y0, int max_width,
+int ski_text_wrap_layout(const char *text, SkPos pos, int max_width,
                          int line_height, SkWrapMeasureFn measure, void *ctx,
                          SkPos *out, int maxout);
 
@@ -687,8 +688,6 @@ int sk_get_text_height(int font_size);
 
 ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t);
 
-void ski_set_draw_offset(int dx, int dy);
-void ski_get_draw_offset(int *out_x, int *out_y);
 void sk_set_draw_offset(SkPos pos);
 
 SkPos sk_get_draw_offset(void);
@@ -740,13 +739,9 @@ void sk_free_flags(SkFlagList *list);
 
 SkTimer sk_timer_start(void);
 
-double ski_end_timer(uint64_t ticks);
-
 double sk_timer_end(SkTimer t);
 
 SkTimer sk_profile_start(void);
-
-void ski_profile_end(uint64_t ticks);
 
 void sk_profile_end(SkTimer timer);
 
@@ -833,25 +828,13 @@ char *sk_get_active_window_id(void);
 bool sk_is_window_open(const char *title);
 #define sk_window_open sk_is_window_open
 
-SkColor ski_get_pixel_color(int x, int y);
-
 SkColor sk_get_pixel_color(SkPos pos);
-
-bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b,
-                       int tolerance);
 
 bool sk_color_matches(SkPos pos, SkColor color, int tolerance);
 
-bool ski_wait_pixel(int x, int y, size_t r, size_t g, size_t b, int tolerance,
-                    double timeout);
-
 bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout);
 
-bool ski_move_to_pos(int x, int y);
-
 bool sk_move_to_pos(SkPos pos);
-
-bool ski_click_at(int x, int y);
 
 bool sk_click_at(SkPos pos);
 
@@ -861,11 +844,7 @@ bool sk_right_click(void);
 
 bool sk_emit_mouse_button(int button, bool down);
 
-bool ski_emit_mouse_button_at(int x, int y, int button, bool down);
-
 bool sk_emit_mouse_button_at(SkPos pos, int button, bool down);
-
-bool ski_click_button_at(int x, int y, int button);
 
 bool sk_click_button_at(SkPos pos, int button);
 
@@ -876,19 +855,11 @@ void sk_emit_key(int vk, bool down);
 #define sk_move_mouse sk_move_to_pos
 #define sk_click() sk_left_click()
 
-bool ski_move_to_pos_rel(int rx, int ry);
-
 bool sk_move_to_pos_rel(SkPos pos);
-
-bool ski_click_at_rel(int rx, int ry);
 
 bool sk_click_at_rel(SkPos pos);
 
-bool ski_emit_mouse_button_at_rel(int rx, int ry, int button, bool down);
-
 bool sk_emit_mouse_button_at_rel(SkPos pos, int button, bool down);
-
-bool ski_click_button_at_rel(int rx, int ry, int button);
 
 bool sk_click_button_at_rel(SkPos pos, int button);
 

@@ -1340,8 +1340,8 @@ SkWindowHandle sk_find_window_by_id(const char *id) {
 
 SkWindowHandle sk_get_held_window(void) { return Platform_GetHeldWindow(); }
 
-bool sk_move_window(SkWindowHandle window, int x, int y) {
-  return Platform_MoveWindow(window, x, y);
+bool sk_move_window(SkWindowHandle window, SkPos pos) {
+  return Platform_MoveWindow(window, pos.x, pos.y);
 }
 
 bool sk_set_window_size(SkWindowHandle window, int w, int h) {
@@ -1818,11 +1818,11 @@ bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
   return true;
 }
 
-int ski_text_wrap_layout(const char *text, int x0, int y0, int max_width,
+int ski_text_wrap_layout(const char *text, SkPos pos, int max_width,
                          int line_height, SkWrapMeasureFn measure, void *ctx,
                          SkPos *out, int maxout) {
-  return text_wrap_layout(text, x0, y0, max_width, line_height, measure, ctx,
-                          out, maxout);
+  return text_wrap_layout(text, pos.x, pos.y, max_width, line_height, measure,
+                          ctx, out, maxout);
 }
 
 typedef struct {
@@ -2114,18 +2114,12 @@ ColorRef sk_color_lerp(ColorRef a, ColorRef b, float t) {
   return color_lerp_bgr(a, b, t);
 }
 
-void ski_set_draw_offset(int dx, int dy) { set_draw_offset(dx, dy); }
-
-void ski_get_draw_offset(int *out_x, int *out_y) {
-  get_draw_offset(out_x, out_y);
-}
-
-void sk_set_draw_offset(SkPos pos) { ski_set_draw_offset(pos.x, pos.y); }
+void sk_set_draw_offset(SkPos pos) { set_draw_offset(pos.x, pos.y); }
 
 SkPos sk_get_draw_offset(void) {
   int x = 0, y = 0;
-  ski_get_draw_offset(&x, &y);
-  return (SkPos){x, y};
+  get_draw_offset(&x, &y);
+  return SK_POS(x, y);
 }
 
 bool ski_scroll_begin(const SkScrollSpec *spec) {
@@ -2419,31 +2413,23 @@ SkWindowList sk_get_all_window_titles(void) {
 
 SkWindowList sk_get_all_window_ids(void) { return Platform_GetWindowIds(); }
 
-SkColor ski_get_pixel_color(int x, int y) {
-  return Platform_GetPixelColor(x, y);
-}
 SkColor sk_get_pixel_color(SkPos pos) {
-  return ski_get_pixel_color(pos.x, pos.y);
+  return Platform_GetPixelColor(pos.x, pos.y);
 }
 
-bool ski_move_to_pos(int x, int y) { return Platform_MoveToPos(x, y); }
-bool sk_move_to_pos(SkPos pos) { return ski_move_to_pos(pos.x, pos.y); }
-bool ski_click_at(int x, int y) { return ski_move_to_pos(x, y) && sk_click(); }
-bool sk_click_at(SkPos pos) { return ski_click_at(pos.x, pos.y); }
+bool sk_move_to_pos(SkPos pos) { return Platform_MoveToPos(pos.x, pos.y); }
+bool sk_click_at(SkPos pos) { return sk_move_to_pos(pos) && sk_click(); }
 bool sk_left_click(void) { return Platform_ClickButton(1); }
 bool sk_right_click(void) { return Platform_ClickButton(2); }
 bool sk_emit_mouse_button(int button, bool down) {
   return Platform_MouseButtonDown(button, down);
 }
-bool ski_emit_mouse_button_at(int x, int y, int button, bool down) {
-  bool moved = ski_move_to_pos(x, y);
+bool sk_emit_mouse_button_at(SkPos pos, int button, bool down) {
+  bool moved = sk_move_to_pos(pos);
   return moved && Platform_MouseButtonDown(button, down);
 }
-bool sk_emit_mouse_button_at(SkPos pos, int button, bool down) {
-  return ski_emit_mouse_button_at(pos.x, pos.y, button, down);
-}
-bool ski_click_button_at(int x, int y, int button) {
-  bool moved = ski_move_to_pos(x, y);
+bool sk_click_button_at(SkPos pos, int button) {
+  bool moved = sk_move_to_pos(pos);
   bool down = moved && Platform_MouseButtonDown(button, true);
   if (!down) {
     return false;
@@ -2451,12 +2437,9 @@ bool ski_click_button_at(int x, int y, int button) {
   sk_sleep(0.02);
   return Platform_MouseButtonDown(button, false);
 }
-bool sk_click_button_at(SkPos pos, int button) {
-  return ski_click_button_at(pos.x, pos.y, button);
-}
 bool sk_mouse_scroll(int notches) { return Platform_MouseScroll(notches); }
 
-static bool rel_to_abs(int rx, int ry, SkPos *out) {
+static bool rel_to_abs(SkPos pos, SkPos *out) {
 
   if (!out) {
     return false;
@@ -2465,49 +2448,41 @@ static bool rel_to_abs(int rx, int ry, SkPos *out) {
   if (!Platform_GetVirtualBounds(&vx, &vy, &vw, &vh)) {
     return false;
   }
-  out->x = vx + rx;
-  out->y = vy + ry;
+  out->x = vx + pos.x;
+  out->y = vy + pos.y;
   return true;
 }
 
-bool ski_move_to_pos_rel(int rx, int ry) {
+bool sk_move_to_pos_rel(SkPos pos) {
   SkPos abs;
-  if (!rel_to_abs(rx, ry, &abs)) {
+  if (!rel_to_abs(pos, &abs)) {
     return false;
   }
-  return ski_move_to_pos(abs.x, abs.y);
+  return sk_move_to_pos(abs);
 }
-bool sk_move_to_pos_rel(SkPos pos) { return ski_move_to_pos_rel(pos.x, pos.y); }
 
-bool ski_click_at_rel(int rx, int ry) {
+bool sk_click_at_rel(SkPos pos) {
   SkPos abs;
-  if (!rel_to_abs(rx, ry, &abs)) {
+  if (!rel_to_abs(pos, &abs)) {
     return false;
   }
-  return ski_click_at(abs.x, abs.y);
+  return sk_click_at(abs);
 }
-bool sk_click_at_rel(SkPos pos) { return ski_click_at_rel(pos.x, pos.y); }
 
-bool ski_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
-  SkPos abs;
-  if (!rel_to_abs(rx, ry, &abs)) {
-    return false;
-  }
-  return ski_emit_mouse_button_at(abs.x, abs.y, button, down);
-}
 bool sk_emit_mouse_button_at_rel(SkPos pos, int button, bool down) {
-  return ski_emit_mouse_button_at_rel(pos.x, pos.y, button, down);
-}
-
-bool ski_click_button_at_rel(int rx, int ry, int button) {
   SkPos abs;
-  if (!rel_to_abs(rx, ry, &abs)) {
+  if (!rel_to_abs(pos, &abs)) {
     return false;
   }
-  return ski_click_button_at(abs.x, abs.y, button);
+  return sk_emit_mouse_button_at(abs, button, down);
 }
+
 bool sk_click_button_at_rel(SkPos pos, int button) {
-  return ski_click_button_at_rel(pos.x, pos.y, button);
+  SkPos abs;
+  if (!rel_to_abs(pos, &abs)) {
+    return false;
+  }
+  return sk_click_button_at(abs, button);
 }
 
 void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
@@ -2587,34 +2562,23 @@ static bool pixel_color_matches_tol(SkColor c, SkColor target, int tolerance) {
     db = -db;
   return db <= tol;
 }
-bool ski_color_matches(int x, int y, size_t r, size_t g, size_t b,
-                       int tolerance) {
-  SkColor target = {.r = r, .g = g, .b = b};
-  SkColor c = ski_get_pixel_color(x, y);
-  return pixel_color_matches_tol(c, target, tolerance);
-}
 bool sk_color_matches(SkPos pos, SkColor color, int tolerance) {
-  return ski_color_matches(pos.x, pos.y, color.r, color.g, color.b, tolerance);
+  SkColor c = sk_get_pixel_color(pos);
+  return pixel_color_matches_tol(c, color, tolerance);
 }
-bool ski_wait_pixel(int x, int y, size_t r, size_t g, size_t b, int tolerance,
-                    double timeout) {
-  SkColor target = {.r = r, .g = g, .b = b};
+bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout) {
   if (timeout <= 0.0)
     timeout = 10.0;
   int tol = tolerance > 0 ? tolerance : 0;
   int steps = (int)(timeout / 0.01);
   for (int i = 0;; i++) {
-    SkColor c = ski_get_pixel_color(x, y);
-    if (pixel_color_matches_tol(c, target, tol))
+    SkColor c = sk_get_pixel_color(pos);
+    if (pixel_color_matches_tol(c, color, tol))
       return true;
     if (i >= steps)
       return false;
     sk_sleep(0.01);
   }
-}
-bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout) {
-  return ski_wait_pixel(pos.x, pos.y, color.r, color.g, color.b, tolerance,
-                        timeout);
 }
 
 typedef struct {
@@ -2870,7 +2834,7 @@ void sk_clear_mouse_queue(void) { global_mouse_clear(); }
 SkPos sk_get_cursor_pos(void) {
   int x, y;
   Platform_GetMousePos(&x, &y);
-  return (SkPos){x, y};
+  return SK_POS(x, y);
 }
 
 bool sk_mouse_pressed(int button) { return input_mouse_state_down(button); }
@@ -3050,11 +3014,7 @@ void sk_run_after_time(double seconds, void (*callback)(void)) {
 
 SkTimer sk_timer_start(void) { return Platform_StartTimer(); }
 
-double ski_end_timer(uint64_t ticks) {
-  return Platform_EndTimer((SkTimer){.ticks = ticks});
-}
-
-double sk_timer_end(SkTimer t) { return ski_end_timer(t.ticks); }
+double sk_timer_end(SkTimer t) { return Platform_EndTimer(t); }
 
 char *sk_get_active_window_title(void) {
   char *title = Platform_GetActiveWindowTitle();
@@ -3178,8 +3138,8 @@ const SkHashMap *sk_hashmap_at(SkHashMap *map, size_t index) {
 
 SkTimer sk_profile_start(void) { return sk_timer_start(); }
 
-void ski_profile_end(uint64_t ticks) {
-  double ms = ski_end_timer(ticks);
+void sk_profile_end(SkTimer timer) {
+  double ms = sk_timer_end(timer);
   if (ms < 0.0)
     ms = 0.0;
 
@@ -3190,8 +3150,6 @@ void ski_profile_end(uint64_t ticks) {
   else
     printf("[profile] %.3f µs \n", ms * 1000.0);
 }
-
-void sk_profile_end(SkTimer timer) { ski_profile_end(timer.ticks); }
 
 typedef struct {
   char name[64];
@@ -3713,22 +3671,18 @@ int sk_reload_all_features(void) {
   return feature_loader_build_stale_sources(true);
 }
 
-bool ski_hotkey_down(int vk_code, int mods) {
-  if (!sk_is_key_down(vk_code))
+bool sk_hotkey_down(SkKey key) {
+  if (!sk_is_key_down(key.vk_code))
     return false;
-  if ((mods & SK_CTRL) && !sk_ctrl_pressed())
+  if ((key.mods & SK_CTRL) && !sk_ctrl_pressed())
     return false;
-  if ((mods & SK_SHIFT) && !sk_shift_pressed())
+  if ((key.mods & SK_SHIFT) && !sk_shift_pressed())
     return false;
-  if ((mods & SK_ALT) && !sk_alt_pressed())
+  if ((key.mods & SK_ALT) && !sk_alt_pressed())
     return false;
-  if ((mods & SK_SUPER) && !sk_super_pressed())
+  if ((key.mods & SK_SUPER) && !sk_super_pressed())
     return false;
   return true;
-}
-
-bool sk_hotkey_down(SkKey key) {
-  return ski_hotkey_down(key.vk_code, key.mods);
 }
 
 void sk_register_key_interceptor(SkKeyInterceptorFn fn) {

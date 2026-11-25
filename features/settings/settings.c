@@ -96,11 +96,10 @@ static void settings_render(PromptState *state) {
     const SkSettingsEntrySpec *entry =
         settings_entry_by_name(state->lb->selected_text);
     if (entry && entry->render) {
-      int saved_x = 0, saved_y = 0;
-      ski_get_draw_offset(&saved_x, &saved_y);
-      ski_set_draw_offset(SETTINGS_SIDEBAR_W + 8, 8);
+      SkPos saved = sk_get_draw_offset();
+      sk_set_draw_offset(SK_POS(SETTINGS_SIDEBAR_W + 8, 8));
       entry->render((SkSettingsEntry *)entry, entry->ud);
-      ski_set_draw_offset(saved_x, saved_y);
+      sk_set_draw_offset(saved);
     }
   }
 }

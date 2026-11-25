@@ -30,7 +30,7 @@ TEST(scroll_event_queue_roundtrip) {
 }
 
 TEST(scroll_area_wheel_clamps_offset) {
-  ski_set_draw_offset(0, 0);
+  sk_set_draw_offset(SK_POS(0, 0));
   int off_y = 0;
   SkScrollSpec spec = {
       .name = "test-scroll-area",
@@ -53,10 +53,9 @@ TEST(scroll_area_wheel_clamps_offset) {
   ASSERT_EQ_INT(off_y, 0);
   ASSERT_FALSE(scroll_area_dispatch_wheel(500, 500, 0, 1));
   sk_scroll_end();
-  int dx = -1, dy = -1;
-  ski_get_draw_offset(&dx, &dy);
-  ASSERT_EQ_INT(dx, 0);
-  ASSERT_EQ_INT(dy, 0);
+  SkPos off = sk_get_draw_offset();
+  ASSERT_EQ_INT(off.x, 0);
+  ASSERT_EQ_INT(off.y, 0);
 }
 
 int main(void) {
