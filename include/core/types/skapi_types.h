@@ -34,6 +34,7 @@ typedef struct {
   int caret_y;
   int caret_pos;
   int text_y;
+  bool auto_focus;
   bool hide_caret;
   bool primary;
   bool no_tab;
