@@ -674,6 +674,10 @@ bool ski_draw_line(const SkLine *spec);
 
 bool ski_draw_circle(const SkCircle *spec);
 
+#define SK_BORDER_AUTO 0
+#define SK_BORDER_ON 1
+#define SK_BORDER_OFF -1
+
 #define sk_draw_rect(...) ski_draw_rect(&(DrawRect){__VA_ARGS__})
 
 #define sk_draw_line(...) ski_draw_line(&(Line){__VA_ARGS__})

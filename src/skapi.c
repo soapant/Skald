@@ -2044,7 +2044,7 @@ bool ski_draw_rect(const DrawRect *spec) {
   if (col == 0 || col == COLOR_AUTO)
     col = COLOR_TEXT;
   col = rgb_to_hex(col);
-  return Platform_DrawRectRaw((DrawRectRawSpec){
+  bool ok = Platform_DrawRectRaw((DrawRectRawSpec){
       .x = spec->x,
       .y = spec->y,
       .w = spec->w,
@@ -2056,6 +2056,25 @@ bool ski_draw_rect(const DrawRect *spec) {
       .thickness = spec->thickness,
       .filled = spec->filled,
       .angle = spec->angle});
+
+  bool border = spec->border > 0 ? true
+                : (spec->border < 0 ? false : EnableBorders);
+  if (!border)
+    return ok;
+
+  Platform_DrawRectRaw((DrawRectRawSpec){
+      .x = spec->x,
+      .y = spec->y,
+      .w = spec->w,
+      .h = spec->h,
+      .color = rgb_to_hex(COLOR_BORDER),
+      .radius = spec->radius ? spec->radius : 0,
+      .rounded = spec->rounded ? spec->rounded : RoundedCorners,
+      .opaque = !transparent,
+      .thickness = spec->thickness > 0.0f ? spec->thickness : 1.0f,
+      .filled = false,
+      .angle = spec->angle});
+  return ok;
 }
 
 int sk_rand_num_between(int min, int max) {
