@@ -75,10 +75,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
     }
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  bool layered = WindowOpacity < 255.0f;
-  DWORD ex_style = WS_EX_TOOLWINDOW | WS_EX_COMPOSITED;
-  if (layered)
-    ex_style |= WS_EX_LAYERED;
+  DWORD ex_style = WS_EX_TOOLWINDOW | WS_EX_LAYERED;
   SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       ex_style, SKALD_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN, x, y, w, h, NULL,
       NULL, hInstance, NULL));
@@ -88,8 +85,6 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   HWND hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (self)
     self->handle = SkaldContext_Get()->window.hPopupWnd;
-  if (layered)
-    SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
   win32_apply_rounded_corners(hwnd, w, h);
   ShowWindow(hwnd, SW_SHOW);
   UpdateWindow(hwnd);

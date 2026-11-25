@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdlib.h>
 #include <string.h>
 #include "core/types/keys.h"
 #include "core/types/window.h"
@@ -150,6 +151,8 @@ static bool win32_hwnd_is_popup(WindowManager *wm, HWND h) {
 static HDC s_bb_dc = NULL;
 static HBITMAP s_bb_bmp = NULL;
 static HBITMAP s_bb_prev = NULL;
+static void *s_bb_bits = NULL;
+static void *s_bb_bg_bits = NULL;
 static int s_bb_w = 0;
 static int s_bb_h = 0;
 
@@ -162,27 +165,114 @@ static void popup_free_back_buffer(void) {
     DeleteObject(s_bb_bmp);
     s_bb_bmp = NULL;
   }
+  free(s_bb_bg_bits);
+  s_bb_bg_bits = NULL;
+  s_bb_bits = NULL;
   s_bb_prev = NULL;
   s_bb_w = 0;
   s_bb_h = 0;
 }
 
 static HDC popup_back_buffer(HDC hdc, int w, int h, HBITMAP *out_prev) {
+  (void)hdc;
   if (w <= 0 || h <= 0)
     return NULL;
   if (!s_bb_dc || !s_bb_bmp || s_bb_w != w || s_bb_h != h) {
     popup_free_back_buffer();
-    s_bb_dc = CreateCompatibleDC(hdc);
-    s_bb_bmp = CreateCompatibleBitmap(hdc, w, h);
+    HDC screen = GetDC(NULL);
+    if (!screen)
+      return NULL;
+    s_bb_dc = CreateCompatibleDC(screen);
+    BITMAPINFO bi = {0};
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = w;
+    bi.bmiHeader.biHeight = -h;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    s_bb_bmp = CreateDIBSection(s_bb_dc, &bi, DIB_RGB_COLORS, &s_bb_bits, NULL,
+                                0);
+    ReleaseDC(NULL, screen);
+    if (s_bb_bmp)
+      s_bb_bg_bits = malloc((size_t)w * (size_t)h * 4u);
     s_bb_w = w;
     s_bb_h = h;
   }
-  if (!s_bb_dc || !s_bb_bmp) {
+  if (!s_bb_dc || !s_bb_bmp || !s_bb_bits || !s_bb_bg_bits) {
     popup_free_back_buffer();
     return NULL;
   }
   *out_prev = (HBITMAP)SelectObject(s_bb_dc, s_bb_bmp);
   return s_bb_dc;
+}
+
+static void popup_snapshot_background(int w, int h) {
+  if (s_bb_bits && s_bb_bg_bits)
+    memcpy(s_bb_bg_bits, s_bb_bits, (size_t)w * (size_t)h * 4u);
+}
+
+static void popup_apply_alpha(HWND hwnd, HDC memDC, int w, int h) {
+  GdiFlush();
+  if (!s_bb_bits || !s_bb_bg_bits)
+    return;
+  unsigned int *px = (unsigned int *)s_bb_bits;
+  const unsigned int *bg = (const unsigned int *)s_bb_bg_bits;
+  float opacity = WindowOpacity;
+  if (opacity < 0.0f)
+    opacity = 0.0f;
+  if (opacity > 255.0f)
+    opacity = 255.0f;
+  unsigned int bg_alpha = (unsigned int)opacity;
+  int r = 0;
+  if (RoundedCorners && CornerRadius > 0) {
+    r = CornerRadius;
+    if (r > 32)
+      r = 32;
+    if (r * 2 > w)
+      r = w / 2;
+    if (r * 2 > h)
+      r = h / 2;
+    if (r < 0)
+      r = 0;
+  }
+  int rr = r * r;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      size_t i = (size_t)y * (size_t)w + (size_t)x;
+      unsigned int rgb = px[i] & 0x00FFFFFFu;
+      unsigned int a = (rgb == (bg[i] & 0x00FFFFFFu)) ? bg_alpha : 255u;
+      if (r > 0) {
+        int cx = x < r ? r : (x >= w - r ? w - r - 1 : x);
+        int cy = y < r ? r : (y >= h - r ? h - r - 1 : y);
+        int dx = x - cx;
+        int dy = y - cy;
+        if (dx * dx + dy * dy > rr)
+          a = 0u;
+      }
+      px[i] = rgb | (a << 24);
+    }
+  }
+  HDC screen = GetDC(NULL);
+  if (!screen)
+    return;
+  RECT wr;
+  POINT dst = {0, 0};
+  if (GetWindowRect(hwnd, &wr)) {
+    dst.x = wr.left;
+    dst.y = wr.top;
+  }
+  POINT src = {0, 0};
+  SIZE size = {w, h};
+  BLENDFUNCTION blend = {0};
+  blend.BlendOp = AC_SRC_OVER;
+  blend.BlendFlags = 0;
+  blend.SourceConstantAlpha = 255;
+  blend.AlphaFormat = AC_SRC_ALPHA;
+  BOOL ok = UpdateLayeredWindow(hwnd, screen, &dst, &size, memDC, &src, 0,
+                                &blend, ULW_ALPHA);
+  ReleaseDC(NULL, screen);
+  if (!ok)
+    SetLayeredWindowAttributes(hwnd, 0, (BYTE)opacity, LWA_ALPHA);
 }
 
 static bool prompt_win_no_bg(void) {
@@ -619,10 +709,12 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                       rect.bottom - rect.top, 0, 0);
       }
       if (!imgDrawn) {
-        FillRect(paintDC, &ps.rcPaint,
+        FillRect(paintDC, &rect,
                  cached_brush(&s_bg_brush, &s_bg_color, COLOR_BG));
       }
     }
+    if (useRenderBuf)
+      popup_snapshot_background(rect.right, rect.bottom);
     if (SkaldContext_Get()->window.prompt_callbacks.render) {
       prompt_band_take_placed();
       PromptState *state = win32_prompt_state_from_hwnd(hwnd);
@@ -770,6 +862,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
              ps.rcPaint.right - ps.rcPaint.left,
              ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left,
              ps.rcPaint.top, SRCCOPY);
+      popup_apply_alpha(hwnd, memDC, rect.right, rect.bottom);
       SelectObject(memDC, oldBmp);
     }
     win32_set_draw_context(NULL);
