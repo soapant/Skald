@@ -518,7 +518,8 @@ void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
     layout.cursor_draw_x = caret_x;
     layout.caret_x = caret_x;
     layout.caret_w = editbox_caret_width(spec);
-    layout.caret_y = caret_y - scroll_y + 4;
+    int caret_line_y = caret_y - y0;
+    layout.caret_y = spec->caret_y + caret_line_y - scroll_y;
     layout.caret_text_y = caret_y - scroll_y;
     layout.scroll_y = scroll_y;
     layout.line_count = line_count;
