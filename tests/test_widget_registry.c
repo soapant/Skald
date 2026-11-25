@@ -86,11 +86,45 @@ TEST(create_then_purge_owner_removes_widget) {
   }
 }
 
+TEST(key_capture_is_opt_in_and_queue_starts_empty) {
+  WidgetSpec spec = {0};
+  spec.name = "test_key_capture_widget";
+  spec.w = 40;
+  spec.h = 20;
+  spec.slot = WIDGET_FREE;
+  spec.x = 600;
+  spec.y = 400;
+  spec.fps = 1;
+  spec.render = registry_stub_render;
+
+  Widget *w = widget_create(&spec);
+  ASSERT_TRUE(w != NULL);
+  ASSERT_FALSE(w->capture_keys);
+  WidgetKey key = {0};
+  ASSERT_FALSE(widget_poll_key(w, &key));
+  ASSERT_FALSE(widget_poll_key(NULL, &key));
+  widget_key_capture_clear(w);
+  widget_key_capture_release_pin();
+
+  spec.capture_keys = true;
+  Widget *opt_in = widget_create(&spec);
+  ASSERT_TRUE(opt_in != NULL);
+  ASSERT_TRUE(opt_in->capture_keys);
+  ASSERT_FALSE(widget_poll_key(opt_in, &key));
+
+  char owner[OWNER_PATH_MAX];
+  owner_resolve_for_func((void *)test_key_capture_is_opt_in_and_queue_starts_empty,
+                         owner, sizeof(owner));
+  if (owner[0])
+    widget_purge_owner(owner, NULL, widget_current_generation());
+}
+
 int main(void) {
   RUN(empty_registry_reports_inactive_owner);
   RUN(purge_owner_on_empty_registry_does_not_deadlock);
   RUN(generation_protocol_is_monotonic);
   RUN(concurrent_purge_and_lookup_smoke);
   RUN(create_then_purge_owner_removes_widget);
+  RUN(key_capture_is_opt_in_and_queue_starts_empty);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

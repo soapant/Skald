@@ -3,6 +3,7 @@
 #include "helpers/x11/raw_input_core_x11.h"
 #include "helpers/helpers_text.h"
 #include "core/window_manager.h"
+#include "core/widget_registry.h"
 
 struct WindowManager;
 
@@ -983,6 +984,15 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
   }
   int code = ev->code;
   int val = ev->value;
+  if (widget_key_capture_active() && code >= 0 && code <= KEY_MAX) {
+    int vk = x11_convert_key_to_windows_vk(code);
+    if (vk) {
+      widget_key_capture_push(vk, remap_current_mods(), val != 0, val == 2);
+      if (val == 0)
+        hotkey_key_up(vk);
+      return true;
+    }
+  }
   if (ev->type == EV_KEY && code == KEY_ENTER && val == 1)
     g_enter_phys_down_ms = Platform_GetWallClockMs();
   if (ev->type == EV_KEY && val != 0)

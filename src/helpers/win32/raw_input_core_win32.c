@@ -1,4 +1,5 @@
 #include "helpers/win32/raw_input_core_win32.h"
+#include "core/widget_registry.h"
 
 static int win32_key_mods(void) {
   int mods = 0;
@@ -230,7 +231,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         {
           int _hint = _isDown ? win32_key_hint(_vk, _gev.mods) : 0;
           if (_isDown) {
-            if (!s_key_is_down[_vk & 0xFF] ||
+            if (widget_key_capture_active() || !s_key_is_down[_vk & 0xFF] ||
                 (now_ms - s_last_keydown_ms[_vk & 0xFF]) >=
                     (unsigned long long)HotkeyRepeatDelayMs) {
               s_key_is_down[_vk & 0xFF] = true;
@@ -241,6 +242,11 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
             s_key_is_down[_vk & 0xFF] = false;
             input_state_update(_vk, false, _gev.mods, 0);
           }
+        }
+        if (widget_key_capture_active()) {
+          if (_isUp)
+            hotkey_key_up(_vk);
+          return 1;
         }
         global_key_push(&_gev);
         if (_isUp)

@@ -9,6 +9,7 @@
 #include "core/context.h"
 #include "core/editbox.h"
 #include "core/window_manager.h"
+#include "core/widget_registry.h"
 #include <commctrl.h>
 #include "helpers/helpers_text.h"
 #include <shellapi.h>
@@ -230,6 +231,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   switch (msg) {
   case WM_LBUTTONDOWN: {
+    widget_key_capture_release_pin();
     POINT pt;
     if (GetCursorPos(&pt))
       listbox_publish_mouse_pos((int)pt.x, (int)pt.y);
@@ -301,6 +303,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     return 0;
   }
   case WM_KEYDOWN: {
+    if (widget_key_capture_active())
+      return 0;
     s_swallow_next_char = false;
     HWND hKey = hwnd;
     PopupKeyEvent pkey;
@@ -347,6 +351,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     break;
   }
   case WM_CHAR: {
+    if (widget_key_capture_active())
+      return 0;
     if (s_swallow_next_char) {
       s_swallow_next_char = false;
       return 0;

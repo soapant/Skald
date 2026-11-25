@@ -3236,6 +3236,10 @@ SkWidget *sk_widget_create(const SkWidgetSpec *spec) {
 
 bool sk_widget_valid(SkWidget *widget) { return widget_valid(widget); }
 
+bool sk_widget_poll_key(SkWidget *widget, SkWidgetKey *out) {
+  return widget_poll_key(widget, out);
+}
+
 SkPos sk_get_widget_pos(const char *name) { return Widget_GetPos(name); }
 
 void sk_widget_show(SkWidget *widget) { widget_show(widget); }

@@ -16,6 +16,7 @@
 #include "helpers/helpers_input_state.h"
 #include "config_values.h"
 #include "core/types/window.h"
+#include "core/types/keys.h"
 #include "deps/stb_ds.h"
 #include "helpers/helpers_misc.h"
 
@@ -23,6 +24,87 @@ static Widget **widgets;
 #define widget_count arrlenu(widgets)
 static int widget_seq = 0;
 static unsigned widget_gen = 1;
+
+static Widget *key_capture_target = NULL;
+static bool key_capture_pinned = false;
+static bool key_capture_blocked = false;
+static long long key_capture_swallow_until = 0;
+static void *key_capture_mutex = NULL;
+static void key_capture_lock_init(void) { lazy_mutex_get(&key_capture_mutex); }
+#define KC_LOCK()                                                              \
+  do {                                                                         \
+    key_capture_lock_init();                                                    \
+    Platform_MutexLock(key_capture_mutex);                                      \
+  } while (0)
+#define KC_UNLOCK() Platform_MutexUnlock(key_capture_mutex)
+
+bool widget_key_capture_active(void) {
+  KC_LOCK();
+  bool active = key_capture_target != NULL ||
+                Platform_GetWallClockMs() < key_capture_swallow_until;
+  KC_UNLOCK();
+  return active;
+}
+
+bool widget_key_capture_push(int vk, int mods, bool down, bool repeat) {
+  KC_LOCK();
+  Widget *widget = key_capture_target;
+  if (!widget) {
+    KC_UNLOCK();
+    return false;
+  }
+  if (vk == VK_ESCAPE && down) {
+    key_capture_target = NULL;
+    key_capture_pinned = false;
+    key_capture_swallow_until = Platform_GetWallClockMs() + 150;
+    KC_UNLOCK();
+    return true;
+  }
+  WidgetKey key = {.vk = vk,
+                   .mods = mods,
+                   .down = down,
+                   .repeat = repeat};
+  int next = (widget->key_tail + 1) % WIDGET_KEY_QUEUE_MAX;
+  if (next == widget->key_head) {
+    widget->key_dropped++;
+  } else {
+    widget->key_queue[widget->key_tail] = key;
+    widget->key_tail = next;
+  }
+  KC_UNLOCK();
+  return true;
+}
+
+void widget_key_capture_clear(Widget *widget) {
+  KC_LOCK();
+  if (key_capture_target == widget) {
+    key_capture_target = NULL;
+    key_capture_pinned = false;
+  }
+  KC_UNLOCK();
+}
+
+void widget_key_capture_release_pin(void) {
+  KC_LOCK();
+  key_capture_pinned = false;
+  key_capture_blocked = true;
+  key_capture_target = NULL;
+  KC_UNLOCK();
+}
+
+bool widget_poll_key(Widget *widget, WidgetKey *out) {
+  if (!widget || !out)
+    return false;
+  KC_LOCK();
+  bool got = false;
+  if (widget->key_head != widget->key_tail) {
+    *out = widget->key_queue[widget->key_head];
+    widget->key_head = (widget->key_head + 1) % WIDGET_KEY_QUEUE_MAX;
+    got = true;
+  }
+  KC_UNLOCK();
+  return got;
+}
 
 static void *widget_mutex = NULL;
 static void widget_mutex_init(void) { lazy_mutex_get(&widget_mutex); }
@@ -108,18 +190,45 @@ static void widget_render_frame(void *ud) {
   bool auto_w = widget->auto_w, auto_h = widget->auto_h;
   void (*on_hover)(void) = widget->on_hover;
   bool hover_running = widget->hover_running;
+  bool capture_keys = widget->capture_keys;
   W_UNLOCK();
   if (dead || !render)
     return;
   widget->frame++;
   bool hoverable = (on_hover != NULL);
-  if (hoverable) {
+  if (hoverable || capture_keys) {
     widget_hover_poll();
     bool inside = (x >= 0x7fffffff)
                       ? false
                       : (hover_pos.x >= x && hover_pos.x < x + w &&
                          hover_pos.y >= y && hover_pos.y < y + h);
-    if (inside && !widget->hovered && on_hover && !hover_running) {
+    if (capture_keys) {
+      bool click_down = input_mouse_state_down(MOUSE_BTN_LEFT);
+      bool click_edge = click_down && !widget->prev_click_down;
+      KC_LOCK();
+      if (!inside) {
+        if (click_edge) {
+          key_capture_pinned = false;
+          key_capture_blocked = true;
+          key_capture_target = NULL;
+        } else {
+          key_capture_blocked = false;
+          if (key_capture_target == widget && !key_capture_pinned)
+            key_capture_target = NULL;
+        }
+      } else if (click_edge) {
+        key_capture_blocked = false;
+        key_capture_target = widget;
+        key_capture_pinned = true;
+      } else if (!key_capture_blocked && !key_capture_pinned &&
+                 key_capture_target != widget) {
+        key_capture_target = widget;
+      }
+      KC_UNLOCK();
+      widget->key_hovered = inside;
+      widget->prev_click_down = click_down;
+    }
+    if (hoverable && inside && !widget->hovered && on_hover && !hover_running) {
       HoverJob *job = (HoverJob *)calloc(1, sizeof(*job));
       if (job) {
         W_LOCK();
@@ -149,6 +258,7 @@ static void widget_render_frame(void *ud) {
   st.frame = widget->frame;
   st.elapsed = Platform_EndTimer(widget->created_at);
   st.hovered = widget->hovered;
+  st.widget = widget;
 
   set_draw_offset(-widget->origin_x, 0);
   begin_measure();
@@ -203,6 +313,7 @@ static void widget_reap(void *ud) {
   Widget *w = (Widget *)ud;
   if (!w)
     return;
+  widget_key_capture_clear(w);
   owner_tag_clear(&w->tag);
   W_LOCK();
   for (size_t i = 0; i < widget_count;) {
@@ -249,6 +360,7 @@ static void widget_purge_destroy(void *ud) {
   if (!w)
     return;
   w->dead = true;
+  widget_key_capture_clear(w);
   hover_widget_hide(w->name);
   render_thread_remove_frame_callback(widget_render_frame, w);
   if (!render_thread_post(widget_destroy_window, w)) {
@@ -311,6 +423,8 @@ bool widget_owner_active(const char *path) {
   return active;
 }
 
+static void widget_capture_click(void) {}
+
 static void widget_attach_window(void *ud) {
   Widget *widget = (Widget *)ud;
   if (!widget || widget->dead)
@@ -318,9 +432,12 @@ static void widget_attach_window(void *ud) {
   bool created = false;
   if (!widget_is_valid(widget->win)) {
     set_draw_bg_color(widget->has_bg ? widget->bg_color : 0);
+    void (*click_cb)(void) = widget->on_click;
+    if (!click_cb && widget->capture_keys)
+      click_cb = widget_capture_click;
     widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w,
                                          widget->h, widget->fps, widget->no_bg,
-                                         widget->on_click, widget->name);
+                                         click_cb, widget->name);
     set_draw_bg_color(0);
     created = (widget->win != NULL);
   } else {
@@ -465,10 +582,13 @@ Widget *widget_create(const WidgetSpec *spec) {
   widget->render = spec->render;
   widget->on_click = spec->on_click;
   widget->on_hover = spec->on_hover;
+  widget->capture_keys = spec->capture_keys;
   widget->free_pos = (spec->slot == WIDGET_FREE);
   widget->frame = 0;
   widget->created_at = Platform_StartTimer();
   W_UNLOCK();
+  if (!widget->capture_keys)
+    widget_key_capture_clear(widget);
 
   if (widget->free_pos) {
     int x = spec->x;

@@ -18,6 +18,7 @@
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
 #include "core/owner_registry.h"
+#include "core/widget_registry.h"
 #include "deps/log.h"
 #include "deps/stb_ds.h"
 #include "helpers/helpers_hotkey.h"
@@ -494,7 +495,7 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
 }
 
 bool hotkey_process(int vk_code, int modifiers) {
-  if (hotkeys_suspended)
+  if (hotkeys_suspended || widget_key_capture_active())
     return false;
   int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
   for (int i = 0; i < arrlen(hotkeys); i++) {

@@ -2,6 +2,7 @@
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"
 #include "core/owner_registry.h"
+#include "core/widget_registry.h"
 #include "platform/platform.h"
 #include "core/types/keys.h"
 #include "deps/log.h"
@@ -266,7 +267,7 @@ static int snippet_match(void) {
 }
 
 bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
-  if (value == 0)
+  if (value == 0 || widget_key_capture_active())
     return false;
   if (vk_code == VK_BACK) {
     if (buf_len > 0)

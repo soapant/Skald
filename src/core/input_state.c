@@ -7,6 +7,7 @@
 #include "core/types/keys.h"
 #include "core/timer.h"
 #include "core/owner_registry.h"
+#include "core/widget_registry.h"
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_misc.h"
 
@@ -45,6 +46,8 @@ static int norm_vk(int vk) {
 void input_state_update(int vk, bool down, int mods, int char_hint) {
   int nv = norm_vk(vk);
   if (nv < 0 || nv >= 256)
+    return;
+  if (widget_key_capture_push(vk, mods, down, false))
     return;
   last_mods = mods;
   bool was = down_map[nv];

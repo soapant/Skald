@@ -10,6 +10,14 @@
 #define WIDGET_DEFAULT_PAD 12
 #define WIDGET_PROVISIONAL_W 160
 #define WIDGET_PROVISIONAL_H 48
+#define WIDGET_KEY_QUEUE_MAX 64
+
+typedef struct {
+  int vk;
+  int mods;
+  bool down;
+  bool repeat;
+} WidgetKey;
 
 typedef enum {
   WIDGET_SLOT_TOP_LEFT,
@@ -35,6 +43,7 @@ typedef struct {
   int fps;
   ColorRef color;
   bool no_bg;
+  bool capture_keys;
   void (*on_click)(void);
   void (*on_hover)(void);
   WidgetRenderFn render;
@@ -44,15 +53,17 @@ typedef struct {
   const char *monitor_name;
 } WidgetSpec;
 
+typedef struct Widget Widget;
+
 typedef struct WidgetState {
   int width;
   int height;
   unsigned long frame;
   double elapsed;
   bool hovered;
+  Widget *widget;
 } WidgetState;
 
-typedef struct Widget Widget;
 struct Widget {
   char name[WIDGET_NAME_MAX];
   int w;
@@ -89,6 +100,14 @@ struct Widget {
   void (*on_hover)(void);
   bool clickable;
   bool hovered;
+  bool capture_keys;
+  bool key_hovered;
+  bool pinned_keys;
+  bool prev_click_down;
+  WidgetKey key_queue[WIDGET_KEY_QUEUE_MAX];
+  int key_head;
+  int key_tail;
+  int key_dropped;
 };
 
 void widget_purge_owner(const char *path_a, const char *path_b,
@@ -104,6 +123,12 @@ Pos Widget_GetPos(const char *name);
 void widget_show(Widget *widget);
 void widget_hide(Widget *widget);
 void widget_set_fps(PlatformWidget *window, int fps);
+
+bool widget_key_capture_active(void);
+bool widget_key_capture_push(int vk, int mods, bool down, bool repeat);
+void widget_key_capture_clear(Widget *widget);
+void widget_key_capture_release_pin(void);
+bool widget_poll_key(Widget *widget, WidgetKey *out);
 
 bool widget_is_valid(const PlatformWidget *widget);
 void widget_set_frame_callback(PlatformWidget *widget, RenderFrameFn fn,

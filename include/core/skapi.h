@@ -33,6 +33,7 @@ typedef Event SkEvent;
 typedef EventCallback SkEventCallback;
 typedef Widget SkWidget;
 typedef WidgetSpec SkWidgetSpec;
+typedef WidgetKey SkWidgetKey;
 typedef WidgetState SkWidgetState;
 typedef WidgetRenderFn SkWidgetRenderFn;
 typedef DrawRect SkRect;
@@ -657,6 +658,7 @@ int sk_monitor_count(void);
 bool sk_monitor_at(int index, SkMonitorInfo *out);
 
 bool sk_widget_valid(SkWidget *widget);
+bool sk_widget_poll_key(SkWidget *widget, SkWidgetKey *out);
 
 SkPos sk_get_widget_pos(const char *name);
 

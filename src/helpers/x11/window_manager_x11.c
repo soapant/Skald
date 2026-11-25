@@ -7,6 +7,7 @@
 #include <linux/input-event-codes.h>
 #include "core/hotkey_manager.h"
 #include "core/feature_loader.h"
+#include "core/widget_registry.h"
 
 #include "core/window_manager.h"
 #include "deps/log.h"
@@ -140,6 +141,8 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   int modifiers = mods;
   if (vk_code)
     input_state_update(vk_code, true, modifiers, char_hint);
+  if (widget_key_capture_active())
+    return;
   log_info("xkey ks=0x%lx len=%d buf0=%d vk=%d mods=%d state=0x%x",
            (unsigned long)ks, len, len > 0 ? (int)(unsigned char)buf[0] : -1,
            vk_code, modifiers, ev->state);
@@ -186,9 +189,10 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
   if (ev->type == ButtonPress && ev->xbutton.button == Button1) {
     if (Platform_Widget_DispatchClick((long)ev->xbutton.window))
       return;
+    widget_key_capture_release_pin();
   }
   Popup *top = WindowManager_GetTopPopup(wm);
-  if (!top) {
+  if (!top && !widget_key_capture_active()) {
     return;
   }
   switch (ev->type) {
