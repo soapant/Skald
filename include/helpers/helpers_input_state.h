@@ -13,6 +13,9 @@ typedef struct {
 } KeyEvent;
 
 void input_state_update(int vk, bool down, int mods, int char_hint);
+bool input_key_is_window_escape(int vk);
+bool input_escape_was_swallowed(void);
+void input_state_swallow_escape(void);
 int input_last_mods(void);
 bool input_is_key_down(int vk);
 bool input_was_key_pressed(int vk);

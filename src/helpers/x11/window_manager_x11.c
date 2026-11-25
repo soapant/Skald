@@ -143,6 +143,8 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
     input_state_update(vk, true, modifiers, char_hint);
   if (widget_key_capture_active())
     return;
+  if (vk == VK_ESCAPE && input_escape_was_swallowed())
+    return;
   log_info("xkey ks=0x%lx len=%d buf0=%d vk=%d mods=%d state=0x%x",
            (unsigned long)ks, len, len > 0 ? (int)(unsigned char)buf[0] : -1,
            vk, modifiers, ev->state);

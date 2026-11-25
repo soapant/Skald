@@ -2,7 +2,11 @@
 
 #include "helpers/x11/raw_input_core_x11.h"
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_input_state.h"
+#include "helpers/helpers_ui.h"
 #include "core/window_manager.h"
+#include "core/prompt_keys.h"
+#include "core/types/prompt.h"
 #include "core/widget_registry.h"
 
 struct WindowManager;
@@ -990,6 +994,31 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       widget_key_capture_push(vk, remap_current_mods(), val != 0, val == 2);
       if (val == 0)
         hotkey_key_up(vk);
+      return true;
+    }
+  }
+  if (code == KEY_ESC) {
+    int vk = x11_convert_key_to_windows_vk(code);
+    if (input_key_is_window_escape(vk)) {
+      if (val == 1) {
+        WindowManager *wm = WindowManager_Get();
+        Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+        PromptState *state = top ? (PromptState *)top->user_data : NULL;
+        if (state) {
+          int mods = remap_current_mods();
+          PopupKeyEvent key;
+          memset(&key, 0, sizeof(key));
+          key.vk = vk;
+          key.ctrl = (mods & HOTKEY_MOD_CTRL) != 0;
+          key.shift = (mods & HOTKEY_MOD_SHIFT) != 0;
+          key.alt = (mods & HOTKEY_MOD_ALT) != 0;
+          prompt_handle_key(state, &key);
+          WindowManager_DrainSelectionComplete(wm);
+          UI_RequestPopupRepaint();
+        }
+      } else if (val == 0) {
+        hotkey_key_up(vk);
+      }
       return true;
     }
   }

@@ -22,6 +22,7 @@
 #include "deps/log.h"
 #include "deps/stb_ds.h"
 #include "helpers/helpers_hotkey.h"
+#include "helpers/helpers_input_state.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_misc.h"
@@ -495,7 +496,8 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk,
 }
 
 bool hotkey_process(int vk, int modifiers) {
-  if (hotkeys_suspended || widget_key_capture_active())
+  if (hotkeys_suspended || input_key_is_window_escape(vk) ||
+      widget_key_capture_active())
     return false;
   int eff_modifiers = hotkey_strip_self_mod(vk, modifiers);
   for (int i = 0; i < arrlen(hotkeys); i++) {

@@ -1,4 +1,5 @@
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_input_state.h"
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"
 #include "core/owner_registry.h"
@@ -267,7 +268,8 @@ static int snippet_match(void) {
 }
 
 bool snippet_feed_vk(int vk, int value, bool can_swallow) {
-  if (value == 0 || widget_key_capture_active())
+  if (value == 0 || input_key_is_window_escape(vk) ||
+      widget_key_capture_active())
     return false;
   if (vk == VK_BACK) {
     if (buf_len > 0)

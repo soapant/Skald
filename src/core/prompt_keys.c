@@ -20,6 +20,7 @@
 #include "platform/draw.h"
 #include "core/prompt_geometry.h"
 #include "helpers/helpers_edit_buffer.h"
+#include "helpers/helpers_input_state.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "core/types/keys.h"
@@ -267,6 +268,7 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     goto done;
   }
   if (vk == VK_ESCAPE) {
+    input_state_swallow_escape();
     WindowManager *wm = WindowManager_Get();
     if (wm && wm->popup_count > 1) {
       WindowManager_PopPopup(wm);

@@ -1,4 +1,8 @@
 #include "helpers/win32/raw_input_core_win32.h"
+#include "helpers/helpers_input_state.h"
+#include "helpers/helpers_ui.h"
+#include "core/window_manager.h"
+#include "core/prompt_keys.h"
 #include "core/widget_registry.h"
 
 static int win32_key_mods(void) {
@@ -246,6 +250,25 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         if (widget_key_capture_active()) {
           if (_isUp)
             hotkey_key_up(_vk);
+          return 1;
+        }
+        if (_vk == VK_ESCAPE && input_key_is_window_escape(_vk)) {
+          if (_isDown) {
+            PromptState *ps = prompt_popup_get_top_prompt_state();
+            if (ps) {
+              PopupKeyEvent pkey;
+              memset(&pkey, 0, sizeof(pkey));
+              pkey.vk = _vk;
+              pkey.ctrl = (_gev.mods & HOTKEY_MOD_CTRL) != 0;
+              pkey.shift = (_gev.mods & HOTKEY_MOD_SHIFT) != 0;
+              pkey.alt = (_gev.mods & HOTKEY_MOD_ALT) != 0;
+              prompt_handle_key(ps, &pkey);
+              WindowManager_DrainSelectionComplete(WindowManager_Get());
+              UI_RequestPopupRepaint();
+            }
+          } else if (_isUp) {
+            hotkey_key_up(_vk);
+          }
           return 1;
         }
         global_key_push(&_gev);

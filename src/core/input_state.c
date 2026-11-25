@@ -10,6 +10,7 @@
 #include "core/widget_registry.h"
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_misc.h"
+#include "helpers/helpers_ui.h"
 
 static bool down_map[256] = {0};
 static bool pressed[256] = {0};
@@ -20,6 +21,22 @@ static OwnerTag cb_tag = {0};
 static char char_queue[32] = {0};
 static int char_head = 0, char_tail = 0;
 static int last_mods = 0;
+static long long escape_swallow_until = 0;
+
+bool input_key_is_window_escape(int vk) {
+  if (vk != VK_ESCAPE)
+    return false;
+  return is_popup_active(WH_NULL) ||
+         Platform_GetWallClockMs() < escape_swallow_until;
+}
+
+bool input_escape_was_swallowed(void) {
+  return Platform_GetWallClockMs() < escape_swallow_until;
+}
+
+void input_state_swallow_escape(void) {
+  escape_swallow_until = Platform_GetWallClockMs() + 150;
+}
 
 #define INHIBIT_MOD_COUNT 11
 static const int kInhibitMods[INHIBIT_MOD_COUNT] = {
@@ -48,6 +65,8 @@ void input_state_update(int vk, bool down, int mods, int char_hint) {
   if (nv < 0 || nv >= 256)
     return;
   if (widget_key_capture_push(vk, mods, down, false))
+    return;
+  if (input_key_is_window_escape(vk))
     return;
   last_mods = mods;
   bool was = down_map[nv];
@@ -226,6 +245,8 @@ static unsigned long long input_now_us(void) {
 
 void global_key_push(const KeyEvent *ev) {
   if (!ev)
+    return;
+  if (input_key_is_window_escape(ev->vk))
     return;
   KeyEvent stamped = *ev;
   stamped.t_us = input_now_us();
