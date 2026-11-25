@@ -1318,7 +1318,7 @@ static SkRect cc_keycap_box(const char *key, float x, int y, float font_size,
   SkRect box = sk_text_bounds(.text = key, .font_size = font_size, .x = x,
                               .y = y, .align = "LEFT");
   box.radius = 6;
-  box.h -= 3.0f;
+  box.h -= 10.f;
   box.y -= 0.5f;
   if (box.w < 15.0f) {
     box.w = 15.0f;
@@ -1372,7 +1372,7 @@ static void cc_on_actions_render(SkPlaceState state) {
   for (size_t i = 0; i < keys.count; i++) {
     SkRect box = cc_keycap_box(keys.items[i], cursor_x, state.rect.y,
                                font_size, 2);
-    sk_draw_text(.x = box.x, .y = box.y - 2.0f, .text = keys.items[i],
+    sk_draw_text(.x = box.x, .y = box.y - 4.0f, .text = keys.items[i],
                  .align = "LEFT", .font_size = font_size,
                  .color = sk_color_lerp(COLOR_BG, SK_WHITE, 0.32f));
     cursor_x += box.w + spacing;

@@ -6,7 +6,6 @@
   HotkeyRepeatDelayMs = 300
   DebugMode = false
   CompactMode = false
-  AllowWindowOverride = false
   RoundedCorners = true
   CornerRadius = 14
   MessageScreenGap = 20
@@ -32,18 +31,19 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = "aurora-borealis"
+  Theme = "abyssal-blue"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = true
   EnableBorders = true
   WindowTitleText = false
   CloseOnLossOfFocus = false
+  AllowWindowOverride = false
 
 [color]
-  BG = "#0E1820"
-  TEXT = "#D8F4EC"
-  SELECTED_TEXT = "#1C303E"
-  CURSOR = "#50FAB4"
-  BORDER = "#36606C"
+  BG = "#080F1A"
+  TEXT = "#C0D4EB"
+  SELECTED_TEXT = "#14243C"
+  CURSOR = "#4FC3F7"
+  BORDER = "#2A466C"
 # </skald-config-generated>
