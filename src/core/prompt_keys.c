@@ -319,6 +319,10 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
       handled = true;
       goto done;
     }
+    if (editbox_wrap_move_vertical(state, -1)) {
+      handled = true;
+      goto done;
+    }
     log_info("keys: up focus='%s' kind=%d entries=%d lb_count=%d",
              focus_name() ? focus_name() : "-", (int)focus_kind(),
              focus_has_entries() ? 1 : 0,
@@ -351,6 +355,10 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
   if (vk == VK_DOWN) {
     if (ctrl) {
       state->eb->cursor = (int)strlen(state->eb->filter);
+      handled = true;
+      goto done;
+    }
+    if (editbox_wrap_move_vertical(state, 1)) {
       handled = true;
       goto done;
     }

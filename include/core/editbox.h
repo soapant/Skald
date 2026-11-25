@@ -210,5 +210,6 @@ void editbox_registry_sync(PromptState *state);
 void editbox_registry_set_active(PromptState *state, const char *name);
 void editbox_registry_cycle(PromptState *state, int dir);
 const char *editbox_registry_active_name(const PromptState *state);
+bool editbox_wrap_move_vertical(PromptState *state, int dir);
 
 #endif

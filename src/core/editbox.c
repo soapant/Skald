@@ -2,7 +2,9 @@
 #include "core/edit_state.h"
 #include "core/editbox.h"
 
+#include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "core/context.h"
@@ -967,6 +969,87 @@ void editbox_registry_sync(PromptState *state) {
     memcpy(entry->buffer, entry->eb.filter, n);
     entry->buffer[n] = '\0';
   }
+}
+
+bool editbox_wrap_move_vertical(PromptState *state, int dir) {
+  if (!state || !dir)
+    return false;
+  if (state->active_editbox < 0 ||
+      state->active_editbox >= state->editbox_count)
+    return false;
+  PromptEditbox *entry = &state->editboxes[state->active_editbox];
+  if (!entry->wrapped)
+    return false;
+  EditboxWrapCache *cache = &entry->wrap_cache;
+  if (cache->count <= 0 || cache->line_h <= 0)
+    return false;
+  const char *text = entry->eb.filter;
+  int len = (int)strlen(text);
+  int max_width = entry->w > PROMPT_EDIT_SCROLL_PAD
+                      ? entry->w - PROMPT_EDIT_SCROLL_PAD
+                      : 40;
+  uint64_t key = editbox_wrap_key(text, len, cache->line_h, max_width);
+  if (cache->key != key || cache->len != len ||
+      cache->max_width != max_width)
+    return false;
+  int cursor = state->eb->cursor;
+  if (cursor < 0)
+    cursor = 0;
+  if (cursor > len)
+    cursor = len;
+  int idx = cursor < cache->count ? cursor : cache->count - 1;
+  int desired_x = cache->positions[idx].x;
+  int current_line = cache->positions[idx].y / cache->line_h;
+  int line_count = 1;
+  for (int i = 0; i < cache->count; i++) {
+    int line = cache->positions[i].y / cache->line_h;
+    if (line >= line_count)
+      line_count = line + 1;
+  }
+  int target_line = current_line + dir;
+  if (target_line < 0 || target_line >= line_count)
+    return false;
+  int best = -1;
+  int best_dist = INT_MAX;
+  int font_size = cache->line_h > 4 ? cache->line_h - 4 : FontSize;
+  for (int i = 0; i < cache->count && i < len; i++) {
+    if (text[i] == '\n' || ((unsigned char)text[i] & 0xC0) == 0x80)
+      continue;
+    if (cache->positions[i].y / cache->line_h != target_line)
+      continue;
+    int glen = utf8_lead_len((unsigned char)text[i]);
+    if (i + glen > len)
+      glen = len - i;
+    int before = cache->positions[i].x;
+    int after;
+    int next = i + glen;
+    if (next < cache->count &&
+        cache->positions[next].y == cache->positions[i].y) {
+      after = cache->positions[next].x;
+    } else {
+      after = before + Platform_MeasureTextWidth((MeasureTextWidthSpec){
+                           .text = text + i,
+                           .len = glen,
+                           .font_size = font_size});
+    }
+    int before_dist = before - desired_x;
+    if (before_dist < 0)
+      before_dist = -before_dist;
+    int after_dist = after - desired_x;
+    if (after_dist < 0)
+      after_dist = -after_dist;
+    int cand = before_dist <= after_dist ? i : next;
+    int dist = before_dist <= after_dist ? before_dist : after_dist;
+    if (dist < best_dist) {
+      best_dist = dist;
+      best = cand;
+    }
+  }
+  if (best < 0)
+    return false;
+  edit_state_end_selection();
+  state->eb->cursor = best;
+  return true;
 }
 
 const char *editbox_registry_active_name(const PromptState *state) {
