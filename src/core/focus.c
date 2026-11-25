@@ -218,7 +218,8 @@ bool focus_move_direction(FocusDirection dir) {
     if (lateral < 0)
       lateral = -lateral;
     long score = forward * 8 + lateral;
-    if (s_entries[i].kind == FOCUS_KIND_LISTBOX)
+    if (s_entries[i].kind == FOCUS_KIND_LISTBOX &&
+        focus_is_widget_kind(cur->kind))
       score += 1000000;
     if (best < 0 || score < best_score) {
       best = i;
