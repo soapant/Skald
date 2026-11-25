@@ -124,7 +124,7 @@ bool hotkey_capture_poll(char *out, size_t cap) {
     return false;
   }
 
-  HotkeyKey captured = {.vk_code = key, .mods = mods};
+  HotkeyKey captured = {.vk = key, .mods = mods};
   char formatted[64] = "";
   if (!hotkey_string_format(captured, formatted, (int)sizeof(formatted)))
     return false;

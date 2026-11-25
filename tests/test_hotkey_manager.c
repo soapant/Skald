@@ -27,7 +27,7 @@ static void fn_cb(void) { fn_calls++; }
 static HotkeyBinding make_binding(int vk, int mods, HotkeyCallbackUd cb_ud,
                                   void *ud, HotkeyCallback cb) {
   HotkeyBinding b = {0};
-  b.vk_code = vk;
+  b.vk = vk;
   b.modifiers = mods;
   b.hotkey_callback = cb;
   b.hotkey_callback_ud = cb_ud;
@@ -82,7 +82,7 @@ TEST(purge_owner_removes_binding_and_pending) {
   int found = -1;
   for (int i = 0; i < hotkey_count(); i++) {
     const HotkeyBinding *x = hotkey_get(i);
-    if (x && x->vk_code == TEST_VK_D)
+    if (x && x->vk == TEST_VK_D)
       found = i;
   }
   ASSERT_TRUE(found >= 0);
@@ -155,7 +155,7 @@ TEST(sk_execute_hotkey_dispatches_callback) {
   HotkeyBinding b = make_binding(0xF7, HOTKEY_MOD_ALT, ud_cb, &marker, NULL);
   ASSERT_TRUE(hotkey_register_internal(b));
   ASSERT_TRUE(
-      sk_execute_hotkey((SkKey){.vk_code = 0xF7, .mods = HOTKEY_MOD_ALT}));
+      sk_execute_hotkey((SkKey){.vk = 0xF7, .mods = HOTKEY_MOD_ALT}));
   hotkey_drain_pending();
   ASSERT_EQ_INT(ud_calls, 1);
   ASSERT_EQ_INT(ud_seen == &marker, 1);

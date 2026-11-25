@@ -133,19 +133,19 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   else if (ks == XK_Shift_L || ks == XK_Shift_R)
     mods |= HOTKEY_MOD_SHIFT;
 
-  int vk_code = x11_keysym_to_vk(ks);
+  int vk = x11_keysym_to_vk(ks);
   int char_hint =
       (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126)
           ? (unsigned char)buf[0]
           : 0;
   int modifiers = mods;
-  if (vk_code)
-    input_state_update(vk_code, true, modifiers, char_hint);
+  if (vk)
+    input_state_update(vk, true, modifiers, char_hint);
   if (widget_key_capture_active())
     return;
   log_info("xkey ks=0x%lx len=%d buf0=%d vk=%d mods=%d state=0x%x",
            (unsigned long)ks, len, len > 0 ? (int)(unsigned char)buf[0] : -1,
-           vk_code, modifiers, ev->state);
+           vk, modifiers, ev->state);
 
   Popup *top = WindowManager_GetTopPopup(wm);
   if (!top) {

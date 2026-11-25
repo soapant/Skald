@@ -68,7 +68,7 @@ hotkey_convert_into_binding(char *hotkey_string,
     log_warn("hotkey_convert_into_binding: invalid hotkey string '%s'",
              hotkey_string ? hotkey_string : "(null)");
 
-  output.vk_code = key.vk_code;
+  output.vk = key.vk;
   output.modifiers = key.mods;
   output.hotkey_callback = on_hotkey_trigger;
   output.hotkey_condition = optional_condition_for_hotkey;

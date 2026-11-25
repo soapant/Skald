@@ -312,7 +312,7 @@ double Platform_EndTimer(Timer t);
 int64_t Platform_TimerNowTicks(void);
 int64_t Platform_TimerTickFrequency(void);
 
-bool Platform_EmitKey(int vk_code, int down);
+bool Platform_EmitKey(int vk, int down);
 
 bool Platform_TryAcquireSingleInstance(void);
 bool Platform_InitDisplaySafe(void);

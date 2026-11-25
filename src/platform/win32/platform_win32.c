@@ -1684,19 +1684,19 @@ void Platform_InvalidatePrompt(void) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
-bool Platform_EmitKey(int vk_code, int down) {
-  log_warn("Platform_EmitKey win32 vk=%d down=%d", vk_code, down);
+bool Platform_EmitKey(int vk, int down) {
+  log_warn("Platform_EmitKey win32 vk=%d down=%d", vk, down);
   INPUT inp = {0};
   inp.type = INPUT_KEYBOARD;
-  inp.ki.wVk = (WORD)vk_code;
+  inp.ki.wVk = (WORD)vk;
   inp.ki.dwFlags = down ? 0 : KEYEVENTF_KEYUP;
-  if (vk_code == VK_UP || vk_code == VK_DOWN || vk_code == VK_LEFT ||
-      vk_code == VK_RIGHT || vk_code == VK_RCONTROL || vk_code == VK_RMENU) {
+  if (vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT ||
+      vk == VK_RIGHT || vk == VK_RCONTROL || vk == VK_RMENU) {
     inp.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
   }
   UINT sent = SendInput(1, &inp, sizeof(INPUT));
   if (sent != 1) {
-    log_error("Platform_EmitKey FAILED vk=%d down=%d sent=%u err=%lu", vk_code,
+    log_error("Platform_EmitKey FAILED vk=%d down=%d sent=%u err=%lu", vk,
               down, (unsigned)sent, GetLastError());
     return false;
   }

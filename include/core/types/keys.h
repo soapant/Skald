@@ -144,7 +144,7 @@
 #define MOUSE_VK(btn) (VK_MOUSE_BASE + (btn) - 1)
 
 typedef struct {
-  int vk_code;
+  int vk;
   int mods;
 } HotkeyKey;
 

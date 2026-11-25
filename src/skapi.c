@@ -730,7 +730,7 @@ bool sk_unregister_hotkey(const char *hotkey) {
                                                        NULL, NULL, false, NULL);
   if (!binding.valid)
     return false;
-  return hotkey_unregister_internal(binding.vk_code, binding.modifiers);
+  return hotkey_unregister_internal(binding.vk, binding.modifiers);
 }
 
 void sk_disable_global_hotkeys(void) { hotkey_set_suspended(true); }
@@ -756,7 +756,7 @@ int sk_hotkey_count(void) { return hotkey_count(); }
 static char *hotkey_binding_format(const HotkeyBinding *b) {
   if (!b)
     return NULL;
-  HotkeyKey key = {.vk_code = b->vk_code, .mods = b->modifiers};
+  HotkeyKey key = {.vk = b->vk, .mods = b->modifiers};
   char tmp[256];
   if (!hotkey_string_format(key, tmp, (int)sizeof(tmp)))
     return NULL;
@@ -783,7 +783,7 @@ bool sk_hotkey_taken(const char *hotkey) {
   HotkeyKey key = {0};
   if (!hotkey_string_parse(hotkey, &key))
     return false;
-  return hotkey_is_taken(key.vk_code, key.mods);
+  return hotkey_is_taken(key.vk, key.mods);
 }
 
 SkFeatureList sk_get_feature_list(void) {
@@ -2512,17 +2512,17 @@ void sk_emit_key(int vk, bool down) { Platform_EmitKey(vk, down ? 1 : 0); }
 
 bool sk_replay_hotkey(SkKey key) {
   int mods = key.mods ? key.mods : 0;
-  return hotkey_process(key.vk_code, mods);
+  return hotkey_process(key.vk, mods);
 }
 
 bool sk_execute_hotkey(SkKey key) {
-  bool handled = hotkey_execute(key.vk_code, key.mods);
+  bool handled = hotkey_execute(key.vk, key.mods);
   PromptState *state = sk_current_prompt_state();
   if (!state)
     return handled;
 
   PopupKeyEvent ev = {0};
-  ev.vk = key.vk_code;
+  ev.vk = key.vk;
   ev.ctrl = (key.mods & HOTKEY_MOD_CTRL) != 0;
   ev.shift = (key.mods & HOTKEY_MOD_SHIFT) != 0;
   ev.alt = (key.mods & HOTKEY_MOD_ALT) != 0;
@@ -2530,8 +2530,8 @@ bool sk_execute_hotkey(SkKey key) {
     return true;
 
   if (!ev.ctrl && !ev.alt && !(key.mods & HOTKEY_MOD_SUPER) &&
-      key.vk_code >= 32 && key.vk_code < 127) {
-    ev.text[0] = (char)key.vk_code;
+      key.vk >= 32 && key.vk < 127) {
+    ev.text[0] = (char)key.vk;
     ev.text_len = 1;
     prompt_insert_text(state, ev.text, ev.text_len);
     return true;
@@ -3724,7 +3724,7 @@ int sk_reload_all_features(void) {
 }
 
 bool sk_hotkey_down(SkKey key) {
-  if (!sk_is_key_down(key.vk_code))
+  if (!sk_is_key_down(key.vk))
     return false;
   if ((key.mods & SK_CTRL) && !sk_ctrl_pressed())
     return false;

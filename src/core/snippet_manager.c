@@ -266,22 +266,22 @@ static int snippet_match(void) {
   return -1;
 }
 
-bool snippet_feed_vk(int vk_code, int value, bool can_swallow) {
+bool snippet_feed_vk(int vk, int value, bool can_swallow) {
   if (value == 0 || widget_key_capture_active())
     return false;
-  if (vk_code == VK_BACK) {
+  if (vk == VK_BACK) {
     if (buf_len > 0)
       buf_len--;
     return false;
   }
-  if (vk_code == VK_RETURN || vk_code == VK_ESCAPE) {
+  if (vk == VK_RETURN || vk == VK_ESCAPE) {
     snippet_reset_buffer();
     return false;
   }
   int mods = remap_current_mods();
   if (mods & (HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT | HOTKEY_MOD_SUPER))
     return false;
-  char c = snippet_char_for_vk(vk_code, (mods & HOTKEY_MOD_SHIFT) != 0);
+  char c = snippet_char_for_vk(vk, (mods & HOTKEY_MOD_SHIFT) != 0);
   if (!c)
     return false;
   snippet_push_char(c);

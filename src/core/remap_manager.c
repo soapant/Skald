@@ -149,18 +149,18 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
   return true;
 }
 
-void remap_update_phys(int vk_code, int value) {
-  if (vk_code < 0 || vk_code >= 256)
+void remap_update_phys(int vk, int value) {
+  if (vk < 0 || vk >= 256)
     return;
   if (value == 2)
     return;
-  bool was_down = phys_vk[vk_code];
-  phys_vk[vk_code] = (value != 0);
+  bool was_down = phys_vk[vk];
+  phys_vk[vk] = (value != 0);
   if (value != 0 && !was_down) {
     seq_counter++;
-    key_seq[vk_code] = seq_counter;
+    key_seq[vk] = seq_counter;
   } else if (value == 0) {
-    key_seq[vk_code] = 0;
+    key_seq[vk] = 0;
   }
 }
 
@@ -407,13 +407,13 @@ void remap_send_combo(const char *combo) {
   remap_release_binding(&b, true);
 }
 
-bool remap_handle_vk(int vk_code, int value) {
-  if (vk_code < 0 || vk_code >= 256)
+bool remap_handle_vk(int vk, int value) {
+  if (vk < 0 || vk >= 256)
     return false;
   if (value == 2)
     return false;
   if (!remap_scratch_reserve(remap_count)) {
-    remap_update_phys(vk_code, value);
+    remap_update_phys(vk, value);
     return false;
   }
   bool *active_before = scratch_before;
@@ -425,7 +425,7 @@ bool remap_handle_vk(int vk_code, int value) {
   for (size_t i = 0; i < remap_count; i++)
     active_before[i] = binding_active(&remaps[i]);
 
-  remap_update_phys(vk_code, value);
+  remap_update_phys(vk, value);
 
   for (size_t i = 0; i < remap_count; i++)
     active_after[i] = binding_active(&remaps[i]);
@@ -452,7 +452,7 @@ bool remap_handle_vk(int vk_code, int value) {
     bool before = active_before[i];
     bool after = active_after[i];
     if (!before && after && allowed[i]) {
-      remap_fire_binding(b, vk_code);
+      remap_fire_binding(b, vk);
     } else if (before && !after) {
       remap_release_binding(b, allowed[i]);
     } else if (before && after && allowed[i]) {
@@ -466,41 +466,41 @@ bool remap_handle_vk(int vk_code, int value) {
     bool before = active_before[i] && allowed[i];
     bool after = active_after[i] && allowed[i];
     for (int k = 0; k < b->src_vk_count; k++)
-      if (b->src_vks[k] == vk_code) {
+      if (b->src_vks[k] == vk) {
         if (before || after)
           swallow = true;
       }
     if (b->src_mods & HOTKEY_MOD_CTRL &&
-        (vk_code == VK_LCONTROL || vk_code == VK_RCONTROL ||
-         vk_code == VK_CONTROL)) {
+        (vk == VK_LCONTROL || vk == VK_RCONTROL ||
+         vk == VK_CONTROL)) {
       if (before || after)
         swallow = true;
     }
     if (b->src_mods & HOTKEY_MOD_ALT &&
-        (vk_code == VK_LMENU || vk_code == VK_RMENU || vk_code == VK_MENU)) {
+        (vk == VK_LMENU || vk == VK_RMENU || vk == VK_MENU)) {
       if (before || after)
         swallow = true;
     }
     if (b->src_mods & HOTKEY_MOD_SHIFT &&
-        (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT)) {
+        (vk == VK_LSHIFT || vk == VK_RSHIFT || vk == VK_SHIFT)) {
       if (before || after)
         swallow = true;
     }
     if (b->src_mods & HOTKEY_MOD_SUPER &&
-        (vk_code == VK_LWIN || vk_code == VK_RWIN)) {
+        (vk == VK_LWIN || vk == VK_RWIN)) {
       if (before || after)
         swallow = true;
     }
     if (after && !before) {
-      if (b->src_vk_count > 0 && b->src_vks[b->src_vk_count - 1] == vk_code)
+      if (b->src_vk_count > 0 && b->src_vks[b->src_vk_count - 1] == vk)
         swallow = true;
     }
   }
   return swallow;
 }
 
-bool remap_should_swallow_vk(int vk_code, int value) {
-  return remap_handle_vk(vk_code, value);
+bool remap_should_swallow_vk(int vk, int value) {
+  return remap_handle_vk(vk, value);
 }
 
 static void remap_destroy_cb(void *element) {

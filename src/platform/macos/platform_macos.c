@@ -620,8 +620,8 @@ int64_t Platform_TimerNowTicks(void) {
 
 int64_t Platform_TimerTickFrequency(void) { return 1000000000LL; }
 
-bool Platform_EmitKey(int vk_code, int down) {
-  UNUSED(vk_code);
+bool Platform_EmitKey(int vk, int down) {
+  UNUSED(vk);
   UNUSED(down);
   return false;
 }

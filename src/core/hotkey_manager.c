@@ -43,7 +43,7 @@ static void hotkey_binding_free_window_list(HotkeyBinding *b) {
 
 static void hotkey_destroy_cb(void *element) {
   HotkeyBinding *b = (HotkeyBinding *)element;
-  log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)", b->vk_code,
+  log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)", b->vk,
            b->modifiers);
   hotkey_binding_free_window_list(b);
   owner_tag_clear(&b->tag);
@@ -175,10 +175,10 @@ static void hotkey_hold_end(int vk) {
   HOTKEY_Q_UNLOCK();
 }
 
-void hotkey_key_up(int vk_code) {
-  if (!vk_code)
+void hotkey_key_up(int vk) {
+  if (!vk)
     return;
-  hotkey_hold_end(vk_code);
+  hotkey_hold_end(vk);
 }
 
 static void hotkey_hold_begin(int vk, int modifiers) {
@@ -210,7 +210,7 @@ static void hotkey_hold_begin(int vk, int modifiers) {
   HOTKEY_Q_UNLOCK();
 }
 
-static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
+static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk,
                                    int modifiers);
 
 static void hotkey_tick_holds(void) {
@@ -225,7 +225,7 @@ static void hotkey_tick_holds(void) {
     int mods = hold_slots[i].modifiers;
     HotkeyBinding *b = NULL;
     for (int k = 0; k < arrlen(hotkeys); k++) {
-      if (hotkeys[k].vk_code == vk && hotkeys[k].modifiers == mods &&
+      if (hotkeys[k].vk == vk && hotkeys[k].modifiers == mods &&
           hotkeys[k].hold) {
         b = &hotkeys[k];
         break;
@@ -273,7 +273,7 @@ void hotkey_drain_pending(void) {
 
 bool hotkey_has_mouse_binding(void) {
   for (int i = 0; i < arrlen(hotkeys); i++) {
-    int vk = hotkeys[i].vk_code;
+    int vk = hotkeys[i].vk;
     if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1)
       return true;
   }
@@ -282,7 +282,7 @@ bool hotkey_has_mouse_binding(void) {
 
 bool hotkey_has_keyboard_binding(void) {
   for (int i = 0; i < arrlen(hotkeys); i++) {
-    int vk = hotkeys[i].vk_code;
+    int vk = hotkeys[i].vk;
     if (vk >= VK_MOUSE_BASE && vk <= VK_MOUSE_BASE + MOUSE_BTN_MAX - 1)
       continue;
     return true;
@@ -307,7 +307,7 @@ bool hotkey_mouse_button_bound(int btn) {
     return false;
   int vk = MOUSE_VK(btn);
   for (int i = 0; i < arrlen(hotkeys); i++) {
-    if (hotkeys[i].vk_code != vk || hotkeys[i].modifiers != 0)
+    if (hotkeys[i].vk != vk || hotkeys[i].modifiers != 0)
       continue;
     const HotkeyBinding *b = &hotkeys[i];
     if (b->whitelist) {
@@ -354,9 +354,9 @@ const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb) {
   return NULL;
 }
 
-bool hotkey_is_taken(int vk_code, int modifiers) {
+bool hotkey_is_taken(int vk, int modifiers) {
   for (int i = 0; i < arrlen(hotkeys); i++)
-    if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers)
+    if (hotkeys[i].vk == vk && hotkeys[i].modifiers == modifiers)
       return true;
   return false;
 }
@@ -372,7 +372,7 @@ bool hotkey_register_internal(HotkeyBinding binding) {
                            (void *)(uintptr_t)binding.hotkey_condition, 0);
 
   for (int i = 0; i < arrlen(hotkeys); i++) {
-    if (hotkeys[i].vk_code == binding.vk_code &&
+    if (hotkeys[i].vk == binding.vk &&
         hotkeys[i].modifiers == binding.modifiers) {
       hotkey_binding_free_window_list(&hotkeys[i]);
       owner_tag_clear(&hotkeys[i].tag);
@@ -384,11 +384,11 @@ bool hotkey_register_internal(HotkeyBinding binding) {
   return true;
 }
 
-bool hotkey_unregister_internal(int vk_code, int modifiers) {
+bool hotkey_unregister_internal(int vk, int modifiers) {
   int n = 0;
   bool found = false;
   for (int i = 0; i < arrlen(hotkeys); i++) {
-    if (hotkeys[i].vk_code == vk_code && hotkeys[i].modifiers == modifiers) {
+    if (hotkeys[i].vk == vk && hotkeys[i].modifiers == modifiers) {
       hotkey_binding_free_window_list(&hotkeys[i]);
       owner_tag_clear(&hotkeys[i].tag);
       found = true;
@@ -415,7 +415,7 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
     if (!hold_slots[i].active)
       continue;
     for (int k = 0; k < arrlen(hotkeys); k++) {
-      if (hotkeys[k].vk_code == hold_slots[i].vk &&
+      if (hotkeys[k].vk == hold_slots[i].vk &&
           hotkeys[k].modifiers == hold_slots[i].modifiers &&
           owner_tag_matches(&hotkeys[k].tag, a, b)) {
         hold_slots[i].active = false;
@@ -439,27 +439,27 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
   owner_strfree(&b);
 }
 
-static int hotkey_strip_self_mod(int vk_code, int mods) {
+static int hotkey_strip_self_mod(int vk, int mods) {
   int eff = mods;
-  if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT)
+  if (vk == VK_LSHIFT || vk == VK_RSHIFT || vk == VK_SHIFT)
     eff &= ~HOTKEY_MOD_SHIFT;
-  else if (vk_code == VK_LCONTROL || vk_code == VK_RCONTROL ||
-           vk_code == VK_CONTROL)
+  else if (vk == VK_LCONTROL || vk == VK_RCONTROL ||
+           vk == VK_CONTROL)
     eff &= ~HOTKEY_MOD_CTRL;
-  else if (vk_code == VK_LMENU || vk_code == VK_RMENU || vk_code == VK_MENU)
+  else if (vk == VK_LMENU || vk == VK_RMENU || vk == VK_MENU)
     eff &= ~HOTKEY_MOD_ALT;
-  else if (vk_code == VK_LWIN || vk_code == VK_RWIN)
+  else if (vk == VK_LWIN || vk == VK_RWIN)
     eff &= ~HOTKEY_MOD_SUPER;
   return eff;
 }
 
-static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
+static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk,
                                    int modifiers) {
-  int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
-  int b_eff = hotkey_strip_self_mod(b->vk_code, b->modifiers);
+  int eff_modifiers = hotkey_strip_self_mod(vk, modifiers);
+  int b_eff = hotkey_strip_self_mod(b->vk, b->modifiers);
   if (b_eff != eff_modifiers)
     return false;
-  if (b_eff != 0 && !remap_check_strict_order(vk_code, b_eff))
+  if (b_eff != 0 && !remap_check_strict_order(vk, b_eff))
     return false;
 
   if (b->hotkey_condition) {
@@ -494,17 +494,17 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk_code,
   return hotkey_window_list_match(b, title);
 }
 
-bool hotkey_process(int vk_code, int modifiers) {
+bool hotkey_process(int vk, int modifiers) {
   if (hotkeys_suspended || widget_key_capture_active())
     return false;
-  int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
+  int eff_modifiers = hotkey_strip_self_mod(vk, modifiers);
   for (int i = 0; i < arrlen(hotkeys); i++) {
     HotkeyBinding *b = &hotkeys[i];
 
-    if (b->vk_code != vk_code) {
+    if (b->vk != vk) {
       continue;
     }
-    if (!hotkey_binding_allowed(b, vk_code, eff_modifiers)) {
+    if (!hotkey_binding_allowed(b, vk, eff_modifiers)) {
       continue;
     }
 
@@ -521,7 +521,7 @@ bool hotkey_process(int vk_code, int modifiers) {
     hotkey_enqueue(cb, b->hotkey_callback_ud, b->user_ud, b->tag.owner);
     char buf[2556];
     char hotkey_buf[2422];
-    hotkey_string_format((HotkeyKey){.vk_code = vk_code, .mods = eff_modifiers},
+    hotkey_string_format((HotkeyKey){.vk = vk, .mods = eff_modifiers},
                          hotkey_buf, sizeof(hotkey_buf));
     if (MessageAfterEachHotkey) {
       snprintf(buf, sizeof(buf), "Ran Hotkey %s", hotkey_buf);
@@ -535,19 +535,19 @@ bool hotkey_process(int vk_code, int modifiers) {
     }
     log_info("hotkey_process Hotkey %s Matches", hotkey_buf);
     if (b->hold)
-      hotkey_hold_begin(vk_code, b->modifiers);
+      hotkey_hold_begin(vk, b->modifiers);
     return swallow;
   }
   return false;
 }
 
-bool hotkey_execute(int vk_code, int modifiers) {
-  int eff_modifiers = hotkey_strip_self_mod(vk_code, modifiers);
+bool hotkey_execute(int vk, int modifiers) {
+  int eff_modifiers = hotkey_strip_self_mod(vk, modifiers);
   for (int i = 0; i < arrlen(hotkeys); i++) {
     HotkeyBinding *b = &hotkeys[i];
-    if (b->vk_code != vk_code)
+    if (b->vk != vk)
       continue;
-    if (hotkey_strip_self_mod(b->vk_code, b->modifiers) != eff_modifiers)
+    if (hotkey_strip_self_mod(b->vk, b->modifiers) != eff_modifiers)
       continue;
     hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud, b->user_ud,
                    b->tag.owner);

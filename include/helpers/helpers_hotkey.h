@@ -10,7 +10,7 @@ typedef void (*HotkeyCallbackUd)(void *);
 typedef bool (*HotkeyCondition)(void);
 
 typedef struct {
-  int vk_code;
+  int vk;
   int modifiers;
   char **window_list;
   int window_count;
@@ -34,6 +34,6 @@ hotkey_convert_into_binding(char *hotkey_string,
                             const char *const *optional_blacklistedwindows,
                             bool whitelist, void *user_ud);
 void hotkey_purge_owner(const char *path_a, const char *path_b);
-void hotkey_key_up(int vk_code);
+void hotkey_key_up(int vk);
 
 #endif

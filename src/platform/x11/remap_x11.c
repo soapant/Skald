@@ -28,49 +28,49 @@ enum {
 
 static int emit_backend[256];
 
-static int vk_to_linux(int vk_code) {
-  int linux_code = x11_vk_to_linux_key(vk_code);
+static int vk_to_linux(int vk) {
+  int linux_code = x11_vk_to_linux_key(vk);
   if (!linux_code) {
-    if (vk_code == VK_LCONTROL)
+    if (vk == VK_LCONTROL)
       linux_code = KEY_LEFTCTRL;
-    else if (vk_code == VK_RCONTROL)
+    else if (vk == VK_RCONTROL)
       linux_code = KEY_RIGHTCTRL;
-    else if (vk_code == VK_LSHIFT)
+    else if (vk == VK_LSHIFT)
       linux_code = KEY_LEFTSHIFT;
-    else if (vk_code == VK_RSHIFT)
+    else if (vk == VK_RSHIFT)
       linux_code = KEY_RIGHTSHIFT;
-    else if (vk_code == VK_LMENU)
+    else if (vk == VK_LMENU)
       linux_code = KEY_LEFTALT;
-    else if (vk_code == VK_RMENU)
+    else if (vk == VK_RMENU)
       linux_code = KEY_RIGHTALT;
-    else if (vk_code == VK_LWIN)
+    else if (vk == VK_LWIN)
       linux_code = KEY_LEFTMETA;
-    else if (vk_code == VK_RWIN)
+    else if (vk == VK_RWIN)
       linux_code = KEY_RIGHTMETA;
-    else if (vk_code == 0xDC)
+    else if (vk == 0xDC)
       linux_code = KEY_BACKSLASH;
-    else if (vk_code == VK_UP)
+    else if (vk == VK_UP)
       linux_code = KEY_UP;
-    else if (vk_code == VK_DOWN)
+    else if (vk == VK_DOWN)
       linux_code = KEY_DOWN;
-    else if (vk_code == VK_LEFT)
+    else if (vk == VK_LEFT)
       linux_code = KEY_LEFT;
-    else if (vk_code == VK_RIGHT)
+    else if (vk == VK_RIGHT)
       linux_code = KEY_RIGHT;
-    else if (vk_code == VK_RETURN)
+    else if (vk == VK_RETURN)
       linux_code = KEY_ENTER;
-    else if (vk_code == VK_SPACE)
+    else if (vk == VK_SPACE)
       linux_code = KEY_SPACE;
-    else if (vk_code == VK_TAB)
+    else if (vk == VK_TAB)
       linux_code = KEY_TAB;
-    else if (vk_code == VK_ESCAPE)
+    else if (vk == VK_ESCAPE)
       linux_code = KEY_ESC;
   }
   return linux_code;
 }
 
-static bool inject_uinput(int vk_code, int down) {
-  int linux_code = vk_to_linux(vk_code);
+static bool inject_uinput(int vk, int down) {
+  int linux_code = vk_to_linux(vk);
   if (!linux_code || x11_uinput_fd_get() < 0)
     return false;
   struct input_event ev;
@@ -83,16 +83,16 @@ static bool inject_uinput(int vk_code, int down) {
   return true;
 }
 
-static const char *vk_to_name(int vk_code, char *buf, size_t sz) {
-  if (vk_code >= 'A' && vk_code <= 'Z') {
-    snprintf(buf, sz, "%c", (char)(vk_code + 32));
+static const char *vk_to_name(int vk, char *buf, size_t sz) {
+  if (vk >= 'A' && vk <= 'Z') {
+    snprintf(buf, sz, "%c", (char)(vk + 32));
     return buf;
   }
-  if (vk_code >= '0' && vk_code <= '9') {
-    snprintf(buf, sz, "%c", (char)vk_code);
+  if (vk >= '0' && vk <= '9') {
+    snprintf(buf, sz, "%c", (char)vk);
     return buf;
   }
-  switch (vk_code) {
+  switch (vk) {
   case VK_UP:
     return "Up";
   case VK_DOWN:
@@ -143,8 +143,8 @@ static bool inject_run(const char *cmd) {
   return false;
 }
 
-static bool inject_ydotool(int vk_code, int down) {
-  int linux_code = vk_to_linux(vk_code);
+static bool inject_ydotool(int vk, int down) {
+  int linux_code = vk_to_linux(vk);
   if (!linux_code)
     return false;
   char cmd[128];
@@ -153,9 +153,9 @@ static bool inject_ydotool(int vk_code, int down) {
 }
 
 static bool inject_keytool(const char *tool, const char *down_flag,
-                           const char *up_flag, int vk_code, int down) {
+                           const char *up_flag, int vk, int down) {
   char buf[32];
-  const char *name = vk_to_name(vk_code, buf, sizeof(buf));
+  const char *name = vk_to_name(vk, buf, sizeof(buf));
   if (!name)
     return false;
   char cmd[256];
@@ -164,55 +164,55 @@ static bool inject_keytool(const char *tool, const char *down_flag,
   return inject_run(cmd);
 }
 
-static bool inject_wtype(int vk_code, int down) {
-  return inject_keytool("wtype", "-P", "-R", vk_code, down);
+static bool inject_wtype(int vk, int down) {
+  return inject_keytool("wtype", "-P", "-R", vk, down);
 }
 
-static bool inject_xdotool(int vk_code, int down) {
-  return inject_keytool("xdotool", "keydown", "keyup", vk_code, down);
+static bool inject_xdotool(int vk, int down) {
+  return inject_keytool("xdotool", "keydown", "keyup", vk, down);
 }
 
-static bool inject_xtest(int vk_code, int down) {
+static bool inject_xtest(int vk, int down) {
 #if __has_include(<X11/extensions/XTest.h>)
   Display *dpy = x11_get_display();
   if (!dpy)
     return false;
   KeySym ks = 0;
-  if (vk_code >= 'A' && vk_code <= 'Z')
-    ks = XK_A + (vk_code - 'A');
-  else if (vk_code >= '0' && vk_code <= '9')
-    ks = XK_0 + (vk_code - '0');
-  else if (vk_code == VK_UP)
+  if (vk >= 'A' && vk <= 'Z')
+    ks = XK_A + (vk - 'A');
+  else if (vk >= '0' && vk <= '9')
+    ks = XK_0 + (vk - '0');
+  else if (vk == VK_UP)
     ks = XK_Up;
-  else if (vk_code == VK_DOWN)
+  else if (vk == VK_DOWN)
     ks = XK_Down;
-  else if (vk_code == VK_LEFT)
+  else if (vk == VK_LEFT)
     ks = XK_Left;
-  else if (vk_code == VK_RIGHT)
+  else if (vk == VK_RIGHT)
     ks = XK_Right;
-  else if (vk_code == VK_RETURN)
+  else if (vk == VK_RETURN)
     ks = XK_Return;
-  else if (vk_code == VK_SPACE)
+  else if (vk == VK_SPACE)
     ks = XK_space;
-  else if (vk_code == VK_TAB)
+  else if (vk == VK_TAB)
     ks = XK_Tab;
-  else if (vk_code == VK_ESCAPE)
+  else if (vk == VK_ESCAPE)
     ks = XK_Escape;
-  else if (vk_code == VK_OEM_3)
+  else if (vk == VK_OEM_3)
     ks = XK_grave;
-  else if (vk_code == 0xDC)
+  else if (vk == 0xDC)
     ks = XK_backslash;
-  else if (vk_code == VK_LSHIFT)
+  else if (vk == VK_LSHIFT)
     ks = XK_Shift_L;
-  else if (vk_code == VK_RSHIFT)
+  else if (vk == VK_RSHIFT)
     ks = XK_Shift_R;
-  else if (vk_code == VK_LCONTROL)
+  else if (vk == VK_LCONTROL)
     ks = XK_Control_L;
-  else if (vk_code == VK_RCONTROL)
+  else if (vk == VK_RCONTROL)
     ks = XK_Control_R;
-  else if (vk_code == VK_LMENU)
+  else if (vk == VK_LMENU)
     ks = XK_Alt_L;
-  else if (vk_code == VK_RMENU)
+  else if (vk == VK_RMENU)
     ks = XK_Alt_R;
   if (!ks)
     return false;
@@ -224,55 +224,55 @@ static bool inject_xtest(int vk_code, int down) {
   return true;
 #else
   log_warn("inject_xtest: XTest Isnt Available");
-  (void)vk_code;
+  (void)vk;
   (void)down;
   return false;
 #endif
 }
 
-static bool emit_try(int backend, int vk_code, int down) {
+static bool emit_try(int backend, int vk, int down) {
   switch (backend) {
   case EMIT_BACKEND_UINPUT:
-    return inject_uinput(vk_code, down);
+    return inject_uinput(vk, down);
   case EMIT_BACKEND_COMPOSITOR:
-    return Platform_InjectKey(vk_code, down);
+    return Platform_InjectKey(vk, down);
   case EMIT_BACKEND_YDOTOOL:
-    return inject_ydotool(vk_code, down);
+    return inject_ydotool(vk, down);
   case EMIT_BACKEND_WTYPE:
-    return inject_wtype(vk_code, down);
+    return inject_wtype(vk, down);
   case EMIT_BACKEND_XDOTOOL:
-    return inject_xdotool(vk_code, down);
+    return inject_xdotool(vk, down);
   case EMIT_BACKEND_XTEST:
-    return inject_xtest(vk_code, down);
+    return inject_xtest(vk, down);
   default:
     return false;
   }
 }
 
-bool Platform_EmitKey(int vk_code, int down) {
-  if (vk_code < 0 || vk_code >= 256)
+bool Platform_EmitKey(int vk, int down) {
+  if (vk < 0 || vk >= 256)
     return false;
   static const int order[] = {
       EMIT_BACKEND_UINPUT, EMIT_BACKEND_COMPOSITOR, EMIT_BACKEND_YDOTOOL,
       EMIT_BACKEND_WTYPE,  EMIT_BACKEND_XDOTOOL,   EMIT_BACKEND_XTEST,
   };
   if (!down) {
-    int cached = emit_backend[vk_code];
-    if (cached && emit_try(cached, vk_code, 0)) {
-      emit_backend[vk_code] = EMIT_BACKEND_NONE;
+    int cached = emit_backend[vk];
+    if (cached && emit_try(cached, vk, 0)) {
+      emit_backend[vk] = EMIT_BACKEND_NONE;
       return true;
     }
   }
   for (size_t i = 0; i < sizeof(order) / sizeof(order[0]); i++) {
     int backend = order[i];
-    if (!down && backend == emit_backend[vk_code])
+    if (!down && backend == emit_backend[vk])
       continue;
-    if (!emit_try(backend, vk_code, down))
+    if (!emit_try(backend, vk, down))
       continue;
-    emit_backend[vk_code] = down ? backend : EMIT_BACKEND_NONE;
+    emit_backend[vk] = down ? backend : EMIT_BACKEND_NONE;
     return true;
   }
   if (!down)
-    emit_backend[vk_code] = EMIT_BACKEND_NONE;
+    emit_backend[vk] = EMIT_BACKEND_NONE;
   return false;
 }
