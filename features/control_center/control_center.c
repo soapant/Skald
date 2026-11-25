@@ -95,6 +95,7 @@ typedef enum {
 
 static CcState cc_state = CC_STATE_LAUNCHER;
 static bool cc_state_changed;
+static bool cc_quicklink_name_seeded;
 
 static void cc_set_state(CcState state) {
   if (cc_state == state)
@@ -607,15 +608,55 @@ static bool cc_launch_app_as_admin(void) {
 }
 
 static void cc_add_quicklink_render(PromptState *state) {
-  char* initial_text = "";
-  int starting_x = state->width / 2 - 200;
-  if (sk_string_contains(sk_get_last_clipboard_entry(),"https://")) initial_text = sk_get_last_clipboard_entry();
-  sk_draw_text(.text="Link",.color=CC_TYPE_COLOR,.x=starting_x,.y=40);
-  sk_place_editbox_wrapped(.x=starting_x + 60,.y=40,.w=400,.h=300,.placeholder="Enter URL or Link",.initial_text=initial_text,.color_bg=CC_TYPE_COLOR);
+  char *clip = sk_get_last_clipboard_entry();
+  bool is_url = clip && sk_string_starts_with(clip, "https://");
+  int starting_x = state->width / 2 - 270;
+
+  sk_draw_text(.text = "Link", .color = CC_TYPE_COLOR, .x = starting_x, .y = 45);
+  sk_place_editbox_wrapped(.name="quicklink_link",.x = starting_x + 60, .y = 40, .w = 400, .h = 200,
+                           .placeholder = "Enter URL or Link",
+                           .initial_text = is_url ? clip : "",
+                           .color_bg = CC_TYPE_COLOR,
+                           .text_y = 8,
+                           .auto_focus = true);
+
+  char name_buf[256] = "";
+  char *after_scheme = sk_string_cut_after(sk_editbox_text("quicklink_link"), ':');
+  if (after_scheme) {
+    const char *host = after_scheme;
+    while (*host == '/')
+      host++;
+    if (strncmp(host, "www.", 4) == 0)
+      host += 4;
+    if (strchr(host, '.')) {
+      char *domain = sk_string_cut_before(host, '.');
+      if (domain && domain[0]) {
+        domain[0] = (char)toupper((unsigned char)domain[0]);
+        snprintf(name_buf, sizeof(name_buf), "%s", domain);
+      }
+      free(domain);
+    }
+    free(after_scheme);
+  }
+
+  sk_draw_text(.text = "Name", .color = CC_TYPE_COLOR, .x = starting_x, .y = 335);
+  sk_place_editbox_wrapped(.name="quicklink_name",.x = starting_x + 60, .y = 320, .w = 400, .h = 60,
+                           .placeholder = "Enter Name",
+                           .color_bg = CC_TYPE_COLOR,
+                           .initial_text = name_buf,
+                           .text_y = 12);
+  if (!cc_quicklink_name_seeded && name_buf[0] &&
+      sk_editbox_set_text("quicklink_name", name_buf))
+    cc_quicklink_name_seeded = true;
+  free(clip);
 }
 
 static bool cc_add_quicklink_enter(PromptState *state) {
-  (void)state;
+  const char* name = sk_editbox_text("quicklink_name");
+  const char* link = sk_editbox_text("quicklink_link");
+  if (name && link && name[0] && link[0])
+    sk_config_set_quicklink(name, link);
+  atomic_store(&cc_entries_dirty, true);
   return false;
 }
 
@@ -627,6 +668,7 @@ static bool cc_add_shortcut_enter(PromptState *state) {
 }
 
 static bool cc_open_quicklink_state(void) {
+  cc_quicklink_name_seeded = false;
   cc_set_state(CC_STATE_ADD_QUICKLINK);
   return false;
 }
@@ -1476,23 +1518,39 @@ static void cc_render(PromptState *state) {
   }
 }
 
-static bool cc_enter(PromptState *state) {
+static bool cc_mode_enter(PromptState *state) {
   switch (cc_state) {
   case CC_STATE_ADD_QUICKLINK:
     return cc_add_quicklink_enter(state);
   case CC_STATE_ADD_SHORTCUT:
     return cc_add_shortcut_enter(state);
-  case CC_STATE_LAUNCHER:
   default:
-    return cc_launcher_enter(state);
+    return false;
   }
 }
 
+static bool cc_finish_enter(CcState was, bool close) {
+  if (was == CC_STATE_LAUNCHER)
+    return close;
+  cc_state = CC_STATE_LAUNCHER;
+  cc_state_changed = true;
+  sk_editbox_set_active(NULL);
+  sk_request_refresh();
+  return false;
+}
+
+static bool cc_enter(PromptState *state) {
+  CcState was = cc_state;
+  bool close = was == CC_STATE_LAUNCHER ? cc_launcher_enter(state)
+                                        : cc_mode_enter(state);
+  return cc_finish_enter(was, close);
+}
+
 static bool cc_enter_with(PromptState *state, CcRunMode mode) {
-  switch (cc_state) {
-  default:
-    return cc_launcher_enter_with(state,mode);
-  }
+  CcState was = cc_state;
+  bool close = was == CC_STATE_LAUNCHER ? cc_launcher_enter_with(state, mode)
+                                        : cc_mode_enter(state);
+  return cc_finish_enter(was, close);
 }
 
 #define CC_DEFINE_ENTER(fn, mode)                                              \
