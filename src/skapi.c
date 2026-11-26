@@ -409,31 +409,36 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   return true;
 }
 
-bool ski_store_set(const char *source_file, const char *key,
-                   const char *value) {
-  return feature_store_set(source_file, key, value);
+const char *ski_store_feature_name(const char *source_file) {
+  static _Thread_local char name[128];
+  if (!feature_store_feature_name(source_file, name, sizeof(name)))
+    name[0] = '\0';
+  return name;
 }
 
-bool ski_store_append(const char *source_file, const char *key,
-                      const char *value) {
-  return feature_store_append(source_file, key, value);
+bool ski_store_set(const char *feature, const char *key, const char *value) {
+  return feature_store_set(feature, key, value);
 }
 
-SkStringList ski_store_get_all(const char *source_file, const char *key) {
-  return feature_store_get_all(source_file, key);
+bool ski_store_append(const char *feature, const char *key, const char *value) {
+  return feature_store_append(feature, key, value);
 }
 
-char *ski_store_get_last(const char *source_file, const char *key) {
-  return feature_store_get_last(source_file, key);
+SkStringList ski_store_get_all(const char *feature, const char *key) {
+  return feature_store_get_all(feature, key);
 }
 
-bool ski_store_replace_all(const char *source_file, const char *key,
+char *ski_store_get_last(const char *feature, const char *key) {
+  return feature_store_get_last(feature, key);
+}
+
+bool ski_store_replace_all(const char *feature, const char *key,
                            const char *const *values, int count) {
-  return feature_store_replace_all(source_file, key, values, count);
+  return feature_store_replace_all(feature, key, values, count);
 }
 
-bool ski_store_clear(const char *source_file, const char *key) {
-  return feature_store_clear(source_file, key);
+bool ski_store_clear(const char *feature, const char *key) {
+  return feature_store_clear(feature, key);
 }
 
 char *sk_write_temp_file(const char *name, const void *data, size_t len) {

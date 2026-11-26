@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#define CH_FILE "clipboard_history.txt"
 #define CH_MAX_STORED 1000
 #define CH_MAX_TEXT 4096
 #define CH_PREVIEW_LEN 128
@@ -122,7 +121,7 @@ static void ch_save(void) {
     }
   }
   if (lines && count > 0)
-    sk_write_to_file(CH_FILE, (const char **)lines, count);
+    sk_store_replace_all((const char *const *)lines, count);
   if (lines) {
     for (int i = 0; i < count; i++)
       free(lines[i]);
@@ -131,7 +130,7 @@ static void ch_save(void) {
 }
 
 static void ch_load(void) {
-  SkStringList lines = sk_load_file_list(CH_FILE);
+  SkStringList lines = sk_store_get_all();
   for (size_t i = 0; i < lines.count; i++) {
     if (!lines.items[i] || !lines.items[i][0])
       continue;

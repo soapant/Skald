@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CC_APPCACHE_FILE "app_launcher_cache.txt"
-
 #define CC_ITEM_TEXT_X 10
 #define CC_ITEM_TEXT_Y 2
 #define CC_ICON_GAP 8
@@ -404,7 +402,8 @@ static bool cc_icon_is_shell_only(const char *icon) {
 }
 
 static bool cc_apps_load_cache(bool *needs_save) {
-  SkStringList lines = sk_load_file_list(CC_APPCACHE_FILE);
+  SkStringList lines =
+      ski_store_get_all("control_center", "app_launcher_cache");
   if (!lines.items)
     return false;
   if (lines.count == 0 || !lines.items[0]) {
@@ -467,7 +466,8 @@ static void cc_apps_save_cache(void) {
     snprintf(line, len, "%s\t%s\t%s", a->name, a->path, a->icon);
     lines[n++] = line;
   }
-  sk_write_to_file(CC_APPCACHE_FILE, (const char **)lines, n);
+  ski_store_replace_all("control_center", "app_launcher_cache",
+                        (const char *const *)lines, n);
   for (int i = 0; i < n; i++)
     free(lines[i]);
   free(lines);

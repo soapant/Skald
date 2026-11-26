@@ -35,8 +35,8 @@ static bool store_sanitize(const char *src, size_t len, char *out,
   return o > 0;
 }
 
-static bool store_feature_name(const char *source_file, char *out,
-                               size_t cap) {
+bool feature_store_feature_name(const char *source_file, char *out,
+                                size_t cap) {
   if (!source_file || !source_file[0])
     return false;
   const char *base = source_file;
@@ -57,24 +57,18 @@ static bool store_key_name(const char *key, char *out, size_t cap) {
   return store_sanitize(key, strlen(key), out, cap);
 }
 
-static bool store_path(const char *source_file, const char *key, char *out,
+static bool store_path(const char *feature_name, const char *key, char *out,
                        size_t cap) {
   char feature[128];
   char name[128];
-  if (!store_feature_name(source_file, feature, sizeof(feature)) ||
+  if (!store_key_name(feature_name, feature, sizeof(feature)) ||
       !store_key_name(key, name, sizeof(name)))
     return false;
   char base[512];
   if (!data_dir(base, sizeof(base)))
     return false;
-  char stores[640];
-  int n = snprintf(stores, sizeof(stores), "%s%sstores", base, STORE_SEP);
-  if (n < 0 || (size_t)n >= sizeof(stores))
-    return false;
-  if (!Platform_MkdirIfNotExists(stores))
-    return false;
   char dir[800];
-  n = snprintf(dir, sizeof(dir), "%s%s%s", stores, STORE_SEP, feature);
+  int n = snprintf(dir, sizeof(dir), "%s%s%s", base, STORE_SEP, feature);
   if (n < 0 || (size_t)n >= sizeof(dir))
     return false;
   if (!Platform_MkdirIfNotExists(dir))
@@ -155,18 +149,18 @@ static bool store_write_unlocked(const char *path, const char *const *values,
   return true;
 }
 
-bool feature_store_set(const char *source_file, const char *key,
+bool feature_store_set(const char *feature, const char *key,
                        const char *value) {
   const char *values[1] = {value};
-  return feature_store_replace_all(source_file, key, values, 1);
+  return feature_store_replace_all(feature, key, values, 1);
 }
 
-bool feature_store_append(const char *source_file, const char *key,
+bool feature_store_append(const char *feature, const char *key,
                           const char *value) {
   if (!store_value_valid(value))
     return false;
   char path[1024];
-  if (!store_path(source_file, key, path, sizeof(path)))
+  if (!store_path(feature, key, path, sizeof(path)))
     return false;
   void *mutex = store_lock();
   Platform_MutexLock(mutex);
@@ -175,9 +169,9 @@ bool feature_store_append(const char *source_file, const char *key,
   return ok;
 }
 
-StringList feature_store_get_all(const char *source_file, const char *key) {
+StringList feature_store_get_all(const char *feature, const char *key) {
   char path[1024];
-  if (!store_path(source_file, key, path, sizeof(path))) {
+  if (!store_path(feature, key, path, sizeof(path))) {
     StringList empty = {0};
     return empty;
   }
@@ -198,8 +192,8 @@ static char *store_strdup(const char *s) {
   return copy;
 }
 
-char *feature_store_get_last(const char *source_file, const char *key) {
-  StringList lines = feature_store_get_all(source_file, key);
+char *feature_store_get_last(const char *feature, const char *key) {
+  StringList lines = feature_store_get_all(feature, key);
   char *last = NULL;
   if (lines.count > 0)
     last = store_strdup(lines.items[lines.count - 1]);
@@ -207,12 +201,12 @@ char *feature_store_get_last(const char *source_file, const char *key) {
   return last;
 }
 
-bool feature_store_replace_all(const char *source_file, const char *key,
+bool feature_store_replace_all(const char *feature, const char *key,
                                const char *const *values, int count) {
   if (!store_values_valid(values, count))
     return false;
   char path[1024];
-  if (!store_path(source_file, key, path, sizeof(path)))
+  if (!store_path(feature, key, path, sizeof(path)))
     return false;
   void *mutex = store_lock();
   Platform_MutexLock(mutex);
@@ -222,9 +216,9 @@ bool feature_store_replace_all(const char *source_file, const char *key,
   return ok;
 }
 
-bool feature_store_clear(const char *source_file, const char *key) {
+bool feature_store_clear(const char *feature, const char *key) {
   char path[1024];
-  if (!store_path(source_file, key, path, sizeof(path)))
+  if (!store_path(feature, key, path, sizeof(path)))
     return false;
   void *mutex = store_lock();
   Platform_MutexLock(mutex);
