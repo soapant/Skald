@@ -28,6 +28,7 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_input_state.h"
+#include "helpers/helpers_monitor.h"
 #include "core/window_manager.h"
 #include "core/prompt_keys.h"
 #include "core/theme.h"
@@ -2860,6 +2861,20 @@ void sk_clear_mouse_queue(void) { global_mouse_clear(); }
 SkPos sk_get_cursor_pos(void) {
   int x, y;
   Platform_GetMousePos(&x, &y);
+  return SK_POS(x, y);
+}
+
+SkPos sk_get_cursor_pos_rel(void) {
+  int x, y;
+  if (!Platform_GetMousePos(&x, &y))
+    return SK_POS(0, 0);
+  MonitorEntry monitors[16];
+  int count = monitor_fill(monitors, 16);
+  for (int i = 0; i < count; i++) {
+    const MonitorEntry *m = &monitors[i];
+    if (x >= m->x && x < m->x + m->w && y >= m->y && y < m->y + m->h)
+      return SK_POS(x - m->x, y - m->y);
+  }
   return SK_POS(x, y);
 }
 

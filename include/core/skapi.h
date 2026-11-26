@@ -47,6 +47,7 @@ typedef Pos SkPos;
 typedef ListSpec SkListSpec;
 
 #define SK_POS(px, py) ((SkPos){.x = (px), .y = (py)})
+#define SK_RECT(px, py,pw,ph) ((SkRect){.x = (px), .y = (py),.w = (pw), .h = (ph)})
 #define SK_COLOR(cr, cg, cb) ((SkColor){.r = (cr), .g = (cg), .b = (cb)})
 typedef WindowList SkWindowList;
 typedef struct {
@@ -956,6 +957,8 @@ unsigned long sk_mouse_queue_dropped(void);
 void sk_clear_mouse_queue(void);
 
 SkPos sk_get_cursor_pos(void);
+
+SkPos sk_get_cursor_pos_rel(void);
 
 #define sk_get_mouse_pos() sk_get_cursor_pos()
 
