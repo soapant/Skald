@@ -176,6 +176,24 @@ bool sk_append_to_file(const char *filepath, const char *line);
 
 bool sk_write_to_file(const char *filepath, const char *lines[], int count);
 
+bool ski_store_set(const char *source_file, const char *key,
+                   const char *value);
+bool ski_store_append(const char *source_file, const char *key,
+                      const char *value);
+SkStringList ski_store_get_all(const char *source_file, const char *key);
+char *ski_store_get_last(const char *source_file, const char *key);
+bool ski_store_replace_all(const char *source_file, const char *key,
+                           const char *const *values, int count);
+bool ski_store_clear(const char *source_file, const char *key);
+
+#define sk_store_set(key, value) ski_store_set(__FILE__, (key), (value))
+#define sk_store_append(key, value) ski_store_append(__FILE__, (key), (value))
+#define sk_store_get_all(key) ski_store_get_all(__FILE__, (key))
+#define sk_store_get_last(key) ski_store_get_last(__FILE__, (key))
+#define sk_store_replace_all(key, values, count)                              \
+  ski_store_replace_all(__FILE__, (key), (values), (count))
+#define sk_store_clear(key) ski_store_clear(__FILE__, (key))
+
 char *sk_write_temp_file(const char *name, const void *data, size_t len);
 
 int sk_get_icon_size(const char *icon_path);

@@ -15,6 +15,7 @@
 
 #include "core/context.h"
 #include "core/checkbox.h"
+#include "core/feature_store.h"
 #include "core/editbox.h"
 #include "core/focus.h"
 #include "core/types/file.h"
@@ -406,6 +407,33 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   }
   fclose(f);
   return true;
+}
+
+bool ski_store_set(const char *source_file, const char *key,
+                   const char *value) {
+  return feature_store_set(source_file, key, value);
+}
+
+bool ski_store_append(const char *source_file, const char *key,
+                      const char *value) {
+  return feature_store_append(source_file, key, value);
+}
+
+SkStringList ski_store_get_all(const char *source_file, const char *key) {
+  return feature_store_get_all(source_file, key);
+}
+
+char *ski_store_get_last(const char *source_file, const char *key) {
+  return feature_store_get_last(source_file, key);
+}
+
+bool ski_store_replace_all(const char *source_file, const char *key,
+                           const char *const *values, int count) {
+  return feature_store_replace_all(source_file, key, values, count);
+}
+
+bool ski_store_clear(const char *source_file, const char *key) {
+  return feature_store_clear(source_file, key);
 }
 
 char *sk_write_temp_file(const char *name, const void *data, size_t len) {
