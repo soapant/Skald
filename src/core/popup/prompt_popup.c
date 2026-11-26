@@ -25,6 +25,7 @@ typedef struct {
   int duration_ms;
   int from_x, from_y, from_w, from_h;
   int to_x, to_y, to_w, to_h;
+  bool ticking;
 } PopupResizeAnim;
 
 typedef struct {
@@ -259,8 +260,8 @@ static bool prompt_popup_apply_bounds(Popup *p, int x, int y, int w, int h,
                                  list_h < LISTBOX_SEPARATOR_MIN_LIST_H;
   }
   Platform_InvalidatePrompt();
-  if (!from_animation)
-    UI_RequestPopupRepaint();
+  UI_RequestPopupRepaint();
+  (void)from_animation;
   return true;
 }
 
@@ -307,23 +308,25 @@ void prompt_popup_tick_resize_animation_popup(Popup *p) {
     return;
   PromptPopupData *data = (PromptPopupData *)p;
   PopupResizeAnim *anim = &data->resize_anim;
-  if (!anim->active)
+  if (!anim->active || anim->ticking)
     return;
+  anim->ticking = true;
   long long elapsed = Platform_GetWallClockMs() - anim->start_ms;
   if (elapsed >= anim->duration_ms) {
     anim->active = false;
     prompt_popup_apply_bounds(p, anim->to_x, anim->to_y, anim->to_w,
                               anim->to_h, true);
-    return;
+  } else {
+    float t = (float)elapsed / (float)anim->duration_ms;
+    float inv = 1.0f - t;
+    float eased = 1.0f - inv * inv * inv;
+    int x = anim->from_x + (int)((anim->to_x - anim->from_x) * eased + 0.5f);
+    int y = anim->from_y + (int)((anim->to_y - anim->from_y) * eased + 0.5f);
+    int w = anim->from_w + (int)((anim->to_w - anim->from_w) * eased + 0.5f);
+    int h = anim->from_h + (int)((anim->to_h - anim->from_h) * eased + 0.5f);
+    prompt_popup_apply_bounds(p, x, y, w, h, true);
   }
-  float t = (float)elapsed / (float)anim->duration_ms;
-  float inv = 1.0f - t;
-  float eased = 1.0f - inv * inv * inv;
-  int x = anim->from_x + (int)((anim->to_x - anim->from_x) * eased + 0.5f);
-  int y = anim->from_y + (int)((anim->to_y - anim->from_y) * eased + 0.5f);
-  int w = anim->from_w + (int)((anim->to_w - anim->from_w) * eased + 0.5f);
-  int h = anim->from_h + (int)((anim->to_h - anim->from_h) * eased + 0.5f);
-  prompt_popup_apply_bounds(p, x, y, w, h, true);
+  anim->ticking = false;
 }
 
 Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec) {

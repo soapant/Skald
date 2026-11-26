@@ -737,6 +737,10 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         win32_set_draw_context(paintDC);
         draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;
+        Popup *anim_popup =
+            prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
+        if (anim_popup)
+          prompt_popup_tick_resize_animation_popup(anim_popup);
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = state->no_separators;
         editbox_registry_tick(state);

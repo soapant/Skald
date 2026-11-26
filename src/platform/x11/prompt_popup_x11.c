@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "core/window_manager.h"
+#include "core/context.h"
 #include "core/draw_state.h"
 #include "wm/wm.h"
 #include "platform/draw.h"
@@ -30,6 +31,7 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   clock_gettime(CLOCK_MONOTONIC, &_t0);
   listbox_invalidate_mouse_pos();
   self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
+  SkaldContext_Get()->window.hPopupWnd = WH_FROM_XID(self->handle.xid);
   XSelectInput(dpy, self->handle.xid,
                KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask |
                    ButtonPressMask | PointerMotionMask);
