@@ -1259,8 +1259,8 @@ static void cc_draw_glyph_icon(const char *text, int x, int y, int size) {
   if (font < 10)
     font = size;
   int tw = sk_get_text_width(glyph, font);
-  sk_draw_text(.text = glyph, .x = x + (size - tw) / 2,
-               .y = y + (size - font) / 2, .font_size = font,
+  sk_draw_text(.text = glyph, .x = x + 5,
+               .y = y - 3, .font_size = 15,
                .color = SK_WHITE, .align = "LEFT", .pad = 0);
 }
 

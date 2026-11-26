@@ -11,7 +11,7 @@
   MessageScreenGap = 20
   WindowOpacity = 235.0
   UsedFont = "0xProto Nerd Font"
-  FontSize = 18
+  FontSize = 19
   IconSize = 32
   EnableIcons = true
   WidgetGap = 10
