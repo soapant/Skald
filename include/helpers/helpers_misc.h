@@ -12,5 +12,6 @@ const char *compiler_find_usable(const char *const candidates[],
                                  bool (*probe)(const char *));
 size_t compiler_argv_base(const char *cc, const char *argv[]);
 void *lazy_mutex_get(void **slot);
+bool svg_file_size(const char *path, int *out_w, int *out_h);
 
 #endif

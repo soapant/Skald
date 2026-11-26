@@ -1,5 +1,6 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_fs.h"
+#include "helpers/helpers_misc.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
@@ -1491,8 +1492,11 @@ bool x11_get_image_size(const char *path, int *out_w, int *out_h) {
   if (!path || !path[0] || !out_w || !out_h)
     return false;
   int w = 0, h = 0, channels = 0;
+  if (svg_file_size(path, &w, &h))
+    goto done;
   if (!stbi_info(path, &w, &h, &channels) || w <= 0 || h <= 0)
     return false;
+done:
   *out_w = w;
   *out_h = h;
   return true;

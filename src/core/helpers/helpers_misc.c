@@ -2,6 +2,7 @@
 #include "helpers/helpers_ui.h"
 #include <stdbool.h>
 #include <stdatomic.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -392,4 +393,92 @@ bool path_next_entry(const char **cursor, char sep, char *out, size_t out_cap) {
 
 bool owner_purge_inactive(const char *path_a, const char *path_b) {
   return (!path_a || !path_a[0]) && (!path_b || !path_b[0]);
+}
+
+static bool svg_read_number(const char **p, const char *end, int *out) {
+  while (*p < end && isspace((unsigned char)**p))
+    (*p)++;
+  if (*p >= end)
+    return false;
+  char *stop = NULL;
+  double value = strtod(*p, &stop);
+  if (!stop || stop == *p || stop > end || value <= 0)
+    return false;
+  *p = stop;
+  *out = (int)value;
+  return *out > 0;
+}
+
+static bool svg_read_attr(const char *svg, const char *end, const char *name,
+                          int *out) {
+  const char *p = strstr(svg, name);
+  if (!p || p >= end)
+    return false;
+  p += strlen(name);
+  while (p < end && isspace((unsigned char)*p))
+    p++;
+  if (p >= end || *p != '=')
+    return false;
+  p++;
+  while (p < end && isspace((unsigned char)*p))
+    p++;
+  if (p < end && (*p == '"' || *p == '\''))
+    p++;
+  return svg_read_number(&p, end, out);
+}
+
+bool svg_file_size(const char *path, int *out_w, int *out_h) {
+  if (!path || !path[0] || !out_w || !out_h)
+    return false;
+  FILE *f = fopen(path, "rb");
+  if (!f)
+    return false;
+  if (fseek(f, 0, SEEK_END) != 0) {
+    fclose(f);
+    return false;
+  }
+  long size = ftell(f);
+  if (size <= 0) {
+    fclose(f);
+    return false;
+  }
+  rewind(f);
+  char *buf = (char *)malloc((size_t)size + 1);
+  if (!buf) {
+    fclose(f);
+    return false;
+  }
+  size_t n = fread(buf, 1, (size_t)size, f);
+  buf[n] = '\0';
+  fclose(f);
+  const char *end = buf + n;
+  const char *svg = strstr(buf, "<svg");
+  if (!svg || svg >= end) {
+    free(buf);
+    return false;
+  }
+  int w = 0, h = 0;
+  bool have_w = svg_read_attr(svg, end, "width", &w);
+  bool have_h = svg_read_attr(svg, end, "height", &h);
+  if (!have_w || !have_h) {
+    const char *vb = strstr(svg, "viewBox");
+    if (vb && vb < end) {
+      const char *p = strchr(vb, '=');
+      if (p && p < end) {
+        p++;
+        int x = 0, y = 0;
+        if (svg_read_number(&p, end, &x) && svg_read_number(&p, end, &y) &&
+            svg_read_number(&p, end, &w) && svg_read_number(&p, end, &h)) {
+          have_w = true;
+          have_h = true;
+        }
+      }
+    }
+  }
+  free(buf);
+  if (!have_w || !have_h || w <= 0 || h <= 0)
+    return false;
+  *out_w = w;
+  *out_h = h;
+  return true;
 }

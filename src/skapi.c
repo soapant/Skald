@@ -2027,7 +2027,15 @@ SkSize ski_get_image_size(const char *path, int *w, int *h) {
   if (!path || !path[0])
     return size;
   int pw = 0, ph = 0;
-  if (!Platform_GetImageSize(path, &pw, &ph))
+  size_t path_len = strlen(path);
+  bool is_svg = path_len >= 4;
+  if (is_svg) {
+    const unsigned char *tail = (const unsigned char *)path + path_len - 4;
+    is_svg = (tail[0] | 32) == '.' && (tail[1] | 32) == 's' &&
+             (tail[2] | 32) == 'v' && (tail[3] | 32) == 'g';
+  }
+  if ((!is_svg || !svg_file_size(path, &pw, &ph)) &&
+      !Platform_GetImageSize(path, &pw, &ph))
     return size;
   size.w = pw;
   size.h = ph;

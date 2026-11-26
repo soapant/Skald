@@ -1,6 +1,7 @@
 #include <string.h>
 #include "platform/draw.h"
 #include "core/types/prompt.h"
+#include "helpers/helpers_misc.h"
 
 void Platform_FlushDraw(void) {}
 
@@ -36,12 +37,11 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
 }
 
 bool Platform_GetImageSize(const char *path, int *w, int *h) {
-  (void)path;
   if (w)
     *w = 0;
   if (h)
     *h = 0;
-  return false;
+  return svg_file_size(path, w, h);
 }
 
 bool Platform_DrawRectRaw(DrawRectRawSpec spec) {

@@ -1,5 +1,6 @@
 #include "helpers/win32/raw_draw_win32.h"
 #include "helpers/win32/common_ui_win32.h"
+#include "helpers/helpers_misc.h"
 #include <math.h>
 
 static int win32_rotate_begin(HDC hdc, float angle, float cx, float cy);
@@ -574,6 +575,8 @@ bool Platform_GetImageSize(const char *path, int *w, int *h) {
   *h = 0;
   if (!path || !path[0])
     return false;
+  if (svg_file_size(path, w, h))
+    return true;
   win32_gdip_ensure();
   if (!g_gdip_token)
     return false;
