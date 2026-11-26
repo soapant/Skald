@@ -141,8 +141,6 @@ static CcEntry *cc_entry_add(const char *label, const char *type,
   CcEntry *e = cc_entry_new();
   if (!e)
     return NULL;
-  if (!icon)
-    icon = "./resources/Skald.png";
   cc_copy(e->label, sizeof(e->label), label);
   cc_copy(e->type, sizeof(e->type), type);
   e->payload = payload;
@@ -1233,6 +1231,39 @@ static void cc_draw_hotkey_chip(const char *hotkey, int right_x, int y) {
                .color = SK_GRAY, .font_size = font);
 }
 
+static unsigned long cc_glyph_color(unsigned char c) {
+  static const unsigned long palette[] = {
+      SK_BLUE, SK_PURPLE, SK_ORANGE, SK_GREEN, SK_RED, SK_CYAN, SK_YELLOW,
+  };
+  unsigned char lower = (unsigned char)tolower(c);
+  int index;
+  if (lower >= 'a' && lower <= 'z')
+    index = lower - 'a';
+  else if (lower >= '0' && lower <= '9')
+    index = 26 + (lower - '0');
+  else
+    index = 36 + lower;
+  return sk_color_lerp(COLOR_BG, palette[index % 7], 0.72f);
+}
+
+static void cc_draw_glyph_icon(const char *text, int x, int y, int size) {
+  unsigned char ch = (unsigned char)text[0];
+  char glyph[2] = {(char)toupper(ch), '\0'};
+  SkRect box = SK_RECT(x, y, size, size);
+  box.filled = true;
+  box.color = cc_glyph_color(ch);
+  box.radius = 5;
+  box.border = false;
+  ski_draw_rect(&box);
+  int font = size - 7;
+  if (font < 10)
+    font = size;
+  int tw = sk_get_text_width(glyph, font);
+  sk_draw_text(.text = glyph, .x = x + (size - tw) / 2,
+               .y = y + (size - font) / 2, .font_size = font,
+               .color = SK_WHITE, .align = "LEFT", .pad = 0);
+}
+
 static void cc_draw_row(const SkListItemCtx *ctx, const ListBox *lb, int row,
                         int type_x) {
   const CcEntry *e = cc_entry_for_row(lb, row);
@@ -1244,13 +1275,19 @@ static void cc_draw_row(const SkListItemCtx *ctx, const ListBox *lb, int row,
     if (!icon && cc_calc_label[0] && strcmp(ctx->text, cc_calc_label) == 0)
       icon = CC_CALC_ROW_ICON;
   }
+  bool glyph_icon = EnableIcons && !icon && ctx->text && ctx->text[0];
+  bool has_icon = icon != NULL || glyph_icon;
 
-  int name_x = ctx->x + CC_ITEM_TEXT_X + (icon ? FontSize + CC_ICON_GAP : 0);
+  int name_x = ctx->x + CC_ITEM_TEXT_X +
+               (has_icon ? FontSize + CC_ICON_GAP : 0);
   int name_w = sk_get_text_width(ctx->text, FontSize);
   if (icon)
     sk_draw_image(.path = icon, .x = ctx->x + CC_ITEM_TEXT_X,
                   .y = ctx->y + (ctx->h - FontSize) / 2 - 1, .w = FontSize,
                   .h = FontSize);
+  else if (glyph_icon)
+    cc_draw_glyph_icon(ctx->text, ctx->x + CC_ITEM_TEXT_X,
+                       ctx->y + (ctx->h - FontSize) / 2 - 1, FontSize);
   sk_draw_text(.x = name_x, .y = ctx->y + CC_ITEM_TEXT_Y, .text = ctx->text,
                .align = "LEFT", .pad = 0);
 

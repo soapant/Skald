@@ -2070,9 +2070,7 @@ bool ski_draw_rect(const DrawRect *spec) {
       .filled = spec->filled,
       .angle = spec->angle});
 
-  bool border = spec->border > 0 ? true
-                : (spec->border < 0 ? false : EnableBorders);
-  if (!border)
+  if (!spec->border)
     return ok;
 
   Platform_DrawRectRaw((DrawRectRawSpec){
@@ -2108,7 +2106,8 @@ int sk_rand_num_between(int min, int max) {
 }
 
 SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
-  SkRect r = {.x = 0, .y = 0, .w = 0, .h = 0, .color = 0};
+  SkRect r = {.x = 0, .y = 0, .w = 0, .h = 0, .color = 0,
+              .border = EnableBorders};
   if (!spec || !spec->text || !spec->text[0])
     return r;
   int fs = spec->font_size > 0 ? spec->font_size : FontSize;
