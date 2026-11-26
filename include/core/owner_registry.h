@@ -32,6 +32,32 @@ bool owner_array_has_active(const void *arr, size_t elem_size, size_t count,
                             size_t tag_offset, const char *path);
 
 bool owner_pointers_have_active(void *const *arr, size_t count,
-                                size_t tag_offset, const char *path);
+                                 size_t tag_offset, const char *path);
+
+#define OWNER_ASSERT_STRUCT(arr, type)                                         \
+  ((void)sizeof(char[_Generic((arr), type * : 1, default : -1)]))
+
+#define OWNER_ASSERT_PTRS(arr, type)                                           \
+  ((void)sizeof(char[_Generic((arr), type ** : 1, default : -1)]))
+
+#define OWNER_PURGE_STRUCT(arr, type, path_a, path_b, max_gen, destroy)        \
+  (OWNER_ASSERT_STRUCT((arr), type),                                           \
+   owner_purge_array((arr), sizeof(type), offsetof(type, tag), (path_a),       \
+                     (path_b), (max_gen), (destroy)))
+
+#define OWNER_PURGE_PTRS(arr, type, path_a, path_b, max_gen, destroy)          \
+  (OWNER_ASSERT_PTRS((arr), type),                                             \
+   owner_purge_pointers((void **)(arr), offsetof(type, tag), (path_a),         \
+                        (path_b), (max_gen), (destroy)))
+
+#define OWNER_STRUCT_HAS_ACTIVE(arr, type, count, path)                        \
+  (OWNER_ASSERT_STRUCT((arr), type),                                           \
+   owner_array_has_active((arr), sizeof(type), (count), offsetof(type, tag),   \
+                          (path)))
+
+#define OWNER_PTRS_HAVE_ACTIVE(arr, type, count, path)                         \
+  (OWNER_ASSERT_PTRS((arr), type),                                             \
+   owner_pointers_have_active((void *const *)(arr), (count),                   \
+                              offsetof(type, tag), (path)))
 
 #endif

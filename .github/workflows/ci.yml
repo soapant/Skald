@@ -68,7 +68,7 @@ jobs:
         run: cc -O2 nob.c -o nob
 
       - name: Build and test with ASan + UBSan
-        run: ASAN_OPTIONS=detect_leaks=0 ./nob --asan --test --dynamic
+        run: LSAN_OPTIONS=suppressions=tests/lsan.supp ./nob --asan --test --dynamic
 
       - name: Link app and features with ASan + UBSan
         run: ./nob --asan --dynamic

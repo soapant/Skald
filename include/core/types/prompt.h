@@ -52,7 +52,8 @@ typedef struct {
   int line_h;
   int max_width;
   int count;
-  Pos positions[EDITBOX_WRAP_MAX_CHARS];
+  Pos *positions;
+  int positions_cap;
 } EditboxWrapCache;
 
 typedef struct {
@@ -72,10 +73,11 @@ typedef struct {
 } PromptEditbox;
 
 struct ListBox {
-  char (*items)[LISTBOX_ROW_BYTES];
+  char **items;
   int items_cap;
   int item_count;
-  int matching_indices[MAX_VISIBLE_ITEMS];
+  int *matching_indices;
+  int matches_cap;
   int total_matches;
   int selected_index;
   const char *selected_text;
@@ -143,8 +145,11 @@ typedef void (*CloseCallback)(void);
 
 void listbox_info_free(ListBox *lb);
 bool listbox_info_ensure_rows(ListBox *lb, int rows);
+bool listbox_info_set_row(ListBox *lb, int idx, const char *text);
+bool listbox_info_ensure_matches(ListBox *lb, int n);
 const char *listbox_info_row(const ListBox *lb, int idx);
 void listbox_info_init(ListBox *lb);
+void editbox_wrap_cache_free(EditboxWrapCache *cache);
 
 typedef struct {
   const char *title;

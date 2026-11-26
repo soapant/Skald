@@ -147,104 +147,40 @@ ConfigTomlStatus config_toml_parse_ex(const char *path, ConfigTomlVisitFn visit,
     }
 
     char keybuf[384];
-    const char *cur = s;
-    size_t rem = s_len;
-    if (s[0] == '"') {
-      size_t i = 1, o = 0;
-      bool closed = false;
-      while (i < rem) {
-        char c = s[i];
-        if (c == '"') {
-          closed = true;
-          break;
-        }
-        if (o + 1 >= sizeof(keybuf)) {
-          fclose(f);
-          return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no,
-                           "quoted key too long");
-        }
-        if (c == '\\' && i + 1 < rem) {
-          char e = s[++i];
-          switch (e) {
-          case 'n':
-            keybuf[o++] = '\n';
-            break;
-          case 't':
-            keybuf[o++] = '\t';
-            break;
-          case 'r':
-            keybuf[o++] = '\r';
-            break;
-          case '"':
-            keybuf[o++] = '"';
-            break;
-          case '\\':
-            keybuf[o++] = '\\';
-            break;
-          default:
-            fclose(f);
-            return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no,
-                             "unknown escape in quoted key");
-          }
-        } else {
-          keybuf[o++] = c;
-        }
-        i++;
-      }
-      if (!closed || o == 0) {
-        fclose(f);
-        return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no,
-                         "unterminated quoted key");
-      }
-      keybuf[o] = '\0';
-      size_t key_end = i + 1;
-      cur = s + key_end;
-      rem = s_len - key_end;
-    } else {
-      const char *eq0 = memchr(s, '=', s_len);
-      if (!eq0) {
-        fclose(f);
-        return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no,
-                         "expected key = value");
-      }
-      size_t klen = toml_trim_right_len(s, (size_t)(eq0 - s));
-      if (klen == 0 || klen >= sizeof(keybuf)) {
-        fclose(f);
-        return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no, "invalid key");
-      }
-      memcpy(keybuf, s, klen);
-      keybuf[klen] = '\0';
-      if (!toml_is_bare_key(keybuf)) {
-        fclose(f);
-        return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no, "invalid key");
-      }
-      cur = s + klen;
-      rem = s_len - klen;
-    }
-
-    {
-      const char *v = toml_trim_left(cur);
-      size_t lead = (size_t)(v - cur);
-      rem = rem >= lead ? rem - lead : 0;
-      cur = v;
-      rem = toml_trim_right_len(cur, rem);
-    }
-
-    const char *eq = memchr(cur, '=', rem);
-    if (!eq) {
-      fclose(f);
-      return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no, "missing '='");
-    }
-
-    const char *vs = toml_trim_left(eq + 1);
-    size_t vlen = toml_trim_right_len(vs, strlen(vs));
     char raw[1024];
-    if (vlen == 0 || vlen >= sizeof(raw)) {
+    TomlKeyValueStatus kvs = toml_parse_key_value(
+        s, s_len, keybuf, sizeof(keybuf), raw, sizeof(raw));
+    if (kvs != TOML_KV_OK) {
+      const char *msg = "invalid key";
+      switch (kvs) {
+      case TOML_KV_NO_KEY:
+        msg = "expected key = value";
+        break;
+      case TOML_KV_KEY_TOO_LONG:
+        msg = "quoted key too long";
+        break;
+      case TOML_KV_BAD_ESCAPE:
+        msg = "unknown escape in quoted key";
+        break;
+      case TOML_KV_UNTERMINATED_KEY:
+        msg = "unterminated quoted key";
+        break;
+      case TOML_KV_INVALID_KEY:
+        msg = "invalid key";
+        break;
+      case TOML_KV_MISSING_EQ:
+        msg = "missing '='";
+        break;
+      case TOML_KV_INVALID_VALUE:
+        msg = "invalid value";
+        break;
+      default:
+        break;
+      }
       fclose(f);
-      return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no, "invalid value");
+      return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no, msg);
     }
-    memcpy(raw, vs, vlen);
-    raw[vlen] = '\0';
+    size_t vlen = strlen(raw);
 
     ConfigTomlEntry entry;
     memset(&entry, 0, sizeof(entry));

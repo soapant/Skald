@@ -38,6 +38,12 @@ bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud) {
   return false;
 }
 
+bool Platform_RemoveDirectory(const char *path) {
+  if (!path || !path[0])
+    return false;
+  return rmdir(path) == 0;
+}
+
 bool Platform_MkdirIfNotExists(const char *path) {
   if (!path)
     return false;

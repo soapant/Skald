@@ -1240,8 +1240,8 @@ static void settings_destroy_cb(void *element) {
 
 void settings_registry_purge_owner(const char *path_a, const char *path_b) {
   render_thread_sync();
-  owner_purge_pointers((void **)settings_entries, offsetof(SettingsEntry, tag),
-                       path_a, path_b, 0, settings_destroy_cb);
+  OWNER_PURGE_PTRS(settings_entries, SettingsEntry, path_a, path_b, 0,
+                   settings_destroy_cb);
   arrfree(s_focus_ctx);
 }
 

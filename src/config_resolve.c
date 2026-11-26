@@ -60,6 +60,7 @@ static void config_resolve_one(AutoApp *app) {
   if (!copy)
     return;
   atomic_store_explicit(app->var, copy, memory_order_release);
+  config_own_string(app->name, copy);
   app->auto_resolved = true;
 }
 

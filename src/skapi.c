@@ -2190,8 +2190,8 @@ SkPos sk_get_draw_offset(void) {
 bool ski_scroll_begin(const SkScrollSpec *spec) {
   if (!spec)
     return false;
-  char owner[OWNER_PATH_MAX] = {0};
-  owner_resolve_for_func(__builtin_return_address(0), owner, sizeof(owner));
+  char *owner =
+      owner_resolve_for_func_alloc((void *)__builtin_return_address(0));
   ScrollAreaSpec inner = {
       .name = spec->name,
       .x = spec->x,
@@ -2205,7 +2205,9 @@ bool ski_scroll_begin(const SkScrollSpec *spec) {
       .wheel_px = spec->wheel_px,
       .owner = owner,
   };
-  return scroll_area_begin(&inner);
+  bool ok = scroll_area_begin(&inner);
+  owner_strfree(&owner);
+  return ok;
 }
 
 void sk_scroll_end(void) { scroll_area_end(); }
@@ -3084,12 +3086,11 @@ void sk_run_after_time(double seconds, void (*callback)(void)) {
     return;
   payload->seconds = seconds;
   payload->callback = callback;
-  payload->owner[0] = '\0';
-  owner_resolve_for_func((void *)callback, payload->owner,
-                         sizeof(payload->owner));
-  thread_registry_add(payload, payload->owner);
+  payload->owner = owner_resolve_for_func_alloc((void *)callback);
+  thread_registry_add(payload, payload->owner ? payload->owner : "");
   if (!sk_run_after_time_arm_platform(payload)) {
     thread_registry_finish(payload);
+    owner_strfree(&payload->owner);
     free(payload);
   }
 }
@@ -3617,15 +3618,17 @@ SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
     return NULL;
   settings_config_set_notify(settings_config_sync);
   SettingsEntrySpec copy = *spec;
-  char owner[OWNER_PATH_MAX];
-  owner_resolve_for_func(__builtin_return_address(0), owner, sizeof(owner));
+  char *owner =
+      owner_resolve_for_func_alloc((void *)__builtin_return_address(0));
   copy.owner = owner;
   char icon[MAX_PATH];
   if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
       feature_path_resolve_asset_path(__builtin_return_address(0), spec->icon,
                                       icon, sizeof(icon)))
     copy.icon = icon;
-  return settings_entry_add(&copy);
+  SkSettingsEntry *result = settings_entry_add(&copy);
+  owner_strfree(&owner);
+  return result;
 }
 
 int ski_settings_entry_add_checkbox(SettingsEntry *entry,
@@ -3689,8 +3692,7 @@ const SkCcEntrySpec *sk_cc_entry_at(int index) {
 void cc_registry_purge_owner(const char *path_a, const char *path_b) {
   if (!path_a && !path_b)
     return;
-  owner_purge_array(cc_entries, sizeof(SkCcEntry), offsetof(SkCcEntry, tag),
-                    path_a, path_b, 0, cc_entry_destroy);
+  OWNER_PURGE_STRUCT(cc_entries, SkCcEntry, path_a, path_b, 0, cc_entry_destroy);
   cc_rebind_all();
 }
 
@@ -4759,9 +4761,8 @@ void sk_init_all_hotkeys(void) {
 
 void config_hotkey_registry_purge_owner(const char *path_a,
                                         const char *path_b) {
-  owner_purge_array(config_hotkey_bindings, sizeof(ConfigHotkeyBinding),
-                    offsetof(ConfigHotkeyBinding, tag), path_a, path_b, 0,
-                    config_hotkey_binding_free);
+  OWNER_PURGE_STRUCT(config_hotkey_bindings, ConfigHotkeyBinding, path_a, path_b,
+                     0, config_hotkey_binding_free);
 }
 
 bool sk_config_set_alias(const char *target, const char *alias) {

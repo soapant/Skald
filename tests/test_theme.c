@@ -41,10 +41,15 @@ TEST(entry_at_out_of_bounds) {
   ASSERT_TRUE(theme_entry_at(SIZE_MAX) == NULL);
 }
 
-#ifndef TEST_BUILD_DIR
-#define TEST_BUILD_DIR "build/tests"
-#endif
-static const char *PIN_FILE = TEST_BUILD_DIR "/pin_test.cnf";
+#include "test_tmp.h"
+
+static char PIN_FILE[512];
+static char MISSING_PIN_FILE[512];
+
+static void pin_cleanup(void) {
+  file_remove_path(PIN_FILE);
+  theme_reset_pinned();
+}
 
 TEST(pin_scan_detects_color_overrides) {
   FILE *f = fopen(PIN_FILE, "wb");
@@ -71,7 +76,7 @@ TEST(pin_scan_detects_color_overrides) {
 
 TEST(pin_scan_missing_file_keeps_pins_empty) {
   theme_reset_pinned();
-  ASSERT_FALSE(theme_pin_scan_file("build/tests/definitely_not_here.cnf"));
+  ASSERT_FALSE(theme_pin_scan_file(MISSING_PIN_FILE));
   ASSERT_FALSE(theme_color_pinned("COLOR_BG"));
 }
 
@@ -85,6 +90,10 @@ TEST(apply_flow_unknown_theme_keeps_colors) {
 }
 
 int main(void) {
+  test_tmp_path(PIN_FILE, sizeof(PIN_FILE), "pin_test.cnf");
+  test_tmp_path(MISSING_PIN_FILE, sizeof(MISSING_PIN_FILE),
+                "definitely_not_here.cnf");
+  TEST_GLOBAL_TEARDOWN(pin_cleanup);
   RUN(find_known_theme_case_insensitive);
   RUN(find_unknown_and_empty);
   RUN(theme_names_are_unique);

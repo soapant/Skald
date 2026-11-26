@@ -96,6 +96,56 @@ TEST(color_ref_parses_hex_forms) {
   ASSERT_FALSE(toml_color_ref("#1a2b3c", NULL));
 }
 
+TEST(parse_key_value_shared_parser) {
+  char key[384], val[1024];
+  const char *line = "  Title = \"hello\" # note";
+  ASSERT_EQ_INT((int)toml_parse_key_value(line, strlen(line), key, sizeof(key),
+                                          val, sizeof(val)),
+                (int)TOML_KV_OK);
+  ASSERT_EQ_STR(key, "Title");
+  ASSERT_EQ_STR(val, "\"hello\"");
+
+  line = "\"my key\" = \"v\"";
+  ASSERT_EQ_INT((int)toml_parse_key_value(line, strlen(line), key, sizeof(key),
+                                          val, sizeof(val)),
+                (int)TOML_KV_OK);
+  ASSERT_EQ_STR(key, "my key");
+  ASSERT_EQ_STR(val, "\"v\"");
+
+  line = "  # comment only";
+  ASSERT_EQ_INT((int)toml_parse_key_value(line, strlen(line), key, sizeof(key),
+                                          val, sizeof(val)),
+                (int)TOML_KV_EMPTY);
+  line = "no separator";
+  ASSERT_EQ_INT((int)toml_parse_key_value(line, strlen(line), key, sizeof(key),
+                                          val, sizeof(val)),
+                (int)TOML_KV_NO_KEY);
+  line = "= \"x\"";
+  ASSERT_EQ_INT((int)toml_parse_key_value(line, strlen(line), key, sizeof(key),
+                                          val, sizeof(val)),
+                (int)TOML_KV_INVALID_KEY);
+  line = "Key =";
+  ASSERT_EQ_INT((int)toml_parse_key_value(line, strlen(line), key, sizeof(key),
+                                          val, sizeof(val)),
+                (int)TOML_KV_INVALID_VALUE);
+}
+
+TEST(next_line_handles_crlf_and_final_line) {
+  const char *data = "one\r\ntwo\nthree";
+  const char *cursor = data, *line = NULL;
+  size_t len = 0;
+  ASSERT_TRUE(toml_next_line(&cursor, &line, &len));
+  ASSERT_EQ_INT((int)len, 3);
+  ASSERT_TRUE(memcmp(line, "one", 3) == 0);
+  ASSERT_TRUE(toml_next_line(&cursor, &line, &len));
+  ASSERT_EQ_INT((int)len, 3);
+  ASSERT_TRUE(memcmp(line, "two", 3) == 0);
+  ASSERT_TRUE(toml_next_line(&cursor, &line, &len));
+  ASSERT_EQ_INT((int)len, 5);
+  ASSERT_TRUE(memcmp(line, "three", 5) == 0);
+  ASSERT_FALSE(toml_next_line(&cursor, &line, &len));
+}
+
 int main(void) {
   RUN(trim_left_and_right);
   RUN(bare_key_validation);
@@ -107,5 +157,7 @@ int main(void) {
   RUN(encode_string_roundtrip);
   RUN(config_wrappers_match_common_helpers);
   RUN(color_ref_parses_hex_forms);
+  RUN(parse_key_value_shared_parser);
+  RUN(next_line_handles_crlf_and_final_line);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

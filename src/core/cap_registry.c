@@ -1,6 +1,7 @@
 #include "core/cap_registry.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "deps/log.h"
 #include "core/feature_loader.h"
 #include "core/owner_registry.h"
@@ -53,14 +54,14 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     return;
   cap_lock();
 
-  char owner[OWNER_PATH_MAX];
-  owner_resolve_for_func(fn, owner, sizeof(owner));
+  char *owner = owner_resolve_for_func_alloc(fn);
 
   for (size_t i = 0; i < cap_count; i++) {
     if (!caps[i].key || strcmp(caps[i].key, key) != 0)
       continue;
     if (caps[i].fn == fn) {
       cap_unlock();
+      owner_strfree(&owner);
       return;
     }
     log_info("cap '%s' replaced (was abi=%u now abi=%u)", key, caps[i].abi,
@@ -73,8 +74,9 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     caps[i].fn = fn;
     cap_gen++;
     cap_unlock();
-    if (owner[0])
+    if (owner && owner[0])
       cap_add_provides(owner, key);
+    owner_strfree(&owner);
     return;
   }
 
@@ -88,8 +90,9 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
   log_info("cap '%s' registered abi=%u owner='%s'", key, abi,
            c->tag.owner ? c->tag.owner : "?");
   cap_unlock();
-  if (owner[0])
+  if (owner && owner[0])
     cap_add_provides(owner, key);
+  owner_strfree(&owner);
 }
 
 void *cap_resolve_abi(const char *key, unsigned abi) {
@@ -137,15 +140,23 @@ void cap_bind_declare(const char *key, void *consumer_fn) {
       owner_strfree(&consumer);
       return;
     }
-    char provider[64];
+    size_t provider_cap = strlen(caps[i].tag.owner) + 1;
+    char *provider = (char *)malloc(provider_cap);
+    if (!provider) {
+      cap_unlock();
+      owner_strfree(&consumer);
+      return;
+    }
     feature_loader_owner_feature_name(caps[i].tag.owner, provider,
-                                      sizeof(provider));
+                                      provider_cap);
     cap_unlock();
     if (!provider[0]) {
+      free(provider);
       owner_strfree(&consumer);
       return;
     }
     feature_loader_manifest_add_depends(consumer, provider);
+    free(provider);
     owner_strfree(&consumer);
     return;
   }
@@ -155,8 +166,8 @@ void cap_bind_declare(const char *key, void *consumer_fn) {
 
 void cap_purge_owner(const char *path_a, const char *path_b) {
   cap_lock();
-  size_t removed = owner_purge_array(caps, sizeof(Cap), offsetof(Cap, tag),
-                                     path_a, path_b, 0, cap_destroy);
+  size_t removed =
+      OWNER_PURGE_STRUCT(caps, Cap, path_a, path_b, 0, cap_destroy);
   if (removed > 0) {
     cap_gen++;
   }

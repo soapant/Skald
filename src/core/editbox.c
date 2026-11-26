@@ -362,27 +362,60 @@ static uint64_t editbox_wrap_key(const char *text, int len, int line_h,
   return h;
 }
 
+static __thread Pos *s_wrap_fallback = NULL;
+static __thread int s_wrap_fallback_cap = 0;
+
+void editbox_wrap_cache_free(EditboxWrapCache *cache) {
+  if (!cache)
+    return;
+  free(cache->positions);
+  cache->positions = NULL;
+  cache->positions_cap = 0;
+  cache->key = 0;
+  cache->len = 0;
+  cache->count = 0;
+}
+
+static bool editbox_wrap_ensure(Pos **buf, int *cap, int need) {
+  if (need <= *cap)
+    return true;
+  int ncap = *cap > 0 ? *cap : 128;
+  while (ncap < need)
+    ncap *= 2;
+  Pos *grown = (Pos *)realloc(*buf, (size_t)ncap * sizeof(*grown));
+  if (!grown)
+    return false;
+  *buf = grown;
+  *cap = ncap;
+  return true;
+}
+
 static const Pos *editbox_wrap_positions(const EditboxSpec *spec,
-                                                 const char *text, int line_h,
-                                                 int *count) {
-  static __thread Pos fallback[EDITBOX_WRAP_MAX_CHARS];
+                                         const char *text, int line_h,
+                                         int *count) {
   const char *src = text ? text : "";
   int len = (int)strlen(src);
   int max_width = spec->visible_w;
   uint64_t key = editbox_wrap_key(src, len, line_h, max_width);
   EditboxWrapCache *cache = spec->wrap_cache;
-  if (cache && cache->key == key && cache->len == len &&
+  if (cache && cache->positions && cache->key == key && cache->len == len &&
       cache->line_h == line_h && cache->max_width == max_width) {
     if (count)
       *count = cache->count;
     return cache->positions;
   }
-  Pos *out = cache ? cache->positions : fallback;
-  int cap = len + 1 < EDITBOX_WRAP_MAX_CHARS ? len + 1
-                                              : EDITBOX_WRAP_MAX_CHARS;
+  int need = len + 1;
+  Pos **buf = cache ? &cache->positions : &s_wrap_fallback;
+  int *cap = cache ? &cache->positions_cap : &s_wrap_fallback_cap;
+  if (!editbox_wrap_ensure(buf, cap, need)) {
+    if (count)
+      *count = 0;
+    return NULL;
+  }
+  Pos *out = *buf;
   EditboxWrapCtx ctx = {spec, src};
   int n = text_wrap_layout(src, 0, 0, max_width, line_h, editbox_wrap_measure,
-                           &ctx, out, cap);
+                           &ctx, out, need);
   if (cache) {
     cache->key = key;
     cache->len = len;

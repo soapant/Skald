@@ -62,8 +62,10 @@ static const char *get_default_browser(int slot) {
     for (size_t j = 0;
          j < sizeof(possible_browsers) / sizeof(possible_browsers[0]); j++) {
       if (string_contains_ci(name, possible_browsers[j])) {
+        char *lower = string_to_lower(possible_browsers[j]);
         snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s",
-                 string_to_lower(possible_browsers[j]));
+                 lower ? lower : "");
+        free(lower);
         free(browser_files.files);
         return default_apps_x11[slot];
       }

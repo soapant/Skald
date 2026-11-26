@@ -22,21 +22,30 @@ bool manifest_parse_string(const char *name, const char *data,
 
   bool malformed = false;
   int section = 0;
-  const char *off = data;
-  while (*off) {
-    const char *nl = strchr(off, '\n');
-    size_t line_len = nl ? (size_t)(nl - off) : strlen(off);
-    char line[512];
-    size_t cl = line_len < sizeof(line) - 1 ? line_len : sizeof(line) - 1;
-    memcpy(line, off, cl);
-    line[cl] = '\0';
-    off = nl ? nl + 1 : off + line_len;
+  const char *cursor = data;
+  const char *line = NULL;
+  size_t line_len = 0;
+  char *work = NULL;
+  size_t work_cap = 0;
+  while (toml_next_line(&cursor, &line, &line_len)) {
+    if (line_len + 1 > work_cap) {
+      size_t cap = work_cap ? work_cap : 256;
+      while (cap < line_len + 1)
+        cap *= 2;
+      char *grown = (char *)realloc(work, cap);
+      if (!grown) {
+        malformed = true;
+        break;
+      }
+      work = grown;
+      work_cap = cap;
+    }
+    memcpy(work, line, line_len);
+    work[line_len] = '\0';
 
-    if (toml_has_control_char(line))
+    if (toml_has_control_char(work))
       malformed = true;
 
-    char work[512];
-    safe_copy(work, sizeof(work), line);
     toml_trim(work);
     if (work[0] == '\0' || work[0] == '#')
       continue;
@@ -73,7 +82,6 @@ bool manifest_parse_string(const char *name, const char *data,
         safe_copy(out->name, sizeof(out->name), val);
       if (strcmp(key, "description") == 0)
         safe_copy(out->description, sizeof(out->description), val);
-      section = 0;
       continue;
     }
 
@@ -92,6 +100,7 @@ bool manifest_parse_string(const char *name, const char *data,
                section);
     }
   }
+  free(work);
   out->valid = !malformed;
   return true;
 }

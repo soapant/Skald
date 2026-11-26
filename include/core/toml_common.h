@@ -20,4 +20,21 @@ bool toml_decode_string(const char *raw, char *out, size_t out_cap);
 bool toml_encode_string(const char *src, char *out, size_t out_cap);
 bool toml_color_ref(const char *body, ColorRef *out);
 
+typedef enum {
+  TOML_KV_OK = 0,
+  TOML_KV_EMPTY,
+  TOML_KV_NO_KEY,
+  TOML_KV_KEY_TOO_LONG,
+  TOML_KV_BAD_ESCAPE,
+  TOML_KV_UNTERMINATED_KEY,
+  TOML_KV_INVALID_KEY,
+  TOML_KV_MISSING_EQ,
+  TOML_KV_INVALID_VALUE
+} TomlKeyValueStatus;
+
+TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len,
+                                        char *key, size_t key_cap,
+                                        char *value, size_t value_cap);
+bool toml_next_line(const char **cursor, const char **line, size_t *len);
+
 #endif

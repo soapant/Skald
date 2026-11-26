@@ -1,17 +1,16 @@
-#ifndef TEST_BUILD_DIR
-#define TEST_BUILD_DIR "build/tests"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "test.h"
+#include "test_tmp.h"
 
 #include "core/config_section.h"
 #include "core/config_toml.h"
 
-static const char *PATH = TEST_BUILD_DIR "/test_config_section.toml";
+static char PATH[512];
+
+static void section_cleanup(void) { file_remove_path(PATH); }
 
 static bool test_noop_visit(const ConfigTomlEntry *e, void *user) {
   (void)e;
@@ -20,7 +19,7 @@ static bool test_noop_visit(const ConfigTomlEntry *e, void *user) {
 }
 
 static void seed(const char *contents) {
-  remove(PATH);
+  file_remove_path(PATH);
   FILE *f = fopen(PATH, "wb");
   if (f) {
     fputs(contents, f);
@@ -46,14 +45,14 @@ static char *slurp(void) {
 }
 
 TEST(set_creates_missing_file) {
-  remove(PATH);
+  file_remove_path(PATH);
   ASSERT_TRUE(config_section_set(PATH, "hotkeys", "Term", "Ctrl+Alt+T"));
   char *s = slurp();
   ASSERT_TRUE(s != NULL);
   ASSERT_TRUE(strstr(s, "[hotkeys]") != NULL);
   ASSERT_TRUE(strstr(s, "Term = \"Ctrl+Alt+T\"") != NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_appends_inside_existing_section_before_next_section) {
@@ -69,7 +68,7 @@ TEST(set_appends_inside_existing_section_before_next_section) {
   ASSERT_TRUE(b_line > a_line);
   ASSERT_TRUE(b_line < color);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_creates_section_at_eof) {
@@ -81,7 +80,7 @@ TEST(set_creates_section_at_eof) {
   ASSERT_TRUE(strstr(s, "[quicklinks]") != NULL);
   ASSERT_TRUE(strstr(s, "YouTube = \"https://youtube.com\"") != NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_upsert_replaces_same_name) {
@@ -93,7 +92,7 @@ TEST(set_upsert_replaces_same_name) {
   ASSERT_TRUE(strstr(s, "Ctrl+Alt+T") == NULL);
   ASSERT_TRUE(strstr(s, "Other = \"F\"") != NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_preserves_comments_and_entries) {
@@ -107,7 +106,7 @@ TEST(set_preserves_comments_and_entries) {
   ASSERT_TRUE(strstr(s, "Term = \"Ctrl+Alt+T\" # entry comment") != NULL);
   ASSERT_TRUE(strstr(s, "New = \"Super+N\"") != NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_replaces_line_with_trailing_comment) {
@@ -118,18 +117,18 @@ TEST(set_replaces_line_with_trailing_comment) {
   ASSERT_TRUE(strstr(s, "Term = \"Super+T\"") != NULL);
   ASSERT_TRUE(strstr(s, "old comment") == NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_quoted_key_roundtrip) {
-  remove(PATH);
+  file_remove_path(PATH);
   ASSERT_TRUE(
       config_section_set(PATH, "quicklinks", "My Home", "https://example.com"));
   char *s = slurp();
   ASSERT_TRUE(s != NULL);
   ASSERT_TRUE(strstr(s, "\"My Home\" = \"https://example.com\"") != NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_malformed_line_refuses_and_keeps_file) {
@@ -141,7 +140,7 @@ TEST(set_malformed_line_refuses_and_keeps_file) {
   ASSERT_EQ_STR(before, after);
   free(before);
   free(after);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_duplicate_sections_refuses_and_keeps_file) {
@@ -153,7 +152,7 @@ TEST(set_duplicate_sections_refuses_and_keeps_file) {
   ASSERT_EQ_STR(before, after);
   free(before);
   free(after);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_same_name_in_different_section_keeps_it) {
@@ -164,7 +163,7 @@ TEST(set_same_name_in_different_section_keeps_it) {
   ASSERT_TRUE(strstr(s, "Term = \"keepme\"") != NULL);
   ASSERT_TRUE(strstr(s, "Term = \"new\"") != NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(clear_removes_entry_and_keeps_section) {
@@ -176,7 +175,7 @@ TEST(clear_removes_entry_and_keeps_section) {
   ASSERT_TRUE(strstr(s, "Term = ") == NULL);
   ASSERT_TRUE(strstr(s, "Other = \"F\"") != NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(clear_missing_section_is_noop_true) {
@@ -186,11 +185,11 @@ TEST(clear_missing_section_is_noop_true) {
   ASSERT_TRUE(s != NULL);
   ASSERT_TRUE(strstr(s, "[other]") != NULL);
   free(s);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(clear_missing_file_is_noop_true) {
-  remove(PATH);
+  file_remove_path(PATH);
   ASSERT_TRUE(config_section_clear(PATH, "hotkeys", "Term"));
 }
 
@@ -201,7 +200,7 @@ TEST(set_then_parse_with_config_toml) {
   ConfigTomlStatus st =
       config_toml_parse(PATH, (ConfigTomlVisitFn)test_noop_visit, NULL);
   ASSERT_EQ_INT((int)st, (int)CONFIG_TOML_OK);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_long_section_name_without_trailing_newline) {
@@ -217,14 +216,14 @@ TEST(set_long_section_name_without_trailing_newline) {
     ASSERT_TRUE(strstr(s, "Key = \"value\"") != NULL);
     free(s);
   }
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(set_overlong_section_name_is_rejected) {
   char section[128];
   memset(section, 'b', sizeof(section) - 1);
   section[sizeof(section) - 1] = '\0';
-  remove(PATH);
+  file_remove_path(PATH);
   ConfigTomlError err;
   ASSERT_EQ_INT((int)config_section_set_ex(PATH, section, "Key", "value", &err),
                 (int)CONFIG_TOML_ERR_PARSE);
@@ -243,10 +242,12 @@ TEST(set_preserves_last_line_without_newline) {
     ASSERT_TRUE(strstr(s, "B = \"2\"") != NULL);
     free(s);
   }
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 int main(void) {
+  test_tmp_path(PATH, sizeof(PATH), "test_config_section.toml");
+  TEST_GLOBAL_TEARDOWN(section_cleanup);
   RUN(set_creates_missing_file);
   RUN(set_appends_inside_existing_section_before_next_section);
   RUN(set_creates_section_at_eof);

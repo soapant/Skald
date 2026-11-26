@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "core/context.h"
 #include "core/focus.h"
@@ -316,30 +317,64 @@ void listbox_navigate_down(ListBox *lb) {
 void listbox_info_free(ListBox *lb) {
   if (!lb)
     return;
+  for (int i = 0; i < lb->items_cap; i++)
+    free(lb->items[i]);
   free(lb->items);
   lb->items = NULL;
   lb->items_cap = 0;
   lb->item_count = 0;
+  free(lb->matching_indices);
+  lb->matching_indices = NULL;
+  lb->matches_cap = 0;
+  lb->total_matches = 0;
 }
 
 bool listbox_info_ensure_rows(ListBox *lb, int rows) {
-  if (!lb || rows <= 0 || rows > MAX_VISIBLE_ITEMS)
+  if (!lb || rows <= 0)
     return false;
   if (lb->items && rows <= lb->items_cap)
     return true;
   int cap = lb->items_cap > 0 ? lb->items_cap : 64;
   while (cap < rows)
     cap *= 2;
-  if (cap > MAX_VISIBLE_ITEMS)
-    cap = MAX_VISIBLE_ITEMS;
-  if (cap < rows)
-    return false;
-  char (*grown)[LISTBOX_ROW_BYTES] = (char (*)[LISTBOX_ROW_BYTES])realloc(
-      lb->items, (size_t)cap * LISTBOX_ROW_BYTES);
+  char **grown = (char **)realloc(lb->items, (size_t)cap * sizeof(*grown));
   if (!grown)
     return false;
   lb->items = grown;
+  memset(lb->items + lb->items_cap, 0,
+         (size_t)(cap - lb->items_cap) * sizeof(*grown));
   lb->items_cap = cap;
+  return true;
+}
+
+bool listbox_info_set_row(ListBox *lb, int idx, const char *text) {
+  if (!lb || idx < 0 || idx >= lb->items_cap)
+    return false;
+  size_t n = text ? strcspn(text, "\r\n") : 0;
+  char *row = (char *)malloc(n + 1);
+  if (!row)
+    return false;
+  memcpy(row, text ? text : "", n);
+  row[n] = '\0';
+  free(lb->items[idx]);
+  lb->items[idx] = row;
+  return true;
+}
+
+bool listbox_info_ensure_matches(ListBox *lb, int n) {
+  if (!lb || n < 0)
+    return false;
+  if (lb->matching_indices && n <= lb->matches_cap)
+    return true;
+  int cap = lb->matches_cap > 0 ? lb->matches_cap : 64;
+  while (cap < n)
+    cap *= 2;
+  int *grown =
+      (int *)realloc(lb->matching_indices, (size_t)cap * sizeof(*grown));
+  if (!grown)
+    return false;
+  lb->matching_indices = grown;
+  lb->matches_cap = cap;
   return true;
 }
 

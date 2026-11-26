@@ -1,4 +1,5 @@
 #include "test.h"
+#include "test_tmp.h"
 #include "core/skapi.h"
 #include "helpers/helpers_fs.h"
 #include <stdlib.h>
@@ -64,7 +65,18 @@ TEST(store_path_uses_source_file_stem) {
   ASSERT_TRUE(sk_store_clear());
 }
 
+static char STORE_TMP[512];
+
+static void store_cleanup(void) {
+  test_tmp_remove_tree(STORE_TMP);
+  data_dir_set_override(NULL);
+}
+
 int main(void) {
+  test_tmp_path(STORE_TMP, sizeof(STORE_TMP), "feature_store");
+  test_tmp_make(STORE_TMP);
+  data_dir_set_override(STORE_TMP);
+  TEST_GLOBAL_TEARDOWN(store_cleanup);
   RUN(store_set_get_last_clear);
   RUN(store_append_and_replace_all);
   RUN(store_rejects_newlines);

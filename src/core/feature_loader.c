@@ -403,24 +403,34 @@ void feature_loader_manifest_add_provides(const char *owner_path,
                                           const char *key) {
   if (!owner_path || !owner_path[0] || !key || !key[0])
     return;
-  char name[64];
-  feature_loader_owner_feature_name(owner_path, name, sizeof(name));
-  if (!name[0])
+  size_t name_cap = strlen(owner_path) + 1;
+  char *name = (char *)malloc(name_cap);
+  if (!name)
     return;
+  feature_loader_owner_feature_name(owner_path, name, name_cap);
+  if (!name[0]) {
+    free(name);
+    return;
+  }
   manifest_add_entry(name, "provides", key);
+  free(name);
 }
 
 void feature_loader_manifest_add_depends(const char *owner_path,
                                          const char *dep_name) {
   if (!owner_path || !owner_path[0] || !dep_name || !dep_name[0])
     return;
-  char name[64];
-  feature_loader_owner_feature_name(owner_path, name, sizeof(name));
-  if (!name[0])
+  size_t name_cap = strlen(owner_path) + 1;
+  char *name = (char *)malloc(name_cap);
+  if (!name)
     return;
-  if (strcmp(name, dep_name) == 0)
+  feature_loader_owner_feature_name(owner_path, name, name_cap);
+  if (!name[0] || strcmp(name, dep_name) == 0) {
+    free(name);
     return;
+  }
   manifest_add_entry(name, "depends", dep_name);
+  free(name);
 }
 
 static bool load_single(const char *dir, const char *filename) {

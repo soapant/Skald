@@ -7,6 +7,7 @@
 #define XDG_DATA_DIRS_FALLBACK "/usr/local/share:/usr/share"
 
 bool data_dir(char *out, size_t out_len);
+void data_dir_set_override(const char *path);
 bool expand_path(const char *template_path, char *out, size_t out_size);
 bool temp_file_write(const char *name, const void *data, size_t len,
                      char *out_path, size_t out_len);

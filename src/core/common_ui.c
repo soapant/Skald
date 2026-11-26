@@ -276,8 +276,10 @@ static int populate_filter(ListBox *lb, const char **items, int item_count,
                            const char *clean_filter,
                            bool (*filter_match)(const char *, const char *)) {
   int total_matches = 0;
+  if (!listbox_info_ensure_matches(lb, item_count))
+    return 0;
   bool empty_filter = (clean_filter[0] == '\0');
-  for (int i = 0; i < item_count && total_matches < MAX_VISIBLE_ITEMS; i++) {
+  for (int i = 0; i < item_count; i++) {
     if (!items[i])
       continue;
     if (empty_filter) {
@@ -296,7 +298,9 @@ static void populate_rank_matches(ListBox *lb, const char **items,
                                   int (*item_rank)(int item_index)) {
   if (clean_filter[0] == '\0' || total_matches <= 1)
     return;
-  int scores[MAX_VISIBLE_ITEMS];
+  int *scores = (int *)malloc((size_t)total_matches * sizeof(*scores));
+  if (!scores)
+    return;
   for (int i = 0; i < total_matches; i++) {
     int idx = lb->matching_indices[i];
     const char *txt = items[idx] ? items[idx] : "";
@@ -318,6 +322,7 @@ static void populate_rank_matches(ListBox *lb, const char **items,
         scores[j] = ts;
       }
     }
+  free(scores);
 }
 
 static void populate_ensure_matches(ListBox *lb, int item_count,
@@ -325,20 +330,17 @@ static void populate_ensure_matches(ListBox *lb, int item_count,
                                     int *total_matches) {
   if (*total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
     int force_count = (item_count < 30) ? item_count : 30;
+    if (!listbox_info_ensure_matches(lb, force_count))
+      return;
     for (int i = 0; i < force_count; i++) {
       lb->matching_indices[*total_matches] = i;
       (*total_matches)++;
     }
   }
-  int pool_max = MAX_VISIBLE_ITEMS;
-  if (*total_matches > pool_max)
-    *total_matches = pool_max;
 }
 
 static void populate_build_cache(ListBox *lb, const char **items,
                                  int total_matches) {
-  if (total_matches > MAX_VISIBLE_ITEMS)
-    total_matches = MAX_VISIBLE_ITEMS;
   lb->item_count = 0;
   if (total_matches <= 0)
     return;
@@ -350,10 +352,8 @@ static void populate_build_cache(ListBox *lb, const char **items,
     int raw_data_index = lb->matching_indices[i];
     if (!items[raw_data_index])
       continue;
-    safe_copy(lb->items[lb->item_count], LISTBOX_ROW_BYTES,
-              items[raw_data_index]);
-    lb->items[lb->item_count][strcspn(lb->items[lb->item_count], "\r\n")] =
-        '\0';
+    if (!listbox_info_set_row(lb, lb->item_count, items[raw_data_index]))
+      continue;
     lb->item_count++;
   }
 }
@@ -375,6 +375,7 @@ static void populate_update_ui(ListBox *lb, int total_matches,
   } else {
     UI_SetSelection(lb, -1);
   }
+  lb->selected_text = listbox_info_row(lb, lb->selected_index);
   if (filter)
     safe_copy(lb->last_filter, sizeof(lb->last_filter), filter);
   else

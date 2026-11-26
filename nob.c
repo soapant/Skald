@@ -867,6 +867,10 @@ static bool run_output(const char *output) {
 }
 
 static bool run_tests(void) {
+#if !defined(_WIN32)
+  if (sanitize)
+    setenv("LSAN_OPTIONS", "suppressions=tests/lsan.supp", 0);
+#endif
   const char *test_build_folder = sanitize       ? "build/san_tests"
                                   : target_win32 ? "build/win_tests"
                                                  : "build/tests";

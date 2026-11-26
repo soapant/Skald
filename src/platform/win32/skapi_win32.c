@@ -265,6 +265,7 @@ static VOID CALLBACK win32_timer_trampoline(PVOID lpParam,
       payload->callback();
     }
     thread_registry_finish(payload);
+    owner_strfree(&payload->owner);
     free(payload);
   }
 }

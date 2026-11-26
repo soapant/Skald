@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "test.h"
 #include "core/context.h"
 #include "core/types/prompt.h"
@@ -126,6 +129,44 @@ TEST(listbox_scroll_top_keeps_rows_above_selection) {
   ASSERT_EQ_INT(listbox_scroll_top_for(2, 10, 100), 0);
   ASSERT_EQ_INT(listbox_scroll_top_for(95, 10, 100), 90);
 }
+TEST(populate_repairs_selected_text_after_row_rebuild) {
+  static ListBox lb;
+  listbox_info_init(&lb);
+  const char *before[] = {"alpha", "beta"};
+  populate_listbox(&lb, "", before, 2, NULL);
+  UI_SetSelection(&lb, 1);
+  ASSERT_EQ_STR(lb.selected_text, "beta");
+  const char *after[] = {"alpha", "BETA2", "gamma"};
+  populate_listbox(&lb, "", after, 3, NULL);
+  ASSERT_EQ_STR(lb.selected_text, "BETA2");
+  listbox_info_free(&lb);
+}
+
+TEST(populate_grows_beyond_fixed_limits) {
+  static ListBox lb;
+  listbox_info_init(&lb);
+  const int n = MAX_VISIBLE_ITEMS + 20;
+  const char **items = (const char **)calloc((size_t)n, sizeof(*items));
+  ASSERT_TRUE(items != NULL);
+  if (!items)
+    return;
+  char long_row[700];
+  memset(long_row, 'x', sizeof(long_row) - 1);
+  long_row[sizeof(long_row) - 1] = '\0';
+  for (int i = 0; i < n; i++)
+    items[i] = (i == 0) ? long_row : "short";
+  populate_listbox(&lb, "", items, n, NULL);
+  ASSERT_EQ_INT(lb.total_matches, n);
+  ASSERT_EQ_INT(lb.item_count, n);
+  ASSERT_TRUE(lb.matches_cap >= n);
+  const char *row0 = listbox_info_row(&lb, 0);
+  ASSERT_TRUE(row0 != NULL);
+  if (row0)
+    ASSERT_EQ_INT((int)strlen(row0), (int)strlen(long_row));
+  free(items);
+  listbox_info_free(&lb);
+}
+
 int main(void) {
   RUN(populate_normal_mode_selects_first);
   RUN(populate_insert_mode_empty_filter_no_selection);
@@ -139,5 +180,7 @@ int main(void) {
   RUN(ui_navigate_to_new_index_resets_hscroll);
   RUN(listbox_info_init_sets_hscroll_zero);
   RUN(listbox_scroll_top_keeps_rows_above_selection);
+  RUN(populate_repairs_selected_text_after_row_rebuild);
+  RUN(populate_grows_beyond_fixed_limits);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

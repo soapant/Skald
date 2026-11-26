@@ -266,9 +266,8 @@ void event_bus_purge_owner(const char *path_a, const char *path_b) {
   if (owner_purge_inactive(path_a, path_b))
     return;
   for (int e = 0; e < 2; ++e)
-    owner_purge_array(event_registry[e], sizeof(struct EventSlot),
-                      offsetof(struct EventSlot, tag), path_a, path_b, 0,
-                      event_slot_destroy);
+    OWNER_PURGE_STRUCT(event_registry[e], struct EventSlot, path_a, path_b, 0,
+                       event_slot_destroy);
 }
 
 void event_bus_trigger(Event event) {

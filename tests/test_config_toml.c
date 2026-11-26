@@ -1,16 +1,15 @@
-#ifndef TEST_BUILD_DIR
-#define TEST_BUILD_DIR "build/tests"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "test.h"
+#include "test_tmp.h"
 
 #include "core/config_toml.h"
 
-static const char *PATH = TEST_BUILD_DIR "/test_config_toml.toml";
+static char PATH[512];
+
+static void toml_cleanup(void) { file_remove_path(PATH); }
 
 static ConfigTomlEntry entries[32];
 static int entry_count;
@@ -35,7 +34,7 @@ static void reset(void) {
 }
 
 static void seed(const char *contents) {
-  remove(PATH);
+  file_remove_path(PATH);
   FILE *f = fopen(PATH, "wb");
   if (f) {
     fputs(contents, f);
@@ -65,7 +64,7 @@ TEST(parse_collects_sections_and_value_types) {
     ASSERT_EQ_INT((int)entries[3].type, (int)CONFIG_TOML_STRING);
     ASSERT_EQ_STR(entries[3].raw, "\"hello\"");
   }
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(parse_tracks_section_changes_and_ignores_comments) {
@@ -81,7 +80,7 @@ TEST(parse_tracks_section_changes_and_ignores_comments) {
     ASSERT_EQ_STR(entries[1].section, "two");
     ASSERT_EQ_STR(entries[1].key, "B");
   }
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(parse_accepts_quoted_keys_with_escapes) {
@@ -94,7 +93,7 @@ TEST(parse_accepts_quoted_keys_with_escapes) {
     ASSERT_EQ_STR(entries[0].key, "My Key");
     ASSERT_TRUE(strchr(entries[1].key, '\n') != NULL);
   }
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(parse_unterminated_section_reports_line) {
@@ -104,7 +103,7 @@ TEST(parse_unterminated_section_reports_line) {
   ASSERT_EQ_INT((int)config_toml_parse_ex(PATH, collecting_visit, NULL, &err),
                 (int)CONFIG_TOML_ERR_PARSE);
   ASSERT_EQ_INT(err.line, 2);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(parse_invalid_section_name_reports_line) {
@@ -114,7 +113,7 @@ TEST(parse_invalid_section_name_reports_line) {
   ASSERT_EQ_INT((int)config_toml_parse_ex(PATH, collecting_visit, NULL, &err),
                 (int)CONFIG_TOML_ERR_PARSE);
   ASSERT_EQ_INT(err.line, 1);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(parse_missing_equals_reports_line) {
@@ -124,7 +123,7 @@ TEST(parse_missing_equals_reports_line) {
   ASSERT_EQ_INT((int)config_toml_parse_ex(PATH, collecting_visit, NULL, &err),
                 (int)CONFIG_TOML_ERR_PARSE);
   ASSERT_EQ_INT(err.line, 2);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(parse_unknown_value_type_reports_line) {
@@ -134,7 +133,7 @@ TEST(parse_unknown_value_type_reports_line) {
   ASSERT_EQ_INT((int)config_toml_parse_ex(PATH, collecting_visit, NULL, &err),
                 (int)CONFIG_TOML_ERR_PARSE);
   ASSERT_EQ_INT(err.line, 2);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(parse_visitor_rejection_reports_rejected) {
@@ -144,11 +143,11 @@ TEST(parse_visitor_rejection_reports_rejected) {
   ASSERT_EQ_INT((int)config_toml_parse_ex(PATH, rejecting_visit, NULL, &err),
                 (int)CONFIG_TOML_ERR_REJECTED);
   ASSERT_EQ_INT(err.line, 2);
-  remove(PATH);
+  file_remove_path(PATH);
 }
 
 TEST(parse_missing_file_reports_io_error) {
-  remove(PATH);
+  file_remove_path(PATH);
   ConfigTomlError err;
   ASSERT_EQ_INT((int)config_toml_parse_ex(PATH, collecting_visit, NULL, &err),
                 (int)CONFIG_TOML_ERR_IO);
@@ -176,7 +175,7 @@ TEST(error_state_is_cleared_before_parse) {
   err.status = CONFIG_TOML_ERR_IO;
   err.line = 42;
   strcpy(err.message, "stale");
-  remove(PATH);
+  file_remove_path(PATH);
   ASSERT_EQ_INT((int)config_toml_parse_ex(PATH, collecting_visit, NULL, &err),
                 (int)CONFIG_TOML_ERR_IO);
   ASSERT_EQ_INT(err.line, 0);
@@ -184,6 +183,8 @@ TEST(error_state_is_cleared_before_parse) {
 }
 
 int main(void) {
+  test_tmp_path(PATH, sizeof(PATH), "test_config_toml.toml");
+  TEST_GLOBAL_TEARDOWN(toml_cleanup);
   RUN(parse_collects_sections_and_value_types);
   RUN(parse_tracks_section_changes_and_ignores_comments);
   RUN(parse_accepts_quoted_keys_with_escapes);

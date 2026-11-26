@@ -1,6 +1,7 @@
 #include "core/toml_common.h"
 
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 
 const char *toml_trim_left(const char *s) {
@@ -228,5 +229,139 @@ bool toml_color_ref(const char *body, ColorRef *out) {
     v[i] = (unsigned)(h * 16 + l);
   }
   *out = (ColorRef)(v[0] | (v[1] << 8) | (v[2] << 16));
+  return true;
+}
+
+TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len,
+                                        char *key, size_t key_cap,
+                                        char *value, size_t value_cap) {
+  if (!line || !key || !value || !key_cap || !value_cap)
+    return TOML_KV_INVALID_VALUE;
+
+  TomlKeyValueStatus st = TOML_KV_INVALID_VALUE;
+  char *stripped = (char *)malloc(len + 1);
+  if (!stripped)
+    return TOML_KV_INVALID_VALUE;
+  memcpy(stripped, line, len);
+  stripped[len] = '\0';
+  toml_strip_comment(stripped, stripped, len + 1);
+
+  const char *s = toml_trim_left(stripped);
+  size_t s_len = toml_trim_right_len(s, strlen(s));
+  if (s_len == 0) {
+    st = TOML_KV_EMPTY;
+    goto done;
+  }
+
+  const char *cur = s;
+  size_t rem = s_len;
+  if (s[0] == '"') {
+    size_t i = 1, o = 0;
+    bool closed = false;
+    while (i < rem) {
+      char c = s[i];
+      if (c == '"') {
+        closed = true;
+        break;
+      }
+      if (o + 1 >= key_cap) {
+        st = TOML_KV_KEY_TOO_LONG;
+        goto done;
+      }
+      if (c == '\\' && i + 1 < rem) {
+        char e = s[++i];
+        switch (e) {
+        case 'n':
+          key[o++] = '\n';
+          break;
+        case 't':
+          key[o++] = '\t';
+          break;
+        case 'r':
+          key[o++] = '\r';
+          break;
+        case '"':
+          key[o++] = '"';
+          break;
+        case '\\':
+          key[o++] = '\\';
+          break;
+        default:
+          st = TOML_KV_BAD_ESCAPE;
+          goto done;
+        }
+      } else {
+        key[o++] = c;
+      }
+      i++;
+    }
+    if (!closed || o == 0) {
+      st = TOML_KV_UNTERMINATED_KEY;
+      goto done;
+    }
+    key[o] = '\0';
+    size_t key_end = i + 1;
+    cur = s + key_end;
+    rem = s_len - key_end;
+  } else {
+    const char *eq0 = memchr(s, '=', s_len);
+    if (!eq0) {
+      st = TOML_KV_NO_KEY;
+      goto done;
+    }
+    size_t klen = toml_trim_right_len(s, (size_t)(eq0 - s));
+    if (klen == 0 || klen >= key_cap) {
+      st = TOML_KV_INVALID_KEY;
+      goto done;
+    }
+    memcpy(key, s, klen);
+    key[klen] = '\0';
+    if (!toml_is_bare_key(key)) {
+      st = TOML_KV_INVALID_KEY;
+      goto done;
+    }
+    cur = s + klen;
+    rem = s_len - klen;
+  }
+
+  const char *v = toml_trim_left(cur);
+  size_t lead = (size_t)(v - cur);
+  rem = rem >= lead ? rem - lead : 0;
+  cur = v;
+  rem = toml_trim_right_len(cur, rem);
+
+  const char *eq = memchr(cur, '=', rem);
+  if (!eq) {
+    st = TOML_KV_MISSING_EQ;
+    goto done;
+  }
+  const char *vs = toml_trim_left(eq + 1);
+  size_t vlen = toml_trim_right_len(vs, strlen(vs));
+  if (vlen == 0 || vlen >= value_cap) {
+    st = TOML_KV_INVALID_VALUE;
+    goto done;
+  }
+  memcpy(value, vs, vlen);
+  value[vlen] = '\0';
+  st = TOML_KV_OK;
+
+done:
+  free(stripped);
+  return st;
+}
+
+bool toml_next_line(const char **cursor, const char **line, size_t *len) {
+  if (!cursor || !line || !len || !*cursor || !**cursor)
+    return false;
+  const char *start = *cursor;
+  const char *p = start;
+  while (*p && *p != '\n')
+    p++;
+  size_t n = (size_t)(p - start);
+  if (n > 0 && start[n - 1] == '\r')
+    n--;
+  *line = start;
+  *len = n;
+  *cursor = *p ? p + 1 : p;
   return true;
 }

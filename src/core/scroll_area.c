@@ -236,7 +236,6 @@ static void scroll_slot_destroy(void *element) {
 
 void scroll_area_purge_owner(const char *path_a, const char *path_b) {
   SCROLL_LOCK();
-  owner_purge_pointers((void **)g_slots, offsetof(ScrollSlot, tag), path_a,
-                       path_b, 0, scroll_slot_destroy);
+  OWNER_PURGE_PTRS(g_slots, ScrollSlot, path_a, path_b, 0, scroll_slot_destroy);
   SCROLL_UNLOCK();
 }

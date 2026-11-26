@@ -380,8 +380,8 @@ void widget_purge_owner(const char *path_a, const char *path_b,
   char *a = owner_strdup(path_a);
   char *b = owner_strdup(path_b);
   W_LOCK();
-  size_t removed = owner_purge_pointers((void **)widgets, offsetof(Widget, tag),
-                                        a, b, generation, widget_purge_destroy);
+  size_t removed =
+      OWNER_PURGE_PTRS(widgets, Widget, a, b, generation, widget_purge_destroy);
   W_UNLOCK();
 
   if (removed == 0) {
@@ -417,8 +417,7 @@ bool widget_owner_active(const char *path) {
   if (!path || !path[0])
     return false;
   W_LOCK();
-  bool active = owner_pointers_have_active((void *const *)widgets, widget_count,
-                                           offsetof(Widget, tag), path);
+  bool active = OWNER_PTRS_HAVE_ACTIVE(widgets, Widget, widget_count, path);
   W_UNLOCK();
   return active;
 }

@@ -17,9 +17,21 @@
 #define FEAT_SEP '/'
 #endif
 
+static char s_data_dir_override[1024];
+
+void data_dir_set_override(const char *path) {
+  s_data_dir_override[0] = '\0';
+  if (path)
+    safe_copy(s_data_dir_override, sizeof(s_data_dir_override), path);
+}
+
 bool data_dir(char *out, size_t out_len) {
   if (!out || out_len == 0)
     return false;
+  if (s_data_dir_override[0]) {
+    safe_copy(out, out_len, s_data_dir_override);
+    return true;
+  }
   const char *home = Platform_GetRealHome();
   if (!home || !home[0])
     return false;

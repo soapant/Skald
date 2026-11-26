@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "test.h"
+#include "test_tmp.h"
 
 #include "core/manifest.h"
 
@@ -179,12 +180,26 @@ TEST(parse_unknown_sections_ignored) {
   ASSERT_EQ_STR(m.deps[0], "real_dep");
 }
 
-TEST(parse_key_value_line_resets_section) {
+TEST(parse_key_value_line_keeps_section) {
   const char *data = "[depends]\nsome = value\nreal_dep\n";
   FeatureManifest m;
   ASSERT_TRUE(manifest_parse_string("x", data, &m));
   ASSERT_TRUE(m.valid);
-  ASSERT_EQ_INT(m.dep_count, 0);
+  ASSERT_EQ_INT(m.dep_count, 1);
+  ASSERT_EQ_STR(m.deps[0], "real_dep");
+}
+
+TEST(parse_long_line_is_not_truncated_away) {
+  char data[1024];
+  memset(data, 'a', sizeof(data));
+  memcpy(data, "[depends]\n", 10);
+  data[10 + 600] = '\n';
+  data[10 + 601] = '\0';
+  FeatureManifest m;
+  ASSERT_TRUE(manifest_parse_string("x", data, &m));
+  ASSERT_TRUE(m.valid);
+  ASSERT_EQ_INT(m.dep_count, 1);
+  ASSERT_EQ_INT((int)strlen(m.deps[0]), 63);
 }
 
 TEST(parse_depends_cap_at_max) {
@@ -262,7 +277,7 @@ TEST(parse_file_roundtrip) {
   ASSERT_EQ_STR(m.provides[0], "cap.x");
   ASSERT_EQ_INT(m.dep_count, 1);
   ASSERT_EQ_STR(m.deps[0], "dep.y");
-  remove(path);
+  file_remove_path(path);
 }
 
 TEST(parse_comment_inside_depends_would_strip_hash) {
@@ -291,7 +306,8 @@ int main(void) {
   RUN(parse_comments_and_blank_lines_ignored);
   RUN(parse_provides_before_or_after_depends);
   RUN(parse_unknown_sections_ignored);
-  RUN(parse_key_value_line_resets_section);
+  RUN(parse_key_value_line_keeps_section);
+  RUN(parse_long_line_is_not_truncated_away);
   RUN(parse_depends_cap_at_max);
   RUN(parse_empty_data_is_valid_with_zero_counts);
   RUN(parse_null_data_returns_false);

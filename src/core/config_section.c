@@ -13,8 +13,6 @@
 #define CONFIG_SECTION_HEADER_MAX 96
 #define CONFIG_SECTION_NAME_MAX (CONFIG_SECTION_HEADER_MAX - 3)
 
-static bool section_is_bare_key(const char *s) { return toml_is_bare_key(s); }
-
 static ConfigTomlStatus section_fail(ConfigTomlError *err,
                                      ConfigTomlStatus status,
                                      const char *message) {
@@ -27,7 +25,7 @@ static ConfigTomlStatus section_fail(ConfigTomlError *err,
 }
 
 static bool section_encode_key(char *out, size_t cap, const char *name) {
-  if (section_is_bare_key(name) && strlen(name) < 384) {
+  if (toml_is_bare_key(name) && strlen(name) < 384) {
     if (strlen(name) >= cap)
       return false;
     memcpy(out, name, strlen(name) + 1);
@@ -37,10 +35,7 @@ static bool section_encode_key(char *out, size_t cap, const char *name) {
 }
 
 static char *section_trim(const char *s, size_t len) {
-  while (len > 0 && isspace((unsigned char)s[0])) {
-    s++;
-    len--;
-  }
+  s = toml_trim_left(s);
   len = toml_trim_right_len(s, len);
   char *out = (char *)malloc(len + 1);
   if (!out)
@@ -50,71 +45,21 @@ static char *section_trim(const char *s, size_t len) {
   return out;
 }
 
-static size_t section_strip_comment(const char *s, size_t len) {
-  char *buf = (char *)malloc(len + 1);
-  if (!buf)
-    return len;
-  memcpy(buf, s, len);
-  buf[len] = '\0';
-  toml_strip_comment(buf, buf, len + 1);
-  size_t n = strlen(buf);
-  free(buf);
-  return n;
-}
-
 static int section_parse_entry_line(const char *line, size_t line_len,
                                     char **key_out, char **value_out) {
   *key_out = NULL;
   *value_out = NULL;
-  line_len = section_strip_comment(line, line_len);
-  char *trimmed = section_trim(line, line_len);
-  if (!trimmed)
-    return -1;
-  if (!trimmed[0] || trimmed[0] == '#') {
-    free(trimmed);
-    return 0;
-  }
-  const char *eq = strchr(trimmed, '=');
-  if (!eq) {
-    free(trimmed);
-    return -1;
-  }
-  char *key_raw = section_trim(trimmed, (size_t)(eq - trimmed));
-  char *value_raw = section_trim(eq + 1, strlen(eq + 1));
-  free(trimmed);
-  if (!key_raw || !value_raw) {
-    free(key_raw);
-    free(value_raw);
-    return -1;
-  }
   char key[384];
-  if (key_raw[0] == '"') {
-    if (!config_toml_decode_string(key_raw, key, sizeof(key))) {
-      free(key_raw);
-      free(value_raw);
-      return -1;
-    }
-  } else {
-    if (!section_is_bare_key(key_raw)) {
-      free(key_raw);
-      free(value_raw);
-      return -1;
-    }
-    snprintf(key, sizeof(key), "%s", key_raw);
-  }
-  if (strlen(key) >= sizeof(key) - 1) {
-    free(key_raw);
-    free(value_raw);
+  char raw[1024];
+  TomlKeyValueStatus st = toml_parse_key_value(line, line_len, key,
+                                               sizeof(key), raw, sizeof(raw));
+  if (st == TOML_KV_EMPTY)
+    return 0;
+  if (st != TOML_KV_OK)
     return -1;
-  }
   char value[1024];
-  if (!config_toml_decode_string(value_raw, value, sizeof(value))) {
-    free(key_raw);
-    free(value_raw);
+  if (!toml_decode_string(raw, value, sizeof(value)))
     return -1;
-  }
-  free(key_raw);
-  free(value_raw);
   *key_out = strdup(key);
   *value_out = strdup(value);
   if (!*key_out || !*value_out) {
@@ -145,7 +90,7 @@ static void section_append_entry(char *out, size_t *out_len,
 
 static bool section_apply(const char *path, const char *section,
                           const char *name, const char *value, bool is_clear) {
-  if (!section_is_bare_key(section) ||
+  if (!toml_is_bare_key(section) ||
       strlen(section) >= CONFIG_SECTION_NAME_MAX) {
     log_error("config-section: invalid or too long section name '%s'", section);
     return false;
@@ -392,7 +337,7 @@ ConfigTomlStatus config_section_set_ex(const char *path, const char *section,
   if (!path || !path[0] || !section || !section[0] || !name || !name[0] ||
       !value || !value[0])
     return section_fail(err, CONFIG_TOML_ERR_ARG, "missing path/section/name/value");
-  if (!section_is_bare_key(section) ||
+  if (!toml_is_bare_key(section) ||
       strlen(section) >= CONFIG_SECTION_NAME_MAX)
     return section_fail(err, CONFIG_TOML_ERR_PARSE, "invalid section name");
   if (!section_apply(path, section, name, value, false))
@@ -406,7 +351,7 @@ ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
   config_toml_error_clear(err);
   if (!path || !path[0] || !section || !section[0] || !name || !name[0])
     return section_fail(err, CONFIG_TOML_ERR_ARG, "missing path/section/name");
-  if (!section_is_bare_key(section) ||
+  if (!toml_is_bare_key(section) ||
       strlen(section) >= CONFIG_SECTION_NAME_MAX)
     return section_fail(err, CONFIG_TOML_ERR_PARSE, "invalid section name");
   if (!section_apply(path, section, name, NULL, true))

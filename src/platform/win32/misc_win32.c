@@ -1,5 +1,6 @@
 #include "helpers/helpers_text.h"
 #include <windows.h>
+#include <direct.h>
 #include "helpers/helpers_fs.h"
 #include <winreg.h>
 #include <ctype.h>
@@ -16,6 +17,12 @@
 #include "helpers/win32/raw_default_apps_win32.h"
 #include "helpers/helpers_misc.h"
 #include <time.h>
+
+bool Platform_RemoveDirectory(const char *path) {
+  if (!path || !path[0])
+    return false;
+  return _rmdir(path) == 0;
+}
 
 bool Platform_MkdirIfNotExists(const char *path) {
 

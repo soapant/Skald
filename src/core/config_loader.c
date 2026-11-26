@@ -311,6 +311,21 @@ bool config_reload(void) {
   return true;
 }
 
+void config_own_string(const char *name, char *s) {
+  if (!name) {
+    free(s);
+    return;
+  }
+  for (int i = 0; i < CONFIG_ENTRY_COUNT; i++) {
+    if (strcmp(config_entries[i].name, name) != 0)
+      continue;
+    free(config_owned[i]);
+    config_owned[i] = s;
+    return;
+  }
+  free(s);
+}
+
 void config_unload(void) {
   for (int i = 0; i < CONFIG_ENTRY_COUNT; i++) {
     free(config_owned[i]);

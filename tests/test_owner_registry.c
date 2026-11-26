@@ -75,20 +75,17 @@ TEST(owner_purge_array_respects_generation_and_order) {
     arrput(records, r);
   }
 
-  size_t removed = owner_purge_array(records, sizeof(TestRecord),
-                                     offsetof(TestRecord, tag), "/x/a.so",
-                                     NULL, 2, record_destroy);
+  size_t removed =
+      OWNER_PURGE_STRUCT(records, TestRecord, "/x/a.so", NULL, 2, record_destroy);
   ASSERT_EQ_INT((int)removed, 2);
   ASSERT_EQ_INT((int)arrlenu(records), 3);
   ASSERT_EQ_INT(records[0].id, 1);
   ASSERT_EQ_INT(records[1].id, 3);
   ASSERT_EQ_INT(records[2].id, 4);
-  ASSERT_TRUE(owner_array_has_active(records, sizeof(TestRecord),
-                                     arrlenu(records),
-                                     offsetof(TestRecord, tag), "c.so"));
-  ASSERT_TRUE(owner_array_has_active(records, sizeof(TestRecord),
-                                     arrlenu(records),
-                                     offsetof(TestRecord, tag), "a.so"));
+  ASSERT_TRUE(OWNER_STRUCT_HAS_ACTIVE(records, TestRecord, arrlenu(records),
+                                      "c.so"));
+  ASSERT_TRUE(OWNER_STRUCT_HAS_ACTIVE(records, TestRecord, arrlenu(records),
+                                      "a.so"));
 
   for (size_t i = 0; i < arrlenu(records); i++)
     record_destroy(&records[i]);
@@ -105,9 +102,8 @@ TEST(owner_purge_array_survives_destroy_freeing_path) {
   }
 
   const char *borrowed = records[0].tag.owner;
-  size_t removed = owner_purge_array(records, sizeof(TestRecord),
-                                     offsetof(TestRecord, tag), borrowed, NULL,
-                                     0, record_destroy);
+  size_t removed =
+      OWNER_PURGE_STRUCT(records, TestRecord, borrowed, NULL, 0, record_destroy);
   ASSERT_EQ_INT((int)removed, 3);
   ASSERT_EQ_INT((int)arrlenu(records), 0);
   arrfree(records);
@@ -122,16 +118,14 @@ TEST(owner_purge_pointers_compacts_and_destroys) {
     arrput(records, r);
   }
 
-  size_t removed = owner_purge_pointers((void **)records,
-                                        offsetof(TestRecord, tag), "drop.so",
-                                        NULL, 0, record_ptr_destroy);
+  size_t removed = OWNER_PURGE_PTRS(records, TestRecord, "drop.so", NULL, 0,
+                                    record_ptr_destroy);
   ASSERT_EQ_INT((int)removed, 2);
   ASSERT_EQ_INT((int)arrlenu(records), 2);
   ASSERT_EQ_INT(records[0]->id, 1);
   ASSERT_EQ_INT(records[1]->id, 3);
-  ASSERT_TRUE(owner_pointers_have_active((void *const *)records,
-                                         arrlenu(records),
-                                         offsetof(TestRecord, tag), "keep.so"));
+  ASSERT_TRUE(OWNER_PTRS_HAVE_ACTIVE(records, TestRecord, arrlenu(records),
+                                     "keep.so"));
 
   for (size_t i = 0; i < arrlenu(records); i++) {
     record_destroy(records[i]);
@@ -145,9 +139,8 @@ TEST(owner_purge_ignores_empty_paths) {
   TestRecord r = {0};
   owner_tag_set(&r.tag, "a.so", 0);
   arrput(records, r);
-  size_t removed = owner_purge_array(records, sizeof(TestRecord),
-                                     offsetof(TestRecord, tag), NULL, NULL, 0,
-                                     record_destroy);
+  size_t removed =
+      OWNER_PURGE_STRUCT(records, TestRecord, NULL, NULL, 0, record_destroy);
   ASSERT_EQ_INT((int)removed, 0);
   ASSERT_EQ_INT((int)arrlenu(records), 1);
   record_destroy(&records[0]);

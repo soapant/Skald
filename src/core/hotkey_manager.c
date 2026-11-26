@@ -425,9 +425,8 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
     return;
   char *a = owner_strdup(path_a);
   char *b = owner_strdup(path_b);
-  int dropped = (int)owner_purge_array(hotkeys, sizeof(HotkeyBinding),
-                                       offsetof(HotkeyBinding, tag), a, b, 0,
-                                       hotkey_destroy_cb);
+  int dropped =
+      (int)OWNER_PURGE_STRUCT(hotkeys, HotkeyBinding, a, b, 0, hotkey_destroy_cb);
   if (dropped > 0)
     log_info("hotkey purged %d binding%s", dropped, dropped == 1 ? "" : "s");
   HOTKEY_Q_LOCK();

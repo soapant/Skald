@@ -1,48 +1,40 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <dirent.h>
-#include <sys/stat.h>
 
 #include "test.h"
+#include "test_tmp.h"
 
 #include "core/feature_loader.h"
 #include "core/cap_registry.h"
+#include "core/skapi.h"
 #include "platform/lib.h"
 #include "platform/platform.h"
 #include "config_values.h"
 
 extern _Atomic(const char *) FeaturePath;
 
-#ifndef TEST_BUILD_DIR
-#define TEST_BUILD_DIR "build/tests"
-#endif
 #define FIXTURE_DIR TEST_BUILD_DIR "/fixture"
 #define FIXTURE_NAME "reload_probe"
 #define MANIFEST_DIR TEST_BUILD_DIR "/featurepath"
 
 static void remove_hot_artifacts(void) {
-  DIR *d = opendir(FIXTURE_DIR);
-  if (!d)
+  DirIter *it = Platform_DirOpen(FIXTURE_DIR);
+  if (!it)
     return;
-  struct dirent *e;
-  while ((e = readdir(d)) != NULL) {
-    if (strstr(e->d_name, ".hot") == NULL)
+  char name[512];
+  bool is_dir = false;
+  while (Platform_DirNext(it, name, sizeof(name), &is_dir)) {
+    if (strstr(name, ".hot") == NULL)
       continue;
-    char path[600];
-    snprintf(path, sizeof(path), "%s/%s", FIXTURE_DIR, e->d_name);
-    remove(path);
+    char path[1024];
+    snprintf(path, sizeof(path), "%s/%s", FIXTURE_DIR, name);
+    file_remove_path(path);
   }
-  closedir(d);
+  Platform_DirClose(it);
 }
 
-static int has_file(const char *path) {
-  FILE *f = fopen(path, "rb");
-  if (!f)
-    return 0;
-  fclose(f);
-  return 1;
-}
+static bool has_file(const char *path) { return sk_file_exists(path); }
 
 TEST(load_reload_unload) {
   const char *orig_feature_path = FeaturePath;
@@ -157,11 +149,21 @@ TEST(baseline_manifest_preserves_declarations) {
   ASSERT_TRUE(strstr(buf, "control_center") != NULL);
   ASSERT_TRUE(strstr(buf, "test.keep.provided") != NULL);
 
-  remove(mpath);
+  file_remove_path(mpath);
   FeaturePath = orig_feature_path;
 }
 
+static const char *s_orig_feature_path;
+
+static void feature_loader_cleanup(void) {
+  FeaturePath = s_orig_feature_path;
+  test_tmp_remove_tree(MANIFEST_DIR);
+  remove_hot_artifacts();
+}
+
 int main(void) {
+  s_orig_feature_path = FeaturePath;
+  TEST_GLOBAL_TEARDOWN(feature_loader_cleanup);
   RUN(load_reload_unload);
   RUN(reload_defers_unload_until_drain);
   RUN(baseline_manifest_preserves_declarations);

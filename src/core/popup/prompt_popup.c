@@ -204,8 +204,10 @@ static void prompt_popup_destroy(Popup *self) {
   if (data->state) {
     listbox_info_free(data->state->lb);
     free(data->state->lb);
-    for (int i = 0; i < data->state->editbox_count; i++)
+    for (int i = 0; i < data->state->editbox_count; i++) {
       free(data->state->editboxes[i].eb.placeholder);
+      editbox_wrap_cache_free(&data->state->editboxes[i].wrap_cache);
+    }
     EditBox *def =
         data->state->default_eb ? data->state->default_eb : data->state->eb;
     free(def->placeholder);

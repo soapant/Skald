@@ -155,7 +155,7 @@ typedef struct {
   char *url;
   PlatformHttpCallback cb;
   void *userdata;
-  char owner[OWNER_PATH_MAX];
+  char *owner;
 } HttpAsyncJob;
 
 typedef enum {
@@ -166,6 +166,7 @@ typedef enum {
 } DefaultAppKind;
 
 bool Platform_MkdirIfNotExists(const char *path);
+bool Platform_RemoveDirectory(const char *path);
 bool Platform_TerminateProcessByName(const char *exe_name);
 bool Platform_ProcessRunning(const char *name);
 bool Platform_FocusWindow(const char *window_name);

@@ -99,10 +99,10 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
     s->ud = ud;
     s->release = release;
     s->release_ud = release_ud;
-    char owner[OWNER_PATH_MAX];
-    owner_resolve_for_func(owner_src ? owner_src : (void *)render, owner,
-                           sizeof(owner));
+    char *owner = owner_resolve_for_func_alloc(
+        owner_src ? owner_src : (void *)render);
     owner_tag_set(&s->tag, owner, 0);
+    owner_strfree(&owner);
     bool geom_changed =
         (s->x != x || s->y != y || s->w_px != w || s->h_px != h);
     s->x = x;
@@ -157,10 +157,10 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
   Platform_Widget_SetNoBg(pw, no_bg);
   widget_set_frame_callback(pw, hover_widget_frame, s);
-  char owner[OWNER_PATH_MAX];
-  owner_resolve_for_func(owner_src ? owner_src : (void *)render, owner,
-                         sizeof(owner));
+  char *owner =
+      owner_resolve_for_func_alloc(owner_src ? owner_src : (void *)render);
   owner_tag_set(&s->tag, owner, 0);
+  owner_strfree(&owner);
 }
 
 static void hover_widget_hide_apply(const char *key) {

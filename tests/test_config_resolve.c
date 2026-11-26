@@ -65,6 +65,7 @@ TEST(unknown_names_are_not_auto) {
 }
 
 int main(void) {
+  TEST_GLOBAL_TEARDOWN(config_unload);
   RUN(explicit_values_are_never_auto_resolved);
   RUN(explicit_values_survive_resolution);
   RUN(linux_style_path_in_config_is_not_flagged_auto);

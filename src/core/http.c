@@ -62,6 +62,7 @@ static void *http_async_worker(void *arg) {
   free(body);
   free(job->url);
   thread_registry_finish(job);
+  owner_strfree(&job->owner);
   free(job);
   return NULL;
 }
@@ -79,11 +80,11 @@ void http_get_async(const char *url, PlatformHttpCallback cb, void *userdata) {
     free(job);
     return;
   }
-  job->owner[0] = '\0';
-  owner_resolve_for_func((void *)cb, job->owner, sizeof(job->owner));
-  thread_registry_add(job, job->owner);
+  job->owner = owner_resolve_for_func_alloc((void *)cb);
+  thread_registry_add(job, job->owner ? job->owner : "");
   if (!Platform_HttpThreadStart(http_async_worker, job)) {
     thread_registry_finish(job);
+    owner_strfree(&job->owner);
     free(job->url);
     free(job);
     log_warn("http async thread create failed");

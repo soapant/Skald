@@ -4,6 +4,7 @@
 #include "helpers/x11/env_helpers_x11.h"
 #include "deps/log.h"
 #include <sys/stat.h>
+#include <unistd.h>
 #include "wm/wm.h"
 #include "helpers/x11/clipboard_x11.h"
 #include "helpers/x11/clipboard_backend_x11.h"
@@ -75,6 +76,12 @@ const char *Platform_GetRealHome(void) {
 bool Platform_IsRunningAsRoot(void) {
   log_info("Platform_IsRunningAsRoot completed");
   return getuid() == 0;
+}
+
+bool Platform_RemoveDirectory(const char *path) {
+  if (!path || !path[0])
+    return false;
+  return rmdir(path) == 0;
 }
 
 bool Platform_MkdirIfNotExists(const char *path) {

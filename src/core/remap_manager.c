@@ -551,7 +551,6 @@ static void remap_destroy_cb(void *element) {
 
 void remap_purge_owner(const char *path_a, const char *path_b) {
   remap_lock();
-  owner_purge_array(remaps, sizeof(RemapBinding), offsetof(RemapBinding, tag),
-                    path_a, path_b, 0, remap_destroy_cb);
+  OWNER_PURGE_STRUCT(remaps, RemapBinding, path_a, path_b, 0, remap_destroy_cb);
   remap_unlock();
 }

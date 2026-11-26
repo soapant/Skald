@@ -624,7 +624,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           }
         }
       }
-      if (lb && lb->selected_index != -1) {
+      if (lb && lb->selected_index != -1 &&
+          (int)pdis->itemID >= 0 && (int)pdis->itemID < lb->item_count &&
+          lb->items[pdis->itemID]) {
         char measureBuffer[512];
         safe_copy(measureBuffer, sizeof(measureBuffer),
                   lb->items[pdis->itemID]);

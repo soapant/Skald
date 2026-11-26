@@ -352,6 +352,7 @@ static void *x11_timer_thread(void *arg) {
     payload->callback();
   }
   thread_registry_finish(payload);
+  owner_strfree(&payload->owner);
   free(payload);
   return NULL;
 }

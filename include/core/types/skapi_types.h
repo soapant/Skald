@@ -54,7 +54,7 @@ typedef struct {
 typedef struct SkRunAfterPayload {
   double seconds;
   void (*callback)(void);
-  char owner[OWNER_PATH_MAX];
+  char *owner;
 } SkRunAfterPayload;
 
 bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload);

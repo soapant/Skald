@@ -50,6 +50,16 @@ static void snippet_free_binding(SnippetBinding *b) {
   owner_tag_clear(&b->tag);
 }
 
+static void snippet_owner_set(OwnerTag *tag, void (*func)(void),
+                              void *caller) {
+  char *owner = func ? owner_resolve_for_func_alloc((void *)(uintptr_t)func)
+                     : NULL;
+  if ((!owner || !owner[0]) && caller)
+    owner = owner_resolve_for_func_alloc(caller);
+  owner_tag_set(tag, owner, 0);
+  owner_strfree(&owner);
+}
+
 bool snippet_register_internal(const char *trigger, const char *text,
                                void (*func)(void), bool whitelist,
                                const char *const *windows, void *caller) {
@@ -57,13 +67,6 @@ bool snippet_register_internal(const char *trigger, const char *text,
     return false;
   if (!text && !func)
     return false;
-
-  char owner[OWNER_PATH_MAX];
-  owner[0] = '\0';
-  if (func)
-    owner_resolve_for_func((void *)(uintptr_t)func, owner, sizeof(owner));
-  if (!owner[0] && caller)
-    owner_resolve_for_func(caller, owner, sizeof(owner));
 
   for (size_t i = 0; i < snippet_count; i++) {
     if (snippets[i].trigger && strcmp(snippets[i].trigger, trigger) == 0) {
@@ -107,7 +110,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
       snippets[i].whitelist = whitelist;
       snippets[i].windows = nwindows;
       snippets[i].window_count = nwindows ? nwin : 0;
-      owner_tag_set(&snippets[i].tag, owner, 0);
+      snippet_owner_set(&snippets[i].tag, func, caller);
       snippet_reset_buffer();
       return true;
     }
@@ -152,7 +155,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
       b->window_count = n;
     }
   }
-  owner_tag_set(&b->tag, owner, 0);
+  snippet_owner_set(&b->tag, func, caller);
   arrput(snippets, nb);
   snippet_reset_buffer();
   return true;
@@ -180,9 +183,8 @@ static void snippet_destroy_cb(void *element) {
 }
 
 void snippet_purge_owner(const char *path_a, const char *path_b) {
-  size_t dropped = owner_purge_array(snippets, sizeof(SnippetBinding),
-                                     offsetof(SnippetBinding, tag), path_a,
-                                     path_b, 0, snippet_destroy_cb);
+  size_t dropped = OWNER_PURGE_STRUCT(snippets, SnippetBinding, path_a, path_b,
+                                      0, snippet_destroy_cb);
   if (dropped > 0) {
     log_info("snippet purged %zu binding%s", dropped,
              dropped == 1 ? "" : "s");
