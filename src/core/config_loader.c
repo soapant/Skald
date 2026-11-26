@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdatomic.h>
 
 #include "platform/platform.h"
 #include "config.h"
@@ -17,8 +18,9 @@
 #include "core/config_toml.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_misc.h"
+#include "helpers/helpers_render_thread.h"
 
-#define X(type, name, def) type name = def;
+#define X(type, name, def) _Atomic(type) name = def;
 CONFIG_VALUES(X)
 #undef X
 
@@ -183,32 +185,45 @@ static void config_staging_free(ConfigStaging *st) {
 }
 
 static void config_staging_commit(ConfigStaging *st) {
+  char *retired_strings[CONFIG_ENTRY_COUNT];
+  size_t retired_count = 0;
   for (size_t i = 0; i < st->count; i++) {
     ConfigAssign *a = &st->items[i];
     const ConfigEntry *ent = &config_entries[a->idx];
     switch (ent->kind) {
     case CONFIG_BOOL:
-      *(bool *)ent->slot = a->b;
+      atomic_store_explicit((_Atomic(bool) *)ent->slot, a->b,
+                            memory_order_release);
       break;
     case CONFIG_INT:
-      *(int *)ent->slot = (int)a->i;
+      atomic_store_explicit((_Atomic(int) *)ent->slot, (int)a->i,
+                            memory_order_release);
       break;
     case CONFIG_FLOAT:
-      *(float *)ent->slot = (float)a->f;
+      atomic_store_explicit((_Atomic(float) *)ent->slot, (float)a->f,
+                            memory_order_release);
       break;
     case CONFIG_STRING: {
       char *old = config_owned[a->idx];
-      *(const char **)ent->slot = a->s;
+      atomic_store_explicit((_Atomic(const char *) *)ent->slot, a->s,
+                            memory_order_release);
       config_owned[a->idx] = a->s;
-      free(old);
+      if (old)
+        retired_strings[retired_count++] = old;
       break;
     }
     case CONFIG_COLORREF:
-      *(ColorRef *)ent->slot = a->cr;
+      atomic_store_explicit((_Atomic(ColorRef) *)ent->slot, a->cr,
+                            memory_order_release);
       break;
     }
   }
   st->count = 0;
+  if (retired_count == 0)
+    return;
+  render_thread_sync();
+  for (size_t i = 0; i < retired_count; i++)
+    free(retired_strings[i]);
 }
 
 static long long config_cached_mtime = 0;
@@ -390,16 +405,28 @@ static ConfigBuf config_emit_region(void) {
     const char *name = e->name;
     switch (e->kind) {
     case CONFIG_BOOL:
-      config_emit_bool_line(&b, name, *(const bool *)e->slot);
+      config_emit_bool_line(
+          &b, name,
+          atomic_load_explicit((const _Atomic(bool) *)e->slot,
+                               memory_order_acquire));
       break;
     case CONFIG_INT:
-      config_emit_int_line(&b, name, *(const int *)e->slot);
+      config_emit_int_line(
+          &b, name,
+          atomic_load_explicit((const _Atomic(int) *)e->slot,
+                               memory_order_acquire));
       break;
     case CONFIG_FLOAT:
-      config_emit_float_line(&b, name, *(const float *)e->slot);
+      config_emit_float_line(
+          &b, name,
+          atomic_load_explicit((const _Atomic(float) *)e->slot,
+                               memory_order_acquire));
       break;
     case CONFIG_STRING:
-      config_emit_str_line(&b, name, *(const char *const *)e->slot);
+      config_emit_str_line(
+          &b, name,
+          atomic_load_explicit((const _Atomic(const char *) *)e->slot,
+                               memory_order_acquire));
       break;
     case CONFIG_COLORREF:
       break;
@@ -411,7 +438,10 @@ static ConfigBuf config_emit_region(void) {
     if (e->kind != CONFIG_COLORREF)
       continue;
     const char *short_name = e->name + 6;
-    config_emit_color_line(&b, short_name, *(const ColorRef *)e->slot);
+    config_emit_color_line(
+        &b, short_name,
+        atomic_load_explicit((const _Atomic(ColorRef) *)e->slot,
+                             memory_order_acquire));
   }
   config_buf_put(&b, "# </skald-config-generated>\n");
   return b;

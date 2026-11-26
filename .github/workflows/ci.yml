@@ -36,6 +36,19 @@ jobs:
       - name: Cross-compile for Windows
         run: ./nob --win32
 
+      - name: Cross-compile Windows tests
+        run: ./nob --win32 --test --dynamic
+
+      - name: Release bundle smoke
+        run: |
+          ./nob --release --dynamic
+          test -x release/skald
+          test -f release/config/config.toml
+          test -f release/build/sdk/core/skapi.h
+          test -f release/build/features/control_center.so
+          test -f release/features/control_center/manifest.toml
+          test -f release/resources/Skald.ico
+
   linux-asan:
     runs-on: ubuntu-latest
     steps:
@@ -56,6 +69,9 @@ jobs:
 
       - name: Build and test with ASan + UBSan
         run: ASAN_OPTIONS=detect_leaks=0 ./nob --asan --test --dynamic
+
+      - name: Link app and features with ASan + UBSan
+        run: ./nob --asan --dynamic
 
   linux-wayland:
     runs-on: ubuntu-latest
@@ -78,3 +94,6 @@ jobs:
 
       - name: Build with Wayland backend
         run: ./nob --wayland --dynamic
+
+      - name: Run tests with Wayland backend
+        run: ./nob --wayland --test --dynamic

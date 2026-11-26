@@ -24,6 +24,7 @@
 #include "core/owner_purge.h"
 #include "core/owner_registry.h"
 #include "helpers/helpers_ui.h"
+#include "helpers/helpers_render_thread.h"
 
 #include "core/cc_registry.h"
 #include "core/widget_registry.h"
@@ -120,10 +121,10 @@ static bool ensure_retired_capacity(int needed) {
   return true;
 }
 
-static void retire_old_lib(LibHandle handle, const char *uniq,
+static bool retire_old_lib(LibHandle handle, const char *uniq,
                            const char *owner) {
   if (!handle)
-    return;
+    return true;
   WindowManager *wm = WindowManager_Get();
   RetiredLib r;
   memset(&r, 0, sizeof(r));
@@ -144,9 +145,10 @@ static void retire_old_lib(LibHandle handle, const char *uniq,
               owner ? owner : "?");
     owner_strfree(&r.uniq);
     owner_tag_clear(&r.tag);
-    return;
+    return false;
   }
   retired[retired_count++] = r;
+  return true;
 }
 
 typedef struct {
@@ -166,6 +168,7 @@ int feature_loader_pending_unload_count(void) { return defer_unload_count; }
 void feature_loader_drain_retired_unloads(void) {
   if (defer_unload_count == 0)
     return;
+  render_thread_sync();
   feature_mutex_init();
   Platform_MutexLock(feature_mutex);
   for (size_t i = 0; i < defer_unload_count; i++) {
@@ -322,6 +325,12 @@ static bool manifest_write_full(const char *name, const FeatureManifest *m) {
 }
 
 static void manifest_write_baseline(const char *name) {
+  char path[512];
+  if (!manifest_path(name, path, sizeof(path)))
+    return;
+  long long mtime = 0, size = 0;
+  if (Platform_FileInfo(path, &mtime, &size))
+    return;
   char dir[512];
   if (!feature_dir(name, dir, sizeof(dir)))
     return;
@@ -886,6 +895,21 @@ static void call_feature_shutdown(LibHandle handle) {
     shut();
 }
 
+static void purge_failed_library(LibHandle h, const char *path) {
+  typedef void (*InitFn)(void);
+  InitFn init = (InitFn)Platform_GetSymbol(h, "skald_feature_init");
+  if (!init)
+    init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
+  char *owner = init ? owner_resolve_for_func_alloc((void *)init) : NULL;
+  if (!owner || !owner[0]) {
+    owner_strfree(&owner);
+    owner = owner_strdup(path);
+  }
+  if (owner && owner[0])
+    purge_owner_set(owner, path, widget_current_generation());
+  owner_strfree(&owner);
+}
+
 void feature_loader_shutdown(void) {
   LOCK();
   int count = feature_count;
@@ -985,9 +1009,25 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
         init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
       if (!init) {
         log_error("reload %s: no init symbol, keeping old", name);
+        purge_failed_library(h, uniquepath);
         Platform_UnloadLibrary(h);
         file_remove_path(uniquepath);
         free(uniquepath);
+        owner_strfree(&path_copy);
+        UNLOCK();
+        return false;
+      }
+      unsigned retire_gen = widget_current_generation();
+      char *retire_owner = owner_strdup(
+          (features[i].uniq && features[i].uniq[0]) ? features[i].uniq
+                                                    : features[i].path);
+      if (!retire_old_lib(old, features[i].uniq, retire_owner)) {
+        log_error("reload %s: cannot retire old lib, keeping it", name);
+        purge_failed_library(h, uniquepath);
+        Platform_UnloadLibrary(h);
+        file_remove_path(uniquepath);
+        free(uniquepath);
+        owner_strfree(&retire_owner);
         owner_strfree(&path_copy);
         UNLOCK();
         return false;
@@ -997,16 +1037,9 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
           (ShutdownFn)Platform_GetSymbol(old, "skald_feature_shutdown");
       if (shut)
         shut();
-      unsigned retire_gen = widget_current_generation();
-      char *retire_owner = owner_strdup(
-          (features[i].uniq && features[i].uniq[0]) ? features[i].uniq
-                                                    : features[i].path);
-      retire_old_lib(old, features[i].uniq, retire_owner);
       widget_bump_generation();
       log_info("feature_reload: %s (constructor ran at dlopen)", name);
       features[i].handle = h;
-      owner_strfree(&features[i].path);
-      features[i].path = owner_strdup(uniquepath);
       owner_strfree(&features[i].uniq);
       features[i].uniq = owner_strdup(uniquepath);
       free(uniquepath);
@@ -1055,31 +1088,30 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
     if (!init) {
       log_error("reload %s: no init symbol, new feature not loaded", name);
+      purge_failed_library(h, uniquepath);
       Platform_UnloadLibrary(h);
       file_remove_path(uniquepath);
       free(uniquepath);
       UNLOCK();
       return false;
     }
+    const char *libext = Platform_LibExtension();
+    char dll[512];
+    snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", name,
+             libext ? libext : "");
     LoadedFeature *f = &features[feature_count++];
     memset(f, 0, sizeof(*f));
     owner_strfree(&f->name);
     f->name = owner_strdup(name);
     owner_strfree(&f->path);
-    f->path = owner_strdup(uniquepath);
+    f->path = owner_strdup(dll);
     owner_strfree(&f->uniq);
     f->uniq = owner_strdup(uniquepath);
     f->handle = h;
     feature_init_count++;
-    {
-      const char *ext = Platform_LibExtension();
-      char dll[512];
-      snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", name,
-               ext ? ext : "");
-      if (!file_copy_path(uniquepath, dll))
-        log_warn("reload %s: could not persist %s (will rebuild next start)",
-                 name, dll);
-    }
+    if (!file_copy_path(uniquepath, dll))
+      log_warn("reload %s: could not persist %s (will rebuild next start)",
+               name, dll);
     free(uniquepath);
     UNLOCK();
     deferred_init_run_all();

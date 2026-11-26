@@ -1,3 +1,4 @@
+#include <stdatomic.h>
 #include "helpers/win32/raw_platform_win32.h"
 #include "helpers/helpers_misc.h"
 #include "helpers/helpers_ui.h"
@@ -961,8 +962,8 @@ char *Platform_GetIconPath(char *app_path) {
 
 int Platform_GetIconSize(char *icon_path) {
   (void)icon_path;
-  extern int IconSize;
-  int s = IconSize;
+  extern _Atomic(int) IconSize;
+  int s = atomic_load_explicit(&IconSize, memory_order_acquire);
   if (s < 16)
     s = 16;
   if (s > 32)

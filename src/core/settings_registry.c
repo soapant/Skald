@@ -30,6 +30,7 @@
 #include "platform/platform.h"
 #include "platform/draw.h"
 #include "core/settings_registry.h"
+#include "helpers/helpers_render_thread.h"
 #include "core/owner_registry.h"
 #include "deps/stb_ds.h"
 
@@ -1238,6 +1239,7 @@ static void settings_destroy_cb(void *element) {
 }
 
 void settings_registry_purge_owner(const char *path_a, const char *path_b) {
+  render_thread_sync();
   owner_purge_pointers((void **)settings_entries, offsetof(SettingsEntry, tag),
                        path_a, path_b, 0, settings_destroy_cb);
   arrfree(s_focus_ctx);

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
+#include <stdatomic.h>
 
 #include "deps/log.h"
 #include "config_values.h"
@@ -24,7 +25,7 @@ static const struct {
     {"COLOR_CURSOR", offsetof(ThemeEntry, cursor)},
     {"COLOR_BORDER", offsetof(ThemeEntry, border)},
 };
-static ColorRef *theme_targets[] = {
+static _Atomic(ColorRef) *theme_targets[] = {
     &COLOR_BG, &COLOR_TEXT, &COLOR_SELECTED_TEXT, &COLOR_CURSOR, &COLOR_BORDER,
 };
 
@@ -145,6 +146,7 @@ void theme_apply(void) {
     if (pin_lookup(theme_slots[i].name, &pinned) &&
         !matches_any_theme(theme_slots[i].off, pinned))
       user_override = true;
-    *theme_targets[i] = user_override ? pinned : theme_color;
+    atomic_store_explicit(theme_targets[i], user_override ? pinned : theme_color,
+                          memory_order_release);
   }
 }

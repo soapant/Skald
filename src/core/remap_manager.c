@@ -1,5 +1,6 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_owner.h"
+#include "helpers/helpers_misc.h"
 #include "core/owner_registry.h"
 #include "core/remap_manager.h"
 #include "core/types/keys.h"
@@ -27,6 +28,19 @@ typedef struct {
 
 static RemapBinding *remaps;
 #define remap_count arrlenu(remaps)
+
+static void *remap_mutex = NULL;
+
+static void remap_lock(void) {
+  remap_mutex = lazy_mutex_get(&remap_mutex);
+  if (remap_mutex)
+    Platform_MutexLock(remap_mutex);
+}
+
+static void remap_unlock(void) {
+  if (remap_mutex)
+    Platform_MutexUnlock(remap_mutex);
+}
 
 static int phys_vk[256] = {0};
 static int virt_vk[256] = {0};
@@ -57,7 +71,12 @@ static bool remap_scratch_reserve(size_t n) {
   return true;
 }
 
-bool remap_has_bindings(void) { return remap_count > 0; }
+bool remap_has_bindings(void) {
+  remap_lock();
+  bool has = remap_count > 0;
+  remap_unlock();
+  return has;
+}
 
 static bool remap_window_eq(const char *a, const char *b) {
   if (a == b)
@@ -67,8 +86,10 @@ static bool remap_window_eq(const char *a, const char *b) {
   return strcmp(a, b) == 0;
 }
 
-bool remap_register_internal(const char *src, const char *dst, bool whitelist,
-                             const char *const *windows, void *caller) {
+static bool remap_register_internal_locked(const char *src, const char *dst,
+                                           bool whitelist,
+                                           const char *const *windows,
+                                           void *caller) {
   if (!src || !dst)
     return false;
   RemapBinding b = {0};
@@ -147,6 +168,14 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
   }
   arrput(remaps, b);
   return true;
+}
+
+bool remap_register_internal(const char *src, const char *dst, bool whitelist,
+                             const char *const *windows, void *caller) {
+  remap_lock();
+  bool ok = remap_register_internal_locked(src, dst, whitelist, windows, caller);
+  remap_unlock();
+  return ok;
 }
 
 void remap_update_phys(int vk, int value) {
@@ -403,11 +432,13 @@ void remap_send_combo(const char *combo) {
   b.src_mods = remap_current_mods();
   b.dst_mods = mods;
   b.dst_vk = vks[0];
+  remap_lock();
   remap_fire_binding(&b, 0);
   remap_release_binding(&b, true);
+  remap_unlock();
 }
 
-bool remap_handle_vk(int vk, int value) {
+static bool remap_handle_vk_locked(int vk, int value) {
   if (vk < 0 || vk >= 256)
     return false;
   if (value == 2)
@@ -499,6 +530,13 @@ bool remap_handle_vk(int vk, int value) {
   return swallow;
 }
 
+bool remap_handle_vk(int vk, int value) {
+  remap_lock();
+  bool swallow = remap_handle_vk_locked(vk, value);
+  remap_unlock();
+  return swallow;
+}
+
 bool remap_should_swallow_vk(int vk, int value) {
   return remap_handle_vk(vk, value);
 }
@@ -512,6 +550,8 @@ static void remap_destroy_cb(void *element) {
 }
 
 void remap_purge_owner(const char *path_a, const char *path_b) {
+  remap_lock();
   owner_purge_array(remaps, sizeof(RemapBinding), offsetof(RemapBinding, tag),
                     path_a, path_b, 0, remap_destroy_cb);
+  remap_unlock();
 }

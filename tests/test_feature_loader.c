@@ -12,7 +12,7 @@
 #include "platform/platform.h"
 #include "config_values.h"
 
-extern const char *FeaturePath;
+extern _Atomic(const char *) FeaturePath;
 
 #ifndef TEST_BUILD_DIR
 #define TEST_BUILD_DIR "build/tests"
@@ -74,6 +74,9 @@ TEST(load_reload_unload) {
 
   feature_loader_reload_from(FIXTURE_NAME, fixture);
   ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
+  bool named_reload_ok = feature_loader_reload_from(FIXTURE_NAME, NULL);
+  ASSERT_TRUE(named_reload_ok);
+  ASSERT_TRUE(cap_resolve_abi("test.reload_probe.cap", CAP_ABI_V1) != NULL);
   feature_loader_drain_retired_unloads();
   ASSERT_FALSE(has_file(hot1));
   ASSERT_FALSE(has_file(hot2));
@@ -118,8 +121,49 @@ TEST(reload_defers_unload_until_drain) {
 
   FeaturePath = orig_feature_path;
 }
+TEST(baseline_manifest_preserves_declarations) {
+  const char *orig_feature_path = FeaturePath;
+  FeaturePath = MANIFEST_DIR;
+  Platform_MkdirIfNotExists(MANIFEST_DIR);
+  char dir[512];
+  snprintf(dir, sizeof(dir), "%s/%s", MANIFEST_DIR, FIXTURE_NAME);
+  Platform_MkdirIfNotExists(dir);
+  char mpath[600];
+  snprintf(mpath, sizeof(mpath), "%s/manifest.toml", dir);
+
+  FILE *f = fopen(mpath, "wb");
+  if (!f) {
+    FeaturePath = orig_feature_path;
+    ASSERT_TRUE(false);
+    return;
+  }
+  fputs("name = \"reload_probe\"\ndescription = \"\"\n\n[provides]\n\n"
+        "\"test.keep.provided\"\n\n[depends]\n\n\"control_center\"\n",
+        f);
+  fclose(f);
+
+  feature_loader_load_all_from_dir(FIXTURE_DIR);
+
+  f = fopen(mpath, "rb");
+  if (!f) {
+    FeaturePath = orig_feature_path;
+    ASSERT_TRUE(false);
+    return;
+  }
+  char buf[2048] = {0};
+  size_t n = fread(buf, 1, sizeof(buf) - 1, f);
+  fclose(f);
+  buf[n] = '\0';
+  ASSERT_TRUE(strstr(buf, "control_center") != NULL);
+  ASSERT_TRUE(strstr(buf, "test.keep.provided") != NULL);
+
+  remove(mpath);
+  FeaturePath = orig_feature_path;
+}
+
 int main(void) {
   RUN(load_reload_unload);
   RUN(reload_defers_unload_until_drain);
+  RUN(baseline_manifest_preserves_declarations);
   return TEST_SUMMARY();
 }

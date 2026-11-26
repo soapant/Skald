@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <stdint.h>
+#include <stdatomic.h>
 #include "helpers/helpers_fs.h"
 #include <stdlib.h>
 #include <dirent.h>
@@ -1535,7 +1536,7 @@ bool sk_set_theme(const char *name) {
   const ThemeEntry *e = theme_find(name);
   if (!e)
     return false;
-  Theme = e->name;
+  atomic_store_explicit(&Theme, e->name, memory_order_release);
   theme_apply();
   config_save();
   UI_RequestPopupRepaint();

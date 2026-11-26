@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 #if defined(__linux__)
 #include <sys/eventfd.h>
 #endif
@@ -30,7 +31,7 @@
 #include "core/types/keys.h"
 
 static HotkeyBinding *hotkeys = NULL;
-static bool hotkeys_suspended = false;
+static atomic_bool hotkeys_suspended = false;
 
 static void hotkey_binding_free_window_list(HotkeyBinding *b) {
   if (!b)
@@ -50,7 +51,13 @@ static void hotkey_destroy_cb(void *element) {
   owner_tag_clear(&b->tag);
 }
 
-void hotkey_set_suspended(bool suspended) { hotkeys_suspended = suspended; }
+void hotkey_set_suspended(bool suspended) {
+  atomic_store_explicit(&hotkeys_suspended, suspended, memory_order_release);
+}
+
+static bool hotkey_is_suspended(void) {
+  return atomic_load_explicit(&hotkeys_suspended, memory_order_acquire);
+}
 
 #define HOTKEY_PENDING_MAX 64
 typedef struct {
@@ -216,14 +223,30 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk,
 
 static void hotkey_tick_holds(void) {
   unsigned long long now = hotkey_now_ms();
+  struct {
+    int slot;
+    int vk;
+    int mods;
+  } due[HOTKEY_HOLD_MAX];
+  int due_count = 0;
+  HOTKEY_Q_LOCK();
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {
     if (!hold_slots[i].active)
       continue;
     if ((long long)(now - hold_slots[i].next_fire_ms) < 0)
       continue;
+    due[due_count].slot = i;
+    due[due_count].vk = hold_slots[i].vk;
+    due[due_count].mods = hold_slots[i].modifiers;
+    due_count++;
+    hold_slots[i].next_fire_ms =
+        now + (unsigned long long)hotkey_repeat_interval_ms();
+  }
+  HOTKEY_Q_UNLOCK();
 
-    int vk = hold_slots[i].vk;
-    int mods = hold_slots[i].modifiers;
+  for (int d = 0; d < due_count; d++) {
+    int vk = due[d].vk;
+    int mods = due[d].mods;
     HotkeyBinding *b = NULL;
     for (int k = 0; k < arrlen(hotkeys); k++) {
       if (hotkeys[k].vk == vk && hotkeys[k].modifiers == mods &&
@@ -232,23 +255,19 @@ static void hotkey_tick_holds(void) {
         break;
       }
     }
-    if (!b) {
-      hold_slots[i].active = false;
+    if (!b || !hotkey_binding_allowed(b, vk, mods)) {
+      HOTKEY_Q_LOCK();
+      hold_slots[due[d].slot].active = false;
+      HOTKEY_Q_UNLOCK();
       continue;
     }
-    if (!hotkey_binding_allowed(b, vk, mods)) {
-      hold_slots[i].active = false;
-      continue;
-    }
-    hold_slots[i].next_fire_ms =
-        now + (unsigned long long)hotkey_repeat_interval_ms();
     hotkey_enqueue(b->hotkey_callback, b->hotkey_callback_ud, b->user_ud,
                    b->tag.owner);
   }
 }
 
 void hotkey_drain_pending(void) {
-  if (hotkeys_suspended)
+  if (hotkey_is_suspended())
     return;
   hotkey_tick_holds();
   for (;;) {
@@ -496,7 +515,7 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk,
 }
 
 bool hotkey_process(int vk, int modifiers) {
-  if (hotkeys_suspended || input_key_is_window_escape(vk) ||
+  if (hotkey_is_suspended() || input_key_is_window_escape(vk) ||
       widget_key_capture_active())
     return false;
   int eff_modifiers = hotkey_strip_self_mod(vk, modifiers);

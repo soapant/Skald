@@ -1,12 +1,13 @@
 #include <string.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 
 #include "config.h"
 #include "platform/platform.h"
 #include "config_values.h"
 
 typedef struct {
-  const char **var;
+  _Atomic(const char *) *var;
   DefaultAppKind kind;
   const char *name;
   bool auto_resolved;
@@ -39,7 +40,9 @@ static void config_resolve_one(AutoApp *app) {
   if (!app || !app->var)
     return;
   app->auto_resolved = false;
-  if ((*app->var) && (*app->var)[0])
+  const char *current =
+      atomic_load_explicit(app->var, memory_order_acquire);
+  if (current && current[0])
     return;
   const char *id = Platform_GetDefaultApp(app->kind);
   if (!id || !id[0])
@@ -56,7 +59,7 @@ static void config_resolve_one(AutoApp *app) {
   }
   if (!copy)
     return;
-  *app->var = copy;
+  atomic_store_explicit(app->var, copy, memory_order_release);
   app->auto_resolved = true;
 }
 
