@@ -15,11 +15,13 @@ TEST(empty_registry_reports_inactive_owner) {
 }
 
 TEST(purge_owner_on_empty_registry_does_not_deadlock) {
-  widget_purge_owner("no-owner-a.so", NULL, widget_current_generation());
-  widget_purge_owner(NULL, "no-owner-b.so", widget_current_generation());
-  widget_purge_owner("no-owner-c.so", "no-owner-d.so",
-                     widget_current_generation());
-  ASSERT_TRUE(true);
+  unsigned gen = widget_current_generation();
+  widget_purge_owner("no-owner-a.so", NULL, gen);
+  widget_purge_owner(NULL, "no-owner-b.so", gen);
+  widget_purge_owner("no-owner-c.so", "no-owner-d.so", gen);
+  ASSERT_EQ_INT((int)widget_current_generation(), (int)gen);
+  ASSERT_FALSE(widget_owner_active("no-owner-a.so"));
+  ASSERT_FALSE(widget_owner_active("no-owner-d.so"));
 }
 
 TEST(generation_protocol_is_monotonic) {
@@ -76,7 +78,8 @@ TEST(create_then_purge_owner_removes_widget) {
   spec.fps = 1;
   spec.render = registry_stub_render;
 
-  Widget *w = widget_create(&spec);
+  Widget *w =
+      widget_create(&spec, (void *)test_create_then_purge_owner_removes_widget);
   ASSERT_TRUE(w != NULL);
   ASSERT_TRUE(widget_valid(w));
   if (owner[0]) {
@@ -97,7 +100,8 @@ TEST(key_capture_is_opt_in_and_queue_starts_empty) {
   spec.fps = 1;
   spec.render = registry_stub_render;
 
-  Widget *w = widget_create(&spec);
+  Widget *w = widget_create(
+      &spec, (void *)test_key_capture_is_opt_in_and_queue_starts_empty);
   ASSERT_TRUE(w != NULL);
   ASSERT_FALSE(w->capture_keys);
   WidgetKey key = {0};
@@ -107,7 +111,8 @@ TEST(key_capture_is_opt_in_and_queue_starts_empty) {
   widget_key_capture_release_pin();
 
   spec.capture_keys = true;
-  Widget *opt_in = widget_create(&spec);
+  Widget *opt_in = widget_create(
+      &spec, (void *)test_key_capture_is_opt_in_and_queue_starts_empty);
   ASSERT_TRUE(opt_in != NULL);
   ASSERT_TRUE(opt_in->capture_keys);
   ASSERT_FALSE(widget_poll_key(opt_in, &key));

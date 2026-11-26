@@ -96,6 +96,31 @@ TEST(parse_accepts_quoted_keys_with_escapes) {
   file_remove_path(PATH);
 }
 
+TEST(parse_accepts_exponent_floats) {
+  reset();
+  seed("Small = 1.25e-1\nBig = 2E3\nInt = 42\n");
+  ASSERT_EQ_INT((int)config_toml_parse(PATH, collecting_visit, NULL),
+                (int)CONFIG_TOML_OK);
+  ASSERT_EQ_INT(entry_count, 3);
+  if (entry_count == 3) {
+    ASSERT_EQ_INT((int)entries[0].type, (int)CONFIG_TOML_FLOAT);
+    ASSERT_EQ_STR(entries[0].raw, "1.25e-1");
+    ASSERT_EQ_INT((int)entries[1].type, (int)CONFIG_TOML_FLOAT);
+    ASSERT_EQ_STR(entries[1].raw, "2E3");
+    ASSERT_EQ_INT((int)entries[2].type, (int)CONFIG_TOML_INT);
+  }
+  file_remove_path(PATH);
+}
+
+TEST(parse_rejects_malformed_numbers) {
+  reset();
+  seed("Bad = 1e\n");
+  ConfigTomlError err;
+  ASSERT_EQ_INT((int)config_toml_parse_ex(PATH, collecting_visit, NULL, &err),
+                (int)CONFIG_TOML_ERR_PARSE);
+  file_remove_path(PATH);
+}
+
 TEST(parse_unterminated_section_reports_line) {
   reset();
   seed("Key = \"x\"\n[broken\n");
@@ -188,6 +213,8 @@ int main(void) {
   RUN(parse_collects_sections_and_value_types);
   RUN(parse_tracks_section_changes_and_ignores_comments);
   RUN(parse_accepts_quoted_keys_with_escapes);
+  RUN(parse_accepts_exponent_floats);
+  RUN(parse_rejects_malformed_numbers);
   RUN(parse_unterminated_section_reports_line);
   RUN(parse_invalid_section_name_reports_line);
   RUN(parse_missing_equals_reports_line);

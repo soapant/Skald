@@ -1,4 +1,5 @@
 #include "core/cap_registry.h"
+#include <stdatomic.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +20,7 @@ typedef struct {
 
 static Cap *caps;
 #define cap_count arrlenu(caps)
-static volatile unsigned cap_gen = 1;
+static _Atomic unsigned cap_gen = 1;
 
 static void *cap_mutex = NULL;
 
@@ -43,7 +44,9 @@ static void cap_destroy(void *element) {
   owner_tag_clear(&c->tag);
 }
 
-unsigned cap_generation(void) { return cap_gen; }
+unsigned cap_generation(void) {
+  return atomic_load_explicit(&cap_gen, memory_order_acquire);
+}
 
 static void cap_add_provides(const char *owner, const char *key) {
   feature_loader_manifest_add_provides(owner, key);
@@ -52,6 +55,7 @@ static void cap_add_provides(const char *owner, const char *key) {
 void cap_register_abi(const char *key, unsigned abi, void *fn) {
   if (!key || !key[0] || !fn)
     return;
+  unsigned gen = atomic_load_explicit(&cap_gen, memory_order_acquire);
   cap_lock();
 
   char *owner = owner_resolve_for_func_alloc(fn);
@@ -69,10 +73,10 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     char *new_key = owner_strdup(key);
     owner_strfree(&caps[i].key);
     caps[i].key = new_key;
-    owner_tag_set(&caps[i].tag, owner, cap_gen);
+    owner_tag_set(&caps[i].tag, owner, gen);
     caps[i].abi = abi;
     caps[i].fn = fn;
-    cap_gen++;
+    atomic_fetch_add_explicit(&cap_gen, 1, memory_order_acq_rel);
     cap_unlock();
     if (owner && owner[0])
       cap_add_provides(owner, key);
@@ -83,10 +87,10 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
   Cap *c = arraddnptr(caps, 1);
   memset(c, 0, sizeof(*c));
   c->key = owner_strdup(key);
-  owner_tag_set_for_func(&c->tag, fn, cap_gen);
+  owner_tag_set_for_func(&c->tag, fn, gen);
   c->abi = abi;
   c->fn = fn;
-  cap_gen++;
+  atomic_fetch_add_explicit(&cap_gen, 1, memory_order_acq_rel);
   log_info("cap '%s' registered abi=%u owner='%s'", key, abi,
            c->tag.owner ? c->tag.owner : "?");
   cap_unlock();
@@ -169,7 +173,7 @@ void cap_purge_owner(const char *path_a, const char *path_b) {
   size_t removed =
       OWNER_PURGE_STRUCT(caps, Cap, path_a, path_b, 0, cap_destroy);
   if (removed > 0) {
-    cap_gen++;
+    atomic_fetch_add_explicit(&cap_gen, 1, memory_order_acq_rel);
   }
   cap_unlock();
 }

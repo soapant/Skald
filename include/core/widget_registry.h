@@ -116,7 +116,7 @@ bool widget_owner_active(const char *path);
 unsigned widget_bump_generation(void);
 unsigned widget_current_generation(void);
 
-Widget *widget_create(const WidgetSpec *spec);
+Widget *widget_create(const WidgetSpec *spec, void *owner_fn);
 void widget_destroy(Widget *widget);
 bool widget_valid(const Widget *widget);
 Pos Widget_GetPos(const char *name);

@@ -11,10 +11,12 @@
 void config_resolve_default_apps(void);
 bool config_is_auto_resolved_app(const char *name);
 bool config_load(void);
+bool config_load_path(const char *path);
 bool config_reload(void);
 void config_own_string(const char *name, char *s);
 void config_unload(void);
-void config_save(void);
+bool config_save(void);
+bool config_save_path(const char *path);
 
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 

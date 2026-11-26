@@ -10,13 +10,29 @@
 #include "helpers/helpers_ui.h"
 #include "platform/platform.h"
 
+static HttpTransport http_transport = {
+    .collect = Platform_HttpCollect,
+    .save_to_file = Platform_HttpSaveToFile,
+    .atomic_rename = Platform_AtomicRename,
+};
+
+void http_set_transport(const HttpTransport *transport) {
+  if (transport) {
+    http_transport = *transport;
+    return;
+  }
+  http_transport.collect = Platform_HttpCollect;
+  http_transport.save_to_file = Platform_HttpSaveToFile;
+  http_transport.atomic_rename = Platform_AtomicRename;
+}
+
 char *http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
   if (!url || !url[0]) {
     if (out_len)
       *out_len = 0;
     return NULL;
   }
-  return Platform_HttpCollect(url, "GET", NULL, NULL, max_bytes, out_len);
+  return http_transport.collect(url, "GET", NULL, NULL, max_bytes, out_len);
 }
 
 char *http_get(const char *url) {
@@ -26,8 +42,8 @@ char *http_get(const char *url) {
 char *http_post(const char *url, const char *content_type, const char *body) {
   if (!url || !url[0])
     return NULL;
-  return Platform_HttpCollect(url, "POST", content_type, body ? body : "",
-                              HTTP_DEFAULT_LIMIT, NULL);
+  return http_transport.collect(url, "POST", content_type, body ? body : "",
+                                HTTP_DEFAULT_LIMIT, NULL);
 }
 
 bool http_download(const char *url, const char *save_path) {
@@ -39,12 +55,12 @@ bool http_download(const char *url, const char *save_path) {
     log_warn("http download path too long for %s.part", save_path);
     return false;
   }
-  if (!Platform_HttpSaveToFile(url, tmp)) {
+  if (!http_transport.save_to_file(url, tmp)) {
     log_warn("http download failed for %s", url);
     remove(tmp);
     return false;
   }
-  if (!Platform_AtomicRename(tmp, save_path)) {
+  if (!http_transport.atomic_rename(tmp, save_path)) {
     log_warn("http download rename failed for %s", save_path);
     remove(tmp);
     return false;

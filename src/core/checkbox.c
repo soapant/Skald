@@ -25,7 +25,11 @@ static CheckboxSpec **checkboxes;
 
 static WidgetMouseState cb_mouse;
 
-void checkbox_frame_begin(void) { cb_mouse.valid = false; }
+void checkbox_frame_begin(void) {
+  cb_mouse.valid = false;
+  for (size_t i = 0; i < checkbox_count; i++)
+    checkboxes[i]->clicked = false;
+}
 
 static void checkbox_focus_activate(void *owner) {
   CheckboxSpec *cb = (CheckboxSpec *)owner;
@@ -274,10 +278,6 @@ bool checkbox_place(const CheckboxSpec *spec) {
   cb->hovered = hovered;
 
   bool clicked = false;
-
-  if (cb->button) {
-    cb->clicked = false;
-  }
 
   if (down && !cb->was_down) {
     if (hovered) {

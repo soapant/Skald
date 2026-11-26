@@ -273,9 +273,14 @@ TEST(image_dims_zeroes_outputs_for_unknown) {
 TEST(image_dims_tolerates_null_outputs) {
   size_t n = 0;
   unsigned char *b = make_png(10, 10, &n);
+  uint32_t w = 0, h = 0;
+  clipboard_image_dims(b, n, &w, &h);
+  ASSERT_EQ_INT(w, 10);
+  ASSERT_EQ_INT(h, 10);
   clipboard_image_dims(b, n, NULL, NULL);
   clipboard_png_dims(b, n, NULL, NULL);
-  ASSERT_TRUE(1);
+  ASSERT_EQ_INT(w, 10);
+  ASSERT_EQ_INT(h, 10);
   free(b);
 }
 

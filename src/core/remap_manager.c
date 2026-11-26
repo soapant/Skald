@@ -193,8 +193,13 @@ void remap_update_phys(int vk, int value) {
   }
 }
 
+static bool (*remap_emit_hook)(int vk, int down) = NULL;
+
+void remap_set_emit_hook(bool (*fn)(int vk, int down)) { remap_emit_hook = fn; }
+
 static void emit_tracked(int vk, int down) {
-  if (!Platform_EmitKey(vk, down)) {
+  bool (*emit)(int, int) = remap_emit_hook ? remap_emit_hook : Platform_EmitKey;
+  if (!emit(vk, down)) {
     log_error("remap: emit failed vk=%d down=%d", vk, down);
     return;
   }
@@ -415,7 +420,9 @@ static void remap_release_binding(RemapBinding *b, bool restore_src) {
 
 static void remap_repeat_binding(RemapBinding *b) {
   if (b->dst_vk) {
-    Platform_EmitKey(b->dst_vk, 1);
+    bool (*emit)(int, int) =
+        remap_emit_hook ? remap_emit_hook : Platform_EmitKey;
+    emit(b->dst_vk, 1);
   }
 }
 

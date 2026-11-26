@@ -536,7 +536,7 @@ static void widget_relayout(void) {
   arrfree(items);
 }
 
-Widget *widget_create(const WidgetSpec *spec) {
+Widget *widget_create(const WidgetSpec *spec, void *owner_fn) {
   if (!spec || !spec->name || !spec->name[0]) {
     log_warn("widget_create: name is required");
     return NULL;
@@ -557,7 +557,7 @@ Widget *widget_create(const WidgetSpec *spec) {
     return NULL;
   }
 
-  owner_tag_set_for_func(&widget->tag, __builtin_return_address(0), widget_gen);
+  owner_tag_set_for_func(&widget->tag, owner_fn, widget_gen);
 
   widget->has_bg = spec->color != 0;
   widget->bg_color = widget->has_bg ? spec->color : 0;

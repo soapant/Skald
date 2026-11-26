@@ -42,6 +42,40 @@ static ConfigTomlStatus toml_fail(ConfigTomlError *err, ConfigTomlStatus status,
   return status;
 }
 
+static bool config_number_shape(const char *raw, size_t raw_len,
+                                bool *out_is_float) {
+  size_t i = 0;
+  if (i < raw_len && (raw[i] == '-' || raw[i] == '+'))
+    i++;
+  size_t int_digits = 0;
+  for (; i < raw_len && isdigit((unsigned char)raw[i]); i++)
+    int_digits++;
+  size_t frac_digits = 0;
+  bool dot = false;
+  if (i < raw_len && raw[i] == '.') {
+    dot = true;
+    i++;
+    for (; i < raw_len && isdigit((unsigned char)raw[i]); i++)
+      frac_digits++;
+  }
+  bool exponent = false;
+  if (i < raw_len && (raw[i] == 'e' || raw[i] == 'E')) {
+    exponent = true;
+    i++;
+    if (i < raw_len && (raw[i] == '-' || raw[i] == '+'))
+      i++;
+    size_t exp_digits = 0;
+    for (; i < raw_len && isdigit((unsigned char)raw[i]); i++)
+      exp_digits++;
+    if (exp_digits == 0)
+      return false;
+  }
+  if (i != raw_len || int_digits + frac_digits == 0)
+    return false;
+  *out_is_float = dot || exponent;
+  return true;
+}
+
 static bool config_classify(const char *raw, size_t raw_len,
                             ConfigTomlValueType *out_type) {
   if (!out_type)
@@ -58,40 +92,11 @@ static bool config_classify(const char *raw, size_t raw_len,
     *out_type = CONFIG_TOML_STRING;
     return true;
   }
-  {
-    size_t i = 0;
-    if (raw[0] == '-' || raw[0] == '+')
-      i++;
-    if (i == raw_len)
-      return false;
-    for (; i < raw_len; i++)
-      if (!isdigit((unsigned char)raw[i]))
-        break;
-    if (i == raw_len && i > 0) {
-      *out_type = CONFIG_TOML_INT;
-      return true;
-    }
-  }
-  {
-    size_t i = 0;
-    if (raw[0] == '-' || raw[0] == '+')
-      i++;
-    bool saw_digit = false, saw_dot = false;
-    for (; i < raw_len; i++) {
-      char c = raw[i];
-      if (isdigit((unsigned char)c))
-        saw_digit = true;
-      else if (c == '.' && !saw_dot)
-        saw_dot = true;
-      else
-        return false;
-    }
-    if (saw_digit && saw_dot) {
-      *out_type = CONFIG_TOML_FLOAT;
-      return true;
-    }
-  }
-  return false;
+  bool is_float = false;
+  if (!config_number_shape(raw, raw_len, &is_float))
+    return false;
+  *out_type = is_float ? CONFIG_TOML_FLOAT : CONFIG_TOML_INT;
+  return true;
 }
 
 ConfigTomlStatus config_toml_parse_ex(const char *path, ConfigTomlVisitFn visit,

@@ -130,11 +130,12 @@ bool theme_color_pinned(const char *name) {
 }
 
 void theme_apply(void) {
-  if (!Theme || !Theme[0])
+  const char *theme_name = atomic_load_explicit(&Theme, memory_order_acquire);
+  if (!theme_name || !theme_name[0])
     return;
-  const ThemeEntry *found = theme_find(Theme);
+  const ThemeEntry *found = theme_find(theme_name);
   if (!found) {
-    log_warn("unknown Theme \"%s\", keeping current colors", Theme);
+    log_warn("unknown Theme \"%s\", keeping current colors", theme_name);
     return;
   }
   theme_pin_scan_file(CONFIG_SRC);

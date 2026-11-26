@@ -6,6 +6,15 @@
 
 #include "platform/platform.h"
 
+typedef struct {
+  char *(*collect)(const char *url, const char *method, const char *content_type,
+                   const char *body, size_t max_bytes, size_t *out_len);
+  bool (*save_to_file)(const char *url, const char *path);
+  bool (*atomic_rename)(const char *old_path, const char *new_path);
+} HttpTransport;
+
+void http_set_transport(const HttpTransport *transport);
+
 char *http_get(const char *url);
 char *http_get_limited(const char *url, size_t max_bytes, size_t *out_len);
 char *http_post(const char *url, const char *content_type, const char *body);

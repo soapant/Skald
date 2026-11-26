@@ -19,7 +19,8 @@ static void (*skald_test_global_teardown)(void);
 
 #define TEST_TEARDOWN(fn) (skald_test_teardown = (fn))
 
-#define TEST_GLOBAL_TEARDOWN(fn) (skald_test_global_teardown = (fn))
+#define TEST_SUITE_TEARDOWN(fn) (skald_test_global_teardown = (fn))
+#define TEST_GLOBAL_TEARDOWN(fn) TEST_SUITE_TEARDOWN(fn)
 
 #define RUN(name)                                                              \
   do {                                                                         \
@@ -28,8 +29,6 @@ static void (*skald_test_global_teardown)(void);
     if (setjmp(skald_test_jmp) == 0) {                                         \
       test_##name();                                                           \
     }                                                                          \
-    if (skald_test_global_teardown)                                            \
-      skald_test_global_teardown();                                            \
     if (skald_test_teardown) {                                                 \
       skald_test_teardown();                                                   \
       skald_test_teardown = NULL;                                              \
@@ -81,7 +80,8 @@ static void (*skald_test_global_teardown)(void);
   } while (0)
 
 #define TEST_SUMMARY()                                                         \
-  (printf("%s: %d passed, %d failed\n", __FILE__, skald_test_passes,           \
+  ((skald_test_global_teardown ? (skald_test_global_teardown(), 0) : 0),       \
+   printf("%s: %d passed, %d failed\n", __FILE__, skald_test_passes,           \
           skald_test_fails),                                                   \
    skald_test_fails)
 

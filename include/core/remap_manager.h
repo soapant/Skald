@@ -17,6 +17,7 @@ void remap_update_phys(int vk, int value);
 bool remap_should_swallow_linux_key(int linux_code, int value);
 bool remap_should_swallow_vk(int vk, int value);
 bool remap_has_bindings(void);
+void remap_set_emit_hook(bool (*fn)(int vk, int down));
 void remap_reset(void);
 int remap_current_mods(void);
 bool remap_is_virt_held(int vk);

@@ -244,7 +244,7 @@ static bool config_file_unchanged(void) {
   return mtime == config_cached_mtime && size == config_cached_size;
 }
 
-static bool config_load_path(const char *path) {
+bool config_load_path(const char *path) {
   ConfigStaging st;
   memset(&st, 0, sizeof(st));
   ConfigTomlError err;
@@ -327,16 +327,30 @@ void config_own_string(const char *name, char *s) {
 }
 
 void config_unload(void) {
-  for (int i = 0; i < CONFIG_ENTRY_COUNT; i++) {
-    free(config_owned[i]);
-    config_owned[i] = NULL;
-  }
+  char *retired_strings[CONFIG_ENTRY_COUNT];
+  size_t retired_count = 0;
+  int idx = 0;
+#define CONFIG_RESET_ONE(type, name, def)                                      \
+  if (config_owned[idx])                                                       \
+    retired_strings[retired_count++] = config_owned[idx];                      \
+  config_owned[idx] = NULL;                                                    \
+  atomic_store_explicit((_Atomic(type) *)&name, (type)(def),                   \
+                        memory_order_release);                                 \
+  idx++;
+  CONFIG_VALUES(CONFIG_RESET_ONE)
+#undef CONFIG_RESET_ONE
+  if (retired_count == 0)
+    return;
+  render_thread_sync();
+  for (size_t i = 0; i < retired_count; i++)
+    free(retired_strings[i]);
 }
 
 typedef struct {
   char *data;
   size_t len;
   size_t cap;
+  bool failed;
 } ConfigBuf;
 
 static void config_buf_free(ConfigBuf *b) {
@@ -344,6 +358,7 @@ static void config_buf_free(ConfigBuf *b) {
   b->data = NULL;
   b->len = 0;
   b->cap = 0;
+  b->failed = false;
 }
 
 static void config_buf_put(ConfigBuf *b, const char *fmt, ...) {
@@ -355,6 +370,7 @@ static void config_buf_put(ConfigBuf *b, const char *fmt, ...) {
   va_end(ap);
   if (n < 0) {
     va_end(aq);
+    b->failed = true;
     return;
   }
   size_t need = b->len + (size_t)n + 1;
@@ -365,6 +381,7 @@ static void config_buf_put(ConfigBuf *b, const char *fmt, ...) {
     char *grown = (char *)realloc(b->data, cap);
     if (!grown) {
       va_end(aq);
+      b->failed = true;
       return;
     }
     b->data = grown;
@@ -385,11 +402,15 @@ static void config_emit_int_line(ConfigBuf *b, const char *name, int v) {
 
 static void config_emit_float_line(ConfigBuf *b, const char *name, float v) {
   char tmp[64];
-  snprintf(tmp, sizeof(tmp), "%.6g", (double)v);
+  int n = snprintf(tmp, sizeof(tmp), "%.9g", (double)v);
+  if (n < 0 || (size_t)n >= sizeof(tmp)) {
+    b->failed = true;
+    return;
+  }
   if (!strchr(tmp, '.') && !strchr(tmp, 'e') && !strchr(tmp, 'E') &&
       !strchr(tmp, 'n') && !strchr(tmp, 'N')) {
-    size_t n = strlen(tmp);
-    snprintf(tmp + n, sizeof(tmp) - n, ".0");
+    size_t len = strlen(tmp);
+    snprintf(tmp + len, sizeof(tmp) - len, ".0");
   }
   config_buf_put(b, "  %s = %s\n", name, tmp);
 }
@@ -400,8 +421,11 @@ static void config_emit_str_line(ConfigBuf *b, const char *name,
   if (config_is_auto_resolved_app(name))
     out = "";
   char enc[1024];
-  if (!config_toml_encode_string(out, enc, sizeof(enc)))
+  if (!config_toml_encode_string(out, enc, sizeof(enc))) {
+    log_error("config: cannot encode '%s', save aborted", name);
+    b->failed = true;
     return;
+  }
   config_buf_put(b, "  %s = %s\n", name, enc);
 }
 
@@ -462,17 +486,22 @@ static ConfigBuf config_emit_region(void) {
   return b;
 }
 
-void config_save(void) {
+bool config_save_path(const char *path) {
+  bool saved = false;
+  if (!path || !path[0]) {
+    log_error("config save: empty path");
+    return false;
+  }
   ConfigBuf region = config_emit_region();
-  if (!region.data) {
+  if (!region.data || region.failed) {
     log_error("config emit failed");
-    return;
+    goto out;
   }
   size_t n = region.len;
   const char *region_data = region.data;
-  FILE *f = fopen(CONFIG_SRC, "rb");
+  FILE *f = fopen(path, "rb");
   if (!f) {
-    log_error("config open %s failed", CONFIG_SRC);
+    log_error("config open %s failed", path);
     goto out;
   }
   fseek(f, 0, SEEK_END);
@@ -515,7 +544,7 @@ void config_save(void) {
   size_t tail_off = (size_t)(after_end - orig);
   size_t tail = got - tail_off;
   char tmp[512];
-  snprintf(tmp, sizeof(tmp), "%s.tmp.%d", CONFIG_SRC, (int)getpid());
+  snprintf(tmp, sizeof(tmp), "%s.tmp.%d", path, (int)getpid());
   FILE *out = fopen(tmp, "wb");
   if (!out) {
     free(orig);
@@ -535,12 +564,16 @@ void config_save(void) {
     log_error("config write failed");
     goto out;
   }
-  if (!Platform_AtomicRename(tmp, CONFIG_SRC)) {
+  if (!Platform_AtomicRename(tmp, path)) {
     remove(tmp);
     log_error("config rename failed");
     goto out;
   }
   log_info("config saved");
+  saved = true;
 out:
   config_buf_free(&region);
+  return saved;
 }
+
+bool config_save(void) { return config_save_path(CONFIG_SRC); }

@@ -1500,7 +1500,7 @@ bool sk_close_windows_by_id(const char *needle) {
 
 bool sk_reload_config(void) { return config_reload(); }
 
-void sk_save_config(void) { config_save(); }
+bool sk_save_config(void) { return config_save(); }
 
 void sk_refresh_ui(void) {
   Platform_ResetUIScale();
@@ -1514,12 +1514,16 @@ void sk_request_refresh(void) {
   UI_RequestPopupRepaint();
 }
 
-void sk_commit_config(void) {
-  sk_save_config();
+bool sk_commit_config(void) {
+  bool ok = sk_save_config();
   sk_refresh_ui();
+  return ok;
 }
 
-const char *sk_get_theme(void) { return (Theme && Theme[0]) ? Theme : NULL; }
+const char *sk_get_theme(void) {
+  const char *theme = atomic_load_explicit(&Theme, memory_order_acquire);
+  return (theme && theme[0]) ? theme : NULL;
+}
 
 int sk_theme_count(void) { return (int)theme_count(); }
 
@@ -1538,7 +1542,8 @@ bool sk_set_theme(const char *name) {
     return false;
   atomic_store_explicit(&Theme, e->name, memory_order_release);
   theme_apply();
-  config_save();
+  if (!config_save())
+    log_warn("could not save theme selection");
   UI_RequestPopupRepaint();
   return true;
 }
@@ -3288,7 +3293,7 @@ SkWidget *sk_widget_create(const SkWidgetSpec *spec) {
       log_warn("sk_widget: monitor '%s' not found, using primary",
                copy.monitor_name);
   }
-  return widget_create(&copy);
+  return widget_create(&copy, __builtin_return_address(0));
 }
 
 bool sk_widget_valid(SkWidget *widget) { return widget_valid(widget); }
