@@ -831,22 +831,7 @@ static bool instance_running(void) {
   return running;
 }
 
-static void stop_running_instance(void) {
-  if (!instance_running())
-    return;
-
-  Nob_Cmd cmd = {0};
-  nob_cmd_append(&cmd, "sh", "-c",
-                 "systemctl --user stop skald.service 2>/dev/null; "
-                 "pkill -f 'build/[s]kald' 2>/dev/null; "
-                 "exit 0");
-  if (nob_cmd_run(&cmd)) {
-    nob_log(NOB_INFO, "Stopped previously running skald instance");
-  }
-}
-
 static bool run_output(const char *output) {
-  stop_running_instance();
   Nob_Cmd cmd = {0};
 #if defined(_WIN32)
   if (sanitize) {
@@ -2189,8 +2174,6 @@ int main(int argc, char **argv) {
     nob_cmd_run(&chmod);
 #endif
     release_finalize();
-    if (!release)
-      stop_running_instance();
     if (do_run && !run_output(output))
       return 1;
     nob_log(NOB_INFO, "Built Successfully");
