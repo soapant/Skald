@@ -1231,6 +1231,30 @@ static char *find_field_decl(const char *body, const char *end,
   return NULL;
 }
 
+static int count_field_bytes(const char *found, const char *body_start) {
+  char rev[128] = {0};
+  size_t n = 0;
+  const char *p = found;
+  while (p > body_start && n + 1 < sizeof(rev)) {
+    --p;
+    if (*p == ';' || *p == '{' || *p == '}') {
+      p++;
+      break;
+    }
+    rev[n++] = *p;
+  }
+  char text[128];
+  for (size_t i = 0; i < n; i++)
+    text[i] = rev[n - 1 - i];
+  text[n] = '\0';
+  if (strstr(text, "size_t") || strstr(text, "uint64") ||
+      strstr(text, "unsigned long") || strstr(text, "long long"))
+    return 8;
+  if (strstr(text, "short"))
+    return 2;
+  return 4;
+}
+
 static const char *struct_name_for_type(const char *t) {
   char base[256] = {0};
   snprintf(base, sizeof(base), "%.255s", t);
@@ -1520,15 +1544,17 @@ static int gen_struct_header(void) {
                     strstr(decl, "char **") != NULL ||
                     strstr(decl, "char**") != NULL;
                 if (is_str_list) {
-                  const char *cands[3] = {NULL, NULL, NULL};
+                  const char *cands[4] = {NULL, NULL, NULL, NULL};
                   char c0[NAME_SZ + 8], c1[NAME_SZ + 8];
                   snprintf(c0, sizeof(c0), "%.120s_count", field);
                   snprintf(c1, sizeof(c1), "%.120s_size", field);
                   cands[0] = c0;
                   cands[1] = c1;
-                  if (strcmp(field, "items") == 0)
-                    cands[2] = "count";
-                  for (int ci = 0; ci < 3 && kind == LSF_SKIP; ci++) {
+                  if (strcmp(field, "items") == 0) {
+                    cands[2] = "item_count";
+                    cands[3] = "count";
+                  }
+                  for (int ci = 0; ci < 4 && kind == LSF_SKIP; ci++) {
                     if (!cands[ci])
                       continue;
                     char *found = find_field_decl(body_start, close,
@@ -1537,6 +1563,7 @@ static int gen_struct_header(void) {
                       kind = LSF_STR_LIST;
                       snprintf(aux, sizeof(aux), "offsetof(%.60s, %.60s)",
                                name, cands[ci]);
+                      cb_kind = count_field_bytes(found, body_start);
                     }
                   }
                 }
@@ -1549,6 +1576,7 @@ static int gen_struct_header(void) {
                     kind = LSF_BUFFER;
                     snprintf(aux, sizeof(aux), "offsetof(%.60s, %.60s)", name,
                              size_name);
+                    cb_kind = count_field_bytes(sz, body_start);
                   }
                 }
               }

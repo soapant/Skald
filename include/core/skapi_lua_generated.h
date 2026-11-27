@@ -79,7 +79,7 @@ static const LuaFieldDesc lf_WidgetMouseState[] = {
 static const LuaStructDesc lsd_WidgetMouseState = {"WidgetMouseState", sizeof(WidgetMouseState), lf_WidgetMouseState, (int)(sizeof(lf_WidgetMouseState)/sizeof(lf_WidgetMouseState[0]))};
 #include "helpers/helpers_text.h"
 static const LuaFieldDesc lf_StringList[] = {
-    {"items", LSF_STR_LIST, offsetof(StringList, items), offsetof(StringList, count), 0, NULL},
+    {"items", LSF_STR_LIST, offsetof(StringList, items), offsetof(StringList, count), 8, NULL},
     {"count", LSF_INT, offsetof(StringList, count), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_StringList = {"StringList", sizeof(StringList), lf_StringList, (int)(sizeof(lf_StringList)/sizeof(lf_StringList[0]))};
@@ -193,7 +193,7 @@ static const LuaStructDesc lsd_SettingsEntrySpec = {"SettingsEntrySpec", sizeof(
 static const LuaFieldDesc lf_SettingsEditboxField[] = {
     {"name", LSF_STR, offsetof(SettingsEditboxField, name), 0, 0, NULL},
     {"label", LSF_STR, offsetof(SettingsEditboxField, label), 0, 0, NULL},
-    {"buffer", LSF_BUFFER, offsetof(SettingsEditboxField, buffer), offsetof(SettingsEditboxField, buffer_size), 0, NULL},
+    {"buffer", LSF_BUFFER, offsetof(SettingsEditboxField, buffer), offsetof(SettingsEditboxField, buffer_size), 8, NULL},
     {"buffer_size", LSF_INT, offsetof(SettingsEditboxField, buffer_size), 0, 0, NULL},
     {"width", LSF_INT, offsetof(SettingsEditboxField, width), 0, 0, NULL},
     {"config_key", LSF_STR, offsetof(SettingsEditboxField, config_key), 0, 0, NULL},
@@ -322,7 +322,7 @@ static const LuaStructDesc lsd_SkDirScanSpec = {"SkDirScanSpec", sizeof(SkDirSca
 static const LuaFieldDesc lf_SkPopulateListboxSpec[] = {
     {"lb", LSF_PTR, offsetof(SkPopulateListboxSpec, lb), 0, 0, NULL},
     {"filter", LSF_STR, offsetof(SkPopulateListboxSpec, filter), 0, 0, NULL},
-    {"items", LSF_STR_LIST, offsetof(SkPopulateListboxSpec, items), offsetof(SkPopulateListboxSpec, count), 0, NULL},
+    {"items", LSF_STR_LIST, offsetof(SkPopulateListboxSpec, items), offsetof(SkPopulateListboxSpec, count), 4, NULL},
     {"count", LSF_INT, offsetof(SkPopulateListboxSpec, count), 0, 0, NULL},
     {"filter_match", LSF_CB, offsetof(SkPopulateListboxSpec, filter_match), 0, 3, NULL},
 };
@@ -747,7 +747,7 @@ static const LuaStructDesc lsd_EditboxWrapCache = {"EditboxWrapCache", sizeof(Ed
 #include "core/types/prompt.h"
 static const LuaFieldDesc lf_PromptEditbox[] = {
     {"name", LSF_STR_INLINE, offsetof(PromptEditbox, name), 128, 0, NULL},
-    {"buffer", LSF_BUFFER, offsetof(PromptEditbox, buffer), offsetof(PromptEditbox, buffer_size), 0, NULL},
+    {"buffer", LSF_BUFFER, offsetof(PromptEditbox, buffer), offsetof(PromptEditbox, buffer_size), 8, NULL},
     {"buffer_size", LSF_INT, offsetof(PromptEditbox, buffer_size), 0, 0, NULL},
     {"x", LSF_INT, offsetof(PromptEditbox, x), 0, 0, NULL},
     {"y", LSF_INT, offsetof(PromptEditbox, y), 0, 0, NULL},
@@ -763,7 +763,7 @@ static const LuaFieldDesc lf_PromptEditbox[] = {
 static const LuaStructDesc lsd_PromptEditbox = {"PromptEditbox", sizeof(PromptEditbox), lf_PromptEditbox, (int)(sizeof(lf_PromptEditbox)/sizeof(lf_PromptEditbox[0]))};
 #include "core/types/prompt.h"
 static const LuaFieldDesc lf_ListBox[] = {
-    {"items", LSF_STR, offsetof(ListBox, items), 0, 0, NULL},
+    {"items", LSF_STR_LIST, offsetof(ListBox, items), offsetof(ListBox, item_count), 4, NULL},
     {"items_cap", LSF_INT, offsetof(ListBox, items_cap), 0, 0, NULL},
     {"item_count", LSF_INT, offsetof(ListBox, item_count), 0, 0, NULL},
     {"matching_indices", LSF_PTR, offsetof(ListBox, matching_indices), 0, 0, NULL},
@@ -881,7 +881,7 @@ static const LuaStructDesc lsd_PopupKeyEvent = {"PopupKeyEvent", sizeof(PopupKey
 #include "core/types/skapi_types.h"
 static const LuaFieldDesc lf_SkEditSpec[] = {
     {"name", LSF_STR, offsetof(SkEditSpec, name), 0, 0, NULL},
-    {"buffer", LSF_BUFFER, offsetof(SkEditSpec, buffer), offsetof(SkEditSpec, buffer_size), 0, NULL},
+    {"buffer", LSF_BUFFER, offsetof(SkEditSpec, buffer), offsetof(SkEditSpec, buffer_size), 8, NULL},
     {"buffer_size", LSF_INT, offsetof(SkEditSpec, buffer_size), 0, 0, NULL},
     {"x", LSF_INT, offsetof(SkEditSpec, x), 0, 0, NULL},
     {"y", LSF_INT, offsetof(SkEditSpec, y), 0, 0, NULL},
@@ -994,7 +994,7 @@ static const LuaStructDesc lsd_Timer = {"Timer", sizeof(Timer), lf_Timer, (int)(
 #include "core/types/window.h"
 static const LuaFieldDesc lf_ListSpec[] = {
     {"lb", LSF_STRUCT_PTR, offsetof(ListSpec, lb), 0, 0, "ListBox"},
-    {"items", LSF_STR_LIST, offsetof(ListSpec, items), offsetof(ListSpec, count), 0, NULL},
+    {"items", LSF_STR_LIST, offsetof(ListSpec, items), offsetof(ListSpec, count), 4, NULL},
     {"count", LSF_INT, offsetof(ListSpec, count), 0, 0, NULL},
     {"x", LSF_INT, offsetof(ListSpec, x), 0, 0, NULL},
     {"y", LSF_INT, offsetof(ListSpec, y), 0, 0, NULL},

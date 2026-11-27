@@ -1,4 +1,5 @@
 #include "helpers/helpers_ui.h"
+#include <pthread.h>
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
@@ -45,6 +46,26 @@ static Display *prompt_attrs_dpy = NULL;
 static Window prompt_attrs_win = None;
 static XWindowAttributes prompt_attrs;
 
+static pthread_mutex_t g_prompt_render_lock;
+static pthread_once_t g_prompt_render_once = PTHREAD_ONCE_INIT;
+
+static void x11_prompt_render_lock_init(void) {
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&g_prompt_render_lock, &attr);
+  pthread_mutexattr_destroy(&attr);
+}
+
+static void x11_prompt_render_lock(void) {
+  pthread_once(&g_prompt_render_once, x11_prompt_render_lock_init);
+  pthread_mutex_lock(&g_prompt_render_lock);
+}
+
+static void x11_prompt_render_unlock(void) {
+  pthread_mutex_unlock(&g_prompt_render_lock);
+}
+
 static void x11_pbuf_drop(void) {
 
   if (pbuf_xd) {
@@ -67,10 +88,12 @@ static void x11_pbuf_drop(void) {
 }
 
 void x11_release_prompt_buffer(Display *dpy, Window win) {
+  x11_prompt_render_lock();
   if (pbuf_dpy == dpy && pbuf_win == win)
     x11_pbuf_drop();
   if (prompt_attrs_dpy == dpy && prompt_attrs_win == win)
     prompt_attrs_valid = false;
+  x11_prompt_render_unlock();
 }
 
 static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
@@ -213,8 +236,9 @@ static bool prompt_render_fallback(Display *dpy, Window *win,
   return true;
 }
 
-bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state,
-                            bool suppress_content) {
+static bool x11_render_prompt_user_locked(Display *dpy, Window *win,
+                                          PromptState *state,
+                                          bool suppress_content) {
   if (!state || !win || *win == None || !dpy) {
     return false;
   }
@@ -272,4 +296,12 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state,
   XFreeGC(dpy, gc);
   XFlush(dpy);
   return true;
+}
+
+bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state,
+                            bool suppress_content) {
+  x11_prompt_render_lock();
+  bool ok = x11_render_prompt_user_locked(dpy, win, state, suppress_content);
+  x11_prompt_render_unlock();
+  return ok;
 }

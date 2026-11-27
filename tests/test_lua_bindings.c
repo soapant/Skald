@@ -51,6 +51,9 @@ TEST(lua_bindings_generated_structs) {
   ASSERT_TRUE(contains(hdr, "{\"h\", LSF_INT, offsetof(DrawRect, h)"));
   ASSERT_TRUE(contains(hdr, "LSF_STR_ARRAY"));
   ASSERT_TRUE(contains(hdr, "offsetof(SkHotkeySpec, whitelist)"));
+  ASSERT_TRUE(contains(hdr,
+                       "{\"items\", LSF_STR_LIST, offsetof(ListBox, items), "
+                       "offsetof(ListBox, item_count), 4, NULL}"));
   ASSERT_TRUE(contains(hdr, "lua_alias_from[]"));
   ASSERT_TRUE(contains(hdr, "\"SkRect\""));
   ASSERT_TRUE(contains(hdr, "\"DrawRect\""));

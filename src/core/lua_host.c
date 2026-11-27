@@ -1,6 +1,7 @@
 #include "core/lua_host.h"
 
 #include <ctype.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -153,8 +154,15 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
       lua_pushlightuserdata(f->L, arg);
   }
   if (lua_pcall(f->L, nargs, want_bool ? 1 : 0, 0) != 0) {
-    log_error("lua callback error: %s", lua_tostring(f->L, -1));
-    lua_pop(f->L, 1);
+    const char *msg = lua_tostring(f->L, -1);
+    if (!msg)
+      msg = luaL_typename(f->L, -1);
+    log_error("lua callback error: %s", msg);
+    luaL_traceback(f->L, f->L, msg, 1);
+    const char *tb = lua_tostring(f->L, -1);
+    if (tb)
+      log_error("lua callback traceback:\n%s", tb);
+    lua_pop(f->L, 2);
     if (want_bool && out_bool)
       *out_bool = false;
   } else if (want_bool && out_bool) {
@@ -335,6 +343,33 @@ static void *lua_raw_ptr(lua_State *L, int idx) {
   return NULL;
 }
 
+static size_t aux_count_get(const void *base, const LuaFieldDesc *fd) {
+  const char *p = (const char *)base + fd->aux;
+  int bytes = fd->cb_kind ? fd->cb_kind : (int)sizeof(size_t);
+  if (bytes == 4) {
+    int n = *(const int *)p;
+    return n > 0 ? (size_t)n : 0;
+  }
+  if (bytes == 2)
+    return *(const unsigned short *)p;
+  if (bytes == 1)
+    return *(const unsigned char *)p;
+  return *(const size_t *)p;
+}
+
+static void aux_count_set(void *base, const LuaFieldDesc *fd, size_t n) {
+  char *p = (char *)base + fd->aux;
+  int bytes = fd->cb_kind ? fd->cb_kind : (int)sizeof(size_t);
+  if (bytes == 4)
+    *(int *)p = n > INT_MAX ? INT_MAX : (int)n;
+  else if (bytes == 2)
+    *(unsigned short *)p = n > USHRT_MAX ? USHRT_MAX : (unsigned short)n;
+  else if (bytes == 1)
+    *(unsigned char *)p = n > UCHAR_MAX ? UCHAR_MAX : (unsigned char)n;
+  else
+    *(size_t *)p = n;
+}
+
 static void fill_struct_depth(lua_State *L, const char *sname, int idx,
                               void *base, LuaFeature *f, int depth) {
   if (depth > 4)
@@ -401,7 +436,7 @@ static void fill_struct_depth(lua_State *L, const char *sname, int idx,
     }
     case LSF_STR_LIST: {
       size_t n = lua_istable(L, -1) ? (size_t)lua_rawlen(L, -1) : 0;
-      char **arr = (char **)calloc(n > 0 ? n : 1, sizeof(char *));
+      char **arr = (char **)calloc(n + 1, sizeof(char *));
       if (!arr)
         break;
       for (size_t ai = 0; ai < n; ai++) {
@@ -419,7 +454,7 @@ static void fill_struct_depth(lua_State *L, const char *sname, int idx,
       }
       track_alloc(f, arr);
       *(char ***)dst = arr;
-      *(size_t *)((char *)base + fd->aux) = n;
+      aux_count_set(base, fd, n);
       break;
     }
     case LSF_BUFFER: {
@@ -432,7 +467,7 @@ static void fill_struct_depth(lua_State *L, const char *sname, int idx,
         memcpy(buf, s, len);
       track_alloc(f, buf);
       *(char **)dst = buf;
-      *(size_t *)((char *)base + fd->aux) = len;
+      aux_count_set(base, fd, len);
       break;
     }
     case LSF_STRUCT_PTR: {
@@ -666,6 +701,9 @@ static int l_struct_call(lua_State *L) {
   void *sym = Platform_GetMainSymbol(fn);
   if (!sym)
     luaL_error(L, "unknown skapi function '%s'", fn);
+  const LuaStructDesc *sd = slua_struct_find(sname);
+  if (!sd || sd->size > 2048)
+    luaL_error(L, "struct '%s' does not fit lua call storage", sname);
   char storage[2048] = {0};
   LuaFeature *f = lua_feature(L);
   const char *saved = slua_current_owner();
@@ -870,7 +908,7 @@ static void push_struct_depth(lua_State *ls, const char *name,
       break;
     }
     case LSF_STR_LIST: {
-      size_t n = *(const size_t *)((const char *)base + fd->aux);
+      size_t n = aux_count_get(base, fd);
       lua_newtable(ls);
       char *const *arr = *(char *const *const *)p;
       for (size_t ai = 0; arr && ai < n; ai++) {
@@ -881,7 +919,7 @@ static void push_struct_depth(lua_State *ls, const char *name,
       break;
     }
     case LSF_BUFFER: {
-      size_t n = *(const size_t *)((const char *)base + fd->aux);
+      size_t n = aux_count_get(base, fd);
       lua_pushlstring(ls, *(const char *const *)p ? *(const char *const *)p : "",
                       n);
       break;
@@ -949,6 +987,7 @@ static void feature_shutdown(LuaFeature *f) {
     if (cb_owners[i] == f) {
       cb_refs[i] = LUA_NOREF;
       cb_owners[i] = NULL;
+      cb_in_use[i] = false;
     }
   }
   for (int i = 0; i < cb_cache_count;) {
