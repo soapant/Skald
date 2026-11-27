@@ -60,6 +60,7 @@ static int norm_vk(int vk) {
     return vk - 'a' + 'A';
   return vk;
 }
+
 void input_state_update(int vk, bool down, int mods, int char_hint) {
   int nv = norm_vk(vk);
   if (nv < 0 || nv >= 256)
@@ -149,6 +150,7 @@ void input_state_clear(void) {
 }
 
 void input_state_clear_queue(void) { char_head = char_tail = 0; }
+
 int input_get_pressed_key(void) {
   for (int i = 0; i < 256; i++) {
     if (pressed[i]) {
@@ -162,6 +164,7 @@ int input_get_pressed_key(void) {
   }
   return 0;
 }
+
 char input_get_pressed_char(void) {
   if (char_head != char_tail) {
     char c = char_queue[char_head];
@@ -217,7 +220,9 @@ static KeyEvent gkeys[GLOBAL_KEY_RING];
 static int gkey_head = 0, gkey_tail = 0;
 static unsigned long gkey_dropped = 0;
 static void *gkey_mutex = NULL;
+
 static void gkey_lock_init(void) { lazy_mutex_get(&gkey_mutex); }
+
 #define GKEY_LOCK()                                                            \
   do {                                                                         \
     gkey_lock_init();                                                          \
@@ -299,7 +304,9 @@ static int gmouse_head = 0, gmouse_tail = 0;
 static unsigned long gmouse_dropped = 0;
 static bool mbtn_down[MOUSE_BTN_MAX] = {0};
 static void *gmouse_mutex = NULL;
+
 static void gmouse_lock_init(void) { lazy_mutex_get(&gmouse_mutex); }
+
 #define GMOUSE_LOCK()                                                          \
   do {                                                                         \
     gmouse_lock_init();                                                        \
@@ -391,7 +398,9 @@ static ScrollEvent gscrolls[GLOBAL_SCROLL_RING];
 static int gscroll_head = 0, gscroll_tail = 0;
 static unsigned long gscroll_dropped = 0;
 static void *gscroll_mutex = NULL;
+
 static void gscroll_lock_init(void) { lazy_mutex_get(&gscroll_mutex); }
+
 #define GSCROLL_LOCK()                                                         \
   do {                                                                         \
     gscroll_lock_init();                                                       \

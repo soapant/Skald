@@ -117,6 +117,7 @@ static bool bg_src_dims(const char *path, int *out_w, int *out_h) {
 static int bg_slot_empty(const void *s) {
   return ((const BgTileSlot *)s)->pm == 0;
 }
+
 static unsigned long bg_slot_stamp(const void *s) {
   return ((const BgTileSlot *)s)->stamp;
 }

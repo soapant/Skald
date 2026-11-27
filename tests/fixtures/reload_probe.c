@@ -4,6 +4,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+
 static void *host_sym(const char *name) {
   HMODULE h = GetModuleHandleA(NULL);
   if (!h)
@@ -12,6 +13,7 @@ static void *host_sym(const char *name) {
 }
 #else
 #include <dlfcn.h>
+
 static void *host_sym(const char *name) { return dlsym(RTLD_DEFAULT, name); }
 #endif
 

@@ -129,6 +129,7 @@ TEST(listbox_scroll_top_keeps_rows_above_selection) {
   ASSERT_EQ_INT(listbox_scroll_top_for(2, 10, 100), 0);
   ASSERT_EQ_INT(listbox_scroll_top_for(95, 10, 100), 90);
 }
+
 TEST(populate_repairs_selected_text_after_row_rebuild) {
   static ListBox lb;
   listbox_info_init(&lb);

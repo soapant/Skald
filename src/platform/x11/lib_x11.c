@@ -38,20 +38,24 @@ LibHandle Platform_LoadLibrary(const char *path) {
     return NULL;
   return dlopen(path, RTLD_NOW);
 }
+
 void *Platform_GetSymbol(LibHandle lib, const char *name) {
   if (!lib || !name)
     return NULL;
   return dlsym(lib, name);
 }
+
 void *Platform_GetMainSymbol(const char *name) {
   if (!name)
     return NULL;
   return dlsym(RTLD_DEFAULT, name);
 }
+
 void Platform_UnloadLibrary(LibHandle lib) {
   if (lib)
     dlclose(lib);
 }
+
 const char *Platform_LibExtension(void) {
 
 #ifdef __APPLE__
@@ -60,4 +64,5 @@ const char *Platform_LibExtension(void) {
   return ".so";
 #endif
 }
+
 const char *Platform_GetLoadError(void) { return dlerror(); }

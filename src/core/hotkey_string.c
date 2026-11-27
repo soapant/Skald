@@ -30,6 +30,7 @@ static int hotkey_mouse_token_to_button(const char *token) {
       {"MouseForward", MOUSE_BTN_FORWARD},
       {"MouseTask", MOUSE_BTN_TASK},
   };
+
   for (size_t i = 0; i < sizeof(named) / sizeof(named[0]); i++) {
     if (strcasecmp(token, named[i].name) == 0)
       return named[i].btn;
@@ -97,6 +98,7 @@ static int hotkey_named_key_to_vk(const char *token) {
       {"Minus", VK_OEM_MINUS},
       {"Plus", VK_OEM_PLUS},
   };
+
   for (size_t i = 0; i < sizeof(named) / sizeof(named[0]); i++) {
     if (strcasecmp(token, named[i].name) == 0)
       return named[i].vk;

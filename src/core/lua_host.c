@@ -108,6 +108,7 @@ static void untrack_refs(LuaFeature *f) {
 }
 
 enum { CB_V, CB_P1, CB_BP1, CB_B };
+
 #define CB_V_COUNT 128
 #define CB_P1_COUNT 32
 #define CB_BP1_COUNT 32
@@ -116,30 +117,31 @@ enum { CB_V, CB_P1, CB_BP1, CB_B };
 
 #define CB_V_SLOTS                                                             \
   X(0)                                                                         \
-  X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13) X(14)   \
-      X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25) X(26)  \
-          X(27) X(28) X(29) X(30) X(31) X(32) X(33) X(34) X(35) X(36) X(37)    \
-              X(38) X(39) X(40) X(41) X(42) X(43) X(44) X(45) X(46) X(47)      \
-                  X(48) X(49) X(50) X(51) X(52) X(53) X(54) X(55) X(56) X(57)  \
-                      X(58) X(59) X(60) X(61) X(62) X(63) X(64) X(65) X(66)    \
-                          X(67) X(68) X(69) X(70) X(71) X(72) X(73) X(74)      \
-                              X(75) X(76) X(77) X(78) X(79) X(80) X(81) X(82)  \
-                                  X(83) X(84) X(85) X(86) X(87) X(88) X(89)    \
-                                      X(90) X(91) X(92) X(93) X(94) X(95) X(   \
-                                          96) X(97) X(98) X(99) X(100) X(101)  \
-                                          X(102) X(103) X(104) X(105) X(106)   \
-                                              X(107) X(108) X(109) X(110) X(   \
-                                                  111) X(112) X(113) X(114)    \
-                                                  X(115) X(116) X(117) X(118)  \
-                                                      X(119) X(120) X(121)     \
-                                                          X(122) X(123) X(124) \
-                                                              X(125) X(126)    \
-                                                                  X(127)
+  X(1)                                                                         \
+  X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13) X(14) X(15)  \
+      X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25) X(26) X(27)  \
+          X(28) X(29) X(30) X(31) X(32) X(33) X(34) X(35) X(36) X(37) X(38)    \
+              X(39) X(40) X(41) X(42) X(43) X(44) X(45) X(46) X(47) X(48)      \
+                  X(49) X(50) X(51) X(52) X(53) X(54) X(55) X(56) X(57) X(58)  \
+                      X(59) X(60) X(61) X(62) X(63) X(64) X(65) X(66) X(67)    \
+                          X(68) X(69) X(70) X(71) X(72) X(73) X(74) X(75)      \
+                              X(76) X(77) X(78) X(79) X(80) X(81) X(82) X(83)  \
+                                  X(84) X(85) X(86) X(87) X(88) X(89) X(90)    \
+                                      X(91) X(92) X(93) X(94) X(95) X(96) X(   \
+                                          97) X(98) X(99) X(100) X(101) X(102) \
+                                          X(103) X(104) X(105) X(106) X(107)   \
+                                              X(108) X(109) X(110) X(111) X(   \
+                                                  112) X(113) X(114) X(115)    \
+                                                  X(116) X(117) X(118) X(119)  \
+                                                      X(120) X(121) X(122)     \
+                                                          X(123) X(124) X(125) \
+                                                              X(126) X(127)
 #define CB_P1_SLOTS                                                            \
   X(0)                                                                         \
-  X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13) X(14)   \
-      X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25) X(26)  \
-          X(27) X(28) X(29) X(30) X(31)
+  X(1)                                                                         \
+  X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13) X(14) X(15)  \
+      X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25) X(26) X(27)  \
+          X(28) X(29) X(30) X(31)
 #define CB_BP1_SLOTS CB_P1_SLOTS
 #define CB_B_SLOTS CB_P1_SLOTS
 
@@ -254,11 +256,14 @@ static CbCacheEntry cb_cache[CB_TOTAL];
 static int cb_cache_count;
 
 static void lua_cb_v_none(void) {}
+
 static void lua_cb_p1_none(void *arg) { (void)arg; }
+
 static bool lua_cb_bp1_none(void *arg) {
   (void)arg;
   return false;
 }
+
 static bool lua_cb_b_none(void) { return false; }
 
 static void *cb_none_for(int kind) {
@@ -584,6 +589,7 @@ static void call_v(lua_State *L) {
              uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
   lua_pushboolean(L, 1);
 }
+
 static void call_b(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol(name);
@@ -596,6 +602,7 @@ static void call_b(lua_State *L) {
                       uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
   lua_pushboolean(L, r);
 }
+
 static void call_i(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol(name);
@@ -608,6 +615,7 @@ static void call_i(lua_State *L) {
                     uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
   lua_pushinteger(L, r);
 }
+
 static void call_s(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol(name);
@@ -623,6 +631,7 @@ static void call_s(lua_State *L) {
   else
     lua_pushnil(L);
 }
+
 static void call_f(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol(name);
@@ -640,18 +649,22 @@ static int l_v(lua_State *L) {
   with_owner(L, call_v);
   return 1;
 }
+
 static int l_b(lua_State *L) {
   with_owner(L, call_b);
   return 1;
 }
+
 static int l_i(lua_State *L) {
   with_owner(L, call_i);
   return 1;
 }
+
 static int l_s(lua_State *L) {
   with_owner(L, call_s);
   return 1;
 }
+
 static int l_f(lua_State *L) {
   with_owner(L, call_f);
   return 1;
@@ -662,6 +675,7 @@ static int l_feature(lua_State *L) {
   lua_pushstring(L, f ? f->name : "");
   return 1;
 }
+
 static int l_source(lua_State *L) {
   LuaFeature *f = lua_feature(L);
   const char *path = f ? f->owner : "";
@@ -689,18 +703,21 @@ static int l_owner(lua_State *L) {
   lua_pushstring(L, f ? f->owner : "");
   return 1;
 }
+
 static int l_global_b(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol(name);
   lua_pushboolean(L, sym && *(bool *)sym);
   return 1;
 }
+
 static int l_global_i(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol(name);
   lua_pushinteger(L, sym ? *(int *)sym : 0);
   return 1;
 }
+
 static int l_image_size(lua_State *L) {
   const char *path = luaL_checkstring(L, 1);
   int w = 0, h = 0;
@@ -709,6 +726,7 @@ static int l_image_size(lua_State *L) {
   lua_pushinteger(L, h);
   return 2;
 }
+
 static int l_cap_register(lua_State *L) {
   const char *key = luaL_checkstring(L, 1);
   LuaFeature *f = lua_feature(L);
@@ -718,6 +736,7 @@ static int l_cap_register(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+
 static int l_struct_from_ptr(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *ptr = NULL;

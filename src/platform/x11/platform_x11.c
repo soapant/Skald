@@ -937,6 +937,7 @@ static char *icon_try(const char *bare, const char *fmt, ...) {
   va_end(ap);
   return icon_probe(path, bare);
 }
+
 static char *x11_icon_try_sizes(const char *bare, const char *dir,
                                 const char *const *sizes,
                                 const char *const *fmts, int n_fmts) {

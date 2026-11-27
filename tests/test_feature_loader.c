@@ -113,6 +113,7 @@ TEST(reload_defers_unload_until_drain) {
 
   FeaturePath = orig_feature_path;
 }
+
 TEST(baseline_manifest_preserves_declarations) {
   const char *orig_feature_path = FeaturePath;
   FeaturePath = MANIFEST_DIR;

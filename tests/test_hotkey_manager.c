@@ -16,12 +16,14 @@
 
 static int ud_calls = 0;
 static void *ud_seen = NULL;
+
 static void ud_cb(void *ud) {
   ud_calls++;
   ud_seen = ud;
 }
 
 static int fn_calls = 0;
+
 static void fn_cb(void) { fn_calls++; }
 
 static HotkeyBinding make_binding(int vk, int mods, HotkeyCallbackUd cb_ud,

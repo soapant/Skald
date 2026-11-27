@@ -62,6 +62,7 @@ void update_text_caret(void);
 #define MsgTimeoutIsIndefinite(t) ((t) == MSG_TIMEOUT_INDEFINITE || (t) <= 0.0)
 
 typedef struct WindowManager WindowManager;
+
 typedef struct {
   int bx;
   int bw;
@@ -90,6 +91,7 @@ typedef struct {
 } SlotRect;
 
 SlotRect message_slot_to_rect(MessageSlot slot, int prompt_gap);
+
 typedef struct {
   const char *message;
   MessageSlot slot;

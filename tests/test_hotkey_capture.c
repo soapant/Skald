@@ -7,6 +7,7 @@
 #include "helpers/helpers_input_state.h"
 
 static void capture_press(int vk) { input_state_update(vk, true, 0, 0); }
+
 static void capture_release(int vk) { input_state_update(vk, false, 0, 0); }
 
 TEST(capture_begin_end) {

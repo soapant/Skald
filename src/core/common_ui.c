@@ -101,6 +101,7 @@ static bool fuzzy_match(const char *text, const char *pattern) {
   }
   return *pattern == '\0';
 }
+
 static int levenshtein(const char *a, const char *b) {
   int la = (int)strlen(a), lb = (int)strlen(b);
   if (abs(la - lb) > 2)
@@ -136,6 +137,7 @@ static int levenshtein(const char *a, const char *b) {
   }
   return dp[la % 3][lb];
 }
+
 static bool fuzzy_match_with_typo(const char *text, const char *pattern) {
   if (fuzzy_match(text, pattern))
     return true;
@@ -150,6 +152,7 @@ static bool fuzzy_match_with_typo(const char *text, const char *pattern) {
     return true;
   return false;
 }
+
 static int fuzzy_score(const char *text, const char *pattern) {
   if (!pattern || !pattern[0])
     return 0;

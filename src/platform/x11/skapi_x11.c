@@ -298,6 +298,7 @@ int sk_get_active_interface_platform(char out[], size_t max_len) {
   }
   return found;
 }
+
 unsigned long long sk_net_rx_bytes_platform(void) {
   char want[64];
   if (!sk_get_active_interface_platform(want, sizeof(want)) || !want[0])

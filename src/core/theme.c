@@ -25,11 +25,13 @@ static const struct {
     {"COLOR_CURSOR", offsetof(ThemeEntry, cursor)},
     {"COLOR_BORDER", offsetof(ThemeEntry, border)},
 };
+
 static _Atomic(ColorRef) *theme_targets[] = {
     &COLOR_BG, &COLOR_TEXT, &COLOR_SELECTED_TEXT, &COLOR_CURSOR, &COLOR_BORDER,
 };
 
 #define THEME_SLOT_COUNT (sizeof(theme_slots) / sizeof(theme_slots[0]))
+
 typedef struct {
   char name[64];
   ColorRef value;

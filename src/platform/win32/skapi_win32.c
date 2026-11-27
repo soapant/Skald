@@ -204,6 +204,7 @@ static BOOL CALLBACK net_cs_init(PINIT_ONCE once, PVOID param, PVOID *ctx) {
   InitializeCriticalSection(&net_cs);
   return TRUE;
 }
+
 static SkNetStatus net_cached = SK_NET_OFFLINE;
 static DWORD net_cached_at = 0;
 static DWORD net_ever = 0;

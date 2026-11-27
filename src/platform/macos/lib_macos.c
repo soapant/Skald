@@ -19,6 +19,7 @@ void *Platform_GetSymbol(LibHandle lib, const char *name) {
     return NULL;
   return dlsym(lib, name);
 }
+
 void *Platform_GetMainSymbol(const char *name) {
   if (!name)
     return NULL;

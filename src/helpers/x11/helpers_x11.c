@@ -67,6 +67,7 @@ void x11_set_dbl_visual(Display *dpy, Visual *vis, Colormap cmap, int depth) {
   dbl_depth = depth;
   dbl_dpy = dpy;
 }
+
 void x11_clear_dbl_visual(void) {
   dbl_visual = NULL;
   dbl_colormap = None;
@@ -735,6 +736,7 @@ typedef struct {
   XftColor color;
   unsigned long stamp;
 } XftColorSlot;
+
 static XftColorSlot xft_color_slots[XFT_COLOR_CACHE_SLOTS];
 static unsigned long xft_color_tick;
 static pthread_mutex_t xft_color_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -1693,6 +1695,7 @@ static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
         long input_mode;
         unsigned long status;
       } motif;
+
       motif.flags = 2;
       motif.functions = 0;
       motif.decorations = 0;
@@ -2194,6 +2197,7 @@ typedef struct {
   Pixmap pm;
   Picture pic;
 } BorderSlot;
+
 static BorderSlot border_slots[BORDER_CACHE_SLOTS];
 static unsigned long border_tick;
 static pthread_mutex_t border_mtx = PTHREAD_MUTEX_INITIALIZER;

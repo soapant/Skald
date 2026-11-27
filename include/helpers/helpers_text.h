@@ -29,6 +29,7 @@ int text_segment_width(const void *seg, int font_size);
 void wrapped_word_push(WrappedWord **words, int *count, int *cap, const char *s,
                        size_t len, unsigned long color, int lead, int breaks,
                        int font_size);
+
 typedef struct {
   unsigned long color;
   int font_size;

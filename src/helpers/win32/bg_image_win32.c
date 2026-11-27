@@ -21,12 +21,14 @@
 #define BG_CACHE_VER 1
 
 #pragma pack(push, 1)
+
 typedef struct {
   char magic[4];
   uint32_t version;
   uint64_t src_mtime;
   uint32_t src_size;
 } BgCacheHeader;
+
 #pragma pack(pop)
 
 typedef struct {
@@ -63,6 +65,7 @@ static BOOL CALLBACK bg_cs_init(PINIT_ONCE once, PVOID param, PVOID *ctx) {
   InitializeCriticalSection(&bg_cs);
   return TRUE;
 }
+
 static ULONG_PTR bg_gdip_token = 0;
 
 static void bg_lock(void) {
@@ -347,6 +350,7 @@ static BgSrcSlot *bg_src_get(const char *native) {
 static int bg_slot_empty(const void *s) {
   return ((const BgTileSlot *)s)->bmp == NULL;
 }
+
 static unsigned long bg_slot_stamp(const void *s) {
   return (unsigned long)((const BgTileSlot *)s)->stamp;
 }

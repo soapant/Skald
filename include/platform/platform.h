@@ -129,6 +129,7 @@ char *Platform_HttpCollect(const char *url, const char *method,
                            size_t max_bytes, size_t *out_len);
 bool Platform_HttpSaveToFile(const char *url, const char *path);
 bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud);
+
 static inline void Platform_BoundsZero(int *out_x, int *out_y, int *out_w,
                                        int *out_h) {
   if (out_x)
@@ -213,6 +214,7 @@ void Platform_InitUI(void);
 void Platform_InitDataFolder(void);
 bool Platform_ResolveAssetFile(const char *stem, const char *rel, char *out,
                                size_t out_len);
+
 typedef struct {
   int item_h;
   int list_top;

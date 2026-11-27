@@ -563,8 +563,11 @@ bool focus_window_right_kwin(void) {
 }
 
 bool focus_window_up_kwin(void) { return false; }
+
 bool focus_window_down_kwin(void) { return false; }
+
 bool move_active_window_up_kwin(void) { return false; }
+
 bool move_active_window_down_kwin(void) { return false; }
 
 bool inject_key_kwin(int vk, int down) {

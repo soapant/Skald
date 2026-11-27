@@ -202,18 +202,23 @@ bool ski_add_dep(const char *dep_name, const char *owner_file) {
 }
 
 unsigned sk_cap_generation(void) { return cap_generation(); }
+
 void ski_cap_register(const char *key, void *fn) {
   cap_register_abi(key, CAP_ABI_V1, fn);
 }
+
 void *sk_cap_resolve(const char *key) {
   return cap_resolve_abi(key, CAP_ABI_V1);
 }
+
 void sk_cap_register_abi(const char *key, unsigned abi, void *fn) {
   cap_register_abi(key, abi, (void *)fn);
 }
+
 void *sk_cap_resolve_abi(const char *key, unsigned abi) {
   return cap_resolve_abi(key, abi);
 }
+
 void sk_cap_bind_declare(const char *key, void *consumer) {
   cap_bind_declare(key, consumer);
 }
@@ -262,6 +267,7 @@ void sk_free_files_list(ListOfFiles *list) {
   list->count = 0;
   list->capacity = 0;
 }
+
 bool sk_free_window_list(SkWindowList *list) {
   if (!list)
     return false;
@@ -702,6 +708,7 @@ bool sk_terminate_process_by_name(const char *exe_name) {
     return false;
   return Platform_TerminateProcessByName(exe_name);
 }
+
 bool sk_string_contains(const char *haystack, const char *needle) {
   if (!needle || !haystack)
     return false;
@@ -717,18 +724,23 @@ bool sk_string_contains_ci(const char *haystack, const char *needle) {
 char *sk_string_cut_at(const char *str, char delim) {
   return string_cut_at(str, delim);
 }
+
 char *sk_string_cut_before(const char *str, char delim) {
   return string_cut_before(str, delim);
 }
+
 char *sk_string_cut_after(const char *str, char delim) {
   return string_cut_after(str, delim);
 }
+
 char *sk_string_between(const char *str, char open, char close) {
   return string_between(str, open, close);
 }
+
 char *sk_string_inside(const char *str, char delim) {
   return string_inside(str, delim);
 }
+
 char *sk_string_trim(const char *str) { return string_trim(str); }
 
 char *sk_string_to_lower(const char *str) { return string_to_lower(str); }
@@ -738,18 +750,23 @@ char *sk_string_to_upper(const char *str) { return string_to_upper(str); }
 bool sk_string_starts_with(const char *str, const char *prefix) {
   return string_starts_with(str, prefix);
 }
+
 bool sk_string_starts_with_ci(const char *str, const char *prefix) {
   return string_starts_with_ci(str, prefix);
 }
+
 bool sk_string_ends_with(const char *str, const char *suffix) {
   return string_ends_with(str, suffix);
 }
+
 bool sk_string_equals_ci(const char *str, const char *other) {
   return string_equals_ci(str, other);
 }
+
 char *sk_string_replace(const char *str, const char *from, const char *to) {
   return string_replace(str, from, to);
 }
+
 char *sk_string_slice(const char *str, int start, int end) {
   return string_slice(str, start, end);
 }
@@ -1867,27 +1884,43 @@ bool ski_place_slider(const SkSliderSpec *spec) {
 }
 
 SkFocusKind sk_focus_kind(void) { return (SkFocusKind)focus_kind(); }
+
 bool sk_focus_is(const char *name) { return focus_is(name); }
+
 bool sk_focus_has_entries(void) { return focus_has_entries(); }
+
 const char *sk_focus_name(void) { return focus_name(); }
+
 bool sk_focus_move_next(void) { return focus_move(1); }
+
 bool sk_focus_move_before(void) { return focus_move(-1); }
+
 bool sk_focus_move_dir(SkFocusDir dir) {
   return focus_move_direction((FocusDirection)dir);
 }
+
 bool sk_activate_focused(void) { return focus_activate(); }
+
 bool sk_focus_adjust(int dir) { return focus_adjust(dir); }
+
 bool sk_set_focus(SkFocusKind kind) { return focus_set_kind((FocusKind)kind); }
+
 void sk_focus_clear(void) { focus_clear(); }
 
 bool sk_slider_is_hovered(const char *name) { return slider_is_hovered(name); }
+
 bool sk_slider_is_clicked(const char *name) { return slider_is_clicked(name); }
+
 bool sk_slider_is_dragging(const char *name) {
   return slider_is_dragging(name);
 }
+
 float sk_slider_value(const char *name) { return slider_value(name); }
+
 float sk_slider_fraction(const char *name) { return slider_fraction(name); }
+
 int sk_slider_percent(const char *name) { return slider_percent(name); }
+
 bool sk_slider_set_value(const char *name, float value) {
   return slider_set_value(name, value);
 }
@@ -1903,16 +1936,22 @@ SkColor sk_get_pixel_color(SkPos pos) {
 }
 
 bool sk_move_to_pos(SkPos pos) { return Platform_MoveToPos(pos.x, pos.y); }
+
 bool sk_click_at(SkPos pos) { return sk_move_to_pos(pos) && sk_click(); }
+
 bool sk_left_click(void) { return Platform_ClickButton(1); }
+
 bool sk_right_click(void) { return Platform_ClickButton(2); }
+
 bool sk_emit_mouse_button(int button, bool down) {
   return Platform_MouseButtonDown(button, down);
 }
+
 bool sk_emit_mouse_button_at(SkPos pos, int button, bool down) {
   bool moved = sk_move_to_pos(pos);
   return moved && Platform_MouseButtonDown(button, down);
 }
+
 bool sk_click_button_at(SkPos pos, int button) {
   bool moved = sk_move_to_pos(pos);
   bool down = moved && Platform_MouseButtonDown(button, true);
@@ -1922,6 +1961,7 @@ bool sk_click_button_at(SkPos pos, int button) {
   sk_sleep(0.02);
   return Platform_MouseButtonDown(button, false);
 }
+
 bool sk_mouse_scroll(int notches) { return Platform_MouseScroll(notches); }
 
 bool sk_move_to_pos_rel(SkPos pos) {
@@ -1995,6 +2035,7 @@ bool sk_color_matches(SkPos pos, SkColor color, int tolerance) {
   SkColor c = sk_get_pixel_color(pos);
   return pixel_color_matches_tol(c, color, tolerance);
 }
+
 bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout) {
   if (timeout <= 0.0)
     timeout = 10.0;
@@ -2108,16 +2149,25 @@ SkKey sk_hotkey_from_string(const char *str) {
 }
 
 bool sk_is_key_down(int vk) { return input_is_key_down(vk); }
+
 bool sk_is_key_pressed(int vk) { return input_was_key_pressed(vk); }
+
 bool sk_is_key_released(int vk) { return input_was_key_released(vk); }
+
 bool sk_ctrl_pressed(void) { return key_is_ctrl_pressed(); }
+
 bool sk_shift_pressed(void) { return key_is_shift_pressed(); }
+
 bool sk_alt_pressed(void) { return key_is_alt_pressed(); }
+
 bool sk_super_pressed(void) { return key_is_super_pressed(); }
+
 void sk_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud) {
   input_set_key_callback(cb, ud);
 }
+
 int sk_get_key_pressed(void) { return input_get_pressed_key(); }
+
 char sk_get_char_pressed(void) { return input_get_pressed_char(); }
 
 char *sk_vk_to_name(int vk) {
@@ -2436,6 +2486,7 @@ char *sk_format_bytes(unsigned long long bytes) {
   }
   return strdup(buf);
 }
+
 SkNetStatus sk_net_status(void) { return sk_net_status_platform(); }
 
 unsigned long long sk_net_rx_bytes(void) { return sk_net_rx_bytes_platform(); }
@@ -2508,6 +2559,7 @@ float sk_parse_float(const char *text, float fallback) {
 bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   return cc_add_from_spec(spec, __builtin_return_address(0));
 }
+
 SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
   if (!spec)
     return NULL;
@@ -2576,12 +2628,17 @@ const SettingsEntrySpec *sk_settings_entry_at(int index) {
 }
 
 int sk_cc_entry_count(void) { return cc_registry_count(); }
+
 const SkCcEntrySpec *sk_cc_entry_at(int index) { return cc_registry_at(index); }
+
 bool sk_register_alias(const char *alias, const char *target) {
   return alias_register(alias, target);
 }
+
 bool sk_remove_alias(const char *alias) { return alias_remove(alias); }
+
 const char *sk_alias_for(const char *target) { return alias_for(target); }
+
 void ski_window(const SkPromptSpec *spec) {
   SkaldContext *ctx = SkaldContext_Get();
   if (ctx && ctx->window.headless.active) {
@@ -2663,6 +2720,7 @@ void sk_register_event(SkEvent event, SkEventCallback cb) {
 void sk_unregister_event(SkEvent event, SkEventCallback cb) {
   event_bus_unregister(event, cb);
 }
+
 void sk_close_window(void) {
   SkaldContext_Get()->window.selection_complete = true;
 }
@@ -2694,74 +2752,98 @@ bool sk_run_feature_shortcut(const char *name) {
     return false;
   return feature_shortcut_run(name);
 }
+
 bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
   if (!spec)
     return false;
   return config_hotkey_set(spec->name, spec->hotkey, (void (*)(void *))spec->cb,
                            spec->ud);
 }
+
 char *sk_config_get_hotkey(const char *name) { return config_hotkey_get(name); }
+
 bool sk_config_clear_hotkey(const char *name) {
   return config_hotkey_clear(name);
 }
+
 bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud) {
   return config_hotkey_bind(name, (void (*)(void *))cb, ud);
 }
+
 int sk_config_hotkey_count(void) {
   return config_entry_count(CONFIG_ENTRY_HOTKEY);
 }
+
 char *sk_config_hotkey_name_at(int index) {
   return config_entry_dup_key_at(CONFIG_ENTRY_HOTKEY, index);
 }
+
 char *sk_config_hotkey_value_at(int index) {
   return config_entry_value_at(CONFIG_ENTRY_HOTKEY, index);
 }
+
 char *sk_config_hotkey_display_name_at(int index) {
   return config_hotkey_display_name_at(index);
 }
+
 bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec) {
   return config_hotkey_register((const ConfigHotkeyRegisterSpec *)spec);
 }
+
 void sk_init_all_hotkeys(void) { config_hotkey_bind_all(); }
+
 bool sk_config_set_alias(const char *target, const char *alias) {
   return config_alias_set(target, alias);
 }
+
 char *sk_config_get_alias(const char *target) {
   return config_alias_get(target);
 }
+
 bool sk_config_clear_alias(const char *target) {
   return config_alias_set(target, NULL);
 }
+
 int sk_config_alias_count(void) {
   return config_entry_count(CONFIG_ENTRY_ALIAS);
 }
+
 char *sk_config_alias_target_at(int index) {
   return config_entry_dup_key_at(CONFIG_ENTRY_ALIAS, index);
 }
+
 char *sk_config_alias_value_at(int index) {
   return config_entry_value_at(CONFIG_ENTRY_ALIAS, index);
 }
+
 int sk_config_quicklink_count(void) {
   return config_entry_count(CONFIG_ENTRY_QUICKLINK);
 }
+
 char *sk_config_quicklink_name_at(int index) {
   return config_entry_dup_key_at(CONFIG_ENTRY_QUICKLINK, index);
 }
+
 char *sk_config_quicklink_value_at(int index) {
   return config_entry_value_at(CONFIG_ENTRY_QUICKLINK, index);
 }
+
 int sk_config_feature_shortcut_count(void) {
   return config_entry_count(CONFIG_ENTRY_FEATURE_SHORTCUT);
 }
+
 char *sk_config_feature_shortcut_name_at(int index) {
   return config_entry_dup_key_at(CONFIG_ENTRY_FEATURE_SHORTCUT, index);
 }
+
 char *sk_config_feature_shortcut_value_at(int index) {
   return config_entry_value_at(CONFIG_ENTRY_FEATURE_SHORTCUT, index);
 }
+
 bool sk_config_set_setting(const char *key, const char *value) {
   return config_setting_set(key, value);
 }
+
 bool sk_config_set_setting_int(const char *key, int value) {
   char buf[32];
   snprintf(buf, sizeof(buf), "%d", value);
@@ -2775,6 +2857,7 @@ bool sk_config_set_setting_float(const char *key, float value) {
 }
 
 char *sk_config_get_setting(const char *key) { return config_setting_get(key); }
+
 bool sk_config_get_setting_string(const char *key, char *out, size_t out_len,
                                   const char *fallback) {
   if (!out || out_len == 0)
@@ -2791,26 +2874,33 @@ bool sk_config_get_setting_bool(const char *key) {
   config_setting_get_value(key, config_parse_bool_value, &value);
   return value;
 }
+
 int sk_config_get_setting_int(const char *key, int fallback) {
   int value = fallback;
   config_setting_get_value(key, config_parse_int_value, &value);
   return value;
 }
+
 float sk_config_get_setting_float(const char *key) {
   return sk_config_get_setting_float_or(key, 0.0f);
 }
+
 float sk_config_get_setting_float_or(const char *key, float fallback) {
   float value = fallback;
   config_setting_get_value(key, config_parse_float_value, &value);
   return value;
 }
+
 bool sk_config_has_setting(const char *key) { return config_setting_has(key); }
+
 int sk_config_setting_count(void) {
   return config_entry_count(CONFIG_ENTRY_SETTING);
 }
+
 const char *sk_config_setting_name_at(int index) {
   return config_entry_key_at(CONFIG_ENTRY_SETTING, index);
 }
+
 const char *sk_config_setting_value_at(int index) {
   return config_entry_value_at(CONFIG_ENTRY_SETTING, index);
 }
@@ -2818,6 +2908,7 @@ const char *sk_config_setting_value_at(int index) {
 bool sk_config_set_quicklink(const char *name, const char *target) {
   return config_quicklink_set(name, target);
 }
+
 bool sk_config_set_feature_shortcut(const char *name, const char *target) {
   return config_feature_shortcut_set(name, target);
 }

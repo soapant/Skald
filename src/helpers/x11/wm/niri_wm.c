@@ -248,8 +248,11 @@ bool focus_window_right_niri(void) {
 }
 
 bool focus_window_up_niri(void) { return false; }
+
 bool focus_window_down_niri(void) { return false; }
+
 bool move_active_window_up_niri(void) { return false; }
+
 bool move_active_window_down_niri(void) { return false; }
 
 bool inject_key_niri(int vk, int down) {

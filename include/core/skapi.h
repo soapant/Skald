@@ -72,22 +72,27 @@ typedef struct {
   int w;
   int h;
 } SkSize;
+
 typedef void (*SkHttpCallback)(const char *body, bool ok, void *userdata);
+
 typedef struct {
   const char *name;
   void (*callback)(void);
   const char *icon;
 } SkFeature;
+
 typedef struct {
   SkFeature *items;
   size_t count;
 } SkFeatureList;
+
 typedef struct {
   int index;
   char name[128];
   int x, y, w, h;
   bool is_primary;
 } SkMonitorInfo;
+
 typedef struct {
   const char *dir_path;
   char **allowed_extensions;
@@ -96,6 +101,7 @@ typedef struct {
   bool strip_extension;
   int max_depth;
 } SkDirScanSpec;
+
 typedef struct {
   ListBox *lb;
   const char *filter;
@@ -104,6 +110,7 @@ typedef struct {
   bool (*filter_match)(const char *item, const char *filter);
   int (*item_rank)(int item_index);
 } SkPopulateListboxSpec;
+
 typedef struct {
   const char *initial_text;
   int x;
@@ -113,6 +120,7 @@ typedef struct {
   ListBox *lb;
   int *out_index;
 } SkEditPopupSpec;
+
 typedef struct {
   const char *message;
   MessageSlot slot;
@@ -136,6 +144,7 @@ typedef struct {
   bool rounded;
   int radius;
 } SkMessageSpec;
+
 typedef struct {
   void (*render)(void *ud);
   void *render_data;
@@ -145,6 +154,7 @@ typedef struct {
   SkTimer created_at;
   int pad;
 } SkHoverPopupCtx;
+
 typedef struct {
   const char *text;
   int x;
@@ -157,6 +167,7 @@ typedef struct {
   bool no_hscroll;
   float angle;
 } SkTextSpec;
+
 typedef struct {
   int x;
   int y;
@@ -167,7 +178,9 @@ typedef struct {
   FontHandle font;
   int font_size;
 } SkTextCenteredSpec;
+
 typedef int (*SkWrapMeasureFn)(void *ctx, const char *text, int len);
+
 typedef struct {
   int x;
   int y;
@@ -177,6 +190,7 @@ typedef struct {
   int font_size;
   SkPos *out_positions;
 } SkMeasureSpec;
+
 typedef struct {
   int x;
   int y;
@@ -185,6 +199,7 @@ typedef struct {
   const char *align;
   int pad;
 } SkTextBoundsSpec;
+
 typedef struct {
   const char *path;
   SkImage image;
@@ -193,10 +208,12 @@ typedef struct {
   int w;
   int h;
 } SkImageSpec;
+
 typedef struct {
   const char *text;
   ColorRef color;
 } SkTextSegment;
+
 typedef struct {
   const SkTextSegment *segments;
   int count;
@@ -210,6 +227,7 @@ typedef struct {
   bool no_hscroll;
   float angle;
 } SkTextSegmentsSpec;
+
 typedef struct {
   const char *text;
   const SkTextSegment *segments;
@@ -227,6 +245,7 @@ typedef struct {
   float angle;
   bool measure_only;
 } SkTextWrappedSpec;
+
 typedef enum {
   SK_FOCUS_NONE = 0,
   SK_FOCUS_BUTTON,
@@ -236,12 +255,14 @@ typedef enum {
   SK_FOCUS_EDITBOX,
   SK_FOCUS_CUSTOM
 } SkFocusKind;
+
 typedef enum {
   SK_FOCUS_LEFT = 0,
   SK_FOCUS_RIGHT,
   SK_FOCUS_UP,
   SK_FOCUS_DOWN
 } SkFocusDir;
+
 typedef struct {
   const char *name;
   int x, y, w, h;
@@ -250,11 +271,14 @@ typedef struct {
   int *off_y;
   int wheel_px;
 } SkScrollSpec;
+
 typedef void *(*SkThreadFunc)(void *arg);
+
 typedef struct {
   char *key;
   long value;
 } SkHashMap;
+
 typedef struct {
   int vk;
   int scancode;
@@ -263,6 +287,7 @@ typedef struct {
   bool repeat;
   unsigned long long t_us;
 } SkKeyEvent;
+
 typedef struct {
   int button;
   int x;
@@ -272,6 +297,7 @@ typedef struct {
   bool repeat;
   unsigned long long t_us;
 } SkMouseEvent;
+
 typedef struct {
   int x;
   int y;
@@ -280,13 +306,16 @@ typedef struct {
   int mods;
   unsigned long long t_us;
 } SkScrollEvent;
+
 typedef void (*SkConfigFn)(void *ud);
+
 typedef struct {
   const char *name;
   const char *hotkey;
   SkConfigFn cb;
   void *ud;
 } SkConfigHotkeySpec;
+
 typedef struct {
   const char *hotkey;
   void (*cb)(void);
@@ -297,6 +326,7 @@ typedef struct {
   bool swallow;
   void *ud;
 } SkHotkeySpec;
+
 typedef struct {
   const char *name;
   const char *key;
@@ -308,13 +338,16 @@ typedef struct {
   const char *blacklist[16];
   void *ud;
 } SkConfigHotkeyRegisterSpec;
+
 typedef struct {
   const char *src;
   const char *dst;
   const char *whitelist[16];
   const char *blacklist[16];
 } SkRemappingSpec;
+
 typedef void (*SkSnippetFunc)(void);
+
 typedef struct {
   const char *trigger;
   const char *text;
@@ -322,6 +355,7 @@ typedef struct {
   const char *whitelist[16];
   const char *blacklist[16];
 } SkSnippetSpec;
+
 typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 
 #define SK_POS(px, py) ((SkPos){.x = (px), .y = (py)})

@@ -54,6 +54,7 @@ static bool listbox_hover_throttled(void) {
 }
 
 void listbox_set_row_h_scroll(int px) { row_hscroll = px; }
+
 int listbox_get_row_h_scroll(void) { return row_hscroll; }
 
 void listbox_focus_by_keyboard(void) {

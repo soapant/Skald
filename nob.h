@@ -543,6 +543,7 @@ typedef struct {
 typedef struct {
   const char *stdin_path;
 } Nob_Chain_Begin_Opt;
+
 #define nob_chain_begin(chain, ...)                                            \
   nob_chain_begin_opt((chain), NOB_CLIT(Nob_Chain_Begin_Opt){__VA_ARGS__})
 NOBDEF bool nob_chain_begin_opt(Nob_Chain *chain, Nob_Chain_Begin_Opt opt);
@@ -551,6 +552,7 @@ typedef struct {
   bool err2out;
   bool dont_reset;
 } Nob_Chain_Cmd_Opt;
+
 #define nob_chain_cmd(chain, cmd, ...)                                         \
   nob_chain_cmd_opt((chain), (cmd), NOB_CLIT(Nob_Chain_Cmd_Opt){__VA_ARGS__})
 NOBDEF bool nob_chain_cmd_opt(Nob_Chain *chain, Nob_Cmd *cmd,
@@ -562,6 +564,7 @@ typedef struct {
   const char *stdout_path;
   const char *stderr_path;
 } Nob_Chain_End_Opt;
+
 #define nob_chain_end(chain, ...)                                              \
   nob_chain_end_opt((chain), NOB_CLIT(Nob_Chain_End_Opt){__VA_ARGS__})
 NOBDEF bool nob_chain_end_opt(Nob_Chain *chain, Nob_Chain_End_Opt opt);
@@ -597,6 +600,7 @@ static inline void nob__cpp_cmd_append_wrapper(Nob_Cmd *cmd, Args... strs) {
   const char *args[] = {strs...};
   nob__cmd_append(cmd, sizeof(args) / sizeof(args[0]), args);
 }
+
 #define nob_cmd_append(cmd, ...) nob__cpp_cmd_append_wrapper(cmd, __VA_ARGS__)
 #else
 #define nob_cmd_append(cmd, ...)                                               \
@@ -767,6 +771,7 @@ NOBDEF void nob__go_rebuild_urself(int argc, char **argv,
 
 typedef struct {
   size_t count;
+
   union {
     const char *data;
     const char *items;
@@ -1252,6 +1257,7 @@ NOBDEF bool nob_chain_cmd_opt(Nob_Chain *chain, Nob_Cmd *cmd,
                               Nob_Chain_Cmd_Opt opt) {
   bool result = true;
   Nob_Pipe pp = {0};
+
   struct {
     size_t count;
     Nob_Fd items[5];
@@ -1304,6 +1310,7 @@ NOBDEF bool nob_chain_end_opt(Nob_Chain *chain, Nob_Chain_End_Opt opt) {
   bool result = true;
 
   Nob_Fd *pfdin = NULL;
+
   struct {
     size_t count;
     Nob_Fd items[5];

@@ -298,6 +298,7 @@ void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
 }
 
 #define X11_LINE_FONT_SLOTS 12
+
 typedef struct {
   Display *dpy;
   int size;

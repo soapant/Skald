@@ -70,12 +70,14 @@ static bool hotkey_is_suspended(void) {
 }
 
 #define HOTKEY_PENDING_MAX 64
+
 typedef struct {
   HotkeyCallback fn;
   HotkeyCallbackUd fn_ud;
   void *ud;
   OwnerTag tag;
 } PendingHotkey;
+
 static PendingHotkey pending_hotkeys[HOTKEY_PENDING_MAX];
 static int pending_head = 0;
 static int pending_tail = 0;
@@ -110,12 +112,14 @@ static void hotkey_queue_init(void) {
   q_mutex = lazy_mutex_get(&q_mutex);
   hotkey_wake_fd();
 }
+
 #define HOTKEY_Q_LOCK()                                                        \
   do {                                                                         \
     hotkey_queue_init();                                                       \
     Platform_MutexLock(q_mutex);                                               \
   } while (0)
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(q_mutex)
+
 static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
                            const char *owner) {
   if (!fn && !fn_ud)
@@ -140,12 +144,14 @@ static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
 }
 
 #define HOTKEY_HOLD_MAX 16
+
 typedef struct {
   int vk;
   int modifiers;
   unsigned long long next_fire_ms;
   bool active;
 } HotkeyHoldSlot;
+
 static HotkeyHoldSlot hold_slots[HOTKEY_HOLD_MAX];
 static unsigned long hold_dropped = 0;
 
@@ -233,11 +239,13 @@ static bool hotkey_binding_allowed(const HotkeyBinding *b, int vk,
 
 static void hotkey_tick_holds(void) {
   unsigned long long now = hotkey_now_ms();
+
   struct {
     int slot;
     int vk;
     int mods;
   } due[HOTKEY_HOLD_MAX];
+
   int due_count = 0;
   HOTKEY_Q_LOCK();
   for (int i = 0; i < HOTKEY_HOLD_MAX; i++) {

@@ -30,7 +30,9 @@ static bool key_capture_pinned = false;
 static bool key_capture_blocked = false;
 static long long key_capture_swallow_until = 0;
 static void *key_capture_mutex = NULL;
+
 static void key_capture_lock_init(void) { lazy_mutex_get(&key_capture_mutex); }
+
 #define KC_LOCK()                                                              \
   do {                                                                         \
     key_capture_lock_init();                                                   \
@@ -104,7 +106,9 @@ bool widget_poll_key(Widget *widget, WidgetKey *out) {
 }
 
 static void *widget_mutex = NULL;
+
 static void widget_mutex_init(void) { lazy_mutex_get(&widget_mutex); }
+
 #define W_LOCK()                                                               \
   do {                                                                         \
     widget_mutex_init();                                                       \
@@ -473,6 +477,7 @@ static void widget_relayout(void) {
     int gap;
     int key;
   } LayoutItem;
+
   LayoutItem *items = NULL;
   W_LOCK();
   for (size_t i = 0; i < widget_count; i++) {
@@ -505,6 +510,7 @@ static void widget_relayout(void) {
     int cursor;
     bool known;
   } MonSlot;
+
   MonSlot ms[WIDGET_SLOT_COUNT][WIDGET_MAX_MONITORS] = {{{0}}};
 
   for (int i = 0; i < n; i++) {

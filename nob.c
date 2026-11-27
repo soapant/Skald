@@ -425,6 +425,7 @@ static void append_dep_ldflags(Nob_Cmd *cmd) {
 }
 #else
 static void append_dep_cflags(Nob_Cmd *cmd) { (void)cmd; }
+
 static void append_dep_ldflags(Nob_Cmd *cmd) { (void)cmd; }
 #endif
 
@@ -1170,6 +1171,7 @@ typedef struct {
   char name[256];
   const char *prefix;
 } PendingFn;
+
 static PendingFn pending_fns[512];
 static size_t pending_fn_count = 0;
 

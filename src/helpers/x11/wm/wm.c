@@ -165,6 +165,7 @@ WindowList wm_get_window_titles(void) {
     return result;
   return empty;
 }
+
 WindowList wm_get_window_ids(void) {
   WindowList result;
   WindowList empty = {.windows = NULL, .count = 0};

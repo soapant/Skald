@@ -154,6 +154,7 @@ typedef struct {
 
 static CbTypedef cb_types[1024];
 static int cb_type_count;
+
 static char *read_all(const char *path) {
   FILE *f = fopen(path, "rb");
   if (!f)
@@ -222,6 +223,7 @@ typedef struct {
   char name[NAME_SZ];
   long long value;
 } EnumConst;
+
 static EnumConst enum_consts[2048];
 static int enum_count;
 

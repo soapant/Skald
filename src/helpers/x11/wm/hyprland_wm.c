@@ -94,6 +94,7 @@ static void hypr_ensure_sig(void) {
   }
   globfree(&g);
 }
+
 static bool hypr_parse_activewindow_field(const char *field, char *buffer,
                                           int buffer_size) {
   if (!field || !buffer || buffer_size <= 0)
@@ -283,9 +284,11 @@ static WindowList hypr_client_list(const char *field, bool toupper_first) {
   free(output);
   return list;
 }
+
 WindowList get_window_ids_hyprland(void) {
   return hypr_client_list("class", true);
 }
+
 WindowList get_window_titles_hyprland(void) {
   return hypr_client_list("title", false);
 }

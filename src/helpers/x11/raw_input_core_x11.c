@@ -179,6 +179,7 @@ static int x11_convert_key_to_windows_vk(int key_code) {
 }
 
 static long long x11_mouse_last_fire_ms[MOUSE_BTN_MAX + 1] = {0};
+
 static void x11_queue_mouse_event(struct input_event *ev) {
 
   if (!ev || ev->type != EV_KEY) {
@@ -250,28 +251,37 @@ static void x11_release_rejected_devices(void) {
 }
 
 int x11_keyboard_count_get(void) { return x11_keyboard_count; }
+
 int x11_mouse_count_get(void) { return x11_mouse_count; }
+
 int x11_keyboard_fd(int i) {
   return (i >= 0 && i < X11_MAX_KEYBOARDS) ? x11_keyboards[i].fd : -1;
 }
+
 int x11_mouse_fd(int i) {
   return (i >= 0 && i < X11_MAX_MICE) ? x11_mice[i].fd : -1;
 }
+
 void x11_keyboard_fd_set(int i, int fd) {
   if (i >= 0 && i < X11_MAX_KEYBOARDS)
     x11_keyboards[i].fd = fd;
 }
+
 bool x11_device_grabbed_get(int i) {
   return (i >= 0 && i < X11_MAX_KEYBOARDS) ? x11_device_grabbed[i] : false;
 }
+
 void x11_device_grabbed_set(int i, bool v) {
   if (i >= 0 && i < X11_MAX_KEYBOARDS)
     x11_device_grabbed[i] = v;
 }
+
 bool x11_mouse_grabbed_get(int i) {
   return (i >= 0 && i < X11_MAX_MICE) ? x11_mouse_grabbed[i] : false;
 }
+
 int x11_uinput_fd_get(void) { return x11_uinput_fd; }
+
 void x11_uinput_fd_set(int fd) { x11_uinput_fd = fd; }
 
 static bool x11_is_traced(void) {

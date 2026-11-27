@@ -730,10 +730,13 @@ static int feature_shortcut_index_of(const char *name) {
   } while (0)
 
 static void hotkey_entries_remove(int i) { arrdel(hotkey_entries, i); }
+
 static void quicklink_entries_remove(int i) { arrdel(quicklink_entries, i); }
+
 static void feature_shortcut_entries_remove(int i) {
   arrdel(feature_shortcut_entries, i);
 }
+
 static void alias_entries_remove(int i) { arrdel(alias_entries, i); }
 
 static void hotkey_entries_set(const char *name, const char *hotkey) {

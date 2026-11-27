@@ -113,6 +113,7 @@ bool get_id_sway(char *buffer, int buffer_size) {
 }
 
 char *paste_sway(const char *content) { return x11_paste_wtype(content); }
+
 static bool succeded_sway(char *output) {
   if (!output) {
     log_error("output is NULL");
@@ -146,6 +147,7 @@ static bool sway_focus_by_con_id(int con_id) {
   free(out);
   return ok;
 }
+
 static bool sway_json_string(const char *at, char *out, size_t cap,
                              const char *limit);
 static bool sway_name_for_pid(const char *json, const char *pid_pos,

@@ -104,6 +104,7 @@ typedef struct {
   Popup *pins[MAX_PINS];
   int npins;
 } RetiredLib;
+
 static RetiredLib *retired = NULL;
 static int retired_count = 0;
 static int retired_cap = 0;
@@ -234,6 +235,7 @@ static void sweep_retired_libs(void) {
 }
 
 static void feature_mutex_init(void) { lazy_mutex_get(&feature_mutex); }
+
 #define LOCK()                                                                 \
   do {                                                                         \
     feature_mutex_init();                                                      \
@@ -402,6 +404,7 @@ static void manifest_add_entry(const char *name, const char *section,
     m.dep_count++;
   manifest_write_full(name, &m);
 }
+
 void feature_loader_manifest_add_provides(const char *owner_path,
                                           const char *key) {
   if (!owner_path || !owner_path[0] || !key || !key[0])
@@ -696,6 +699,7 @@ static void *build_worker;
 static bool build_worker_failed;
 
 static void build_mutex_init(void) { lazy_mutex_get(&build_mutex); }
+
 #define B_LOCK()                                                               \
   do {                                                                         \
     build_mutex_init();                                                        \

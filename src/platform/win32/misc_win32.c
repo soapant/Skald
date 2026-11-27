@@ -299,6 +299,7 @@ bool Platform_PasteContent(const char *content) {
   log_info("Platform_PasteContent content length=%zu", strlen(content));
   return success;
 }
+
 const char *Platform_GetRealHome(void) {
 
   static char buf[512] = {0};
