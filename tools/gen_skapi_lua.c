@@ -10,88 +10,6 @@
 #define LINE_SZ 4096
 #define NAME_SZ 128
 
-typedef struct {
-  const char *name;
-  const char *code;
-} Override;
-
-static const Override overrides[] = {
-    {"sk_store_set",
-     "M.sk_store_set = function(value) native.v(\"ski_store_set\", "
-     "native.feature(), native.feature(), value) end"},
-    {"sk_store_append",
-     "M.sk_store_append = function(value) native.v(\"ski_store_append\", "
-     "native.feature(), native.feature(), value) end"},
-    {"sk_store_get_all",
-     "M.sk_store_get_all = function() return native.s(\"ski_store_get_all\", "
-     "native.feature(), native.feature()) end"},
-    {"sk_store_get_last",
-     "M.sk_store_get_last = function() return native.s(\"ski_store_get_last\", "
-     "native.feature(), native.feature()) end"},
-    {"sk_store_replace_all",
-     "M.sk_store_replace_all = function(values, count) "
-     "native.v(\"ski_store_replace_all\", native.feature(), native.feature(), "
-     "values, count) end"},
-    {"sk_store_clear",
-     "M.sk_store_clear = function() native.v(\"ski_store_clear\", "
-     "native.feature(), native.feature()) end"},
-    {"sk_add_dep",
-     "M.sk_add_dep = function(dep) native.v(\"ski_add_dep\", dep, "
-     "native.owner()) end"},
-    {"sk_get_image_size",
-     "M.sk_get_image_size = function(path) return native.image_size(path) end"},
-    {"sk_set_window_geometry",
-     "M.sk_set_window_geometry = function(window, t) return "
-     "native.struct_call(\"ski_set_window_geometry\", \"SkRect\", t or {}, "
-     "\"b\", window) end"},
-    {"sk_populate_listbox",
-     "M.sk_populate_listbox = function(t) return "
-     "native.struct_call(\"ski_populate_listbox\", \"SkPopulateListboxSpec\", "
-     "t or {}, \"v\") end"},
-    {"sk_cap_register",
-     "M.sk_cap_register = function(key, fn) native.cap_register(key, fn) end"},
-    {"sk_cap_bind",
-     "M.sk_cap_bind = function(key) return function(...) return "
-     "native.call_fn(\"sk_cap_resolve\", key, ...) end end"},
-    {"sk_message_fmt",
-     "M.sk_message_fmt = function(t, ...) return native.struct_call(\"ski_message\", "
-     "\"SkMessageSpec\", t or {}, \"v\") end"},
-    {"sk_overlay",
-     "M.sk_overlay = function(t) local v = {} for k,x in pairs(t or {}) do "
-     "v[k] = x end v.timeout = v.timeout or 10000000.0 return "
-     "native.struct_call(\"ski_message\", \"SkMessageSpec\", v, \"v\") end"},
-    {"sk_draw_rect",
-     "M.sk_draw_rect = function(t) local v = {} for k,x in pairs(t or {}) do "
-     "v[k] = x end if v.border == nil then v.border = "
-     "native.global_b(\"EnableBorders\") end return "
-     "native.struct_call(\"ski_draw_rect\", \"DrawRect\", v, \"b\") end"},
-    {"sk_add_feature",
-     "M.sk_add_feature = function(t) local v = {} for k,x in pairs(t or {}) "
-     "do v[k] = x end v.type = v.type or \"Feature\" return "
-     "native.struct_call(\"ski_add_to_cc\", \"SkCcEntrySpec\", v, \"b\") end"},
-    {"sk_subwindow",
-     "M.sk_subwindow = function(t) local v = {} for k,x in pairs(t or {}) do "
-     "v[k] = x end v.subwindow = true return "
-     "native.struct_call(\"ski_window\", \"PromptSpec\", v, \"v\") end"},
-    {"sk_place_button",
-     "M.sk_place_button = function(t) local v = {} for k,x in pairs(t or {}) "
-     "do v[k] = x end v.border = true v.button = true return "
-     "native.struct_call(\"ski_place_checkbox\", \"SkCheckboxSpec\", v, \"b\") "
-     "end"},
-    {"sk_place_checkbox",
-     "M.sk_place_checkbox = function(t) local v = {} for k,x in pairs(t or {}) "
-     "do v[k] = x end v.border = true v.checkbox = true return "
-     "native.struct_call(\"ski_place_checkbox\", \"SkCheckboxSpec\", v, \"b\") "
-     "end"},
-};
-
-static bool overridden(const char *name) {
-  for (size_t i = 0; i < sizeof(overrides) / sizeof(overrides[0]); i++)
-    if (strcmp(overrides[i].name, name) == 0)
-      return true;
-  return false;
-}
-
 static const char *ret_kind(const char *line) {
   if (strncmp(line, "bool", 4) == 0)
     return "b";
@@ -111,6 +29,55 @@ static char *trim(char *s) {
   while (n && isspace((unsigned char)s[n - 1]))
     s[--n] = '\0';
   return s;
+}
+
+typedef struct {
+  char name[NAME_SZ];
+  const char *kind;
+} RetEntry;
+
+static RetEntry rets[512];
+static int ret_count;
+
+static const char *ret_for(const char *name) {
+  for (int i = 0; i < ret_count; i++)
+    if (strcmp(rets[i].name, name) == 0)
+      return rets[i].kind;
+  return "v";
+}
+
+static void collect_rets(char lines[MAX_LINES][LINE_SZ], int line_count) {
+  for (int i = 0; i < line_count; i++) {
+    char work[LINE_SZ];
+    snprintf(work, sizeof(work), "%s", lines[i]);
+    char *p = work;
+    while (*p && isspace((unsigned char)*p))
+      p++;
+    char *semi = strrchr(p, ';');
+    if (!semi)
+      continue;
+    *semi = '\0';
+    char *open = strchr(p, '(');
+    if (!open)
+      continue;
+    char *end = open;
+    while (end > p && isspace((unsigned char)end[-1]))
+      end--;
+    char *start = end;
+    while (start > p && (isalnum((unsigned char)start[-1]) || start[-1] == '_'))
+      start--;
+    size_t n = (size_t)(end - start);
+    if (n == 0 || n >= NAME_SZ || ret_count >= 512)
+      continue;
+    char name[NAME_SZ];
+    memcpy(name, start, n);
+    name[n] = '\0';
+    if (name[0] != 's' || name[1] != 'k')
+      continue;
+    snprintf(rets[ret_count].name, NAME_SZ, "%s", name);
+    rets[ret_count].kind = ret_kind(p);
+    ret_count++;
+  }
 }
 
 typedef struct {
@@ -258,6 +225,160 @@ static void parse_callback_typedefs(const char *src) {
     line = strtok(NULL, "\n");
   }
   free(buf);
+}
+
+static void lua_expr(char *out, size_t cap, const char *expr) {
+  char e[256];
+  snprintf(e, sizeof(e), "%s", expr);
+  char *v = trim(e);
+  if (strncmp(v, "EnableBorders", 13) == 0)
+    snprintf(out, cap, "native.global_b(\"EnableBorders\")");
+  else if (strcmp(v, "true") == 0 || strcmp(v, "false") == 0 ||
+           (v[0] >= '0' && v[0] <= '9') || v[0] == '"')
+    snprintf(out, cap, "%s", v);
+  else
+    snprintf(out, cap, "nil");
+}
+
+static void emit_defaults(FILE *out, const char *rest) {
+  const char *p = rest;
+  while ((p = strstr(p, ".")) != NULL) {
+    p++;
+    char field[NAME_SZ] = {0};
+    int fi = 0;
+    while (*p && (isalnum((unsigned char)*p) || *p == '_') && fi < NAME_SZ - 1)
+      field[fi++] = *p++;
+    field[fi] = '\0';
+    if (!field[0] || !strchr(p, '='))
+      continue;
+    p = strchr(p, '=') + 1;
+    const char *end = p;
+    while (*end && *end != ',' && *end != ')' && *end != '}')
+      end++;
+    char expr[256] = {0};
+    size_t n = (size_t)(end - p);
+    if (n >= sizeof(expr))
+      n = sizeof(expr) - 1;
+    memcpy(expr, p, n);
+    expr[n] = '\0';
+    char value[256];
+    lua_expr(value, sizeof(value), expr);
+    fprintf(out, "if v.%s == nil then v.%s = %s end ", field, field, value);
+    p = end;
+  }
+}
+
+static void gen_wrapper(FILE *out, const char *name, const char *rest,
+                        const char *params) {
+  char raw[NAME_SZ] = {0};
+  snprintf(raw, sizeof(raw), "ski_%s", name + 3);
+  const char *kind = ret_for(raw);
+  if (strcmp(kind, "v") != 0 && strcmp(kind, "i") != 0 &&
+      strcmp(kind, "b") != 0 && strcmp(kind, "s") != 0)
+    kind = "v";
+
+  if (strstr(rest, "SK_STORE_NAME")) {
+    fprintf(out,
+            "M.%s = function(...) return native.%s(\"%s\", native.feature(), "
+            "native.feature(), ...) end\n",
+            name, kind, raw);
+    return;
+  }
+  if (strstr(rest, "__FILE__")) {
+    fprintf(out,
+            "M.%s = function(...) return native.v(\"%s\", ..., native.owner()) "
+            "end\n",
+            name, raw);
+    return;
+  }
+  if (strstr(rest, "NULL, NULL")) {
+    fprintf(out, "M.%s = function(path) return native.image_size(path) end\n",
+            name);
+    return;
+  }
+  if (strstr(rest, "sk_cap_generation")) {
+    fprintf(out,
+            "M.%s = function(key) return function(...) return "
+            "native.call_fn(\"sk_cap_resolve\", key, ...) end end\n",
+            name);
+    return;
+  }
+  if (strstr(rest, "(void *)") || strstr(rest, "(void*)")) {
+    fprintf(out, "M.%s = function(key, fn) native.cap_register(key, fn) end\n",
+            name);
+    return;
+  }
+  if (strstr(name, "_fmt") || strstr(rest, "const SkMessageSpec")) {
+    fprintf(out,
+            "M.%s = function(t, ...) return native.struct_call(\"ski_message\", "
+            "\"SkMessageSpec\", t or {}, \"v\") end\n",
+            name);
+    return;
+  }
+
+  char target[NAME_SZ] = {0};
+  int ti = 0;
+  const char *q = rest;
+  while (*q && ti < NAME_SZ - 1 && (isalnum((unsigned char)*q) || *q == '_'))
+    target[ti++] = *q++;
+  target[ti] = '\0';
+
+  if (target[0] == 's' && target[1] == 'k' && target[2] == '_' &&
+      target[3] != 'i') {
+    fprintf(out, "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
+                 "v[k] = x end ",
+            name);
+    emit_defaults(out, rest);
+    fprintf(out, "return M.%s(v) end\n", target);
+    return;
+  }
+
+  char *st = strstr(rest, "&(");
+  if (st && target[0]) {
+    st += 2;
+    char stype[NAME_SZ] = {0};
+    int si = 0;
+    while (*st && si < NAME_SZ - 1 &&
+           (isalnum((unsigned char)*st) || *st == '_'))
+      stype[si++] = *st++;
+    stype[si] = '\0';
+    char lead[NAME_SZ] = {0};
+    if (params) {
+      const char *pp = params;
+      while (*pp && *pp != '.') {
+        if (isalnum((unsigned char)*pp) || *pp == '_') {
+          size_t n = strlen(lead);
+          if (n < NAME_SZ - 2) {
+            lead[n] = *pp;
+            lead[n + 1] = '\0';
+          }
+        } else if (*pp == ',' && lead[0]) {
+          strcat(lead, ",");
+        }
+        pp++;
+      }
+    }
+    fprintf(out, "M.%s = function(%st) local v = {} for k,x in pairs(t or {}) do "
+                 "v[k] = x end ",
+            name, lead[0] ? lead : "");
+    emit_defaults(out, rest);
+    fprintf(out, "return native.struct_call(\"%s\", \"%s\", v, \"%s\"", target,
+            stype, kind);
+    if (lead[0]) {
+      char lead_args[NAME_SZ];
+      snprintf(lead_args, sizeof(lead_args), "%s", lead);
+      size_t ln = strlen(lead_args);
+      if (ln && lead_args[ln - 1] == ',')
+        lead_args[ln - 1] = '\0';
+      fprintf(out, ",%s", lead_args);
+    }
+    fprintf(out, ") end\n");
+    return;
+  }
+
+  fprintf(out, "M.%s = M.%s or function(...) return native.%s(\"%s\", ...) "
+               "end\n",
+          name, target[0] ? target : name, kind, name);
 }
 
 static int gen_struct_header(void) {
@@ -502,6 +623,7 @@ int main(void) {
       cur = -1;
   }
   fclose(in);
+  collect_rets(lines, line_count);
 
   fprintf(out,
           "-- Generated by tools/gen_skapi_lua.c. Do not edit.\n"
@@ -521,46 +643,22 @@ int main(void) {
              (isalnum((unsigned char)*p) || *p == '_'))
         name[ni++] = *p++;
       name[ni] = '\0';
-      if (!name[0] || name[0] != 's' || name[1] != 'k' || overridden(name))
+      if (!name[0] || name[0] != 's' || name[1] != 'k')
         continue;
+      char params[NAME_SZ] = {0};
+      if (*p == '(') {
+        char *close_paren = strchr(p, ')');
+        if (close_paren) {
+          size_t pn = (size_t)(close_paren - p + 1);
+          if (pn < NAME_SZ - 1) {
+            memcpy(params, p, pn);
+            params[pn] = '\0';
+          }
+          p = close_paren + 1;
+        }
+      }
       char *rest = trim(p);
-      if (*rest == '(') {
-        char *close = strchr(rest, ')');
-        if (close)
-          rest = close + 1;
-        rest = trim(rest);
-      }
-
-      char *lp = strchr(name, '(');
-      if (lp)
-        *lp = '\0';
-      char raw[NAME_SZ] = {0};
-      int ri = 0;
-      while (*rest && ri < NAME_SZ - 1 &&
-             (isalnum((unsigned char)*rest) || *rest == '_'))
-        raw[ri++] = *rest++;
-      raw[ri] = '\0';
-
-      char *st = strstr(rest, "&(");
-      if (st && raw[0]) {
-        st += 2;
-        char stype[NAME_SZ] = {0};
-        int si = 0;
-        while (*st && si < NAME_SZ - 1 &&
-               (isalnum((unsigned char)*st) || *st == '_'))
-          stype[si++] = *st++;
-        stype[si] = '\0';
-        if (stype[0])
-          fprintf(out,
-                  "M.%s = function(t) return native.struct_call(\"%s\", "
-                  "\"%s\", t or {}, \"v\") end\n",
-                  name, raw, stype);
-      } else if (raw[0]) {
-        fprintf(out,
-                "M.%s = M.%s or function(...) return native.v(\"%s\", "
-                "...) end\n",
-                name, raw, name);
-      }
+      gen_wrapper(out, name, rest, params);
       continue;
     }
 
@@ -583,16 +681,17 @@ int main(void) {
       continue;
     memcpy(fname, start, flen);
     fname[flen] = '\0';
-    if (!fname[0] || fname[0] != 's' || fname[1] != 'k' || overridden(fname))
+    if (!fname[0] || fname[0] != 's' || fname[1] != 'k')
       continue;
     if (strstr(p, "typedef"))
       continue;
-    fprintf(out, "function M.%s(...) return native.%s(\"%s\", ...) end\n",
-            fname, ret_kind(p), fname);
+    if (strstr(fname, "_fmt")) {
+      gen_wrapper(out, fname, "const SkMessageSpec", "");
+    } else {
+      fprintf(out, "function M.%s(...) return native.%s(\"%s\", ...) end\n",
+              fname, ret_kind(p), fname);
+    }
   }
-
-  for (size_t i = 0; i < sizeof(overrides) / sizeof(overrides[0]); i++)
-    fprintf(out, "%s\n", overrides[i].code);
 
   fprintf(out, "\nreturn M\n");
   fclose(out);
