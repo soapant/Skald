@@ -744,33 +744,9 @@ typedef void (*SkHttpCallback)(const char *body, bool ok, void *userdata);
 
 void sk_http_get_async(const char *url, SkHttpCallback cb, void *userdata);
 
-typedef struct {
-  char name[64];
-  char value[256];
-  bool has_value;
-} SkFlag;
-
-typedef struct {
-  SkFlag *flags;
-  size_t count;
-} SkFlagList;
-
-SkFlagList sk_parse_flags(const char *input);
-bool sk_is_flag_prefix(char c);
-char *sk_extract_flag_name(const char *p);
-char *sk_extract_quoted(char **pp);
-char *sk_extract_value(char **pp);
-bool sk_next_flag(char *p);
-
-void sk_free_flags(SkFlagList *list);
-
 SkTimer sk_timer_start(void);
 
 double sk_timer_end(SkTimer t);
-
-SkTimer sk_profile_start(void);
-
-void sk_profile_end(SkTimer timer);
 
 void sk_run_after_time(double seconds, void (*callback)(void));
 
@@ -1348,7 +1324,6 @@ SkPos sk_get_widget_pos_fmt(const char *fmt, ...);
 int sk_get_text_width_fmt(int font_size, const char *fmt, ...);
 void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt,
                            ...);
-SkFlagList sk_parse_flags_fmt(const char *fmt, ...);
 SkLibrary sk_library_open_fmt(const char *fmt, ...);
 void sk_library_register_fmt(SkLibrary handle, const char *fmt, ...);
 SkLibrary sk_library_get_fmt(const char *fmt, ...);

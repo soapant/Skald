@@ -281,17 +281,8 @@ function M.http_get_limited(...) return native.s("sk_http_get_limited", ...) end
 M.http_download = function(...) return native.sk_http_download(...) end
 function M.http_post(...) return native.s("sk_http_post", ...) end
 M.http_get_async = function(...) return native.sk_http_get_async(...) end
-M.parse_flags = function(...) return native.sk_parse_flags(...) end
-M.is_flag_prefix = function(...) return native.sk_is_flag_prefix(...) end
-function M.extract_flag_name(...) return native.s("sk_extract_flag_name", ...) end
-function M.extract_quoted(...) return native.s("sk_extract_quoted", ...) end
-function M.extract_value(...) return native.s("sk_extract_value", ...) end
-M.next_flag = function(...) return native.sk_next_flag(...) end
-M.free_flags = function(...) return native.sk_free_flags(...) end
 M.timer_start = function(...) return native.sk_timer_start(...) end
 M.timer_end = function(...) return native.sk_timer_end(...) end
-M.profile_start = function(...) return native.sk_profile_start(...) end
-M.profile_end = function(...) return native.sk_profile_end(...) end
 M.run_after_time = function(...) return native.sk_run_after_time(...) end
 M.string_contains = function(...) return native.sk_string_contains(...) end
 M.string_contains_ci = function(...) return native.sk_string_contains_ci(...) end
@@ -528,7 +519,6 @@ M.slider_set_value_fmt = function(...) return native.fmt_call("b", "sk_slider_se
 M.get_widget_pos_fmt = function(...) return native.fmt_call("i", "sk_get_widget_pos_fmt", ...) end
 M.get_text_width_fmt = function(...) return native.fmt_call("i", "sk_get_text_width_fmt", ...) end
 M.http_get_async_fmt = function(...) return native.fmt_call("v", "sk_http_get_async_fmt", ...) end
-M.parse_flags_fmt = function(...) return native.fmt_call("i", "sk_parse_flags_fmt", ...) end
 M.library_open_fmt = function(...) return native.fmt_call("i", "sk_library_open_fmt", ...) end
 M.library_register_fmt = function(...) return native.fmt_call("v", "sk_library_register_fmt", ...) end
 M.library_get_fmt = function(...) return native.fmt_call("i", "sk_library_get_fmt", ...) end

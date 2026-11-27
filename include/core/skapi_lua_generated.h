@@ -543,19 +543,6 @@ static const LuaFieldDesc lf_SkScrollSpec[] = {
 };
 static const LuaStructDesc lsd_SkScrollSpec = {"SkScrollSpec", sizeof(SkScrollSpec), lf_SkScrollSpec, (int)(sizeof(lf_SkScrollSpec)/sizeof(lf_SkScrollSpec[0]))};
 #include "core/skapi.h"
-static const LuaFieldDesc lf_SkFlag[] = {
-    {"name", LSF_STR_INLINE, offsetof(SkFlag, name), 64, 0, NULL},
-    {"value", LSF_STR_INLINE, offsetof(SkFlag, value), 256, 0, NULL},
-    {"has_value", LSF_BOOL, offsetof(SkFlag, has_value), 0, 0, NULL},
-};
-static const LuaStructDesc lsd_SkFlag = {"SkFlag", sizeof(SkFlag), lf_SkFlag, (int)(sizeof(lf_SkFlag)/sizeof(lf_SkFlag[0]))};
-#include "core/skapi.h"
-static const LuaFieldDesc lf_SkFlagList[] = {
-    {"flags", LSF_STRUCT_PTR, offsetof(SkFlagList, flags), 0, 0, "SkFlag"},
-    {"count", LSF_INT, offsetof(SkFlagList, count), 0, 0, NULL},
-};
-static const LuaStructDesc lsd_SkFlagList = {"SkFlagList", sizeof(SkFlagList), lf_SkFlagList, (int)(sizeof(lf_SkFlagList)/sizeof(lf_SkFlagList[0]))};
-#include "core/skapi.h"
 static const LuaFieldDesc lf_SkHashMap[] = {
     {"key", LSF_STR, offsetof(SkHashMap, key), 0, 0, NULL},
     {"value", LSF_INT, offsetof(SkHashMap, value), 0, 0, NULL},
@@ -1521,8 +1508,6 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_SkTextSegmentsSpec,
     &lsd_SkTextWrappedSpec,
     &lsd_SkScrollSpec,
-    &lsd_SkFlag,
-    &lsd_SkFlagList,
     &lsd_SkHashMap,
     &lsd_SkKeyEvent,
     &lsd_SkMouseEvent,
@@ -3267,49 +3252,6 @@ static inline int lthunk_sk_http_get_async(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
-static inline int lthunk_sk_parse_flags(lua_State *L) {
-  slua_owner_from_state(L);
-  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol("sk_parse_flags");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_parse_flags"); }
-  typedef SkFlagList (*fn_t)(const char *);
-  SkFlagList r = ((fn_t)sym)((const char *)a0);
-  slua_owner_clear();
-  slua_push_struct(L, "SkFlagList", &r);
-  return 1;
-}
-static inline int lthunk_sk_is_flag_prefix(lua_State *L) {
-  slua_owner_from_state(L);
-  long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
-  void *sym = Platform_GetMainSymbol("sk_is_flag_prefix");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_flag_prefix"); }
-  typedef bool (*fn_t)(char);
-  bool r = ((fn_t)sym)((char)a0);
-  slua_owner_clear();
-  lua_pushboolean(L, r != 0);
-  return 1;
-}
-static inline int lthunk_sk_next_flag(lua_State *L) {
-  slua_owner_from_state(L);
-  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol("sk_next_flag");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_next_flag"); }
-  typedef bool (*fn_t)(char *);
-  bool r = ((fn_t)sym)((char *)a0);
-  slua_owner_clear();
-  lua_pushboolean(L, r != 0);
-  return 1;
-}
-static inline int lthunk_sk_free_flags(lua_State *L) {
-  slua_owner_from_state(L);
-  SkFlagList *a0 = (SkFlagList *)slua_raw_ptr(L, 1);
-  void *sym = Platform_GetMainSymbol("sk_free_flags");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_flags"); }
-  typedef void (*fn_t)(SkFlagList *);
-  ((fn_t)sym)(a0);
-  slua_owner_clear();
-  return 0;
-}
 static inline int lthunk_sk_timer_start(lua_State *L) {
   slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_timer_start");
@@ -3331,27 +3273,6 @@ static inline int lthunk_sk_timer_end(lua_State *L) {
   slua_owner_clear();
   lua_pushnumber(L, (double)r);
   return 1;
-}
-static inline int lthunk_sk_profile_start(lua_State *L) {
-  slua_owner_from_state(L);
-  void *sym = Platform_GetMainSymbol("sk_profile_start");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_profile_start"); }
-  typedef SkTimer (*fn_t)(void);
-  SkTimer r = ((fn_t)sym)();
-  slua_owner_clear();
-  slua_push_struct(L, "SkTimer", &r);
-  return 1;
-}
-static inline int lthunk_sk_profile_end(lua_State *L) {
-  slua_owner_from_state(L);
-  SkTimer a0; memset(&a0, 0, sizeof(a0));
-  slua_fill_struct(L, "SkTimer", 1, &a0);
-  void *sym = Platform_GetMainSymbol("sk_profile_end");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_profile_end"); }
-  typedef void (*fn_t)(SkTimer);
-  ((fn_t)sym)(a0);
-  slua_owner_clear();
-  return 0;
 }
 static inline int lthunk_sk_run_after_time(lua_State *L) {
   slua_owner_from_state(L);
@@ -4708,14 +4629,8 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_scroll_end); lua_setfield(L, -2, "sk_scroll_end");
   lua_pushcfunction(L, lthunk_sk_http_download); lua_setfield(L, -2, "sk_http_download");
   lua_pushcfunction(L, lthunk_sk_http_get_async); lua_setfield(L, -2, "sk_http_get_async");
-  lua_pushcfunction(L, lthunk_sk_parse_flags); lua_setfield(L, -2, "sk_parse_flags");
-  lua_pushcfunction(L, lthunk_sk_is_flag_prefix); lua_setfield(L, -2, "sk_is_flag_prefix");
-  lua_pushcfunction(L, lthunk_sk_next_flag); lua_setfield(L, -2, "sk_next_flag");
-  lua_pushcfunction(L, lthunk_sk_free_flags); lua_setfield(L, -2, "sk_free_flags");
   lua_pushcfunction(L, lthunk_sk_timer_start); lua_setfield(L, -2, "sk_timer_start");
   lua_pushcfunction(L, lthunk_sk_timer_end); lua_setfield(L, -2, "sk_timer_end");
-  lua_pushcfunction(L, lthunk_sk_profile_start); lua_setfield(L, -2, "sk_profile_start");
-  lua_pushcfunction(L, lthunk_sk_profile_end); lua_setfield(L, -2, "sk_profile_end");
   lua_pushcfunction(L, lthunk_sk_run_after_time); lua_setfield(L, -2, "sk_run_after_time");
   lua_pushcfunction(L, lthunk_sk_string_contains); lua_setfield(L, -2, "sk_string_contains");
   lua_pushcfunction(L, lthunk_sk_string_contains_ci); lua_setfield(L, -2, "sk_string_contains_ci");

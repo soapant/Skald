@@ -2236,142 +2236,6 @@ unsigned long sk_key_queue_dropped(void) { return global_key_dropped(); }
 
 void sk_clear_key_queue(void) { global_key_clear(); }
 
-bool sk_is_flag_prefix(char c) { return c == '-' || c == '/'; }
-
-char *sk_extract_flag_name(const char *p) {
-  size_t n = 0;
-  while (p[n] && !isspace((unsigned char)p[n]) && p[n] != '=')
-    n++;
-  return dup_substring(p, n);
-}
-
-char *sk_extract_quoted(char **pp) {
-  char *p = *pp;
-  char q = *p++;
-  char *s = p;
-  while (*p && *p != q)
-    p++;
-  size_t len = (size_t)(p - s);
-  char *out = dup_substring(s, len);
-  if (*p == q)
-    p++;
-  *pp = p;
-  return out;
-}
-
-char *sk_extract_value(char **pp) {
-  char *p = *pp;
-  if (*p == '"' || *p == '\'')
-    return sk_extract_quoted(pp);
-  char *s = p;
-  while (*p && !isspace((unsigned char)*p))
-    p++;
-  size_t len = (size_t)(p - s);
-  if (len == 0)
-    return NULL;
-  char *out = dup_substring(s, len);
-  if (!out)
-    return NULL;
-  *pp = p;
-  return out;
-}
-
-bool sk_next_flag(char *p) {
-  while (*p && isspace((unsigned char)*p))
-    p++;
-  return *p == '-' || *p == '/';
-}
-
-SkFlagList sk_parse_flags(const char *input) {
-  SkFlagList out = {0};
-  if (!input || !*input)
-    return out;
-  char *copy = strdup(input);
-  if (!copy)
-    return out;
-  size_t cap = 8;
-  SkFlag *arr = (SkFlag *)calloc(cap, sizeof(SkFlag));
-  if (!arr) {
-    free(copy);
-    {
-      return out;
-    }
-  }
-  char *p = copy;
-  while (*p) {
-    while (*p && isspace((unsigned char)*p))
-      p++;
-    if (!*p)
-      break;
-    if (!sk_is_flag_prefix(*p)) {
-      while (*p && !isspace((unsigned char)*p))
-        p++;
-      continue;
-    }
-    p++;
-    if (*p == '-')
-      p++;
-    char *name = sk_extract_flag_name(p);
-    if (!name)
-      break;
-    p += strlen(name);
-    char *valbuf = NULL;
-    bool has_val = false;
-    if (*p == '=') {
-      p++;
-      valbuf = sk_extract_value(&p);
-      has_val = valbuf != NULL;
-    } else {
-      char *save = p;
-      while (*p && isspace((unsigned char)*p))
-        p++;
-      if (*p && !sk_is_flag_prefix(*p)) {
-        valbuf = sk_extract_value(&p);
-        has_val = valbuf != NULL;
-        if (has_val && sk_next_flag(p)) {
-          has_val = false;
-          free(valbuf);
-          valbuf = NULL;
-          p = save;
-          while (*p && isspace((unsigned char)*p))
-            p++;
-        }
-      }
-    }
-    if (out.count >= cap) {
-      cap *= 2;
-      SkFlag *narr = (SkFlag *)realloc(arr, cap * sizeof(SkFlag));
-      if (!narr)
-        break;
-      arr = narr;
-    }
-    SkFlag *f = &arr[out.count++];
-    memset(f, 0, sizeof(*f));
-    safe_copy(f->name, sizeof(f->name), name);
-    free(name);
-    if (has_val) {
-      safe_copy(f->value, sizeof(f->value), valbuf);
-      f->has_value = true;
-      free(valbuf);
-    }
-  }
-  free(copy);
-  out.flags = arr;
-  if (out.count == 0) {
-    free(arr);
-    out.flags = NULL;
-  }
-  return out;
-}
-
-void sk_free_flags(SkFlagList *list) {
-  if (!list) {
-    return;
-  }
-  free(list->flags);
-  list->flags = NULL;
-  list->count = 0;
-}
 
 void sk_run_after_time(double seconds, void (*callback)(void)) {
   if (!callback || seconds < 0)
@@ -2507,21 +2371,6 @@ const SkHashMap *sk_hashmap_at(SkHashMap *map, size_t index) {
   return &map[index];
 }
 
-SkTimer sk_profile_start(void) { return sk_timer_start(); }
-
-void sk_profile_end(SkTimer timer) {
-  double ms = sk_timer_end(timer);
-  if (ms < 0.0)
-    ms = 0.0;
-
-  if (ms >= 1000.0)
-    printf("[profile] %.3f s \n", ms / 1000.0);
-  else if (ms >= 1.0)
-    printf("[profile] %.3f ms \n", ms);
-  else
-    printf("[profile] %.3f µs \n", ms * 1000.0);
-}
-
 typedef struct {
   char name[64];
   SkLibrary handle;
@@ -2637,7 +2486,6 @@ bool sk_monitor_at(int index, SkMonitorInfo *out) {
 }
 
 unsigned long long sk_net_rx_bytes_over(double seconds) {
-
   if (seconds <= 0)
     return 0;
 
@@ -3225,11 +3073,6 @@ void sk_http_get_async_fmt(SkHttpCallback cb, void *userdata, const char *fmt,
                            ...) {
   SK_FMT_BUFFER();
   sk_http_get_async(buf, cb, userdata);
-}
-
-SkFlagList sk_parse_flags_fmt(const char *fmt, ...) {
-  SK_FMT_BUFFER();
-  return sk_parse_flags(buf);
 }
 
 SkLibrary sk_library_open_fmt(const char *fmt, ...) {
