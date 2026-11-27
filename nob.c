@@ -41,9 +41,9 @@
 
 #define WIN_CC_FLAGS                                                           \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
-      "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-MMD", "-MP",     \
-      "-Wall", "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter",        \
-      "-Wno-override-init"
+      "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-I",              \
+      "include/deps/lua", "-MMD", "-MP", "-Wall", "-Wextra",                   \
+      "-Wno-sign-compare", "-Wno-unused-parameter", "-Wno-override-init"
 
 #define WIN_LINK_FLAGS                                                         \
   "-static", "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32",   \
