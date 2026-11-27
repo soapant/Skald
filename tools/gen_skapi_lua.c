@@ -218,6 +218,13 @@ static int scalar_name_count;
 static char handle_names[256][NAME_SZ];
 static int handle_name_count;
 
+typedef struct {
+  char name[NAME_SZ];
+  long long value;
+} EnumConst;
+static EnumConst enum_consts[2048];
+static int enum_count;
+
 static void parse_aliases(const char *path) {
   char *buf = read_all(path);
   if (!buf)
@@ -308,6 +315,73 @@ static void parse_enum_typedefs(const char *path) {
       if (!known)
         snprintf(scalar_names[scalar_name_count++], NAME_SZ, "%s", name);
     }
+  }
+  free(buf);
+}
+
+static void add_enum_const(const char *name, long long value) {
+  if (!name[0])
+    return;
+  for (int i = 0; i < enum_count; i++)
+    if (strcmp(enum_consts[i].name, name) == 0)
+      return;
+  if (enum_count < 2048) {
+    snprintf(enum_consts[enum_count].name, NAME_SZ, "%s", name);
+    enum_consts[enum_count++].value = value;
+  }
+}
+
+static void parse_enum_values(const char *path) {
+  char *buf = read_all(path);
+  if (!buf)
+    return;
+  char *p = buf;
+  while ((p = strstr(p, "enum")) != NULL && enum_count < 2048) {
+    if ((p > buf && (isalnum((unsigned char)p[-1]) || p[-1] == '_'))) {
+      p += 4;
+      continue;
+    }
+    char *q = p + 4;
+    while (*q && isspace((unsigned char)*q))
+      q++;
+    while (*q && (isalnum((unsigned char)*q) || *q == '_'))
+      q++;
+    while (*q && isspace((unsigned char)*q))
+      q++;
+    if (*q != '{') {
+      p = q;
+      continue;
+    }
+    char *close = strchr(q, '}');
+    if (!close)
+      break;
+    char *body = q + 1;
+    long long next = 0;
+    while (body < close && enum_count < 2048) {
+      while (body < close && (*body == ',' || isspace((unsigned char)*body)))
+        body++;
+      if (body >= close)
+        break;
+      char item[256] = {0};
+      size_t n = 0;
+      while (body < close && *body != ',' && n < sizeof(item) - 1)
+        item[n++] = *body++;
+      item[n] = '\0';
+      clean(item);
+      char *eq = strchr(item, '=');
+      char name[NAME_SZ] = {0};
+      if (eq) {
+        *eq = '\0';
+        char *v = eq + 1;
+        while (*v == ' ')
+          v++;
+        next = strtoll(v, NULL, 0);
+      }
+      snprintf(name, NAME_SZ, "%s", trim(item));
+      add_enum_const(name, next);
+      next++;
+    }
+    p = close + 1;
   }
   free(buf);
 }
@@ -1213,6 +1287,7 @@ static int gen_struct_header(void) {
   for (int i = 0; i < header_count; i++) {
     parse_callback_typedefs(header_paths[i]);
     parse_enum_typedefs(header_paths[i]);
+    parse_enum_values(header_paths[i]);
     parse_bool_globals(header_paths[i]);
   }
   FILE *out = fopen("include/core/skapi_lua_generated.h.tmp", "w");
@@ -1761,6 +1836,9 @@ int main(void) {
               fname, ret_kind(p), fname);
     }
   }
+
+  for (int i = 0; i < enum_count; i++)
+    fprintf(out, "M.%s = %lld\n", enum_consts[i].name, enum_consts[i].value);
 
   fprintf(out, "\nreturn M\n");
   fclose(out);
