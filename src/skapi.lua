@@ -187,7 +187,6 @@ M.edit_text_popup = function(t) local v = {} for k,x in pairs(t or {}) do v[k] =
 M.replace_line_in_file = function(...) return native.sk_replace_line_in_file(...) end
 M.popup = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_popup", "PopupSpec", v, "s") end
 M.message = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_message", "SkMessageSpec", v, "v") end
-M.message_fmt = function(...) return native.fmt_call("v", "sk_message_fmt", ...) end
 M.overlay = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.timeout == nil then v.timeout = 10000000.0 end return M.message(v) end
 M.dismiss_overlay = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.dismiss_message(v) end
 M.overlay_active = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.message_active(v) end
@@ -476,66 +475,6 @@ M.register_key_interceptor = function(...) return native.sk_register_key_interce
 M.close_window = function(...) return native.sk_close_window(...) end
 M.resize_window = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_resize_window", "SkRect", v, "b") end
 M.get_window_bounds = function(...) return native.sk_get_window_bounds(...) end
-M.copy_to_clipboard_fmt = function(...) return native.fmt_call("b", "sk_copy_to_clipboard_fmt", ...) end
-M.copy_file_path_fmt = function(...) return native.fmt_call("b", "sk_copy_file_path_fmt", ...) end
-M.paste_fmt = function(...) return native.fmt_call("b", "sk_paste_fmt", ...) end
-M.load_file_list_fmt = function(...) return native.fmt_call("i", "sk_load_file_list_fmt", ...) end
-M.file_exists_fmt = function(...) return native.fmt_call("b", "sk_file_exists_fmt", ...) end
-M.prewarm_image_fmt = function(...) return native.fmt_call("b", "sk_prewarm_image_fmt", ...) end
-M.write_to_file_fmt = function(...) return native.fmt_call("b", "sk_write_to_file_fmt", ...) end
-M.get_icon_size_fmt = function(...) return native.fmt_call("i", "sk_get_icon_size_fmt", ...) end
-M.launch_detached_fmt = function(...) return native.fmt_call("b", "sk_launch_detached_fmt", ...) end
-M.terminate_process_by_name_fmt = function(...) return native.fmt_call("b", "sk_terminate_process_by_name_fmt", ...) end
-M.process_running_fmt = function(...) return native.fmt_call("b", "sk_process_running_fmt", ...) end
-M.send_hotkey_fmt = function(...) return native.fmt_call("v", "sk_send_hotkey_fmt", ...) end
-M.hotkey_from_string_fmt = function(...) return native.fmt_call("i", "sk_hotkey_from_string_fmt", ...) end
-M.launch_browser_fmt = function(...) return native.fmt_call("b", "sk_launch_browser_fmt", ...) end
-M.query_browser_fmt = function(...) return native.fmt_call("b", "sk_query_browser_fmt", ...) end
-M.focus_window_by_title_fmt = function(...) return native.fmt_call("b", "sk_focus_window_by_title_fmt", ...) end
-M.find_window_by_title_fmt = function(...) return native.fmt_call("i", "sk_find_window_by_title_fmt", ...) end
-M.find_window_by_root_atom_fmt = function(...) return native.fmt_call("i", "sk_find_window_by_root_atom_fmt", ...) end
-M.find_window_by_id_fmt = function(...) return native.fmt_call("i", "sk_find_window_by_id_fmt", ...) end
-M.window_set_long_property_fmt = function(...) return native.fmt_call("b", "sk_window_set_long_property_fmt", ...) end
-M.window_send_message_fmt = function(...) return native.fmt_call("b", "sk_window_send_message_fmt", ...) end
-M.dismiss_message_fmt = function(...) return native.fmt_call("b", "sk_dismiss_message_fmt", ...) end
-M.message_active_fmt = function(...) return native.fmt_call("b", "sk_message_active_fmt", ...) end
-M.close_windows_by_title_fmt = function(...) return native.fmt_call("b", "sk_close_windows_by_title_fmt", ...) end
-M.close_windows_by_id_fmt = function(...) return native.fmt_call("b", "sk_close_windows_by_id_fmt", ...) end
-M.set_theme_fmt = function(...) return native.fmt_call("b", "sk_set_theme_fmt", ...) end
-M.set_edit_text_fmt = function(...) return native.fmt_call("v", "sk_set_edit_text_fmt", ...) end
-M.checkbox_is_checked_fmt = function(...) return native.fmt_call("b", "sk_checkbox_is_checked_fmt", ...) end
-M.checkbox_is_hovered_fmt = function(...) return native.fmt_call("b", "sk_checkbox_is_hovered_fmt", ...) end
-M.checkbox_is_clicked_fmt = function(...) return native.fmt_call("b", "sk_checkbox_is_clicked_fmt", ...) end
-M.button_is_checked_fmt = function(...) return native.fmt_call("b", "sk_button_is_checked_fmt", ...) end
-M.button_is_hovered_fmt = function(...) return native.fmt_call("b", "sk_button_is_hovered_fmt", ...) end
-M.button_is_clicked_fmt = function(...) return native.fmt_call("b", "sk_button_is_clicked_fmt", ...) end
-M.slider_is_hovered_fmt = function(...) return native.fmt_call("b", "sk_slider_is_hovered_fmt", ...) end
-M.slider_is_clicked_fmt = function(...) return native.fmt_call("b", "sk_slider_is_clicked_fmt", ...) end
-M.slider_is_dragging_fmt = function(...) return native.fmt_call("b", "sk_slider_is_dragging_fmt", ...) end
-M.slider_value_fmt = function(...) return native.fmt_call("f", "sk_slider_value_fmt", ...) end
-M.slider_fraction_fmt = function(...) return native.fmt_call("f", "sk_slider_fraction_fmt", ...) end
-M.slider_percent_fmt = function(...) return native.fmt_call("i", "sk_slider_percent_fmt", ...) end
-M.slider_set_value_fmt = function(...) return native.fmt_call("b", "sk_slider_set_value_fmt", ...) end
-M.get_widget_pos_fmt = function(...) return native.fmt_call("i", "sk_get_widget_pos_fmt", ...) end
-M.get_text_width_fmt = function(...) return native.fmt_call("i", "sk_get_text_width_fmt", ...) end
-M.http_get_async_fmt = function(...) return native.fmt_call("v", "sk_http_get_async_fmt", ...) end
-M.library_open_fmt = function(...) return native.fmt_call("i", "sk_library_open_fmt", ...) end
-M.library_register_fmt = function(...) return native.fmt_call("v", "sk_library_register_fmt", ...) end
-M.library_get_fmt = function(...) return native.fmt_call("i", "sk_library_get_fmt", ...) end
-M.hashmap_put_fmt = function(...) return native.fmt_call("v", "sk_hashmap_put_fmt", ...) end
-M.hashmap_add_fmt = function(...) return native.fmt_call("v", "sk_hashmap_add_fmt", ...) end
-M.hashmap_get_fmt = function(...) return native.fmt_call("i", "sk_hashmap_get_fmt", ...) end
-M.hashmap_has_fmt = function(...) return native.fmt_call("b", "sk_hashmap_has_fmt", ...) end
-M.hashmap_del_fmt = function(...) return native.fmt_call("b", "sk_hashmap_del_fmt", ...) end
-M.is_window_open_fmt = function(...) return native.fmt_call("b", "sk_is_window_open_fmt", ...) end
-M.type_text_fmt = function(...) return native.fmt_call("b", "sk_type_text_fmt", ...) end
-M.config_clear_hotkey_fmt = function(...) return native.fmt_call("b", "sk_config_clear_hotkey_fmt", ...) end
-M.config_bind_hotkey_fmt = function(...) return native.fmt_call("b", "sk_config_bind_hotkey_fmt", ...) end
-M.config_clear_alias_fmt = function(...) return native.fmt_call("b", "sk_config_clear_alias_fmt", ...) end
-M.hotkey_taken_fmt = function(...) return native.fmt_call("b", "sk_hotkey_taken_fmt", ...) end
-M.reload_feature_fmt = function(...) return native.fmt_call("v", "sk_reload_feature_fmt", ...) end
-M.cap_register_abi_fmt = function(...) return native.fmt_call("v", "sk_cap_register_abi_fmt", ...) end
-M.cap_bind_declare_fmt = function(...) return native.fmt_call("v", "sk_cap_bind_declare_fmt", ...) end
 M.AUTO = 0
 M.TOP_LEFT = 1
 M.TOP_CENTER = 2
