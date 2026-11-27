@@ -1471,7 +1471,7 @@ static const char *lua_alias_to[] = {
     "struct",
     "struct",
 };
-static const LuaStructDesc *ski_lua_struct_find(const char *name) {
+static const LuaStructDesc *slua_struct_find(const char *name) {
   for (int pass = 0; pass < 8; pass++) {
     const char *next = name;
     for (size_t i = 0; i < sizeof(lua_alias_from)/sizeof(lua_alias_from[0]); i++)
@@ -1490,2749 +1490,2749 @@ static const LuaStructDesc *ski_lua_struct_find(const char *name) {
 }
 
 static inline int lthunk_sk_copy_to_clipboard(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_copy_to_clipboard");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_copy_to_clipboard"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_copy_to_clipboard"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_copy_file_path(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_copy_file_path");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_copy_file_path"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_copy_file_path"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_paste_from_clipboard(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_paste_from_clipboard");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_paste_from_clipboard"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_paste_from_clipboard"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_paste(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_paste");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_paste"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_paste"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_clipboard_history_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_clipboard_history_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clipboard_history_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clipboard_history_count"); }
   typedef size_t (*fn_t)(void);
   size_t r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_clipboard_clear_history(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_clipboard_clear_history");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clipboard_clear_history"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clipboard_clear_history"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_net_status(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_net_status");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_net_status"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_net_status"); }
   typedef SkNetStatus (*fn_t)(void);
   SkNetStatus r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_net_rx_bytes(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_net_rx_bytes");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_net_rx_bytes"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_net_rx_bytes"); }
   typedef unsigned long long (*fn_t)(void);
   unsigned long long r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_net_rx_bytes_over(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   double a0 = lua_isnoneornil(L, 1) ? 0 : lua_tonumber(L, 1);
   void *sym = Platform_GetMainSymbol("sk_net_rx_bytes_over");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_net_rx_bytes_over"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_net_rx_bytes_over"); }
   typedef unsigned long long (*fn_t)(double);
   unsigned long long r = ((fn_t)sym)((double)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_load_file_list(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_load_file_list");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_load_file_list"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_load_file_list"); }
   typedef SkStringList (*fn_t)(const char *);
   SkStringList r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkStringList", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkStringList", &r);
   return 1;
 }
 static inline int lthunk_sk_array_free(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_array_free");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_array_free"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_array_free"); }
   typedef void (*fn_t)(void *);
   ((fn_t)sym)((void *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_write_string_to_file(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_write_string_to_file");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_write_string_to_file"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_write_string_to_file"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_file_exists(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_file_exists");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_file_exists"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_file_exists"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_append_unique_line(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_append_unique_line");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_append_unique_line"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_append_unique_line"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_remove_line(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_remove_line");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_remove_line"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_remove_line"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_remove_line_contains(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_remove_line_contains");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_remove_line_contains"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_remove_line_contains"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_prewarm_image(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_prewarm_image");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_prewarm_image"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_prewarm_image"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_append_to_file(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_append_to_file");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_append_to_file"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_append_to_file"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_get_icon_size(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_get_icon_size");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_icon_size"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_icon_size"); }
   typedef int (*fn_t)(const char *);
   int r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_free_string_list(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_free_string_list");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_string_list"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_string_list"); }
   typedef void (*fn_t)(SkStringList *);
   ((fn_t)sym)((SkStringList *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_free_files_list(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_free_files_list");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_files_list"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_files_list"); }
   typedef void (*fn_t)(ListOfFiles *);
   ((fn_t)sym)((ListOfFiles *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_free_window_list(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_free_window_list");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_window_list"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_window_list"); }
   typedef bool (*fn_t)(SkWindowList *);
   bool r = ((fn_t)sym)((SkWindowList *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_string_list_free(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_string_list_free");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_list_free"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_list_free"); }
   typedef void (*fn_t)(StringList *);
   ((fn_t)sym)((StringList *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_launch_with_args(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_launch_with_args");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_with_args"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_with_args"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_launch_with_args_as_admin(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_launch_with_args_as_admin");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_with_args_as_admin"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_with_args_as_admin"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_launch_terminal_at_path(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_launch_terminal_at_path");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_terminal_at_path"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_terminal_at_path"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_launch_detached(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_launch_detached");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_detached"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_detached"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_terminate_process_by_name(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_terminate_process_by_name");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_terminate_process_by_name"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_terminate_process_by_name"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_process_running(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_process_running");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_process_running"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_process_running"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_get_feature_list(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_feature_list");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_feature_list"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_feature_list"); }
   typedef SkFeatureList (*fn_t)(void);
   SkFeatureList r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkFeatureList", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkFeatureList", &r);
   return 1;
 }
 static inline int lthunk_sk_free_feature_list(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_free_feature_list");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_feature_list"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_feature_list"); }
   typedef void (*fn_t)(SkFeatureList *);
   ((fn_t)sym)((SkFeatureList *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_init_all_hotkeys(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_init_all_hotkeys");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_init_all_hotkeys"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_init_all_hotkeys"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_send_hotkey(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_send_hotkey");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_send_hotkey"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_send_hotkey"); }
   typedef void (*fn_t)(const char *);
   ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_hotkey_from_string(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_hotkey_from_string");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_from_string"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_from_string"); }
   typedef SkKey (*fn_t)(const char *);
   SkKey r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkKey", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkKey", &r);
   return 1;
 }
 static inline int lthunk_sk_hotkey_down(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkKey a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkKey", 1, &a0);
+  slua_fill_struct(L, "SkKey", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_hotkey_down");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_down"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_down"); }
   typedef bool (*fn_t)(SkKey);
   bool r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_launch_browser(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_launch_browser");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_browser"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_launch_browser"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_query_browser(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_query_browser");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_query_browser"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_query_browser"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_window_by_title(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_focus_window_by_title");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_by_title"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_by_title"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_find_window_by_title(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_find_window_by_title");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_title"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_title"); }
   typedef SkWindowHandle (*fn_t)(const char *);
   SkWindowHandle r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) ? sizeof(rv) : sizeof(r)); lua_pushinteger(L, (lua_Integer)rv);
   return 1;
 }
 static inline int lthunk_sk_find_window_by_root_atom(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_find_window_by_root_atom");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_root_atom"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_root_atom"); }
   typedef SkWindowHandle (*fn_t)(const char *);
   SkWindowHandle r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) ? sizeof(rv) : sizeof(r)); lua_pushinteger(L, (lua_Integer)rv);
   return 1;
 }
 static inline int lthunk_sk_find_window_by_id(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_find_window_by_id");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_id"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_id"); }
   typedef SkWindowHandle (*fn_t)(const char *);
   SkWindowHandle r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) ? sizeof(rv) : sizeof(r)); lua_pushinteger(L, (lua_Integer)rv);
   return 1;
 }
 static inline int lthunk_sk_get_held_window(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_held_window");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_held_window"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_held_window"); }
   typedef SkWindowHandle (*fn_t)(void);
   SkWindowHandle r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) ? sizeof(rv) : sizeof(r)); lua_pushinteger(L, (lua_Integer)rv);
   return 1;
 }
 static inline int lthunk_sk_move_window(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
   SkPos a1; memset(&a1, 0, sizeof(a1));
-  ski_lua_fill_struct(L, "SkPos", 2, &a1);
+  slua_fill_struct(L, "SkPos", 2, &a1);
   void *sym = Platform_GetMainSymbol("sk_move_window");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_window"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_window"); }
   typedef bool (*fn_t)(SkWindowHandle, SkPos);
   bool r = ((fn_t)sym)(a0, a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_set_window_size(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
   void *sym = Platform_GetMainSymbol("sk_set_window_size");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_window_size"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_window_size"); }
   typedef bool (*fn_t)(SkWindowHandle, int, int);
   bool r = ((fn_t)sym)(a0, (int)a1, (int)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_set_window_opacity(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_set_window_opacity");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_window_opacity"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_window_opacity"); }
   typedef bool (*fn_t)(SkWindowHandle, int);
   bool r = ((fn_t)sym)(a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_get_window_geometry(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
   void *sym = Platform_GetMainSymbol("sk_get_window_geometry");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_window_geometry"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_window_geometry"); }
   typedef SkRect (*fn_t)(SkWindowHandle);
   SkRect r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkRect", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkRect", &r);
   return 1;
 }
 static inline int lthunk_sk_window_set_string_property(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
   void *sym = Platform_GetMainSymbol("sk_window_set_string_property");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_set_string_property"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_set_string_property"); }
   typedef bool (*fn_t)(SkWindowHandle, const char *, const char *);
   bool r = ((fn_t)sym)(a0, (const char *)a1, (const char *)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_window_set_long_property(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
   void *sym = Platform_GetMainSymbol("sk_window_set_long_property");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_set_long_property"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_set_long_property"); }
   typedef bool (*fn_t)(SkWindowHandle, const char *, long);
   bool r = ((fn_t)sym)(a0, (const char *)a1, (long)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_window_send_message(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
   void *sym = Platform_GetMainSymbol("sk_window_send_message");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_send_message"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_send_message"); }
   typedef bool (*fn_t)(SkWindowHandle, const char *, long);
   bool r = ((fn_t)sym)(a0, (const char *)a1, (long)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_close_active_window(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_close_active_window");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_close_active_window"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_close_active_window"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_dismiss_message(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_dismiss_message");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_dismiss_message"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_dismiss_message"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_message_active(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_message_active");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_message_active"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_message_active"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_toggle_fullscreen_active(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_toggle_fullscreen_active");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_toggle_fullscreen_active"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_toggle_fullscreen_active"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_move_active_window_to_monitor(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   bool a0 = lua_toboolean(L, 1) != 0;
   void *sym = Platform_GetMainSymbol("sk_move_active_window_to_monitor");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_to_monitor"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_to_monitor"); }
   typedef bool (*fn_t)(bool);
   bool r = ((fn_t)sym)((bool)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_move_active_window_left(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_move_active_window_left");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_left"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_left"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_move_active_window_up(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_move_active_window_up");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_up"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_up"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_move_active_window_down(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_move_active_window_down");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_down"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_down"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_move_active_window_right(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_move_active_window_right");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_right"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_right"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_window_left(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_window_left");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_left"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_left"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_window_up(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_window_up");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_up"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_up"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_window_down(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_window_down");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_down"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_down"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_window_right(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_window_right");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_right"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_right"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_toggle_minimized_active(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_toggle_minimized_active");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_toggle_minimized_active"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_toggle_minimized_active"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_toggle_maximize_active(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_toggle_maximize_active");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_toggle_maximize_active"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_toggle_maximize_active"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_toggle_always_on_top_active(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_toggle_always_on_top_active");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_toggle_always_on_top_active"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_toggle_always_on_top_active"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_raise_active_window(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_raise_active_window");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_raise_active_window"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_raise_active_window"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_lower_active_window(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_lower_active_window");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_lower_active_window"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_lower_active_window"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_center_active_window(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_center_active_window");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_center_active_window"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_center_active_window"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_snap_active_window(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_snap_active_window");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_snap_active_window"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_snap_active_window"); }
   typedef bool (*fn_t)(SnapPreset);
   bool r = ((fn_t)sym)((SnapPreset)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_get_active_window_pid(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_active_window_pid");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_active_window_pid"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_active_window_pid"); }
   typedef long (*fn_t)(void);
   long r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_switch_to_workspace(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_switch_to_workspace");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_switch_to_workspace"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_switch_to_workspace"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_move_active_window_to_workspace(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_move_active_window_to_workspace");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_to_workspace"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_active_window_to_workspace"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_set_active_window_opacity(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_set_active_window_opacity");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_active_window_opacity"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_active_window_opacity"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_close_windows_by_title(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_close_windows_by_title");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_close_windows_by_title"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_close_windows_by_title"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_close_windows_by_id(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_close_windows_by_id");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_close_windows_by_id"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_close_windows_by_id"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_reload_config(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_reload_config");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_reload_config"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_reload_config"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_save_config(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_save_config");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_save_config"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_save_config"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_refresh_ui(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_refresh_ui");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_refresh_ui"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_refresh_ui"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_request_refresh(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_request_refresh");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_request_refresh"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_request_refresh"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_commit_config(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_commit_config");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_commit_config"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_commit_config"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_set_theme(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_set_theme");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_theme"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_theme"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_theme_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_theme_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_theme_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_theme_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_get_screen_width(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_screen_width");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_screen_width"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_screen_width"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_get_screen_height(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_screen_height");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_screen_height"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_screen_height"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_get_monitor_geometry(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_monitor_geometry");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_monitor_geometry"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_monitor_geometry"); }
   typedef SkRect (*fn_t)(void);
   SkRect r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkRect", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkRect", &r);
   return 1;
 }
 static inline int lthunk_sk_string_starts_with(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_string_starts_with");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_starts_with"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_starts_with"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_string_starts_with_ci(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_string_starts_with_ci");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_starts_with_ci"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_starts_with_ci"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_string_ends_with(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_string_ends_with");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_ends_with"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_ends_with"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_string_equals_ci(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_string_equals_ci");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_equals_ci"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_equals_ci"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_string_split(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_string_split");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_split"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_split"); }
   typedef SkStringList (*fn_t)(const char *, const char *);
   SkStringList r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkStringList", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkStringList", &r);
   return 1;
 }
 static inline int lthunk_sk_set_edit_text(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_set_edit_text");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_edit_text"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_edit_text"); }
   typedef void (*fn_t)(const char *);
   ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_set_edit_cursor(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_set_edit_cursor");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_edit_cursor"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_edit_cursor"); }
   typedef void (*fn_t)(int);
   ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_get_edit_cursor(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_edit_cursor");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_edit_cursor"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_edit_cursor"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_replace_line_in_file(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
   void *sym = Platform_GetMainSymbol("sk_replace_line_in_file");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_replace_line_in_file"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_replace_line_in_file"); }
   typedef bool (*fn_t)(const char *, int, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (int)a1, (const char *)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_image_from_window_title(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_image_from_window_title");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_image_from_window_title"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_image_from_window_title"); }
   typedef SkImage (*fn_t)(const char *);
   SkImage r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkImage", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkImage", &r);
   return 1;
 }
 static inline int lthunk_sk_image_from_window_id(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_image_from_window_id");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_image_from_window_id"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_image_from_window_id"); }
   typedef SkImage (*fn_t)(const char *);
   SkImage r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkImage", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkImage", &r);
   return 1;
 }
 static inline int lthunk_sk_image_free(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkImage a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkImage", 1, &a0);
+  slua_fill_struct(L, "SkImage", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_image_free");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_image_free"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_image_free"); }
   typedef void (*fn_t)(SkImage);
   ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_editbox_set_text(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_editbox_set_text");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_editbox_set_text"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_editbox_set_text"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_editbox_set_active(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_editbox_set_active");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_editbox_set_active"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_editbox_set_active"); }
   typedef void (*fn_t)(const char *);
   ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_checkbox_is_checked(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_checkbox_is_checked");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_checkbox_is_checked"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_checkbox_is_checked"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_checkbox_is_hovered(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_checkbox_is_hovered");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_checkbox_is_hovered"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_checkbox_is_hovered"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_checkbox_is_clicked(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_checkbox_is_clicked");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_checkbox_is_clicked"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_checkbox_is_clicked"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_button_is_checked(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_button_is_checked");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_button_is_checked"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_button_is_checked"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_button_is_hovered(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_button_is_hovered");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_button_is_hovered"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_button_is_hovered"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_button_is_clicked(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_button_is_clicked");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_button_is_clicked"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_button_is_clicked"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_slider_is_hovered(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_slider_is_hovered");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_is_hovered"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_is_hovered"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_slider_is_clicked(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_slider_is_clicked");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_is_clicked"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_is_clicked"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_slider_is_dragging(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_slider_is_dragging");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_is_dragging"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_is_dragging"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_slider_value(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_slider_value");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_value"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_value"); }
   typedef float (*fn_t)(const char *);
   float r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushnumber(L, (double)r);
   return 1;
 }
 static inline int lthunk_sk_slider_fraction(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_slider_fraction");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_fraction"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_fraction"); }
   typedef float (*fn_t)(const char *);
   float r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushnumber(L, (double)r);
   return 1;
 }
 static inline int lthunk_sk_slider_percent(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_slider_percent");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_percent"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_percent"); }
   typedef int (*fn_t)(const char *);
   int r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_slider_set_value(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   double a1 = lua_isnoneornil(L, 2) ? 0 : lua_tonumber(L, 2);
   void *sym = Platform_GetMainSymbol("sk_slider_set_value");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_set_value"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_slider_set_value"); }
   typedef bool (*fn_t)(const char *, float);
   bool r = ((fn_t)sym)((const char *)a0, (float)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_kind(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_kind");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_kind"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_kind"); }
   typedef SkFocusKind (*fn_t)(void);
   SkFocusKind r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_focus_is(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_focus_is");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_is"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_is"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_has_entries(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_has_entries");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_has_entries"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_has_entries"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_move_next(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_move_next");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_move_next"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_move_next"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_move_before(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_move_before");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_move_before"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_move_before"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_activate_focused(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_activate_focused");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_activate_focused"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_activate_focused"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_adjust(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_focus_adjust");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_adjust"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_adjust"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_set_focus(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_set_focus");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_focus"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_focus"); }
   typedef bool (*fn_t)(SkFocusKind);
   bool r = ((fn_t)sym)((SkFocusKind)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_focus_clear(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_focus_clear");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_clear"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_clear"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_listbox_next(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_listbox_next");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_listbox_next"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_listbox_next"); }
   typedef bool (*fn_t)(SkListItemCtx *);
   bool r = ((fn_t)sym)((SkListItemCtx *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_listbox_end(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_listbox_end");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_listbox_end"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_listbox_end"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_draw_text_auto(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_draw_text_auto");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_draw_text_auto"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_draw_text_auto"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_place_editbox_auto(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
   void *sym = Platform_GetMainSymbol("sk_place_editbox_auto");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_place_editbox_auto"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_place_editbox_auto"); }
   typedef bool (*fn_t)(int, int, const char *);
   bool r = ((fn_t)sym)((int)a0, (int)a1, (const char *)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_draw_image_auto(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
   void *sym = Platform_GetMainSymbol("sk_draw_image_auto");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_draw_image_auto"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_draw_image_auto"); }
   typedef bool (*fn_t)(int, int, const char *);
   bool r = ((fn_t)sym)((int)a0, (int)a1, (const char *)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_monitor_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_monitor_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_monitor_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_monitor_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_monitor_at(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *a1 = (void *)(uintptr_t)(lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2));
   void *sym = Platform_GetMainSymbol("sk_monitor_at");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_monitor_at"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_monitor_at"); }
   typedef bool (*fn_t)(int, SkMonitorInfo *);
   bool r = ((fn_t)sym)((int)a0, (SkMonitorInfo *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_get_widget_pos(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_get_widget_pos");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_widget_pos"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_widget_pos"); }
   typedef SkPos (*fn_t)(const char *);
   SkPos r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkPos", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkPos", &r);
   return 1;
 }
 static inline int lthunk_sk_rand_num_between(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_rand_num_between");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_rand_num_between"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_rand_num_between"); }
   typedef int (*fn_t)(int, int);
   int r = ((fn_t)sym)((int)a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_get_text_width(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_get_text_width");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_text_width"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_text_width"); }
   typedef int (*fn_t)(const char *, int);
   int r = ((fn_t)sym)((const char *)a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_get_text_height(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_get_text_height");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_text_height"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_text_height"); }
   typedef int (*fn_t)(int);
   int r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_set_draw_offset(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_set_draw_offset");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_draw_offset"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_draw_offset"); }
   typedef void (*fn_t)(SkPos);
   ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_get_draw_offset(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_draw_offset");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_draw_offset"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_draw_offset"); }
   typedef SkPos (*fn_t)(void);
   SkPos r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkPos", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkPos", &r);
   return 1;
 }
 static inline int lthunk_sk_scroll_end(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_scroll_end");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_scroll_end"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_scroll_end"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_http_download(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_http_download");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_http_download"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_http_download"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_parse_flags(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_parse_flags");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_parse_flags"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_parse_flags"); }
   typedef SkFlagList (*fn_t)(const char *);
   SkFlagList r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkFlagList", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkFlagList", &r);
   return 1;
 }
 static inline int lthunk_sk_is_flag_prefix(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_is_flag_prefix");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_flag_prefix"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_flag_prefix"); }
   typedef bool (*fn_t)(char);
   bool r = ((fn_t)sym)((char)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_next_flag(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_next_flag");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_next_flag"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_next_flag"); }
   typedef bool (*fn_t)(char *);
   bool r = ((fn_t)sym)((char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_free_flags(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_free_flags");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_flags"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_flags"); }
   typedef void (*fn_t)(SkFlagList *);
   ((fn_t)sym)((SkFlagList *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_timer_start(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_timer_start");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_timer_start"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_timer_start"); }
   typedef SkTimer (*fn_t)(void);
   SkTimer r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkTimer", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkTimer", &r);
   return 1;
 }
 static inline int lthunk_sk_timer_end(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkTimer a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkTimer", 1, &a0);
+  slua_fill_struct(L, "SkTimer", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_timer_end");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_timer_end"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_timer_end"); }
   typedef double (*fn_t)(SkTimer);
   double r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushnumber(L, (double)r);
   return 1;
 }
 static inline int lthunk_sk_profile_start(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_profile_start");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_profile_start"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_profile_start"); }
   typedef SkTimer (*fn_t)(void);
   SkTimer r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkTimer", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkTimer", &r);
   return 1;
 }
 static inline int lthunk_sk_profile_end(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkTimer a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkTimer", 1, &a0);
+  slua_fill_struct(L, "SkTimer", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_profile_end");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_profile_end"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_profile_end"); }
   typedef void (*fn_t)(SkTimer);
   ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_run_after_time(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   double a0 = lua_isnoneornil(L, 1) ? 0 : lua_tonumber(L, 1);
   void *sym = Platform_GetMainSymbol("sk_run_after_time");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_run_after_time"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_run_after_time"); }
   typedef void (*fn_t)(double);
   ((fn_t)sym)((double)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_string_contains(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_string_contains");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_contains"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_contains"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_string_contains_ci(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_string_contains_ci");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_contains_ci"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_contains_ci"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_is_root(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_is_root");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_root"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_root"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_run_every(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   double a0 = lua_isnoneornil(L, 1) ? 0 : lua_tonumber(L, 1);
   void *sym = Platform_GetMainSymbol("sk_run_every");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_run_every"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_run_every"); }
   typedef void (*fn_t)(double);
   ((fn_t)sym)((double)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_hashmap_get(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
   void *sym = Platform_GetMainSymbol("sk_hashmap_get");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_get"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_get"); }
   typedef long (*fn_t)(SkHashMap *, const char *, long);
   long r = ((fn_t)sym)((SkHashMap *)a0, (const char *)a1, (long)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_hashmap_has(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_hashmap_has");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_has"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_has"); }
   typedef bool (*fn_t)(SkHashMap *, const char *);
   bool r = ((fn_t)sym)((SkHashMap *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_hashmap_len(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_hashmap_len");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_len"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_len"); }
   typedef size_t (*fn_t)(SkHashMap *);
   size_t r = ((fn_t)sym)((SkHashMap *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_get_all_window_titles(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_all_window_titles");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_all_window_titles"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_all_window_titles"); }
   typedef SkWindowList (*fn_t)(void);
   SkWindowList r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkWindowList", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkWindowList", &r);
   return 1;
 }
 static inline int lthunk_sk_get_all_window_ids(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_all_window_ids");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_all_window_ids"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_all_window_ids"); }
   typedef SkWindowList (*fn_t)(void);
   SkWindowList r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkWindowList", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkWindowList", &r);
   return 1;
 }
 static inline int lthunk_sk_is_window_open(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_is_window_open");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_window_open"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_window_open"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_get_pixel_color(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_get_pixel_color");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_pixel_color"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_pixel_color"); }
   typedef SkColor (*fn_t)(SkPos);
   SkColor r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkColor", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkColor", &r);
   return 1;
 }
 static inline int lthunk_sk_color_matches(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   SkColor a1; memset(&a1, 0, sizeof(a1));
-  ski_lua_fill_struct(L, "SkColor", 2, &a1);
+  slua_fill_struct(L, "SkColor", 2, &a1);
   long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
   void *sym = Platform_GetMainSymbol("sk_color_matches");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_color_matches"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_color_matches"); }
   typedef bool (*fn_t)(SkPos, SkColor, int);
   bool r = ((fn_t)sym)(a0, a1, (int)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_wait_pixel(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   SkColor a1; memset(&a1, 0, sizeof(a1));
-  ski_lua_fill_struct(L, "SkColor", 2, &a1);
+  slua_fill_struct(L, "SkColor", 2, &a1);
   long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
   double a3 = lua_isnoneornil(L, 4) ? 0 : lua_tonumber(L, 4);
   void *sym = Platform_GetMainSymbol("sk_wait_pixel");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_wait_pixel"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_wait_pixel"); }
   typedef bool (*fn_t)(SkPos, SkColor, int, double);
   bool r = ((fn_t)sym)(a0, a1, (int)a2, (double)a3);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_move_to_pos(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_move_to_pos");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_to_pos"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_to_pos"); }
   typedef bool (*fn_t)(SkPos);
   bool r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_click_at(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_click_at");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_click_at"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_click_at"); }
   typedef bool (*fn_t)(SkPos);
   bool r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_left_click(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_left_click");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_left_click"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_left_click"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_right_click(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_right_click");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_right_click"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_right_click"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_emit_mouse_button(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   bool a1 = lua_toboolean(L, 2) != 0;
   void *sym = Platform_GetMainSymbol("sk_emit_mouse_button");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_emit_mouse_button"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_emit_mouse_button"); }
   typedef bool (*fn_t)(int, bool);
   bool r = ((fn_t)sym)((int)a0, (bool)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_emit_mouse_button_at(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   bool a2 = lua_toboolean(L, 3) != 0;
   void *sym = Platform_GetMainSymbol("sk_emit_mouse_button_at");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_emit_mouse_button_at"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_emit_mouse_button_at"); }
   typedef bool (*fn_t)(SkPos, int, bool);
   bool r = ((fn_t)sym)(a0, (int)a1, (bool)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_click_button_at(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_click_button_at");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_click_button_at"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_click_button_at"); }
   typedef bool (*fn_t)(SkPos, int);
   bool r = ((fn_t)sym)(a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_mouse_scroll(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_mouse_scroll");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_mouse_scroll"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_mouse_scroll"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_emit_key(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   bool a1 = lua_toboolean(L, 2) != 0;
   void *sym = Platform_GetMainSymbol("sk_emit_key");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_emit_key"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_emit_key"); }
   typedef void (*fn_t)(int, bool);
   ((fn_t)sym)((int)a0, (bool)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_move_to_pos_rel(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_move_to_pos_rel");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_to_pos_rel"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_to_pos_rel"); }
   typedef bool (*fn_t)(SkPos);
   bool r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_click_at_rel(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_click_at_rel");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_click_at_rel"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_click_at_rel"); }
   typedef bool (*fn_t)(SkPos);
   bool r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_emit_mouse_button_at_rel(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   bool a2 = lua_toboolean(L, 3) != 0;
   void *sym = Platform_GetMainSymbol("sk_emit_mouse_button_at_rel");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_emit_mouse_button_at_rel"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_emit_mouse_button_at_rel"); }
   typedef bool (*fn_t)(SkPos, int, bool);
   bool r = ((fn_t)sym)(a0, (int)a1, (bool)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_click_button_at_rel(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkPos a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkPos", 1, &a0);
+  slua_fill_struct(L, "SkPos", 1, &a0);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_click_button_at_rel");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_click_button_at_rel"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_click_button_at_rel"); }
   typedef bool (*fn_t)(SkPos, int);
   bool r = ((fn_t)sym)(a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_type_text(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_type_text");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_type_text"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_type_text"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_sleep(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   double a0 = lua_isnoneornil(L, 1) ? 0 : lua_tonumber(L, 1);
   void *sym = Platform_GetMainSymbol("sk_sleep");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_sleep"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_sleep"); }
   typedef void (*fn_t)(double);
   ((fn_t)sym)((double)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_is_key_down(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_is_key_down");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_key_down"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_key_down"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_is_key_pressed(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_is_key_pressed");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_key_pressed"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_key_pressed"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_is_key_released(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_is_key_released");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_key_released"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_key_released"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_ctrl_pressed(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_ctrl_pressed");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_ctrl_pressed"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_ctrl_pressed"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_shift_pressed(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_shift_pressed");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_shift_pressed"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_shift_pressed"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_alt_pressed(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_alt_pressed");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_alt_pressed"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_alt_pressed"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_super_pressed(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_super_pressed");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_super_pressed"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_super_pressed"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_on_key(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_on_key");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_on_key"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_on_key"); }
   typedef void (*fn_t)(void *);
   ((fn_t)sym)((void *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_get_key_pressed(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_key_pressed");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_key_pressed"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_key_pressed"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_get_char_pressed(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_char_pressed");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_char_pressed"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_char_pressed"); }
   typedef char (*fn_t)(void);
   char r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_poll_mouse(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_poll_mouse");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_poll_mouse"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_poll_mouse"); }
   typedef bool (*fn_t)(SkMouseEvent *);
   bool r = ((fn_t)sym)((SkMouseEvent *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_poll_scroll(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_poll_scroll");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_poll_scroll"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_poll_scroll"); }
   typedef bool (*fn_t)(SkScrollEvent *);
   bool r = ((fn_t)sym)((SkScrollEvent *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_scroll_queue_len(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_scroll_queue_len");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_scroll_queue_len"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_scroll_queue_len"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_clear_scroll_queue(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_clear_scroll_queue");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clear_scroll_queue"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clear_scroll_queue"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_mouse_queue_len(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_mouse_queue_len");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_mouse_queue_len"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_mouse_queue_len"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_mouse_queue_dropped(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_mouse_queue_dropped");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_mouse_queue_dropped"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_mouse_queue_dropped"); }
   typedef unsigned long (*fn_t)(void);
   unsigned long r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_clear_mouse_queue(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_clear_mouse_queue");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clear_mouse_queue"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clear_mouse_queue"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_get_cursor_pos(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_cursor_pos");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_cursor_pos"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_cursor_pos"); }
   typedef SkPos (*fn_t)(void);
   SkPos r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkPos", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkPos", &r);
   return 1;
 }
 static inline int lthunk_sk_get_cursor_pos_rel(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_cursor_pos_rel");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_cursor_pos_rel"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_cursor_pos_rel"); }
   typedef SkPos (*fn_t)(void);
   SkPos r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkPos", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkPos", &r);
   return 1;
 }
 static inline int lthunk_sk_mouse_pressed(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   void *sym = Platform_GetMainSymbol("sk_mouse_pressed");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_mouse_pressed"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_mouse_pressed"); }
   typedef bool (*fn_t)(int);
   bool r = ((fn_t)sym)((int)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_poll_key(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
   void *sym = Platform_GetMainSymbol("sk_poll_key");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_poll_key"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_poll_key"); }
   typedef bool (*fn_t)(SkKeyEvent *);
   bool r = ((fn_t)sym)((SkKeyEvent *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_key_queue_len(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_key_queue_len");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_key_queue_len"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_key_queue_len"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_key_queue_dropped(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_key_queue_dropped");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_key_queue_dropped"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_key_queue_dropped"); }
   typedef unsigned long (*fn_t)(void);
   unsigned long r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_clear_key_queue(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_clear_key_queue");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clear_key_queue"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_clear_key_queue"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_config_set_setting(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_config_set_setting");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_setting"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_setting"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_set_setting_int(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_config_set_setting_int");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_setting_int"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_setting_int"); }
   typedef bool (*fn_t)(const char *, int);
   bool r = ((fn_t)sym)((const char *)a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_set_setting_float(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   double a1 = lua_isnoneornil(L, 2) ? 0 : lua_tonumber(L, 2);
   void *sym = Platform_GetMainSymbol("sk_config_set_setting_float");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_setting_float"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_setting_float"); }
   typedef bool (*fn_t)(const char *, float);
   bool r = ((fn_t)sym)((const char *)a0, (float)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_get_setting_string(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
   const char *a3 = lua_isnoneornil(L, 4) ? "" : luaL_checkstring(L, 4);
   void *sym = Platform_GetMainSymbol("sk_config_get_setting_string");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_string"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_string"); }
   typedef bool (*fn_t)(const char *, char *, size_t, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (char *)a1, (size_t)a2, (const char *)a3);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_get_setting_bool(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_config_get_setting_bool");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_bool"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_bool"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_get_setting_int(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_config_get_setting_int");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_int"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_int"); }
   typedef int (*fn_t)(const char *, int);
   int r = ((fn_t)sym)((const char *)a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_config_get_setting_float(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_config_get_setting_float");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_float"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_float"); }
   typedef float (*fn_t)(const char *);
   float r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushnumber(L, (double)r);
   return 1;
 }
 static inline int lthunk_sk_config_get_setting_float_or(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   double a1 = lua_isnoneornil(L, 2) ? 0 : lua_tonumber(L, 2);
   void *sym = Platform_GetMainSymbol("sk_config_get_setting_float_or");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_float_or"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_get_setting_float_or"); }
   typedef float (*fn_t)(const char *, float);
   float r = ((fn_t)sym)((const char *)a0, (float)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushnumber(L, (double)r);
   return 1;
 }
 static inline int lthunk_sk_parse_int(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_parse_int");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_parse_int"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_parse_int"); }
   typedef int (*fn_t)(const char *, int);
   int r = ((fn_t)sym)((const char *)a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_parse_float(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   double a1 = lua_isnoneornil(L, 2) ? 0 : lua_tonumber(L, 2);
   void *sym = Platform_GetMainSymbol("sk_parse_float");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_parse_float"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_parse_float"); }
   typedef float (*fn_t)(const char *, float);
   float r = ((fn_t)sym)((const char *)a0, (float)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushnumber(L, (double)r);
   return 1;
 }
 static inline int lthunk_sk_config_has_setting(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_config_has_setting");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_has_setting"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_has_setting"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_setting_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_config_setting_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_setting_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_setting_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_settings_editbox_set(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkSettingsEditboxGroup a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkSettingsEditboxGroup", 1, &a0);
+  slua_fill_struct(L, "SkSettingsEditboxGroup", 1, &a0);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
   void *sym = Platform_GetMainSymbol("sk_settings_editbox_set");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_settings_editbox_set"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_settings_editbox_set"); }
   typedef bool (*fn_t)(SkSettingsEditboxGroup, const char *, const char *);
   bool r = ((fn_t)sym)(a0, (const char *)a1, (const char *)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_settings_editbox_right_offset(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_settings_editbox_right_offset");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_settings_editbox_right_offset"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_settings_editbox_right_offset"); }
   typedef int (*fn_t)(int, int);
   int r = ((fn_t)sym)((int)a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_register_alias(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_register_alias");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_alias"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_alias"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_remove_alias(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_remove_alias");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_remove_alias"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_remove_alias"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_init(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_config_init");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_init"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_init"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_config_set_alias(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_config_set_alias");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_alias"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_alias"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_clear_hotkey(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_config_clear_hotkey");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_clear_hotkey"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_clear_hotkey"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_bind_hotkey(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
-  void *a1 = ski_lua_callback(L, 2, 1);
+  void *a1 = slua_callback(L, 2, 1);
   void *a2 = (void *)(uintptr_t)(lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3));
   void *sym = Platform_GetMainSymbol("sk_config_bind_hotkey");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_bind_hotkey"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_bind_hotkey"); }
   typedef bool (*fn_t)(const char *, SkConfigFn, void *);
   bool r = ((fn_t)sym)((const char *)a0, (SkConfigFn)a1, (void *)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_hotkey_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_config_hotkey_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_hotkey_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_hotkey_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_config_clear_alias(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_config_clear_alias");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_clear_alias"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_clear_alias"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_alias_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_config_alias_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_alias_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_alias_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_config_quicklink_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_config_quicklink_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_quicklink_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_quicklink_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_config_set_quicklink(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_config_set_quicklink");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_quicklink"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_quicklink"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_config_feature_shortcut_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_config_feature_shortcut_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_feature_shortcut_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_feature_shortcut_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_config_set_feature_shortcut(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_config_set_feature_shortcut");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_feature_shortcut"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_config_set_feature_shortcut"); }
   typedef bool (*fn_t)(const char *, const char *);
   bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_run_feature_shortcut(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_run_feature_shortcut");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_run_feature_shortcut"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_run_feature_shortcut"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_cc_entry_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_cc_entry_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_cc_entry_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_cc_entry_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_settings_entry_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_settings_entry_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_settings_entry_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_settings_entry_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_settings_scroll_to_block(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_settings_scroll_to_block");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_settings_scroll_to_block"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_settings_scroll_to_block"); }
   typedef void (*fn_t)(const char *, int);
   ((fn_t)sym)((const char *)a0, (int)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_unregister_hotkey(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_unregister_hotkey");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_unregister_hotkey"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_unregister_hotkey"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_disable_global_hotkeys(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_disable_global_hotkeys");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_disable_global_hotkeys"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_disable_global_hotkeys"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_enable_global_hotkeys(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_enable_global_hotkeys");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_enable_global_hotkeys"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_enable_global_hotkeys"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_hotkey_capture_begin(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_hotkey_capture_begin");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_capture_begin"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_capture_begin"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_hotkey_capture_poll(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *sym = Platform_GetMainSymbol("sk_hotkey_capture_poll");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_capture_poll"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_capture_poll"); }
   typedef bool (*fn_t)(char *, size_t);
   bool r = ((fn_t)sym)((char *)a0, (size_t)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_hotkey_capture_active(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_hotkey_capture_active");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_capture_active"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_capture_active"); }
   typedef bool (*fn_t)(void);
   bool r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_hotkey_capture_end(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_hotkey_capture_end");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_capture_end"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_capture_end"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_hotkey_count(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_hotkey_count");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_count"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_count"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_hotkey_taken(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_hotkey_taken");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_taken"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hotkey_taken"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_register_deferred_init(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_register_deferred_init");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_deferred_init"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_deferred_init"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_replay_hotkey(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkKey a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkKey", 1, &a0);
+  slua_fill_struct(L, "SkKey", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_replay_hotkey");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_replay_hotkey"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_replay_hotkey"); }
   typedef bool (*fn_t)(SkKey);
   bool r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_execute_hotkey(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   SkKey a0; memset(&a0, 0, sizeof(a0));
-  ski_lua_fill_struct(L, "SkKey", 1, &a0);
+  slua_fill_struct(L, "SkKey", 1, &a0);
   void *sym = Platform_GetMainSymbol("sk_execute_hotkey");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_execute_hotkey"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_execute_hotkey"); }
   typedef bool (*fn_t)(SkKey);
   bool r = ((fn_t)sym)(a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_unregister_snippet(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_unregister_snippet");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_unregister_snippet"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_unregister_snippet"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_reload_feature(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol("sk_reload_feature");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_reload_feature"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_reload_feature"); }
   typedef void (*fn_t)(const char *);
   ((fn_t)sym)((const char *)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_reload_all_features(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_reload_all_features");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_reload_all_features"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_reload_all_features"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_get_pid(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_pid");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_pid"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_pid"); }
   typedef int (*fn_t)(void);
   int r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_cap_register_abi(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
   void *a2 = (void *)(uintptr_t)(lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3));
   void *sym = Platform_GetMainSymbol("sk_cap_register_abi");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_cap_register_abi"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_cap_register_abi"); }
   typedef void (*fn_t)(const char *, unsigned, void *);
   ((fn_t)sym)((const char *)a0, (unsigned)a1, (void *)a2);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_cap_generation(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_cap_generation");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_cap_generation"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_cap_generation"); }
   typedef unsigned (*fn_t)(void);
   unsigned r = ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_cap_bind_declare(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
   void *a1 = (void *)(uintptr_t)(lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2));
   void *sym = Platform_GetMainSymbol("sk_cap_bind_declare");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_cap_bind_declare"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_cap_bind_declare"); }
   typedef void (*fn_t)(const char *, void *);
   ((fn_t)sym)((const char *)a0, (void *)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_register_event(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
-  void *a1 = ski_lua_callback(L, 2, 0);
+  void *a1 = slua_callback(L, 2, 0);
   void *sym = Platform_GetMainSymbol("sk_register_event");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_event"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_event"); }
   typedef void (*fn_t)(SkEvent, SkEventCallback);
   ((fn_t)sym)((SkEvent)a0, (SkEventCallback)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_unregister_event(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
-  void *a1 = ski_lua_callback(L, 2, 0);
+  void *a1 = slua_callback(L, 2, 0);
   void *sym = Platform_GetMainSymbol("sk_unregister_event");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_unregister_event"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_unregister_event"); }
   typedef void (*fn_t)(SkEvent, SkEventCallback);
   ((fn_t)sym)((SkEvent)a0, (SkEventCallback)a1);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_register_key_interceptor(lua_State *L) {
-  ski_lua_owner_from_state(L);
-  void *a0 = ski_lua_callback(L, 1, 3);
+  slua_owner_from_state(L);
+  void *a0 = slua_callback(L, 1, 3);
   void *sym = Platform_GetMainSymbol("sk_register_key_interceptor");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_key_interceptor"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_key_interceptor"); }
   typedef void (*fn_t)(SkKeyInterceptorFn);
   ((fn_t)sym)((SkKeyInterceptorFn)a0);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_close_window(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_close_window");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_close_window"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_close_window"); }
   typedef void (*fn_t)(void);
   ((fn_t)sym)();
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_get_window_bounds(lua_State *L) {
-  ski_lua_owner_from_state(L);
+  slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_window_bounds");
-  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_window_bounds"); }
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_window_bounds"); }
   typedef SkRect (*fn_t)(void);
   SkRect r = ((fn_t)sym)();
-  ski_lua_owner_clear();
-  ski_lua_push_struct(L, "SkRect", &r);
+  slua_owner_clear();
+  slua_push_struct(L, "SkRect", &r);
   return 1;
 }
-static inline void ski_lua_register_thunks(void *Lp) {
+static inline void slua_register_thunks(void *Lp) {
   lua_State *L = (lua_State *)Lp;
   lua_pushcfunction(L, lthunk_sk_copy_to_clipboard); lua_setfield(L, -2, "sk_copy_to_clipboard");
   lua_pushcfunction(L, lthunk_sk_copy_file_path); lua_setfield(L, -2, "sk_copy_file_path");

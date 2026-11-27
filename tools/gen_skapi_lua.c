@@ -805,17 +805,17 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
   ParamDesc params[16];
   int n = parse_params(fd->params, params);
   fprintf(out, "static inline int lthunk_%s(lua_State *L) {\n", fd->name);
-  fprintf(out, "  ski_lua_owner_from_state(L);\n");
+  fprintf(out, "  slua_owner_from_state(L);\n");
   int out_count = 0;
   for (int i = 0; i < n; i++) {
     const char *t = params[i].type;
     int idx = i + 1;
     int ck = callback_kind_for_type(t);
     if (ck >= 0) {
-      fprintf(out, "  void *a%d = ski_lua_callback(L, %d, %d);\n", i, idx, ck);
+      fprintf(out, "  void *a%d = slua_callback(L, %d, %d);\n", i, idx, ck);
     } else if (is_struct_type(t)) {
       fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d));\n", t, i, i, i);
-      fprintf(out, "  ski_lua_fill_struct(L, \"%s\", %d, &a%d);\n", t, idx, i);
+      fprintf(out, "  slua_fill_struct(L, \"%s\", %d, &a%d);\n", t, idx, i);
     } else if (is_out_param(t)) {
       char base[256];
       base_type(t, base, sizeof(base));
@@ -854,7 +854,7 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
   }
   fprintf(out, "  void *sym = Platform_GetMainSymbol(\"%s\");\n", fd->name);
   fprintf(out,
-          "  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "
+          "  if (!sym) { slua_owner_clear(); return luaL_error(L, "
           "\"unknown skapi function '%%s'\", \"%s\"); }\n",
           fd->name);
   fprintf(out, "  typedef %s (*fn_t)(", fd->ret);
@@ -885,9 +885,9 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
     else
       fprintf(out, "(%s)a%d", t, i);
   }
-  fprintf(out, ");\n  ski_lua_owner_clear();\n");
+  fprintf(out, ");\n  slua_owner_clear();\n");
   if (is_struct_type(fd->ret)) {
-    fprintf(out, "  ski_lua_push_struct(L, \"%s\", &r);\n", fd->ret);
+    fprintf(out, "  slua_push_struct(L, \"%s\", &r);\n", fd->ret);
   } else if (is_handle_type(fd->ret)) {
     fprintf(out, "  uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) "
                  "? sizeof(rv) : sizeof(r)); lua_pushinteger(L, "
@@ -909,7 +909,7 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
 }
 
 static void gen_thunk_registry(FILE *out) {
-  fprintf(out, "static inline void ski_lua_register_thunks(void *Lp) {\n");
+  fprintf(out, "static inline void slua_register_thunks(void *Lp) {\n");
   fprintf(out, "  lua_State *L = (lua_State *)Lp;\n");
   for (int i = 0; i < func_count; i++)
     if (can_thunk(&funcs[i]))
@@ -1155,7 +1155,7 @@ static int gen_struct_header(void) {
     fprintf(out, "    \"%s\",\n", aliases[i].to);
   fprintf(out,
           "};\n"
-          "static const LuaStructDesc *ski_lua_struct_find(const char *name) {\n"
+          "static const LuaStructDesc *slua_struct_find(const char *name) {\n"
           "  for (int pass = 0; pass < 8; pass++) {\n"
           "    const char *next = name;\n"
           "    for (size_t i = 0; i < "

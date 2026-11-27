@@ -937,7 +937,7 @@ static bool load_lua_named(const char *name) {
     }
   }
 
-  if (!ski_lua_load(name, path)) {
+  if (!slua_load(name, path)) {
     log_error("lua feature '%s' failed to load", name);
     return false;
   }
@@ -1008,7 +1008,7 @@ void feature_loader_shutdown(void) {
   if (handles) {
     for (int i = 0; i < count; i++) {
       if (features[i].lua)
-        ski_lua_shutdown(features[i].name);
+        slua_shutdown(features[i].name);
       else if (handles[i])
         call_feature_shutdown(handles[i]);
     }
@@ -1066,7 +1066,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
     if (features[i].name && strcmp(features[i].name, name) == 0) {
       if (features[i].lua) {
         UNLOCK();
-        return ski_lua_reload(name);
+        return slua_reload(name);
       }
       char *path_copy = owner_strdup(features[i].path);
       const char *base = path_copy ? path_copy : "";
@@ -1223,7 +1223,7 @@ void feature_loader_reload_all(void) {
     if (features[i].lua) {
       char *name = owner_strdup(features[i].name);
       UNLOCK();
-      ski_lua_reload(name);
+      slua_reload(name);
       free(name);
       LOCK();
       continue;

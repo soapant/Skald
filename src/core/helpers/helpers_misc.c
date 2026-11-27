@@ -314,7 +314,7 @@ bool owner_module_matches(const char *owner, const char *a, const char *b) {
 }
 
 char *owner_resolve_for_func_alloc(void *fn) {
-  const char *lua_owner = ski_lua_current_owner();
+  const char *lua_owner = slua_current_owner();
   if (lua_owner && lua_owner[0]) {
     size_t n = strlen(lua_owner) + 1;
     char *copy = malloc(n);

@@ -34,14 +34,14 @@ static int g_feature_cap;
 
 static __thread char *tl_owner;
 
-const char *ski_lua_current_owner(void) { return tl_owner; }
+const char *slua_current_owner(void) { return tl_owner; }
 
-void ski_lua_owner_set(const char *owner) {
+void slua_owner_set(const char *owner) {
   free(tl_owner);
   tl_owner = owner ? strdup(owner) : NULL;
 }
 
-void ski_lua_owner_clear(void) {
+void slua_owner_clear(void) {
   free(tl_owner);
   tl_owner = NULL;
 }
@@ -122,9 +122,9 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool) {
   if (!f || !f->L)
     return;
   cb_in_use[slot] = true;
-  const char *saved = ski_lua_current_owner();
+  const char *saved = slua_current_owner();
   char *saved_copy = saved ? strdup(saved) : NULL;
-  ski_lua_owner_set(f->owner);
+  slua_owner_set(f->owner);
   lua_rawgeti(f->L, LUA_REGISTRYINDEX, cb_refs[slot]);
   if (nargs == 1)
     lua_pushlightuserdata(f->L, (void *)1);
@@ -138,9 +138,9 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool) {
     lua_pop(f->L, 1);
   }
   cb_in_use[slot] = false;
-  ski_lua_owner_clear();
+  slua_owner_clear();
   if (saved_copy) {
-    ski_lua_owner_set(saved_copy);
+    slua_owner_set(saved_copy);
     free(saved_copy);
   }
 }
@@ -301,7 +301,7 @@ static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
 
 static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
                         LuaFeature *f) {
-  const LuaStructDesc *desc = ski_lua_struct_find(sname);
+  const LuaStructDesc *desc = slua_struct_find(sname);
   if (!desc)
     luaL_error(L, "unsupported lua struct '%s'", sname);
   for (int i = 0; i < desc->count; i++) {
@@ -391,13 +391,13 @@ static uintptr_t arg_value(lua_State *L, int idx) {
 
 static void with_owner(lua_State *L, void (*fn)(lua_State *L)) {
   LuaFeature *f = lua_feature(L);
-  const char *saved = ski_lua_current_owner();
+  const char *saved = slua_current_owner();
   char *copy = saved ? strdup(saved) : NULL;
-  ski_lua_owner_set(f ? f->owner : NULL);
+  slua_owner_set(f ? f->owner : NULL);
   fn(L);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   if (copy) {
-    ski_lua_owner_set(copy);
+    slua_owner_set(copy);
     free(copy);
   }
 }
@@ -515,9 +515,9 @@ static int l_cap_register(lua_State *L) {
   const char *key = luaL_checkstring(L, 1);
   LuaFeature *f = lua_feature(L);
   void *cb = make_callback(L, 2, CB_V, f);
-  ski_lua_owner_set(f ? f->owner : NULL);
+  slua_owner_set(f ? f->owner : NULL);
   ski_cap_register(key, cb);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   return 0;
 }
 static int l_struct_call(lua_State *L) {
@@ -530,9 +530,9 @@ static int l_struct_call(lua_State *L) {
     luaL_error(L, "unknown skapi function '%s'", fn);
   char storage[2048] = {0};
   LuaFeature *f = lua_feature(L);
-  const char *saved = ski_lua_current_owner();
+  const char *saved = slua_current_owner();
   char *copy = saved ? strdup(saved) : NULL;
-  ski_lua_owner_set(f ? f->owner : NULL);
+  slua_owner_set(f ? f->owner : NULL);
   fill_struct(L, sname, 3, storage, f);
   uintptr_t a[7] = {(uintptr_t)storage};
   for (int i = 0; i < 6; i++)
@@ -540,9 +540,9 @@ static int l_struct_call(lua_State *L) {
   typedef uintptr_t (*generic_fn)(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
                                   uintptr_t, uintptr_t, uintptr_t);
   uintptr_t r = ((generic_fn)sym)(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   if (copy) {
-    ski_lua_owner_set(copy);
+    slua_owner_set(copy);
     free(copy);
   }
   if (strcmp(ret, "b") == 0)
@@ -640,17 +640,17 @@ static const luaL_Reg native_funcs[] = {
     {NULL, NULL},
 };
 
-void *ski_lua_callback(void *L, int idx, int kind) {
+void *slua_callback(void *L, int idx, int kind) {
   return make_callback((lua_State *)L, idx, kind, lua_feature((lua_State *)L));
 }
 
-void ski_lua_fill_struct(void *L, const char *name, int idx, void *base) {
+void slua_fill_struct(void *L, const char *name, int idx, void *base) {
   fill_struct((lua_State *)L, name, idx, base, lua_feature((lua_State *)L));
 }
 
-void ski_lua_push_struct(void *L, const char *name, const void *base) {
+void slua_push_struct(void *L, const char *name, const void *base) {
   lua_State *ls = (lua_State *)L;
-  const LuaStructDesc *desc = ski_lua_struct_find(name);
+  const LuaStructDesc *desc = slua_struct_find(name);
   if (!desc) {
     lua_pushnil(ls);
     return;
@@ -683,14 +683,14 @@ void ski_lua_push_struct(void *L, const char *name, const void *base) {
   }
 }
 
-void ski_lua_owner_from_state(void *L) {
+void slua_owner_from_state(void *L) {
   LuaFeature *f = lua_feature((lua_State *)L);
-  ski_lua_owner_set(f ? f->owner : NULL);
+  slua_owner_set(f ? f->owner : NULL);
 }
 
 static int luaopen_skapi_native(lua_State *L) {
   luaL_newlib(L, native_funcs);
-  ski_lua_register_thunks(L);
+  slua_register_thunks(L);
   return 1;
 }
 
@@ -706,14 +706,14 @@ static void feature_shutdown(LuaFeature *f) {
     return;
   lua_getglobal(f->L, "shutdown");
   if (lua_isfunction(f->L, -1)) {
-    const char *saved = ski_lua_current_owner();
+    const char *saved = slua_current_owner();
     char *copy = saved ? strdup(saved) : NULL;
-    ski_lua_owner_set(f->owner);
+    slua_owner_set(f->owner);
     if (lua_pcall(f->L, 0, 0, 0) != 0)
       log_error("lua shutdown error: %s", lua_tostring(f->L, -1));
-    ski_lua_owner_clear();
+    slua_owner_clear();
     if (copy) {
-      ski_lua_owner_set(copy);
+      slua_owner_set(copy);
       free(copy);
     }
   } else {
@@ -776,9 +776,9 @@ static bool feature_start(LuaFeature *f, const char *name, const char *path) {
   lua_setfield(f->L, -2, "skapi_native");
   lua_pop(f->L, 2);
 
-  ski_lua_owner_set(f->owner);
+  slua_owner_set(f->owner);
   int status = luaL_dofile(f->L, path);
-  ski_lua_owner_clear();
+  slua_owner_clear();
   if (status != 0) {
     log_error("lua feature %s failed: %s", name, lua_tostring(f->L, -1));
     feature_shutdown(f);
@@ -787,7 +787,7 @@ static bool feature_start(LuaFeature *f, const char *name, const char *path) {
   return true;
 }
 
-bool ski_lua_load(const char *name, const char *path) {
+bool slua_load(const char *name, const char *path) {
   if (!name || !path)
     return false;
   LuaFeature *f = find_feature(name);
@@ -809,7 +809,7 @@ bool ski_lua_load(const char *name, const char *path) {
   return feature_start(f, name, path);
 }
 
-bool ski_lua_reload(const char *name) {
+bool slua_reload(const char *name) {
   LuaFeature *f = find_feature(name);
   if (!f)
     return false;
@@ -821,13 +821,13 @@ bool ski_lua_reload(const char *name) {
   return ok;
 }
 
-void ski_lua_shutdown(const char *name) {
+void slua_shutdown(const char *name) {
   LuaFeature *f = find_feature(name);
   if (f)
     feature_shutdown(f);
 }
 
-bool ski_lua_is_loaded(const char *name) {
+bool slua_is_loaded(const char *name) {
   LuaFeature *f = find_feature(name);
   return f && f->L != NULL;
 }
