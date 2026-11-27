@@ -63,6 +63,8 @@ static FuncDesc funcs[4096];
 static int func_count;
 static char struct_names[2048][NAME_SZ];
 static char struct_sources[2048][512];
+static char struct_fields[2048][64][NAME_SZ];
+static int struct_field_counts[2048];
 static int struct_name_count;
 
 static const char *ret_for(const char *name) {
@@ -475,6 +477,29 @@ static void emit_defaults(FILE *out, const char *rest) {
   }
 }
 
+static int find_field_list(const char *name, char out[64][NAME_SZ]) {
+  const char *base = name;
+  for (int pass = 0; pass < 8; pass++) {
+    const char *next = base;
+    for (int j = 0; j < alias_count; j++)
+      if (strcmp(next, aliases[j].from) == 0) {
+        next = aliases[j].to;
+        break;
+      }
+    if (strcmp(next, base) == 0)
+      break;
+    base = next;
+  }
+  for (int i = 0; i < struct_name_count; i++) {
+    if (strcmp(base, struct_names[i]) != 0)
+      continue;
+    for (int f = 0; f < struct_field_counts[i]; f++)
+      snprintf(out[f], NAME_SZ, "%s", struct_fields[i][f]);
+    return struct_field_counts[i];
+  }
+  return 0;
+}
+
 static void gen_wrapper(FILE *out, const char *name, const char *rest,
                         const char *params) {
   char raw[NAME_SZ] = {0};
@@ -485,6 +510,7 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
       strcmp(kind, "f") != 0)
     kind = "v";
 
+  bool raw_thunk = can_thunk(func_for(raw));
   if (can_thunk(func_for(name))) {
     fprintf(out, "M.%s = function(...) return native.%s(...) end\n", name, name);
     return;
@@ -497,18 +523,26 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
       n++;
       p2 += strlen("SK_STORE_NAME");
     }
-    fprintf(out, "M.%s = function(...) return native.%s(\"%s\"", name, kind,
-            raw);
-    for (int i = 0; i < n; i++)
-      fprintf(out, ", native.feature()");
-    fprintf(out, ", ...) end\n");
+    fprintf(out, "M.%s = function(...) return native.%s(", name,
+            raw_thunk ? raw : kind);
+    bool first_arg = raw_thunk;
+    if (!raw_thunk) {
+      fprintf(out, "\"%s\"", raw);
+      first_arg = false;
+    }
+    for (int i = 0; i < n; i++) {
+      fprintf(out, "%snative.feature()", first_arg ? "" : ", ");
+      first_arg = false;
+    }
+    fprintf(out, "%s...) end\n", first_arg ? "" : ", ");
     return;
   }
   if (strstr(rest, "__FILE__")) {
-    fprintf(out,
-            "M.%s = function(...) return native.%s(\"%s\", ..., "
-            "native.owner()) end\n",
-            name, kind, raw);
+    fprintf(out, "M.%s = function(...) return native.%s(", name,
+            raw_thunk ? raw : kind);
+    if (!raw_thunk)
+      fprintf(out, "\"%s\", ", raw);
+    fprintf(out, "..., native.owner()) end\n");
     return;
   }
   if (strstr(rest, "NULL, NULL")) {
@@ -565,37 +599,70 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
            (isalnum((unsigned char)*st) || *st == '_'))
       stype[si++] = *st++;
     stype[si] = '\0';
-    char lead[NAME_SZ] = {0};
+
+    char lead_names[16][NAME_SZ];
+    int lead_count = 0;
     if (params) {
       const char *pp = params;
-      while (*pp && *pp != '.') {
-        if (isalnum((unsigned char)*pp) || *pp == '_') {
-          size_t n = strlen(lead);
-          if (n < NAME_SZ - 2) {
-            lead[n] = *pp;
-            lead[n + 1] = '\0';
-          }
-        } else if (*pp == ',' && lead[0]) {
-          strcat(lead, ",");
-        }
+      while (*pp && *pp != '(')
         pp++;
+      if (*pp == '(')
+        pp++;
+      while (*pp && *pp != ')' && lead_count < 16) {
+        while (*pp == ' ' || *pp == ',')
+          pp++;
+        if (!*pp || *pp == ')' || strncmp(pp, "...", 3) == 0)
+          break;
+        int ni = 0;
+        while (*pp && ni < NAME_SZ - 1 &&
+               (isalnum((unsigned char)*pp) || *pp == '_'))
+          lead_names[lead_count][ni++] = *pp++;
+        lead_names[lead_count][ni] = '\0';
+        if (lead_names[lead_count][0])
+          lead_count++;
+        while (*pp && *pp != ',' && *pp != ')')
+          pp++;
       }
     }
-    fprintf(out, "M.%s = function(%st) local v = {} for k,x in pairs(t or {}) do "
-                 "v[k] = x end ",
-            name, lead[0] ? lead : "");
-    emit_defaults(out, rest);
-    fprintf(out, "return native.struct_call(\"%s\", \"%s\", v, \"%s\"", target,
-            stype, kind);
-    if (lead[0]) {
-      char lead_args[NAME_SZ];
-      snprintf(lead_args, sizeof(lead_args), "%s", lead);
-      size_t ln = strlen(lead_args);
-      if (ln && lead_args[ln - 1] == ',')
-        lead_args[ln - 1] = '\0';
-      fprintf(out, ",%s", lead_args);
+
+    char fields[64][NAME_SZ];
+    int field_count = find_field_list(stype, fields);
+    if (field_count == 0) {
+      fprintf(out,
+              "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
+              "v[k] = x end ",
+              name);
+      emit_defaults(out, rest);
+      fprintf(out, "return native.struct_call(\"%s\", \"%s\", v, \"%s\"", target,
+              stype, kind);
+      for (int i = 0; i < lead_count; i++)
+        fprintf(out, ",%s", lead_names[i]);
+      fprintf(out, ") end\n");
+      return;
     }
-    fprintf(out, ") end\n");
+
+    fprintf(out, "M.%s = function(", name);
+    for (int i = 0; i < lead_count; i++)
+      fprintf(out, "%s%s", i ? ", " : "", lead_names[i]);
+    for (int i = 0; i < field_count; i++)
+      fprintf(out, "%s%s", (i || lead_count) ? ", " : "", fields[i]);
+    fprintf(out, ")\n  local v\n");
+    if (lead_count == 0)
+      fprintf(out, "  if type(%s) == \"table\" then v = %s else ", fields[0],
+              fields[0]);
+    fprintf(out, "v = {");
+    for (int i = 0; i < field_count; i++)
+      fprintf(out, "%s%s = %s", i ? ", " : "", fields[i], fields[i]);
+    fprintf(out, "}");
+    if (lead_count == 0)
+      fprintf(out, " end");
+    fprintf(out, "\n  ");
+    emit_defaults(out, rest);
+    fprintf(out, "\n  return native.struct_call(\"%s\", \"%s\", v, \"%s\"",
+            target, stype, kind);
+    for (int i = 0; i < lead_count; i++)
+      fprintf(out, ", %s", lead_names[i]);
+    fprintf(out, ")\nend\n");
     return;
   }
 
@@ -1340,7 +1407,13 @@ static int gen_struct_header(void) {
                 }
               }
             }
-            if (field[0] && kind != LSF_SKIP)
+            if (field[0] && kind != LSF_SKIP) {
+              int si2 = struct_name_count - 1;
+              if (si2 >= 0 && si2 < 2048 && struct_field_counts[si2] < 64) {
+                snprintf(struct_fields[si2][struct_field_counts[si2]], NAME_SZ,
+                         "%s", field);
+                struct_field_counts[si2]++;
+              }
               fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %s, %d},\n",
                       field,
                       kind == LSF_INT          ? "LSF_INT"
@@ -1353,6 +1426,7 @@ static int gen_struct_header(void) {
                       : kind == LSF_PTR        ? "LSF_PTR"
                                                : "LSF_CB",
                       name, field, aux, cb_kind);
+            }
           }
         }
         fprintf(out, "};\n");
@@ -1414,10 +1488,10 @@ int main(void) {
     fprintf(stderr, "gen_skapi_lua: cannot open include/core/skapi.h\n");
     return 1;
   }
-  FILE *out = fopen("src/skapi.lua", "w");
+  FILE *out = fopen("src/skapi.lua.tmp", "w");
   if (!out) {
     fclose(in);
-    fprintf(stderr, "gen_skapi_lua: cannot write src/skapi.lua\n");
+    fprintf(stderr, "gen_skapi_lua: cannot write src/skapi.lua.tmp\n");
     return 1;
   }
 
@@ -1536,5 +1610,30 @@ int main(void) {
 
   fprintf(out, "\nreturn M\n");
   fclose(out);
+
+  FILE *in2 = fopen("src/skapi.lua.tmp", "rb");
+  FILE *dst = fopen("src/skapi.lua", "wb");
+  if (in2 && dst) {
+    char line[LINE_SZ];
+    while (fgets(line, sizeof(line), in2)) {
+      char *p = line;
+      while ((p = strstr(p, "M.ski_")) != NULL) {
+        memmove(p + 2, p + 5, strlen(p + 5) + 1);
+        memcpy(p, "M.i_", 4);
+        p += 4;
+      }
+      p = line;
+      while ((p = strstr(p, "M.sk_")) != NULL) {
+        memmove(p + 2, p + 5, strlen(p + 5) + 1);
+        p += 2;
+      }
+      fputs(line, dst);
+    }
+  }
+  if (in2)
+    fclose(in2);
+  if (dst)
+    fclose(dst);
+  remove("src/skapi.lua.tmp");
   return gen_rc;
 }
