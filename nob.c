@@ -138,6 +138,25 @@ static bool wayland_session_active(void) {
 static Nob_File_Paths sources = {0};
 static Nob_File_Paths feature_sources = {0};
 static Nob_File_Paths test_sources = {0};
+static Nob_File_Paths gen_header_paths = {0};
+
+static void write_gen_stamp(const char *path) {
+  FILE *f = fopen(path, "wb");
+  if (f) {
+    fputc('\n', f);
+    fclose(f);
+  }
+}
+
+static bool collect_gen_header(Nob_Walk_Entry entry) {
+  if (entry.type == NOB_FILE_REGULAR) {
+    Nob_String_View path = nob_sv_from_cstr(entry.path);
+    if (nob_sv_ends_with_cstr(path, ".h") &&
+        !nob_sv_ends_with_cstr(path, "skapi_lua_generated.h"))
+      nob_da_append(&gen_header_paths, strdup(entry.path));
+  }
+  return true;
+}
 
 static bool collect_source(Nob_Walk_Entry entry) {
   if (entry.type == NOB_FILE_REGULAR) {
@@ -2015,21 +2034,45 @@ int main(int argc, char **argv) {
 #endif
   }
 
+  if (!nob_walk_dir("include", collect_gen_header)) {
+    nob_log(NOB_ERROR, "Failed to walk include for generator headers");
+    return 1;
+  }
+
   {
-    Nob_Cmd gen = {0};
-    append_cc(&gen);
-    nob_cmd_append(&gen, CC_FLAGS);
-    nob_cmd_append(&gen, "-o", BUILD_FOLDER "/gen_skapi_lua",
-                   "tools/gen_skapi_lua.c");
-    if (!nob_cmd_run(&gen)) {
-      nob_log(NOB_ERROR, "Failed to build skapi.lua generator");
-      return 1;
+    const char *gen_bin = BUILD_FOLDER "/gen_skapi_lua";
+    if (!nob_file_exists(gen_bin) ||
+        nob_needs_rebuild1(gen_bin, "tools/gen_skapi_lua.c") != 0) {
+      Nob_Cmd gen = {0};
+      append_cc(&gen);
+      nob_cmd_append(&gen, CC_FLAGS);
+      nob_cmd_append(&gen, "-o", gen_bin, "tools/gen_skapi_lua.c");
+      if (!nob_cmd_run(&gen)) {
+        nob_log(NOB_ERROR, "Failed to build skapi.lua generator");
+        return 1;
+      }
     }
-    Nob_Cmd run = {0};
-    nob_cmd_append(&run, BUILD_FOLDER "/gen_skapi_lua");
-    if (!nob_cmd_run(&run)) {
-      nob_log(NOB_ERROR, "Failed to generate src/skapi.lua");
-      return 1;
+    const char *stamp = BUILD_FOLDER "/gen_skapi_lua.stamp";
+    bool need_gen = !nob_file_exists("src/skapi.lua") ||
+                    !nob_file_exists("include/core/skapi_lua_generated.h") ||
+                    !nob_file_exists(stamp);
+    if (!need_gen) {
+      Nob_File_Paths inputs = {0};
+      nob_da_append(&inputs, strdup("tools/gen_skapi_lua.c"));
+      for (size_t i = 0; i < gen_header_paths.count; i++)
+        nob_da_append(&inputs, strdup(gen_header_paths.items[i]));
+      need_gen = nob_needs_rebuild(stamp, (const char **)inputs.items,
+                                   inputs.count) != 0;
+      nob_da_free(inputs);
+    }
+    if (need_gen) {
+      Nob_Cmd run = {0};
+      nob_cmd_append(&run, gen_bin);
+      if (!nob_cmd_run(&run)) {
+        nob_log(NOB_ERROR, "Failed to generate src/skapi.lua");
+        return 1;
+      }
+      write_gen_stamp(stamp);
     }
   }
 

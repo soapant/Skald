@@ -176,6 +176,22 @@ static char *read_all(const char *path) {
   return buf;
 }
 
+static void write_if_changed(const char *final, const char *tmp) {
+  char *old = read_all(final);
+  char *now = read_all(tmp);
+  if (old && now && strcmp(old, now) == 0) {
+    free(old);
+    free(now);
+    remove(tmp);
+    return;
+  }
+  free(old);
+  free(now);
+  remove(final);
+  if (rename(tmp, final) != 0)
+    fprintf(stderr, "gen_skapi_lua: cannot replace %s\\n", final);
+}
+
 static void clean(char *s) {
   for (char *p = s; *p; p++)
     if (*p == '\n' || *p == '\r' || *p == '\t')
@@ -1169,9 +1185,9 @@ static int gen_struct_header(void) {
     parse_enum_typedefs(header_paths[i]);
     parse_bool_globals(header_paths[i]);
   }
-  FILE *out = fopen("include/core/skapi_lua_generated.h", "w");
+  FILE *out = fopen("include/core/skapi_lua_generated.h.tmp", "w");
   if (!out) {
-    fprintf(stderr, "gen_skapi_lua: cannot write generated struct header\n");
+    fprintf(stderr, "gen_skapi_lua: cannot write generated struct header.tmp\n");
     return 1;
   }
   fprintf(out,
@@ -1560,6 +1576,8 @@ static int gen_struct_header(void) {
   gen_thunk_registry(out);
   fprintf(out, "\n#endif\n");
   fclose(out);
+  write_if_changed("include/core/skapi_lua_generated.h",
+                   "include/core/skapi_lua_generated.h.tmp");
   return 0;
 }
 
@@ -1693,7 +1711,7 @@ int main(void) {
   fclose(out);
 
   FILE *in2 = fopen("src/skapi.lua.tmp", "rb");
-  FILE *dst = fopen("src/skapi.lua", "wb");
+  FILE *dst = fopen("src/skapi.lua.new", "wb");
   if (in2 && dst) {
     char line[LINE_SZ];
     while (fgets(line, sizeof(line), in2)) {
@@ -1716,5 +1734,6 @@ int main(void) {
   if (dst)
     fclose(dst);
   remove("src/skapi.lua.tmp");
+  write_if_changed("src/skapi.lua", "src/skapi.lua.new");
   return gen_rc;
 }
