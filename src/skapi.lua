@@ -47,6 +47,7 @@ function M.get_icon_path(...) return native.s("sk_get_icon_path", ...) end
 M.prewarm_image = function(...) return native.sk_prewarm_image(...) end
 M.append_to_file = function(...) return native.sk_append_to_file(...) end
 function M.write_to_file(...) return native.b("sk_write_to_file", ...) end
+function M.platform(...) return native.s("sk_platform", ...) end
 M.store_set = function(f_value, feature, key)
   feature = feature or native.source()
   key = key or feature

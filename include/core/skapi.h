@@ -176,6 +176,8 @@ bool sk_append_to_file(const char *filepath, const char *line);
 
 bool sk_write_to_file(const char *filepath, const char *lines[], int count);
 
+const char *sk_platform(void);
+
 const char *ski_store_feature_name(const char *source_file);
 bool ski_store_set(const char *feature, const char *key, const char *value);
 bool ski_store_append(const char *feature, const char *key, const char *value);

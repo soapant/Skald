@@ -410,6 +410,18 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   return true;
 }
 
+const char *sk_platform(void) {
+#if defined(_WIN32)
+  return "win32";
+#elif defined(__APPLE__)
+  return "macos";
+#elif defined(__ANDROID__)
+  return "android";
+#else
+  return "linux";
+#endif
+}
+
 const char *ski_store_feature_name(const char *source_file) {
   static _Thread_local char name[128];
   if (!feature_store_feature_name(source_file, name, sizeof(name)))
