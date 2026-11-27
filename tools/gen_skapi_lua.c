@@ -546,7 +546,7 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
     for (int i = 0; i < arg_count; i++)
       fprintf(out, "f_%s, ", args[i]);
     fprintf(out, "feature, key)\n");
-    fprintf(out, "  feature = feature or native.feature()\n");
+    fprintf(out, "  feature = feature or native.source()\n");
     fprintf(out, "  key = key or feature\n");
     fprintf(out, "  return native.%s(", raw_thunk ? raw : kind);
     if (!raw_thunk)

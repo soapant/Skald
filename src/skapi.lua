@@ -48,32 +48,32 @@ M.prewarm_image = function(...) return native.sk_prewarm_image(...) end
 M.append_to_file = function(...) return native.sk_append_to_file(...) end
 function M.write_to_file(...) return native.b("sk_write_to_file", ...) end
 M.store_set = function(f_value, feature, key)
-  feature = feature or native.feature()
+  feature = feature or native.source()
   key = key or feature
   return native.ski_store_set(feature, key, f_value)
 end
 M.store_append = function(f_value, feature, key)
-  feature = feature or native.feature()
+  feature = feature or native.source()
   key = key or feature
   return native.ski_store_append(feature, key, f_value)
 end
 M.store_get_all = function(feature, key)
-  feature = feature or native.feature()
+  feature = feature or native.source()
   key = key or feature
   return native.ski_store_get_all(feature, key)
 end
 M.store_get_last = function(feature, key)
-  feature = feature or native.feature()
+  feature = feature or native.source()
   key = key or feature
   return native.s("ski_store_get_last", feature, key)
 end
 M.store_replace_all = function(f_values, f_count, feature, key)
-  feature = feature or native.feature()
+  feature = feature or native.source()
   key = key or feature
   return native.ski_store_replace_all(feature, key, f_values, f_count)
 end
 M.store_clear = function(feature, key)
-  feature = feature or native.feature()
+  feature = feature or native.source()
   key = key or feature
   return native.ski_store_clear(feature, key)
 end

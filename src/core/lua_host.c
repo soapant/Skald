@@ -1,5 +1,6 @@
 #include "core/lua_host.h"
 
+#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -579,6 +580,28 @@ static int l_feature(lua_State *L) {
   lua_pushstring(L, f ? f->name : "");
   return 1;
 }
+static int l_source(lua_State *L) {
+  LuaFeature *f = lua_feature(L);
+  const char *path = f ? f->owner : "";
+  const char *base = path;
+  for (const char *p = path; *p; p++)
+    if (*p == '/' || *p == '\\')
+      base = p + 1;
+  size_t n = strlen(base);
+  if (n >= 4 && strcmp(base + n - 4, ".lua") == 0)
+    n -= 4;
+  char name[128] = {0};
+  for (size_t i = 0; i < n && i + 1 < sizeof(name); i++) {
+    unsigned char c = (unsigned char)base[i];
+    if (isalnum(c) || c == '_' || c == '-')
+      name[i] = (char)c;
+    else
+      name[i] = '_';
+  }
+  lua_pushstring(L, name);
+  return 1;
+}
+
 static int l_owner(lua_State *L) {
   LuaFeature *f = lua_feature(L);
   lua_pushstring(L, f ? f->owner : "");
@@ -742,6 +765,7 @@ static const luaL_Reg native_funcs[] = {
     {"f", l_f},
     {"feature", l_feature},
     {"owner", l_owner},
+    {"source", l_source},
     {"global_b", l_global_b},
     {"image_size", l_image_size},
     {"cap_register", l_cap_register},
