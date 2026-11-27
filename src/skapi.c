@@ -38,6 +38,7 @@
 #include "core/http.h"
 #include "core/owner_purge.h"
 #include "core/scroll_area.h"
+#include "core/lua_host.h"
 
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
@@ -3560,6 +3561,20 @@ static const char *cc_dup(char *dst, size_t cap, const char *src) {
   return dst;
 }
 
+static bool sk_resolve_icon_path(void *caller, const char *icon, char *out,
+                                 size_t cap) {
+  if (!icon || (icon[0] != '/' && icon[0] != '\\') || !out || cap == 0)
+    return false;
+  char asset[MAX_PATH];
+  const char *owner = slua_current_owner();
+  if (owner && feature_path_resolve_asset_for_owner(owner, icon, asset,
+                                                    sizeof(asset)))
+    return safe_copy(out, cap, asset);
+  if (feature_path_resolve_asset_path(caller, icon, asset, sizeof(asset)))
+    return safe_copy(out, cap, asset);
+  return false;
+}
+
 bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   if (!spec)
     return false;
@@ -3589,9 +3604,8 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
   e->pub.display_name =
       cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
   char icon_asset[MAX_PATH];
-  if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
-      feature_path_resolve_asset_path(__builtin_return_address(0), spec->icon,
-                                      icon_asset, sizeof(icon_asset))) {
+  if (sk_resolve_icon_path(__builtin_return_address(0), spec->icon, icon_asset,
+                           sizeof(icon_asset))) {
     e->pub.icon = cc_dup(e->icon, sizeof(e->icon), icon_asset);
   } else {
     e->pub.icon = cc_dup(e->icon, sizeof(e->icon), spec->icon);
@@ -3626,7 +3640,7 @@ bool ski_add_to_cc(const SkCcEntrySpec *spec) {
     cc_add_dep("control_center.c", owner);
   }
   if (spec->type && strcmp(spec->type, "Feature") == 0)
-    feature_list_add(spec->display_name, spec->on_action, spec->icon, owner);
+    feature_list_add(spec->display_name, spec->on_action, e->pub.icon, owner);
   cc_rebind_all();
   return true;
 }
@@ -3647,9 +3661,8 @@ SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
       owner_resolve_for_func_alloc((void *)__builtin_return_address(0));
   copy.owner = owner;
   char icon[MAX_PATH];
-  if (spec->icon && (spec->icon[0] == '/' || spec->icon[0] == '\\') &&
-      feature_path_resolve_asset_path(__builtin_return_address(0), spec->icon,
-                                      icon, sizeof(icon)))
+  if (sk_resolve_icon_path(__builtin_return_address(0), spec->icon, icon,
+                           sizeof(icon)))
     copy.icon = icon;
   SkSettingsEntry *result = settings_entry_add(&copy);
   owner_strfree(&owner);

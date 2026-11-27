@@ -106,16 +106,33 @@ static void untrack_refs(LuaFeature *f) {
 }
 
 enum { CB_V, CB_P1, CB_BP1, CB_B };
-#define CB_V_COUNT 32
-#define CB_P1_COUNT 12
-#define CB_BP1_COUNT 12
-#define CB_B_COUNT 12
+#define CB_V_COUNT 128
+#define CB_P1_COUNT 32
+#define CB_BP1_COUNT 32
+#define CB_B_COUNT 32
 #define CB_TOTAL (CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT + CB_B_COUNT)
+
+#define CB_V_SLOTS                                                             \
+  X(0) X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13)   \
+  X(14) X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25)     \
+  X(26) X(27) X(28) X(29) X(30) X(31) X(32) X(33) X(34) X(35) X(36) X(37)     \
+  X(38) X(39) X(40) X(41) X(42) X(43) X(44) X(45) X(46) X(47) X(48) X(49)     \
+  X(50) X(51) X(52) X(53) X(54) X(55) X(56) X(57) X(58) X(59) X(60) X(61)     \
+  X(62) X(63) X(64) X(65) X(66) X(67) X(68) X(69) X(70) X(71) X(72) X(73)     \
+  X(74) X(75) X(76) X(77) X(78) X(79) X(80) X(81) X(82) X(83) X(84) X(85)     \
+  X(86) X(87) X(88) X(89) X(90) X(91) X(92) X(93) X(94) X(95) X(96) X(97)     \
+  X(98) X(99) X(100) X(101) X(102) X(103) X(104) X(105) X(106) X(107)         \
+  X(108) X(109) X(110) X(111) X(112) X(113) X(114) X(115) X(116) X(117)       \
+  X(118) X(119) X(120) X(121) X(122) X(123) X(124) X(125) X(126) X(127)
+#define CB_P1_SLOTS                                                            \
+  X(0) X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13)   \
+  X(14) X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25)     \
+  X(26) X(27) X(28) X(29) X(30) X(31)
+#define CB_BP1_SLOTS CB_P1_SLOTS
+#define CB_B_SLOTS CB_P1_SLOTS
 
 static int cb_refs[CB_TOTAL];
 static LuaFeature *cb_owners[CB_TOTAL];
-static int cb_gen[CB_TOTAL];
-static int cb_next_gen = 1;
 static bool cb_in_use[CB_TOTAL];
 
 static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
@@ -171,55 +188,72 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
     return r;                                                                  \
   }
 
-DEF_CB_V(0) DEF_CB_V(1) DEF_CB_V(2) DEF_CB_V(3) DEF_CB_V(4) DEF_CB_V(5)
-DEF_CB_V(6) DEF_CB_V(7) DEF_CB_V(8) DEF_CB_V(9) DEF_CB_V(10) DEF_CB_V(11)
-DEF_CB_V(12) DEF_CB_V(13) DEF_CB_V(14) DEF_CB_V(15) DEF_CB_V(16) DEF_CB_V(17)
-DEF_CB_V(18) DEF_CB_V(19) DEF_CB_V(20) DEF_CB_V(21) DEF_CB_V(22) DEF_CB_V(23)
-DEF_CB_V(24) DEF_CB_V(25) DEF_CB_V(26) DEF_CB_V(27) DEF_CB_V(28) DEF_CB_V(29)
-DEF_CB_V(30) DEF_CB_V(31)
-
-DEF_CB_P1(0) DEF_CB_P1(1) DEF_CB_P1(2) DEF_CB_P1(3) DEF_CB_P1(4) DEF_CB_P1(5)
-DEF_CB_P1(6) DEF_CB_P1(7) DEF_CB_P1(8) DEF_CB_P1(9) DEF_CB_P1(10) DEF_CB_P1(11)
-
-DEF_CB_BP1(0) DEF_CB_BP1(1) DEF_CB_BP1(2) DEF_CB_BP1(3) DEF_CB_BP1(4)
-DEF_CB_BP1(5) DEF_CB_BP1(6) DEF_CB_BP1(7) DEF_CB_BP1(8) DEF_CB_BP1(9)
-DEF_CB_BP1(10) DEF_CB_BP1(11)
-
-DEF_CB_B(0) DEF_CB_B(1) DEF_CB_B(2) DEF_CB_B(3) DEF_CB_B(4) DEF_CB_B(5)
-DEF_CB_B(6) DEF_CB_B(7) DEF_CB_B(8) DEF_CB_B(9) DEF_CB_B(10) DEF_CB_B(11)
+#define X(N) DEF_CB_V(N)
+CB_V_SLOTS
+#undef X
+#define X(N) DEF_CB_P1(N)
+CB_P1_SLOTS
+#undef X
+#define X(N) DEF_CB_BP1(N)
+CB_BP1_SLOTS
+#undef X
+#define X(N) DEF_CB_B(N)
+CB_B_SLOTS
+#undef X
 
 static void *cb_v_table[CB_V_COUNT] = {
-    lua_cb_v_0,  lua_cb_v_1,  lua_cb_v_2,  lua_cb_v_3,  lua_cb_v_4,
-    lua_cb_v_5,  lua_cb_v_6,  lua_cb_v_7,  lua_cb_v_8,  lua_cb_v_9,
-    lua_cb_v_10, lua_cb_v_11, lua_cb_v_12, lua_cb_v_13, lua_cb_v_14,
-    lua_cb_v_15, lua_cb_v_16, lua_cb_v_17, lua_cb_v_18, lua_cb_v_19,
-    lua_cb_v_20, lua_cb_v_21, lua_cb_v_22, lua_cb_v_23, lua_cb_v_24,
-    lua_cb_v_25, lua_cb_v_26, lua_cb_v_27, lua_cb_v_28, lua_cb_v_29,
-    lua_cb_v_30, lua_cb_v_31};
+#define X(N) lua_cb_v_##N,
+    CB_V_SLOTS
+#undef X
+};
 static void *cb_p1_table[CB_P1_COUNT] = {
-    lua_cb_p1_0, lua_cb_p1_1, lua_cb_p1_2,  lua_cb_p1_3,
-    lua_cb_p1_4, lua_cb_p1_5, lua_cb_p1_6,  lua_cb_p1_7,
-    lua_cb_p1_8, lua_cb_p1_9, lua_cb_p1_10, lua_cb_p1_11};
+#define X(N) lua_cb_p1_##N,
+    CB_P1_SLOTS
+#undef X
+};
 static void *cb_bp1_table[CB_BP1_COUNT] = {
-    lua_cb_bp1_0, lua_cb_bp1_1, lua_cb_bp1_2,  lua_cb_bp1_3,
-    lua_cb_bp1_4, lua_cb_bp1_5, lua_cb_bp1_6,  lua_cb_bp1_7,
-    lua_cb_bp1_8, lua_cb_bp1_9, lua_cb_bp1_10, lua_cb_bp1_11};
+#define X(N) lua_cb_bp1_##N,
+    CB_BP1_SLOTS
+#undef X
+};
 static void *cb_b_table[CB_B_COUNT] = {
-    lua_cb_b_0, lua_cb_b_1, lua_cb_b_2,  lua_cb_b_3,
-    lua_cb_b_4, lua_cb_b_5, lua_cb_b_6,  lua_cb_b_7,
-    lua_cb_b_8, lua_cb_b_9, lua_cb_b_10, lua_cb_b_11};
+#define X(N) lua_cb_b_##N,
+    CB_B_SLOTS
+#undef X
+};
 
 typedef struct {
   lua_State *L;
   const void *fn;
   int slot;
+  int kind;
   LuaFeature *f;
 } CbCacheEntry;
 
 static CbCacheEntry cb_cache[CB_TOTAL];
 static int cb_cache_count;
 
+static void lua_cb_v_none(void) {}
+static void lua_cb_p1_none(void *arg) { (void)arg; }
+static bool lua_cb_bp1_none(void *arg) {
+  (void)arg;
+  return false;
+}
+static bool lua_cb_b_none(void) { return false; }
+
+static void *cb_none_for(int kind) {
+  if (kind == CB_V)
+    return lua_cb_v_none;
+  if (kind == CB_P1)
+    return lua_cb_p1_none;
+  if (kind == CB_BP1)
+    return lua_cb_bp1_none;
+  return lua_cb_b_none;
+}
+
 static void *cb_fn_for(int slot, int kind) {
+  if (slot < 0 || slot >= CB_TOTAL)
+    return cb_none_for(kind);
   if (kind == CB_V)
     return cb_v_table[slot];
   if (kind == CB_P1)
@@ -238,8 +272,8 @@ static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
   }
   const void *key = lua_topointer(L, idx);
   for (int i = 0; i < cb_cache_count; i++) {
-    if (cb_cache[i].L == L && cb_cache[i].fn == key &&
-        cb_cache[i].f == f)
+    if (cb_cache[i].L == L && cb_cache[i].fn == key && cb_cache[i].f == f &&
+        cb_cache[i].kind == kind)
       return cb_fn_for(cb_cache[i].slot, kind);
   }
 
@@ -259,36 +293,14 @@ static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
   }
   int slot = -1;
   for (int i = 0; i < count; i++)
-    if (cb_refs[base + i] == LUA_NOREF) {
+    if (cb_refs[base + i] == LUA_NOREF && !cb_in_use[base + i]) {
       slot = base + i;
       break;
     }
   if (slot < 0) {
-    for (int i = 0; i < count; i++) {
-      int s = base + i;
-      if (cb_in_use[s])
-        continue;
-      if (slot < 0 || cb_gen[s] < cb_gen[slot])
-        slot = s;
-    }
-    if (slot < 0) {
-      luaL_error(L, "no free lua callback slots");
-      return NULL;
-    }
-    int old_ref = cb_refs[slot];
-    LuaFeature *old_owner = cb_owners[slot];
-    if (old_ref != LUA_NOREF && old_owner && old_owner->L)
-      luaL_unref(old_owner->L, LUA_REGISTRYINDEX, old_ref);
-    untrack_ref(old_owner, old_ref);
-    for (int i = 0; i < cb_cache_count;) {
-      if (cb_cache[i].slot == slot) {
-        cb_cache[i] = cb_cache[--cb_cache_count];
-        continue;
-      }
-      i++;
-    }
+    log_error("lua callback slots exhausted (kind=%d)", kind);
+    return cb_none_for(kind);
   }
-  cb_gen[slot] = cb_next_gen++;
   lua_pushvalue(L, idx);
   int ref = luaL_ref(L, LUA_REGISTRYINDEX);
   cb_refs[slot] = ref;
@@ -299,6 +311,7 @@ static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
     e->L = L;
     e->fn = key;
     e->slot = slot;
+    e->kind = kind;
     e->f = f;
   }
   return cb_fn_for(slot, kind);

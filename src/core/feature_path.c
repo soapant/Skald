@@ -136,6 +136,36 @@ bool feature_path_stem_from_caller(void *caller, char *out, size_t out_len) {
   return out[0] != '\0';
 }
 
+bool feature_path_stem_from_owner(const char *owner, char *out,
+                                  size_t out_len) {
+  if (!owner || !out || out_len == 0)
+    return false;
+  const char *base = owner;
+  for (const char *p = owner; *p; p++)
+    if (*p == '/' || *p == '\\')
+      base = p + 1;
+  char work[256];
+  size_t len = strlen(base);
+  if (len == 0 || len >= sizeof(work))
+    return false;
+  memcpy(work, base, len + 1);
+  if (len >= 4 && fp_strcasecmp(work + len - 4, ".lua") == 0)
+    len -= 4;
+  else if (len >= 3 && fp_strcasecmp(work + len - 3, ".so") == 0)
+    len -= 3;
+  else if (len >= 4 && fp_strcasecmp(work + len - 4, ".dll") == 0)
+    len -= 4;
+  else if (len >= 5 && fp_strcasecmp(work + len - 5, ".dylib") == 0)
+    len -= 5;
+  work[len] = '\0';
+  char stem[128];
+  feature_path_sanitize_stem(work, stem, sizeof(stem));
+  if (!stem[0] || strlen(stem) >= out_len)
+    return false;
+  memcpy(out, stem, strlen(stem) + 1);
+  return true;
+}
+
 bool feature_path_resolve_data_path(void *caller, const char *name, char *out,
                                     size_t out_len) {
 
@@ -208,30 +238,50 @@ bool feature_path_resolve_data_path(void *caller, const char *name, char *out,
   return feature_path_get(safe, stem, out, out_len);
 }
 
-bool feature_path_resolve_asset_path(void *caller, const char *name, char *out,
-                                     size_t out_len) {
-
-  if (!name || !name[0] || !out || out_len == 0) {
+static bool feature_path_asset_rel(const char *name, const char **out_rel) {
+  if (!name || !name[0] || !out_rel)
     return false;
-  }
-  if (!FeaturePath || !FeaturePath[0]) {
-    log_warn("resolve_asset_file: FeaturePath empty, check config");
-    return false;
-  }
   const char *rel = name;
   while (*rel == '/' || *rel == '\\')
     rel++;
   if (!rel[0])
     return false;
-  for (const char *p = rel; *p; p++) {
-    if (*p == '/' || *p == '\\') {
+  for (const char *p = rel; *p; p++)
+    if (*p == '/' || *p == '\\')
       return false;
-    }
-  }
   if (strstr(rel, ".."))
     return false;
+  *out_rel = rel;
+  return true;
+}
+
+bool feature_path_resolve_asset_path(void *caller, const char *name, char *out,
+                                     size_t out_len) {
+  const char *rel = NULL;
+  if (!out || out_len == 0 || !feature_path_asset_rel(name, &rel))
+    return false;
+  if (!FeaturePath || !FeaturePath[0]) {
+    log_warn("resolve_asset_file: FeaturePath empty, check config");
+    return false;
+  }
   char stem[128];
   if (!feature_path_stem_from_caller(caller, stem, sizeof(stem))) {
+    return false;
+  }
+  return Platform_ResolveAssetFile(stem, rel, out, out_len);
+}
+
+bool feature_path_resolve_asset_for_owner(const char *owner, const char *name,
+                                          char *out, size_t out_len) {
+  const char *rel = NULL;
+  if (!owner || !out || out_len == 0 || !feature_path_asset_rel(name, &rel))
+    return false;
+  if (!FeaturePath || !FeaturePath[0]) {
+    log_warn("resolve_asset_file: FeaturePath empty, check config");
+    return false;
+  }
+  char stem[128];
+  if (!feature_path_stem_from_owner(owner, stem, sizeof(stem))) {
     return false;
   }
   return Platform_ResolveAssetFile(stem, rel, out, out_len);
