@@ -553,21 +553,32 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 #define sk_resize_window(...) ski_resize_window(&(SkRect){__VA_ARGS__})
 
 ColorRef sk_rgb(unsigned r, unsigned g, unsigned b);
+
 ColorRef sk_hex(unsigned long h);
 
 SkSearchIndex *sk_search_create(void);
+
 void sk_search_destroy(SkSearchIndex *idx);
+
 void sk_search_push_context(SkSearchIndex *idx, int source_id,
                             const char *context);
+
 void sk_search_pop_context(SkSearchIndex *idx);
+
 void sk_search_add_text(SkSearchIndex *idx, const char *text, SkSearchKind kind,
                         const char *widget_name, const char *value);
+
 void sk_search_set_activate(SkSearchIndex *idx, SkSearchActivateFn activate,
                             void *ud);
+
 void sk_search_reindex(SkSearchIndex *idx, SkSearchRenderFn render, void *ud);
+
 int sk_search_query(SkSearchIndex *idx, const char *filter);
+
 int sk_search_hit_count(const SkSearchIndex *idx);
+
 const SkSearchHit *sk_search_hit_at(const SkSearchIndex *idx, int i);
+
 void sk_search_activate(SkSearchIndex *idx, int hit_i);
 
 bool sk_copy_to_clipboard(const char *text);
@@ -601,9 +612,13 @@ bool ski_dir_scan(const SkDirScanSpec *spec);
 SkStringList sk_load_file_list(const char *filepath);
 
 void *sk_array_grow(void *arr, size_t elem_size, size_t add, size_t min_cap);
+
 size_t sk_array_len(const void *arr);
+
 void *sk_array_set_len(void *arr, size_t elem_size, size_t len);
+
 void *sk_array_push(void *arr, size_t elem_size, const void *item);
+
 void sk_array_free(void *arr);
 
 char *sk_load_file(const char *filepath);
@@ -625,6 +640,7 @@ bool sk_remove_line_contains(const char *path, const char *substr);
 char *sk_parse_desktop_file(const char *path, bool *out_nodisplay);
 
 char *sk_get_icon_path(const char *path);
+
 bool sk_prewarm_image(const char *path);
 
 bool sk_append_to_file(const char *filepath, const char *line);
@@ -634,12 +650,18 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count);
 const char *sk_platform(void);
 
 const char *ski_store_feature_name(const char *source_file);
+
 bool ski_store_set(const char *feature, const char *key, const char *value);
+
 bool ski_store_append(const char *feature, const char *key, const char *value);
+
 SkStringList ski_store_get_all(const char *feature, const char *key);
+
 char *ski_store_get_last(const char *feature, const char *key);
+
 bool ski_store_replace_all(const char *feature, const char *key,
                            const char *const *values, int count);
+
 bool ski_store_clear(const char *feature, const char *key);
 
 char *sk_write_temp_file(const char *name, const void *data, size_t len);
@@ -647,6 +669,7 @@ char *sk_write_temp_file(const char *name, const void *data, size_t len);
 int sk_get_icon_size(const char *icon_path);
 
 void sk_free_string_list(SkStringList *list);
+
 void sk_free_files_list(ListOfFiles *list);
 
 bool sk_free_list(const char *list[], int count);
@@ -677,9 +700,11 @@ char *sk_which(const char *command);
 bool sk_launch_detached(const char *command);
 
 bool sk_terminate_process_by_name(const char *exe_name);
+
 bool sk_process_running(const char *name);
 
 SkFeatureList sk_get_feature_list(void);
+
 void sk_free_feature_list(SkFeatureList *list);
 
 void sk_init_all_hotkeys(void);
@@ -699,21 +724,29 @@ bool sk_query_browser(const char *query);
 bool sk_focus_window_by_title(const char *title);
 
 SkWindowHandle sk_find_window_by_title(const char *title);
+
 SkWindowHandle sk_find_window_by_root_atom(const char *atom);
+
 SkWindowHandle sk_find_window_by_id(const char *id);
 
 SkWindowHandle sk_get_held_window(void);
 
 bool sk_move_window(SkWindowHandle window, SkPos pos);
+
 bool sk_set_window_size(SkWindowHandle window, int w, int h);
+
 bool sk_set_window_opacity(SkWindowHandle window, int percent);
+
 SkRect sk_get_window_geometry(SkWindowHandle window);
+
 bool ski_set_window_geometry(SkWindowHandle window, const SkRect *rect);
 
 bool sk_window_set_string_property(SkWindowHandle window, const char *atom,
                                    const char *value);
+
 bool sk_window_set_long_property(SkWindowHandle window, const char *atom,
                                  long value);
+
 bool sk_window_send_message(SkWindowHandle window, const char *atom, long data);
 
 bool sk_close_active_window(void);
@@ -727,13 +760,17 @@ bool sk_toggle_fullscreen_active(void);
 bool sk_move_active_window_to_monitor(bool right);
 
 bool sk_move_active_window_left(void);
+
 bool sk_move_active_window_up(void);
+
 bool sk_move_active_window_down(void);
 
 bool sk_move_active_window_right(void);
 
 bool sk_focus_window_left(void);
+
 bool sk_focus_window_up(void);
+
 bool sk_focus_window_down(void);
 
 bool sk_focus_window_right(void);
@@ -741,27 +778,45 @@ bool sk_focus_window_right(void);
 bool sk_toggle_minimized_active(void);
 
 bool sk_toggle_maximize_active(void);
+
 bool sk_toggle_always_on_top_active(void);
+
 bool sk_raise_active_window(void);
+
 bool sk_lower_active_window(void);
+
 bool sk_center_active_window(void);
+
 bool sk_snap_active_window(SnapPreset preset);
+
 long sk_get_active_window_pid(void);
 
 bool sk_switch_to_workspace(int index);
+
 bool sk_move_active_window_to_workspace(int index);
+
 bool sk_set_active_window_opacity(int percent);
+
 bool sk_close_windows_by_title(const char *needle);
+
 bool sk_close_windows_by_id(const char *needle);
 
 bool sk_reload_config(void);
+
 bool sk_save_config(void);
+
 void sk_refresh_ui(void);
+
 void sk_request_refresh(void);
+
 bool sk_commit_config(void);
+
 bool sk_set_theme(const char *name);
+
 const char *sk_get_theme(void);
+
 int sk_theme_count(void);
+
 const char *sk_theme_name_at(int index);
 
 int sk_get_screen_width(void);
@@ -787,9 +842,11 @@ char *sk_string_to_lower(const char *str);
 char *sk_string_to_upper(const char *str);
 
 bool sk_string_starts_with(const char *str, const char *prefix);
+
 bool sk_string_starts_with_ci(const char *str, const char *prefix);
 
 bool sk_string_ends_with(const char *str, const char *suffix);
+
 bool sk_string_equals_ci(const char *str, const char *other);
 
 char *sk_string_replace(const char *str, const char *from, const char *to);
@@ -830,10 +887,13 @@ int ski_measure_text_wrapped(const SkMeasureSpec *spec);
 SkRect ski_text_bounds(const SkTextBoundsSpec *spec);
 
 SkImage sk_image_from_window_title(const char *title);
+
 SkImage sk_image_from_window_id(const char *id);
+
 void sk_image_free(SkImage image);
 
 bool ski_draw_text(const SkTextSpec *spec);
+
 bool ski_draw_text_centered(const SkTextCenteredSpec *spec);
 
 bool ski_draw_text_segments(const SkTextSegmentsSpec *spec);
@@ -841,58 +901,95 @@ bool ski_draw_text_segments(const SkTextSegmentsSpec *spec);
 int ski_draw_text_wrapped(const SkTextWrappedSpec *spec);
 
 bool ski_draw_image(const SkImageSpec *spec);
+
 SkSize ski_get_image_size(const char *path, int *w, int *h);
 
 bool ski_place_editbox(const SkEditSpec *spec);
+
 const char *sk_editbox_text(const char *name);
+
 bool sk_editbox_set_text(const char *name, const char *text);
+
 const char *sk_editbox_active(void);
+
 void sk_editbox_set_active(const char *name);
+
 bool ski_place_listbox(const SkListSpec *spec);
+
 bool ski_place_checkbox(const SkCheckboxSpec *spec);
+
 bool ski_place_slider(const SkSliderSpec *spec);
 
 bool sk_checkbox_is_checked(const char *name);
+
 bool sk_checkbox_is_hovered(const char *name);
+
 bool sk_checkbox_is_clicked(const char *name);
+
 bool sk_button_is_checked(const char *name);
+
 bool sk_button_is_hovered(const char *name);
+
 bool sk_button_is_clicked(const char *name);
+
 bool sk_slider_is_hovered(const char *name);
+
 bool sk_slider_is_clicked(const char *name);
+
 bool sk_slider_is_dragging(const char *name);
+
 float sk_slider_value(const char *name);
+
 float sk_slider_fraction(const char *name);
+
 int sk_slider_percent(const char *name);
+
 bool sk_slider_set_value(const char *name, float value);
 
 SkFocusKind sk_focus_kind(void);
+
 bool sk_focus_is(const char *name);
+
 bool sk_focus_has_entries(void);
+
 const char *sk_focus_name(void);
+
 bool sk_focus_move_next(void);
+
 bool sk_focus_move_before(void);
+
 bool sk_focus_move_dir(SkFocusDir dir);
+
 bool sk_activate_focused(void);
+
 bool sk_focus_adjust(int dir);
+
 bool sk_set_focus(SkFocusKind kind);
+
 void sk_focus_clear(void);
 
 bool ski_listbox_begin(const SkListSpec *spec);
 
 bool sk_listbox_next(SkListItemCtx *out);
+
 void sk_listbox_end(void);
 
 bool sk_draw_text_auto(const char *text);
+
 bool sk_place_editbox_auto(int w, int h, const char *buffer);
+
 bool sk_place_listbox_auto(int w, int h, const char **items, int count);
+
 bool sk_draw_image_auto(int w, int h, const char *path);
 
 SkWidget *sk_widget_create(const SkWidgetSpec *spec);
+
 int sk_monitor_count(void);
+
 bool sk_monitor_at(int index, SkMonitorInfo *out);
 
 bool sk_widget_valid(SkWidget *widget);
+
 bool sk_widget_poll_key(SkWidget *widget, SkWidgetKey *out);
 
 SkPos sk_get_widget_pos(const char *name);
@@ -900,6 +997,7 @@ SkPos sk_get_widget_pos(const char *name);
 void sk_widget_show(SkWidget *widget);
 
 void sk_widget_hide(SkWidget *widget);
+
 void sk_widget_destroy(SkWidget *widget);
 
 bool ski_draw_rect(const SkRect *spec);
@@ -921,6 +1019,7 @@ void sk_set_draw_offset(SkPos pos);
 SkPos sk_get_draw_offset(void);
 
 bool ski_scroll_begin(const SkScrollSpec *spec);
+
 void sk_scroll_end(void);
 
 char *sk_http_get(const char *url);
@@ -940,6 +1039,7 @@ double sk_timer_end(SkTimer t);
 void sk_run_after_time(double seconds, void (*callback)(void));
 
 bool sk_string_contains(const char *haystack, const char *needle);
+
 bool sk_string_contains_ci(const char *haystack, const char *needle);
 
 char *sk_get_working_dir(void);
@@ -1069,7 +1169,9 @@ char *sk_vk_to_name(int vk);
 bool sk_poll_mouse(SkMouseEvent *out);
 
 bool sk_poll_scroll(SkScrollEvent *out);
+
 int sk_scroll_queue_len(void);
+
 void sk_clear_scroll_queue(void);
 
 int sk_mouse_queue_len(void);
@@ -1093,43 +1195,66 @@ unsigned long sk_key_queue_dropped(void);
 void sk_clear_key_queue(void);
 
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
+
 bool sk_config_set_setting(const char *key, const char *value);
+
 bool sk_config_set_setting_int(const char *key, int value);
+
 bool sk_config_set_setting_float(const char *key, float value);
+
 char *sk_config_get_setting(const char *key);
+
 bool sk_config_get_setting_string(const char *key, char *out, size_t out_len,
                                   const char *fallback);
+
 bool sk_config_get_setting_bool(const char *key);
+
 int sk_config_get_setting_int(const char *key, int fallback);
+
 float sk_config_get_setting_float(const char *key);
+
 float sk_config_get_setting_float_or(const char *key, float fallback);
+
 int sk_parse_int(const char *text, int fallback);
+
 float sk_parse_float(const char *text, float fallback);
+
 bool sk_config_has_setting(const char *key);
+
 int sk_config_setting_count(void);
+
 const char *sk_config_setting_name_at(int index);
+
 const char *sk_config_setting_value_at(int index);
 
 int ski_settings_entry_add_checkbox(SkSettingsEntry *entry,
                                     const SkSettingsCheckboxSpec *spec);
+
 int ski_settings_entry_add_button(SkSettingsEntry *entry,
                                   const SkSettingsButtonSpec *spec);
+
 int ski_settings_entry_add_slider(SkSettingsEntry *entry,
                                   const SkSettingsSliderSpec *spec);
+
 int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
                                     const SkSettingsDropdownSpec *spec);
+
 SkSettingsEditboxGroup
 ski_settings_entry_add_editbox(SkSettingsEntry *entry,
                                const SkSettingsEditboxSpec *spec);
+
 const char *sk_settings_editbox_get(SkSettingsEditboxGroup group,
                                     const char *name);
+
 bool sk_settings_editbox_set(SkSettingsEditboxGroup group, const char *name,
                              const char *value);
+
 int sk_settings_editbox_right_offset(int pane_w, int width);
 
 bool ski_add_to_cc(const SkCcEntrySpec *spec);
 
 bool sk_register_alias(const char *alias, const char *target);
+
 bool sk_remove_alias(const char *alias);
 
 const char *sk_alias_for(const char *target);
@@ -1137,31 +1262,49 @@ const char *sk_alias_for(const char *target);
 void sk_config_init(void);
 
 bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec);
+
 bool sk_config_set_alias(const char *target, const char *alias);
+
 char *sk_config_get_hotkey(const char *name);
+
 bool sk_config_clear_hotkey(const char *name);
 
 bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud);
 
 int sk_config_hotkey_count(void);
+
 char *sk_config_hotkey_name_at(int index);
+
 char *sk_config_hotkey_display_name_at(int index);
+
 char *sk_config_hotkey_value_at(int index);
 
 char *sk_config_get_alias(const char *target);
+
 bool sk_config_clear_alias(const char *target);
 
 int sk_config_alias_count(void);
+
 char *sk_config_alias_target_at(int index);
+
 char *sk_config_alias_value_at(int index);
+
 int sk_config_quicklink_count(void);
+
 char *sk_config_quicklink_name_at(int index);
+
 char *sk_config_quicklink_value_at(int index);
+
 bool sk_config_set_quicklink(const char *name, const char *target);
+
 int sk_config_feature_shortcut_count(void);
+
 char *sk_config_feature_shortcut_name_at(int index);
+
 char *sk_config_feature_shortcut_value_at(int index);
+
 bool sk_config_set_feature_shortcut(const char *name, const char *target);
+
 bool sk_run_feature_shortcut(const char *name);
 
 int sk_cc_entry_count(void);
@@ -1169,6 +1312,7 @@ int sk_cc_entry_count(void);
 const CcEntrySpec *sk_cc_entry_at(int index);
 
 int sk_settings_entry_count(void);
+
 void sk_settings_scroll_to_block(const char *entry_name, int block_index);
 
 const SettingsEntrySpec *sk_settings_entry_at(int index);
@@ -1176,45 +1320,65 @@ const SettingsEntrySpec *sk_settings_entry_at(int index);
 bool ski_add_dep(const char *dep_name, const char *owner_file);
 
 bool ski_register_hotkey(const SkHotkeySpec *spec);
+
 bool sk_unregister_hotkey(const char *hotkey);
 
 bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec);
 
 void sk_disable_global_hotkeys(void);
+
 void sk_enable_global_hotkeys(void);
 
 void sk_hotkey_capture_begin(void);
+
 bool sk_hotkey_capture_poll(char *out, size_t cap);
+
 const char *sk_hotkey_capture_preview(void);
+
 const char *sk_hotkey_capture_last(void);
+
 bool sk_hotkey_capture_active(void);
+
 void sk_hotkey_capture_end(void);
 
 int sk_hotkey_count(void);
+
 char *sk_hotkey_string_at(int index);
+
 bool sk_hotkey_taken(const char *hotkey);
+
 char *sk_hotkey_for_callback(void (*cb)(void));
+
 char *sk_hotkey_for_ud(void *ud);
+
 void sk_register_deferred_init(void (*cb)(void));
 
 bool ski_register_remapping(const SkRemappingSpec *spec);
 
 bool sk_replay_hotkey(SkKey key);
+
 bool sk_execute_hotkey(SkKey key);
 
 bool ski_register_snippet(const SkSnippetSpec *spec);
+
 bool sk_unregister_snippet(const char *trigger);
 
 void sk_reload_feature(const char *name);
+
 int sk_reload_all_features(void);
+
 int sk_get_pid(void);
 
 void sk_cap_register_abi(const char *key, unsigned abi, void *fn);
+
 void *sk_cap_resolve_abi(const char *key, unsigned abi);
 
 void ski_cap_register(const char *key, void *fn);
+
 void *sk_cap_resolve(const char *key);
+
 unsigned sk_cap_generation(void);
+
 void sk_cap_bind_declare(const char *key, void *consumer);
 
 SkMetrics *sk_get_metrics(void);
@@ -1222,6 +1386,7 @@ SkMetrics *sk_get_metrics(void);
 void *sk_get_active_prompt(void);
 
 void sk_register_event(SkEvent event, SkEventCallback cb);
+
 void sk_unregister_event(SkEvent event, SkEventCallback cb);
 
 void sk_register_key_interceptor(SkKeyInterceptorFn fn);
@@ -1229,7 +1394,9 @@ void sk_register_key_interceptor(SkKeyInterceptorFn fn);
 void sk_close_window(void);
 
 bool ski_resize_window(const SkRect *rect);
+
 bool ski_resize_window_animated(const SkRect *rect, int duration_ms);
+
 SkRect sk_get_window_bounds(void);
 
 #endif
