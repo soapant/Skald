@@ -8,6 +8,7 @@ typedef void *LibHandle;
 
 LibHandle Platform_LoadLibrary(const char *path);
 void *Platform_GetSymbol(LibHandle lib, const char *name);
+void *Platform_GetMainSymbol(const char *name);
 void Platform_UnloadLibrary(LibHandle lib);
 const char *Platform_LibExtension(void);
 const char *Platform_GetLoadError(void);

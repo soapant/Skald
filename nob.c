@@ -8,8 +8,9 @@
 #define BUILD_FOLDER "build"
 
 #define CC_COMMON_FLAGS                                                        \
-  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wall",       \
-      "-Wextra", "-Wshadow", "-Wmissing-prototypes", "-Wstrict-prototypes",    \
+  "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-I", "include/deps/lua",     \
+      "-MMD", "-MP", "-Wall", "-Wextra", "-Wshadow", "-Wmissing-prototypes",   \
+      "-Wstrict-prototypes",                                                     \
       "-Wformat=2", "-Wundef", "-Wvla", "-Wno-override-init"
 
 #if defined(_WIN32)
@@ -2012,6 +2013,23 @@ int main(int argc, char **argv) {
     if (!nob_mkdir_if_not_exists("build/debug"))
       return 1;
 #endif
+  }
+
+  {
+    Nob_Cmd gen = {0};
+    append_cc(&gen);
+    nob_cmd_append(&gen, "-o", BUILD_FOLDER "/gen_skapi_lua",
+                   "tools/gen_skapi_lua.c");
+    if (!nob_cmd_run(&gen)) {
+      nob_log(NOB_ERROR, "Failed to build skapi.lua generator");
+      return 1;
+    }
+    Nob_Cmd run = {0};
+    nob_cmd_append(&run, BUILD_FOLDER "/gen_skapi_lua");
+    if (!nob_cmd_run(&run)) {
+      nob_log(NOB_ERROR, "Failed to generate src/skapi.lua");
+      return 1;
+    }
   }
 
   if (!nob_walk_dir(SRC_FOLDER, collect_source)) {

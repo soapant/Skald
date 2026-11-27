@@ -11,6 +11,7 @@
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_input_state.h"
 #include "core/context.h"
+#include "core/lua_host.h"
 #include "core/types/keys.h"
 #include "core/window_manager.h"
 #include "platform/platform.h"
@@ -313,6 +314,14 @@ bool owner_module_matches(const char *owner, const char *a, const char *b) {
 }
 
 char *owner_resolve_for_func_alloc(void *fn) {
+  const char *lua_owner = ski_lua_current_owner();
+  if (lua_owner && lua_owner[0]) {
+    size_t n = strlen(lua_owner) + 1;
+    char *copy = malloc(n);
+    if (copy)
+      memcpy(copy, lua_owner, n);
+    return copy;
+  }
   if (!fn)
     return NULL;
   return Platform_GetModuleOwnerPathAlloc(fn);

@@ -1,0 +1,777 @@
+#include "core/lua_host.h"
+
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "deps/lua/lua.h"
+#include "deps/lua/lauxlib.h"
+#include "deps/lua/lualib.h"
+
+#include "core/skapi.h"
+#include "core/owner_purge.h"
+#include "core/window_manager.h"
+#include "deps/log.h"
+#include "platform/lib.h"
+
+typedef struct {
+  char *name;
+  char *owner;
+  lua_State *L;
+  int *refs;
+  int ref_count;
+  int ref_cap;
+} LuaFeature;
+
+static LuaFeature *g_features;
+static int g_feature_count;
+static int g_feature_cap;
+
+static __thread char *tl_owner;
+
+const char *ski_lua_current_owner(void) { return tl_owner; }
+
+void ski_lua_owner_set(const char *owner) {
+  free(tl_owner);
+  tl_owner = owner ? strdup(owner) : NULL;
+}
+
+void ski_lua_owner_clear(void) {
+  free(tl_owner);
+  tl_owner = NULL;
+}
+
+static LuaFeature *lua_feature(lua_State *L) {
+  lua_getfield(L, LUA_REGISTRYINDEX, "skapi_feature");
+  LuaFeature *f = (LuaFeature *)lua_touserdata(L, -1);
+  lua_pop(L, 1);
+  return f;
+}
+
+static void track_ref(LuaFeature *f, int ref) {
+  if (!f)
+    return;
+  if (f->ref_count >= f->ref_cap) {
+    int cap = f->ref_cap > 0 ? f->ref_cap * 2 : 16;
+    int *grown = (int *)realloc(f->refs, (size_t)cap * sizeof(int));
+    if (!grown)
+      return;
+    f->refs = grown;
+    f->ref_cap = cap;
+  }
+  f->refs[f->ref_count++] = ref;
+}
+
+static void untrack_refs(LuaFeature *f) {
+  if (!f || !f->L)
+    return;
+  for (int i = 0; i < f->ref_count; i++)
+    luaL_unref(f->L, LUA_REGISTRYINDEX, f->refs[i]);
+  free(f->refs);
+  f->refs = NULL;
+  f->ref_count = 0;
+  f->ref_cap = 0;
+}
+
+enum { CB_V, CB_PS, CB_BPS, CB_B };
+#define CB_V_COUNT 32
+#define CB_PS_COUNT 12
+#define CB_BPS_COUNT 12
+#define CB_B_COUNT 12
+#define CB_TOTAL (CB_V_COUNT + CB_PS_COUNT + CB_BPS_COUNT + CB_B_COUNT)
+
+static int cb_refs[CB_TOTAL];
+static LuaFeature *cb_owners[CB_TOTAL];
+
+static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool) {
+  LuaFeature *f = cb_owners[slot];
+  if (!f || !f->L)
+    return;
+  const char *saved = ski_lua_current_owner();
+  char *saved_copy = saved ? strdup(saved) : NULL;
+  ski_lua_owner_set(f->owner);
+  lua_rawgeti(f->L, LUA_REGISTRYINDEX, cb_refs[slot]);
+  if (nargs == 1)
+    lua_pushlightuserdata(f->L, (void *)1);
+  if (lua_pcall(f->L, nargs, want_bool ? 1 : 0, 0) != 0) {
+    log_error("lua callback error: %s", lua_tostring(f->L, -1));
+    lua_pop(f->L, 1);
+    if (want_bool && out_bool)
+      *out_bool = false;
+  } else if (want_bool && out_bool) {
+    *out_bool = lua_toboolean(f->L, -1) != 0;
+    lua_pop(f->L, 1);
+  }
+  ski_lua_owner_clear();
+  if (saved_copy) {
+    ski_lua_owner_set(saved_copy);
+    free(saved_copy);
+  }
+}
+
+#define DEF_CB_V(N)                                                            \
+  static void lua_cb_v_##N(void) { cb_invoke(N, 0, false, NULL); }
+#define DEF_CB_PS(N)                                                           \
+  static void lua_cb_ps_##N(PromptState *s) {                                 \
+    (void)s;                                                                   \
+    cb_invoke(CB_V_COUNT + N, 1, false, NULL);                                 \
+  }
+#define DEF_CB_BPS(N)                                                          \
+  static bool lua_cb_bps_##N(PromptState *s) {                                \
+    bool r = false;                                                            \
+    (void)s;                                                                   \
+    cb_invoke(CB_V_COUNT + CB_PS_COUNT + N, 1, true, &r);                      \
+    return r;                                                                  \
+  }
+#define DEF_CB_B(N)                                                            \
+  static bool lua_cb_b_##N(void) {                                            \
+    bool r = false;                                                            \
+    cb_invoke(CB_V_COUNT + CB_PS_COUNT + CB_BPS_COUNT + N, 0, true, &r);       \
+    return r;                                                                  \
+  }
+
+DEF_CB_V(0) DEF_CB_V(1) DEF_CB_V(2) DEF_CB_V(3) DEF_CB_V(4) DEF_CB_V(5)
+DEF_CB_V(6) DEF_CB_V(7) DEF_CB_V(8) DEF_CB_V(9) DEF_CB_V(10) DEF_CB_V(11)
+DEF_CB_V(12) DEF_CB_V(13) DEF_CB_V(14) DEF_CB_V(15) DEF_CB_V(16) DEF_CB_V(17)
+DEF_CB_V(18) DEF_CB_V(19) DEF_CB_V(20) DEF_CB_V(21) DEF_CB_V(22) DEF_CB_V(23)
+DEF_CB_V(24) DEF_CB_V(25) DEF_CB_V(26) DEF_CB_V(27) DEF_CB_V(28) DEF_CB_V(29)
+DEF_CB_V(30) DEF_CB_V(31)
+
+DEF_CB_PS(0) DEF_CB_PS(1) DEF_CB_PS(2) DEF_CB_PS(3) DEF_CB_PS(4) DEF_CB_PS(5)
+DEF_CB_PS(6) DEF_CB_PS(7) DEF_CB_PS(8) DEF_CB_PS(9) DEF_CB_PS(10) DEF_CB_PS(11)
+
+DEF_CB_BPS(0) DEF_CB_BPS(1) DEF_CB_BPS(2) DEF_CB_BPS(3) DEF_CB_BPS(4)
+DEF_CB_BPS(5) DEF_CB_BPS(6) DEF_CB_BPS(7) DEF_CB_BPS(8) DEF_CB_BPS(9)
+DEF_CB_BPS(10) DEF_CB_BPS(11)
+
+DEF_CB_B(0) DEF_CB_B(1) DEF_CB_B(2) DEF_CB_B(3) DEF_CB_B(4) DEF_CB_B(5)
+DEF_CB_B(6) DEF_CB_B(7) DEF_CB_B(8) DEF_CB_B(9) DEF_CB_B(10) DEF_CB_B(11)
+
+static void *cb_v_table[CB_V_COUNT] = {
+    lua_cb_v_0,  lua_cb_v_1,  lua_cb_v_2,  lua_cb_v_3,  lua_cb_v_4,
+    lua_cb_v_5,  lua_cb_v_6,  lua_cb_v_7,  lua_cb_v_8,  lua_cb_v_9,
+    lua_cb_v_10, lua_cb_v_11, lua_cb_v_12, lua_cb_v_13, lua_cb_v_14,
+    lua_cb_v_15, lua_cb_v_16, lua_cb_v_17, lua_cb_v_18, lua_cb_v_19,
+    lua_cb_v_20, lua_cb_v_21, lua_cb_v_22, lua_cb_v_23, lua_cb_v_24,
+    lua_cb_v_25, lua_cb_v_26, lua_cb_v_27, lua_cb_v_28, lua_cb_v_29,
+    lua_cb_v_30, lua_cb_v_31};
+static void *cb_ps_table[CB_PS_COUNT] = {
+    lua_cb_ps_0, lua_cb_ps_1, lua_cb_ps_2,  lua_cb_ps_3,
+    lua_cb_ps_4, lua_cb_ps_5, lua_cb_ps_6,  lua_cb_ps_7,
+    lua_cb_ps_8, lua_cb_ps_9, lua_cb_ps_10, lua_cb_ps_11};
+static void *cb_bps_table[CB_BPS_COUNT] = {
+    lua_cb_bps_0, lua_cb_bps_1, lua_cb_bps_2,  lua_cb_bps_3,
+    lua_cb_bps_4, lua_cb_bps_5, lua_cb_bps_6,  lua_cb_bps_7,
+    lua_cb_bps_8, lua_cb_bps_9, lua_cb_bps_10, lua_cb_bps_11};
+static void *cb_b_table[CB_B_COUNT] = {
+    lua_cb_b_0, lua_cb_b_1, lua_cb_b_2,  lua_cb_b_3,
+    lua_cb_b_4, lua_cb_b_5, lua_cb_b_6,  lua_cb_b_7,
+    lua_cb_b_8, lua_cb_b_9, lua_cb_b_10, lua_cb_b_11};
+
+static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
+  static bool cb_init = false;
+  if (!cb_init) {
+    for (int i = 0; i < CB_TOTAL; i++)
+      cb_refs[i] = LUA_NOREF;
+    cb_init = true;
+  }
+  lua_pushvalue(L, idx);
+  int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  for (int i = 0; i < CB_TOTAL; i++) {
+    if (cb_refs[i] != LUA_NOREF)
+      continue;
+    int base = 0, count = 0;
+    void **table = NULL;
+    if (kind == CB_V) {
+      base = 0;
+      count = CB_V_COUNT;
+      table = cb_v_table;
+    } else if (kind == CB_PS) {
+      base = CB_V_COUNT;
+      count = CB_PS_COUNT;
+      table = cb_ps_table;
+    } else if (kind == CB_BPS) {
+      base = CB_V_COUNT + CB_PS_COUNT;
+      count = CB_BPS_COUNT;
+      table = cb_bps_table;
+    } else {
+      base = CB_V_COUNT + CB_PS_COUNT + CB_BPS_COUNT;
+      count = CB_B_COUNT;
+      table = cb_b_table;
+    }
+    int slot = base + i - base;
+    if (slot < base || slot >= base + count)
+      continue;
+    cb_refs[i] = ref;
+    cb_owners[i] = f;
+    track_ref(f, ref);
+    return table[slot - base];
+  }
+  luaL_unref(L, LUA_REGISTRYINDEX, ref);
+  luaL_error(L, "no free lua callback slots");
+  return NULL;
+}
+
+enum {
+  FLD_I,
+  FLD_B,
+  FLD_F,
+  FLD_D,
+  FLD_S,
+  FLD_CB_V,
+  FLD_CB_PS,
+  FLD_CB_BPS,
+  FLD_CB_B,
+  FLD_SKIP
+};
+
+typedef struct {
+  const char *name;
+  int kind;
+  size_t off;
+} Field;
+
+#define FD(k, t, f) {#f, k, offsetof(t, f)}
+
+static const Field f_cc[] = {
+    FD(FLD_S, SkCcEntrySpec, display_name),
+    FD(FLD_S, SkCcEntrySpec, internal_name),
+    FD(FLD_CB_B, SkCcEntrySpec, on_enter),
+    FD(FLD_CB_B, SkCcEntrySpec, on_ctrl_enter),
+    FD(FLD_CB_B, SkCcEntrySpec, on_shift_enter),
+    FD(FLD_CB_B, SkCcEntrySpec, on_ctrl_shift_enter),
+    FD(FLD_CB_B, SkCcEntrySpec, on_ctrl_alt_enter),
+    FD(FLD_CB_B, SkCcEntrySpec, on_shift_alt_enter),
+    FD(FLD_CB_B, SkCcEntrySpec, on_tab),
+    FD(FLD_CB_V, SkCcEntrySpec, on_action),
+    FD(FLD_S, SkCcEntrySpec, icon),
+    FD(FLD_S, SkCcEntrySpec, type),
+};
+static const Field f_hotkey[] = {
+    FD(FLD_S, SkHotkeySpec, hotkey),
+    FD(FLD_CB_V, SkHotkeySpec, cb),
+    FD(FLD_CB_B, SkHotkeySpec, should_swallow),
+    FD(FLD_B, SkHotkeySpec, swallow),
+};
+static const Field f_prompt[] = {
+    FD(FLD_S, PromptSpec, title),
+    FD(FLD_CB_PS, PromptSpec, refresh),
+    FD(FLD_CB_BPS, PromptSpec, enter),
+    FD(FLD_CB_BPS, PromptSpec, ctrl_enter),
+    FD(FLD_CB_BPS, PromptSpec, shift_enter),
+    FD(FLD_CB_PS, PromptSpec, render),
+    FD(FLD_CB_V, PromptSpec, on_close),
+    FD(FLD_I, PromptSpec, w),
+    FD(FLD_I, PromptSpec, h),
+    FD(FLD_I, PromptSpec, x),
+    FD(FLD_I, PromptSpec, y),
+    FD(FLD_B, PromptSpec, no_bg),
+    FD(FLD_I, PromptSpec, bg_color),
+    FD(FLD_B, PromptSpec, auto_scale),
+    FD(FLD_B, PromptSpec, password_mode),
+    FD(FLD_B, PromptSpec, subwindow),
+    FD(FLD_B, PromptSpec, no_separators),
+    FD(FLD_B, PromptSpec, rounded),
+    FD(FLD_I, PromptSpec, radius),
+};
+static const Field f_text[] = {
+    FD(FLD_S, SkTextSpec, text),
+    FD(FLD_I, SkTextSpec, x),
+    FD(FLD_I, SkTextSpec, y),
+    FD(FLD_I, SkTextSpec, color),
+    FD(FLD_I, SkTextSpec, font_size),
+    FD(FLD_S, SkTextSpec, align),
+    FD(FLD_I, SkTextSpec, pad),
+    FD(FLD_B, SkTextSpec, no_hscroll),
+    FD(FLD_F, SkTextSpec, angle),
+};
+static const Field f_rect[] = {
+    FD(FLD_I, DrawRect, x),       FD(FLD_I, DrawRect, y),
+    FD(FLD_I, DrawRect, w),       FD(FLD_I, DrawRect, h),
+    FD(FLD_I, DrawRect, color),   FD(FLD_F, DrawRect, thickness),
+    FD(FLD_B, DrawRect, transparent), FD(FLD_B, DrawRect, filled),
+    FD(FLD_I, DrawRect, radius),  FD(FLD_B, DrawRect, rounded),
+    FD(FLD_F, DrawRect, angle),   FD(FLD_I, DrawRect, border),
+};
+static const Field f_checkbox[] = {
+    FD(FLD_S, SkCheckboxSpec, name),   FD(FLD_S, SkCheckboxSpec, text),
+    FD(FLD_I, SkCheckboxSpec, font_size), FD(FLD_I, SkCheckboxSpec, x),
+    FD(FLD_I, SkCheckboxSpec, y),      FD(FLD_I, SkCheckboxSpec, w),
+    FD(FLD_I, SkCheckboxSpec, h),      FD(FLD_B, SkCheckboxSpec, checked),
+    FD(FLD_B, SkCheckboxSpec, button), FD(FLD_B, SkCheckboxSpec, checkbox),
+    FD(FLD_I, SkCheckboxSpec, thickness), FD(FLD_I, SkCheckboxSpec, text_color),
+    FD(FLD_B, SkCheckboxSpec, border), FD(FLD_B, SkCheckboxSpec, no_bg),
+    FD(FLD_CB_V, SkCheckboxSpec, on_click), FD(FLD_CB_V, SkCheckboxSpec, on_hover),
+};
+static const Field f_message[] = {
+    FD(FLD_S, SkMessageSpec, message),
+    FD(FLD_I, SkMessageSpec, slot),
+    FD(FLD_I, SkMessageSpec, x),
+    FD(FLD_I, SkMessageSpec, y),
+    FD(FLD_D, SkMessageSpec, timeout),
+    FD(FLD_I, SkMessageSpec, color_text),
+    FD(FLD_S, SkMessageSpec, hover_key),
+    FD(FLD_I, SkMessageSpec, fps),
+    FD(FLD_B, SkMessageSpec, no_bg),
+    FD(FLD_I, SkMessageSpec, color_bg),
+    FD(FLD_S, SkMessageSpec, name),
+    FD(FLD_B, SkMessageSpec, close_on_keypress),
+    FD(FLD_B, SkMessageSpec, rounded),
+    FD(FLD_I, SkMessageSpec, radius),
+};
+static const Field f_edit[] = {
+    FD(FLD_S, SkEditSpec, name),
+    FD(FLD_I, SkEditSpec, x),
+    FD(FLD_I, SkEditSpec, y),
+    FD(FLD_I, SkEditSpec, w),
+    FD(FLD_I, SkEditSpec, h),
+    FD(FLD_S, SkEditSpec, placeholder),
+    FD(FLD_S, SkEditSpec, initial_text),
+    FD(FLD_I, SkEditSpec, color_bg),
+    FD(FLD_I, SkEditSpec, color_text),
+    FD(FLD_I, SkEditSpec, font_size),
+    FD(FLD_I, SkEditSpec, caret_h),
+    FD(FLD_I, SkEditSpec, caret_w),
+    FD(FLD_B, SkEditSpec, primary),
+    FD(FLD_B, SkEditSpec, no_tab),
+    FD(FLD_B, SkEditSpec, wrapped),
+};
+static const Field f_list[] = {
+    FD(FLD_I, ListSpec, x),
+    FD(FLD_I, ListSpec, y),
+    FD(FLD_I, ListSpec, w),
+    FD(FLD_I, ListSpec, h),
+    FD(FLD_I, ListSpec, item_height),
+};
+static const Field f_skrect[] = {
+    FD(FLD_I, SkRect, x),
+    FD(FLD_I, SkRect, y),
+    FD(FLD_I, SkRect, w),
+    FD(FLD_I, SkRect, h),
+};
+
+static const Field *fields_for(const char *name, int *count) {
+#define FIELDS(key, n)                                                         \
+  if (strcmp(name, key) == 0) {                                                \
+    *count = (int)(sizeof(f_##n) / sizeof(f_##n[0]));                          \
+    return f_##n;                                                              \
+  }
+  FIELDS("SkCcEntrySpec", cc)
+  FIELDS("SkHotkeySpec", hotkey)
+  FIELDS("SkPromptSpec", prompt)
+  FIELDS("PromptSpec", prompt)
+  FIELDS("SkTextSpec", text)
+  FIELDS("DrawRect", rect)
+  FIELDS("SkCheckboxSpec", checkbox)
+  FIELDS("SkMessageSpec", message)
+  FIELDS("SkEditSpec", edit)
+  FIELDS("ListSpec", list)
+  FIELDS("SkRect", skrect)
+#undef FIELDS
+  *count = 0;
+  return NULL;
+}
+
+static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
+                        LuaFeature *f) {
+  int count = 0;
+  const Field *fields = fields_for(sname, &count);
+  if (!fields)
+    luaL_error(L, "unsupported lua struct '%s'", sname);
+  for (int i = 0; i < count; i++) {
+    const Field *fd = &fields[i];
+    lua_getfield(L, idx, fd->name);
+    if (lua_isnil(L, -1)) {
+      lua_pop(L, 1);
+      continue;
+    }
+    char *dst = (char *)base + fd->off;
+    switch (fd->kind) {
+    case FLD_I:
+      *(int *)dst = (int)lua_tointeger(L, -1);
+      break;
+    case FLD_B:
+      *(bool *)dst = lua_toboolean(L, -1) != 0;
+      break;
+    case FLD_F:
+      *(float *)dst = (float)lua_tonumber(L, -1);
+      break;
+    case FLD_D:
+      *(double *)dst = lua_tonumber(L, -1);
+      break;
+    case FLD_S:
+      *(const char **)dst = lua_tostring(L, -1);
+      break;
+    case FLD_CB_V:
+      *(void **)dst = make_callback(L, -1, CB_V, f);
+      break;
+    case FLD_CB_PS:
+      *(void **)dst = make_callback(L, -1, CB_PS, f);
+      break;
+    case FLD_CB_BPS:
+      *(void **)dst = make_callback(L, -1, CB_BPS, f);
+      break;
+    case FLD_CB_B:
+      *(void **)dst = make_callback(L, -1, CB_B, f);
+      break;
+    default:
+      break;
+    }
+    lua_pop(L, 1);
+  }
+}
+
+static uintptr_t arg_value(lua_State *L, int idx) {
+  if (lua_isstring(L, idx))
+    return (uintptr_t)lua_tostring(L, idx);
+  if (lua_isnumber(L, idx))
+    return (uintptr_t)lua_tointeger(L, idx);
+  if (lua_isboolean(L, idx))
+    return (uintptr_t)(lua_toboolean(L, idx) != 0);
+  if (lua_isuserdata(L, idx))
+    return (uintptr_t)lua_touserdata(L, idx);
+  return 0;
+}
+
+static void with_owner(lua_State *L, void (*fn)(lua_State *L)) {
+  LuaFeature *f = lua_feature(L);
+  const char *saved = ski_lua_current_owner();
+  char *copy = saved ? strdup(saved) : NULL;
+  ski_lua_owner_set(f ? f->owner : NULL);
+  fn(L);
+  ski_lua_owner_clear();
+  if (copy) {
+    ski_lua_owner_set(copy);
+    free(copy);
+  }
+}
+
+static void call_v(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *sym = Platform_GetMainSymbol(name);
+  if (!sym)
+    luaL_error(L, "unknown skapi function '%s'", name);
+  uintptr_t a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = arg_value(L, 2 + i);
+  ((void (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+             uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
+  lua_pushboolean(L, 1);
+}
+static void call_b(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *sym = Platform_GetMainSymbol(name);
+  if (!sym)
+    luaL_error(L, "unknown skapi function '%s'", name);
+  uintptr_t a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = arg_value(L, 2 + i);
+  bool r = ((bool (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                      uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
+  lua_pushboolean(L, r);
+}
+static void call_i(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *sym = Platform_GetMainSymbol(name);
+  if (!sym)
+    luaL_error(L, "unknown skapi function '%s'", name);
+  uintptr_t a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = arg_value(L, 2 + i);
+  int r = ((int (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                    uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
+  lua_pushinteger(L, r);
+}
+static void call_s(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *sym = Platform_GetMainSymbol(name);
+  if (!sym)
+    luaL_error(L, "unknown skapi function '%s'", name);
+  uintptr_t a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = arg_value(L, 2 + i);
+  char *r = ((char *(*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                        uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
+  if (r)
+    lua_pushstring(L, r);
+  else
+    lua_pushnil(L);
+}
+static void call_f(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *sym = Platform_GetMainSymbol(name);
+  if (!sym)
+    luaL_error(L, "unknown skapi function '%s'", name);
+  double a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = lua_tonumber(L, 2 + i);
+  double r = ((double (*)(double, double, double, double, double, double))sym)(
+      a[0], a[1], a[2], a[3], a[4], a[5]);
+  lua_pushnumber(L, r);
+}
+
+static int l_v(lua_State *L) {
+  with_owner(L, call_v);
+  return 1;
+}
+static int l_b(lua_State *L) {
+  with_owner(L, call_b);
+  return 1;
+}
+static int l_i(lua_State *L) {
+  with_owner(L, call_i);
+  return 1;
+}
+static int l_s(lua_State *L) {
+  with_owner(L, call_s);
+  return 1;
+}
+static int l_f(lua_State *L) {
+  with_owner(L, call_f);
+  return 1;
+}
+
+static int l_feature(lua_State *L) {
+  LuaFeature *f = lua_feature(L);
+  lua_pushstring(L, f ? f->name : "");
+  return 1;
+}
+static int l_owner(lua_State *L) {
+  LuaFeature *f = lua_feature(L);
+  lua_pushstring(L, f ? f->owner : "");
+  return 1;
+}
+static int l_global_b(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *sym = Platform_GetMainSymbol(name);
+  lua_pushboolean(L, sym && *(bool *)sym);
+  return 1;
+}
+static int l_image_size(lua_State *L) {
+  const char *path = luaL_checkstring(L, 1);
+  int w = 0, h = 0;
+  ski_get_image_size(path, &w, &h);
+  lua_pushinteger(L, w);
+  lua_pushinteger(L, h);
+  return 2;
+}
+static int l_cap_register(lua_State *L) {
+  const char *key = luaL_checkstring(L, 1);
+  LuaFeature *f = lua_feature(L);
+  void *cb = make_callback(L, 2, CB_V, f);
+  ski_lua_owner_set(f ? f->owner : NULL);
+  ski_cap_register(key, cb);
+  ski_lua_owner_clear();
+  return 0;
+}
+static int l_cap_call(lua_State *L) {
+  const char *key = lua_tostring(L, lua_upvalueindex(1));
+  void *fn = sk_cap_resolve(key);
+  if (!fn) {
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+  uintptr_t a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = arg_value(L, 1 + i);
+  ((void (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+             uintptr_t))fn)(a[0], a[1], a[2], a[3], a[4], a[5]);
+  lua_pushboolean(L, 1);
+  return 1;
+}
+static int l_cap_bind(lua_State *L) {
+  const char *key = luaL_checkstring(L, 1);
+  lua_pushstring(L, key);
+  lua_pushcclosure(L, l_cap_call, 1);
+  return 1;
+}
+static int l_message_fmt(lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  char storage[1024] = {0};
+  fill_struct(L, "SkMessageSpec", 1, storage, lua_feature(L));
+  ski_message((SkMessageSpec *)storage);
+  return 0;
+}
+
+static int l_struct_call(lua_State *L) {
+  const char *fn = luaL_checkstring(L, 1);
+  const char *sname = luaL_checkstring(L, 2);
+  luaL_checktype(L, 3, LUA_TTABLE);
+  const char *ret = luaL_optstring(L, 4, "v");
+  void *sym = Platform_GetMainSymbol(fn);
+  if (!sym)
+    luaL_error(L, "unknown skapi function '%s'", fn);
+  char storage[2048] = {0};
+  LuaFeature *f = lua_feature(L);
+  const char *saved = ski_lua_current_owner();
+  char *copy = saved ? strdup(saved) : NULL;
+  ski_lua_owner_set(f ? f->owner : NULL);
+  fill_struct(L, sname, 3, storage, f);
+  uintptr_t a[7] = {(uintptr_t)storage};
+  for (int i = 0; i < 6; i++)
+    a[i + 1] = arg_value(L, 5 + i);
+  typedef uintptr_t (*generic_fn)(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                                  uintptr_t, uintptr_t, uintptr_t);
+  uintptr_t r = ((generic_fn)sym)(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+  ski_lua_owner_clear();
+  if (copy) {
+    ski_lua_owner_set(copy);
+    free(copy);
+  }
+  if (strcmp(ret, "b") == 0)
+    lua_pushboolean(L, r != 0);
+  else if (strcmp(ret, "i") == 0)
+    lua_pushinteger(L, (lua_Integer)r);
+  else
+    lua_pushboolean(L, 1);
+  return 1;
+}
+
+static const luaL_Reg native_funcs[] = {
+    {"v", l_v},
+    {"b", l_b},
+    {"i", l_i},
+    {"s", l_s},
+    {"f", l_f},
+    {"feature", l_feature},
+    {"owner", l_owner},
+    {"global_b", l_global_b},
+    {"image_size", l_image_size},
+    {"cap_register", l_cap_register},
+    {"cap_bind", l_cap_bind},
+    {"message_fmt", l_message_fmt},
+    {"struct_call", l_struct_call},
+    {NULL, NULL},
+};
+
+static int luaopen_skapi_native(lua_State *L) {
+  luaL_newlib(L, native_funcs);
+  return 1;
+}
+
+static LuaFeature *find_feature(const char *name) {
+  for (int i = 0; i < g_feature_count; i++)
+    if (strcmp(g_features[i].name, name) == 0)
+      return &g_features[i];
+  return NULL;
+}
+
+static void feature_shutdown(LuaFeature *f) {
+  if (!f || !f->L)
+    return;
+  lua_getglobal(f->L, "shutdown");
+  if (lua_isfunction(f->L, -1)) {
+    const char *saved = ski_lua_current_owner();
+    char *copy = saved ? strdup(saved) : NULL;
+    ski_lua_owner_set(f->owner);
+    if (lua_pcall(f->L, 0, 0, 0) != 0)
+      log_error("lua shutdown error: %s", lua_tostring(f->L, -1));
+    ski_lua_owner_clear();
+    if (copy) {
+      ski_lua_owner_set(copy);
+      free(copy);
+    }
+  } else {
+    lua_pop(f->L, 1);
+  }
+  for (int i = 0; i < CB_TOTAL; i++) {
+    if (cb_owners[i] == f) {
+      cb_refs[i] = LUA_NOREF;
+      cb_owners[i] = NULL;
+    }
+  }
+  untrack_refs(f);
+  purge_owner_set(f->owner, NULL, widget_bump_generation());
+  lua_close(f->L);
+  f->L = NULL;
+  free(f->name);
+  f->name = NULL;
+  free(f->owner);
+  f->owner = NULL;
+}
+
+static bool feature_start(LuaFeature *f, const char *name, const char *path) {
+  f->name = strdup(name);
+  f->owner = strdup(path);
+  f->L = luaL_newstate();
+  if (!f->L)
+    return false;
+  luaL_openlibs(f->L);
+  const char *pkg = "package.path";
+  lua_getglobal(f->L, "package");
+  lua_getfield(f->L, -1, "path");
+  const char *old = lua_tostring(f->L, -1);
+  char newpath[1024];
+  snprintf(newpath, sizeof(newpath), "src/?.lua;./src/?.lua;%s",
+           old ? old : "");
+  lua_pop(f->L, 1);
+  lua_pushstring(f->L, newpath);
+  lua_setfield(f->L, -2, "path");
+  lua_pop(f->L, 1);
+  (void)pkg;
+
+  lua_pushlightuserdata(f->L, f);
+  lua_setfield(f->L, LUA_REGISTRYINDEX, "skapi_feature");
+  lua_getglobal(f->L, "package");
+  lua_getfield(f->L, -1, "preload");
+  lua_pushcfunction(f->L, luaopen_skapi_native);
+  lua_setfield(f->L, -2, "skapi_native");
+  lua_pop(f->L, 2);
+
+  ski_lua_owner_set(f->owner);
+  int status = luaL_dofile(f->L, path);
+  ski_lua_owner_clear();
+  if (status != 0) {
+    log_error("lua feature %s failed: %s", name, lua_tostring(f->L, -1));
+    feature_shutdown(f);
+    return false;
+  }
+  return true;
+}
+
+bool ski_lua_load(const char *name, const char *path) {
+  if (!name || !path)
+    return false;
+  LuaFeature *f = find_feature(name);
+  if (f && f->L)
+    return true;
+  if (!f) {
+    if (g_feature_count >= g_feature_cap) {
+      int cap = g_feature_cap > 0 ? g_feature_cap * 2 : 8;
+      LuaFeature *grown =
+          (LuaFeature *)realloc(g_features, (size_t)cap * sizeof(*g_features));
+      if (!grown)
+        return false;
+      g_features = grown;
+      g_feature_cap = cap;
+    }
+    f = &g_features[g_feature_count++];
+    memset(f, 0, sizeof(*f));
+  }
+  return feature_start(f, name, path);
+}
+
+bool ski_lua_reload(const char *name) {
+  LuaFeature *f = find_feature(name);
+  if (!f)
+    return false;
+  char *owner = f->owner ? strdup(f->owner) : NULL;
+  char *path = owner;
+  feature_shutdown(f);
+  bool ok = feature_start(f, name, path);
+  free(path);
+  return ok;
+}
+
+void ski_lua_shutdown(const char *name) {
+  LuaFeature *f = find_feature(name);
+  if (f)
+    feature_shutdown(f);
+}
+
+bool ski_lua_is_loaded(const char *name) {
+  LuaFeature *f = find_feature(name);
+  return f && f->L != NULL;
+}

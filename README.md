@@ -139,7 +139,6 @@ Skald is in active, early development. The following bugs are known and will be 
 
 - **macOS Support:** Port the platform layer to fully support macOS.
 - **Polyglot Features:** Allow features to be written in languages other than C (e.g., Lua, C++, or Rust).
-- **Settings GUI:** Build a proper graphical settings menu (currently just an empty feature placeholder).
 - **Feature Registry:** A centralized website where users can easily find and download community-made features (like a "Skald Extensions" store), alongside a built-in viewer as a feature inside Skald.
 
 ## License

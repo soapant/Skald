@@ -31,7 +31,7 @@
   ActionsHotkey = "Ctrl+K"
   RegHotkey = "Ctrl+Shift+E"
   RegAliasHotkey = "Ctrl+Shift+A"
-  Theme = "mint-slate"
+  Theme = "void-cosmos"
   BackgroundImage = ""
   MessagesEnabled = true
   EnableAutoPairing = true
@@ -41,9 +41,9 @@
   AllowWindowOverride = false
 
 [color]
-  BG = "#142020"
-  TEXT = "#D0EEE8"
-  SELECTED_TEXT = "#243A3A"
-  CURSOR = "#6EEBCD"
-  BORDER = "#426C68"
+  BG = "#07080F"
+  TEXT = "#D6DCF0"
+  SELECTED_TEXT = "#14182A"
+  CURSOR = "#82B1FF"
+  BORDER = "#343C60"
 # </skald-config-generated>

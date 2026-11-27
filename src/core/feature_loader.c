@@ -1,4 +1,5 @@
 #include "core/feature_loader.h"
+#include "core/lua_host.h"
 #include "core/reload_lib.h"
 #include "core/manifest.h"
 #include "helpers/helpers_key.h"
@@ -39,6 +40,8 @@
 static void (**deferred_inits)(void);
 #define deferred_count arrlenu(deferred_inits)
 
+static void feature_loader_load_lua_all(void);
+
 void deferred_init_register(void (*cb)(void)) {
   if (!cb)
     return;
@@ -68,6 +71,7 @@ typedef struct {
   char *path;
   char *uniq;
   LibHandle handle;
+  bool lua;
 } LoadedFeature;
 
 static int reload_seq = 0;
@@ -620,6 +624,7 @@ bool feature_loader_load_all_from_dir(const char *dir) {
   free(loaded);
   free(names);
   UNLOCK();
+  feature_loader_load_lua_all();
   log_info("feature_loader_load_all_from_dir completed");
   return true;
 }
@@ -897,6 +902,73 @@ bool feature_loader_init(void) {
   return true;
 }
 
+static bool feature_name_loaded(const char *name) {
+  for (int i = 0; i < feature_count; i++)
+    if (features[i].name && strcmp(features[i].name, name) == 0)
+      return true;
+  return false;
+}
+
+static bool load_lua_named(const char *name) {
+  if (!FeaturePath || !FeaturePath[0] || feature_name_loaded(name))
+    return true;
+  char path[1024];
+  snprintf(path, sizeof(path), "%.255s/%.255s/%.255s.lua", FeaturePath, name,
+           name);
+  FILE *fp = fopen(path, "rb");
+  if (!fp)
+    return false;
+  fclose(fp);
+
+  manifest_write_baseline(name);
+  FeatureManifest man = {0};
+  char mpath[512];
+  ConfigTomlError merr;
+  ConfigTomlStatus mst = CONFIG_TOML_ERR_IO;
+  if (manifest_path(name, mpath, sizeof(mpath)))
+    mst = manifest_parse_file_ex(mpath, name, &man, &merr);
+  if (mst == CONFIG_TOML_OK && man.valid) {
+    for (int i = 0; i < man.dep_count; i++) {
+      if (!feature_name_loaded(man.deps[i])) {
+        log_warn("lua feature '%s' skipped, dep '%s' not loaded", name,
+                 man.deps[i]);
+        return false;
+      }
+    }
+  }
+
+  if (!ski_lua_load(name, path)) {
+    log_error("lua feature '%s' failed to load", name);
+    return false;
+  }
+  if (!ensure_feature_capacity(feature_count + 1))
+    return false;
+  LoadedFeature *f = &features[feature_count++];
+  memset(f, 0, sizeof(*f));
+  f->name = owner_strdup(name);
+  f->path = owner_strdup(path);
+  f->handle = (LibHandle)1;
+  f->lua = true;
+  feature_init_count++;
+  return true;
+}
+
+static void feature_loader_load_lua_all(void) {
+  if (!FeaturePath || !FeaturePath[0])
+    return;
+  DirIter *d = Platform_DirOpen(FeaturePath);
+  if (!d)
+    return;
+  char dname[256];
+  bool is_dir = false;
+  while (Platform_DirNext(d, dname, sizeof(dname), &is_dir)) {
+    if (!is_dir || dname[0] == '.')
+      continue;
+    load_lua_named(dname);
+  }
+  Platform_DirClose(d);
+}
+
 static void call_feature_shutdown(LibHandle handle) {
   typedef void (*ShutdownFn)(void);
   ShutdownFn shut =
@@ -935,7 +1007,9 @@ void feature_loader_shutdown(void) {
 
   if (handles) {
     for (int i = 0; i < count; i++) {
-      if (handles[i])
+      if (features[i].lua)
+        ski_lua_shutdown(features[i].name);
+      else if (handles[i])
         call_feature_shutdown(handles[i]);
     }
     free(handles);
@@ -947,7 +1021,8 @@ void feature_loader_shutdown(void) {
       char *path_copy = owner_strdup(features[i].path);
       purge_owner_set(NULL, path_copy, widget_bump_generation());
       owner_strfree(&path_copy);
-      Platform_UnloadLibrary(features[i].handle);
+      if (!features[i].lua)
+        Platform_UnloadLibrary(features[i].handle);
       if (features[i].uniq)
         file_remove_path(features[i].uniq);
       features[i].handle = 0;
@@ -989,6 +1064,10 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
   sweep_retired_libs();
   for (int i = 0; i < feature_count; i++) {
     if (features[i].name && strcmp(features[i].name, name) == 0) {
+      if (features[i].lua) {
+        UNLOCK();
+        return ski_lua_reload(name);
+      }
       char *path_copy = owner_strdup(features[i].path);
       const char *base = path_copy ? path_copy : "";
       const char *src = (src_path && src_path[0]) ? src_path : base;
@@ -1141,6 +1220,14 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
 void feature_loader_reload_all(void) {
   LOCK();
   for (int i = 0; i < feature_count; i++) {
+    if (features[i].lua) {
+      char *name = owner_strdup(features[i].name);
+      UNLOCK();
+      ski_lua_reload(name);
+      free(name);
+      LOCK();
+      continue;
+    }
     if (features[i].handle) {
       call_feature_shutdown(features[i].handle);
       char *loaded = owner_strdup(
