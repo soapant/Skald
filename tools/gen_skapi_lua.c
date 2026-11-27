@@ -138,6 +138,63 @@ static void clean(char *s) {
     s[--n] = '\0';
 }
 
+typedef struct {
+  char from[NAME_SZ];
+  char to[NAME_SZ];
+} Alias;
+
+static Alias aliases[128];
+static int alias_count;
+
+static void parse_aliases(const char *path) {
+  char *buf = read_all(path);
+  if (!buf)
+    return;
+  char *line = strtok(buf, "\n");
+  while (line && alias_count < 128) {
+    char work[512];
+    snprintf(work, sizeof(work), "%s", line);
+    clean(work);
+    if (strncmp(work, "typedef ", 8) == 0 && strchr(work, '{') == NULL &&
+        strchr(work, '(') == NULL && strchr(work, '*') == NULL) {
+      char *last = work + strlen(work);
+      while (last > work && isspace((unsigned char)last[-1]))
+        last--;
+      char *start = last;
+      while (start > work && (isalnum((unsigned char)start[-1]) ||
+                              start[-1] == '_'))
+        start--;
+      char to[NAME_SZ] = {0};
+      size_t n = (size_t)(last - start);
+      if (n > 0 && n < NAME_SZ) {
+        memcpy(to, start, n);
+        to[n] = '\0';
+        char *first = work + 8;
+        while (*first == ' ')
+          first++;
+        char *end = first;
+        while (*end && !isspace((unsigned char)*end))
+          end++;
+        char from[NAME_SZ] = {0};
+        n = (size_t)(end - first);
+        if (n > 0 && n < NAME_SZ &&
+            strcmp(first, "struct") != 0 && strcmp(first, "enum") != 0 &&
+            strcmp(first, "union") != 0) {
+          memcpy(from, first, n);
+          from[n] = '\0';
+          if (from[0] && to[0] && strcmp(from, to) != 0) {
+            snprintf(aliases[alias_count].from, NAME_SZ, "%s", to);
+            snprintf(aliases[alias_count].to, NAME_SZ, "%s", from);
+            alias_count++;
+          }
+        }
+      }
+    }
+    line = strtok(NULL, "\n");
+  }
+  free(buf);
+}
+
 static const char *cb_kind_for_sig(const char *sig) {
   if (strcmp(sig, "void()") == 0)
     return "LCB_V";
@@ -405,6 +462,9 @@ static int gen_struct_header(void) {
           "#include \"core/lua_struct.h\"\n"
           "#include <string.h>\n\n");
 
+  for (size_t h = 0; h < sizeof(headers) / sizeof(headers[0]); h++)
+    parse_aliases(headers[h]);
+
   for (size_t h = 0; h < sizeof(headers) / sizeof(headers[0]); h++) {
     char *buf = read_all(headers[h]);
     if (!buf) {
@@ -567,13 +627,20 @@ static int gen_struct_header(void) {
   fprintf(out, "    &lsd_SkTextSpec, &lsd_DrawRect,\n");
   fprintf(out, "    &lsd_CheckboxSpec, &lsd_SkMessageSpec, &lsd_SkEditSpec,\n");
   fprintf(out, "    &lsd_ListSpec,\n");
+  fprintf(out, "};\n");
+  fprintf(out, "static const char *lua_alias_from[] = {\n");
+  for (int i = 0; i < alias_count; i++)
+    fprintf(out, "    \"%s\",\n", aliases[i].from);
+  fprintf(out, "};\nstatic const char *lua_alias_to[] = {\n");
+  for (int i = 0; i < alias_count; i++)
+    fprintf(out, "    \"%s\",\n", aliases[i].to);
   fprintf(out,
           "};\n"
           "static const LuaStructDesc *ski_lua_struct_find(const char *name) {\n"
-          "  if (strcmp(name, \"SkCcEntrySpec\") == 0) name = \"CcEntrySpec\";\n"
-          "  if (strcmp(name, \"SkCheckboxSpec\") == 0) name = \"CheckboxSpec\";\n"
-          "  if (strcmp(name, \"SkPromptSpec\") == 0) name = \"PromptSpec\";\n"
-          "  if (strcmp(name, \"SkRect\") == 0) name = \"DrawRect\";\n"
+          "  for (size_t i = 0; i < "
+          "sizeof(lua_alias_from)/sizeof(lua_alias_from[0]); i++)\n"
+          "    if (strcmp(name, lua_alias_from[i]) == 0)\n"
+          "      name = lua_alias_to[i];\n"
           "  for (size_t i = 0; i < "
           "sizeof(lua_generated_structs)/sizeof(lua_generated_structs[0]); "
           "i++)\n"
