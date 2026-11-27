@@ -148,41 +148,60 @@ static bool win32_hwnd_is_popup(WindowManager *wm, HWND h) {
   return false;
 }
 
-static HDC s_bb_dc = NULL;
-static HBITMAP s_bb_bmp = NULL;
-static HBITMAP s_bb_prev = NULL;
-static void *s_bb_bits = NULL;
-static void *s_bb_bg_bits = NULL;
-static int s_bb_w = 0;
-static int s_bb_h = 0;
+typedef struct {
+  HWND hwnd;
+  HDC dc;
+  HBITMAP bmp;
+  void *bits;
+  void *bg_bits;
+  int w, h;
+} PopupBuffer;
 
-static void popup_free_back_buffer(void) {
-  if (s_bb_dc) {
-    DeleteDC(s_bb_dc);
-    s_bb_dc = NULL;
-  }
-  if (s_bb_bmp) {
-    DeleteObject(s_bb_bmp);
-    s_bb_bmp = NULL;
-  }
-  free(s_bb_bg_bits);
-  s_bb_bg_bits = NULL;
-  s_bb_bits = NULL;
-  s_bb_prev = NULL;
-  s_bb_w = 0;
-  s_bb_h = 0;
+#define POPUP_BUF_MAX 16
+static PopupBuffer s_buffers[POPUP_BUF_MAX];
+
+static PopupBuffer *popup_buffer_for(HWND hwnd) {
+  for (int i = 0; i < POPUP_BUF_MAX; i++)
+    if (s_buffers[i].hwnd == hwnd)
+      return &s_buffers[i];
+  return NULL;
 }
 
-static HDC popup_back_buffer(HDC hdc, int w, int h, HBITMAP *out_prev) {
-  (void)hdc;
+static void popup_free_back_buffer(PopupBuffer *b) {
+  if (!b)
+    return;
+  if (b->dc)
+    DeleteDC(b->dc);
+  if (b->bmp)
+    DeleteObject(b->bmp);
+  free(b->bg_bits);
+  memset(b, 0, sizeof(*b));
+}
+
+static HDC popup_back_buffer(HWND hwnd, int w, int h, HBITMAP *out_prev) {
   if (w <= 0 || h <= 0)
     return NULL;
-  if (!s_bb_dc || !s_bb_bmp || s_bb_w != w || s_bb_h != h) {
-    popup_free_back_buffer();
+  PopupBuffer *b = popup_buffer_for(hwnd);
+  if (!b) {
+    for (int i = 0; i < POPUP_BUF_MAX; i++) {
+      if (!s_buffers[i].hwnd) {
+        b = &s_buffers[i];
+        break;
+      }
+    }
+    if (!b) {
+      b = &s_buffers[0];
+      popup_free_back_buffer(b);
+    }
+    b->hwnd = hwnd;
+  }
+  if (!b->dc || !b->bmp || b->w != w || b->h != h) {
+    popup_free_back_buffer(b);
+    b->hwnd = hwnd;
     HDC screen = GetDC(NULL);
     if (!screen)
       return NULL;
-    s_bb_dc = CreateCompatibleDC(screen);
+    b->dc = CreateCompatibleDC(screen);
     BITMAPINFO bi = {0};
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bi.bmiHeader.biWidth = w;
@@ -190,33 +209,35 @@ static HDC popup_back_buffer(HDC hdc, int w, int h, HBITMAP *out_prev) {
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 32;
     bi.bmiHeader.biCompression = BI_RGB;
-    s_bb_bmp = CreateDIBSection(s_bb_dc, &bi, DIB_RGB_COLORS, &s_bb_bits, NULL,
-                                0);
+    b->bmp = CreateDIBSection(b->dc, &bi, DIB_RGB_COLORS, &b->bits, NULL, 0);
     ReleaseDC(NULL, screen);
-    if (s_bb_bmp)
-      s_bb_bg_bits = malloc((size_t)w * (size_t)h * 4u);
-    s_bb_w = w;
-    s_bb_h = h;
+    if (b->bmp)
+      b->bg_bits = malloc((size_t)w * (size_t)h * 4u);
+    b->w = w;
+    b->h = h;
   }
-  if (!s_bb_dc || !s_bb_bmp || !s_bb_bits || !s_bb_bg_bits) {
-    popup_free_back_buffer();
+  if (!b->dc || !b->bmp || !b->bits || !b->bg_bits) {
+    popup_free_back_buffer(b);
+    b->hwnd = hwnd;
     return NULL;
   }
-  *out_prev = (HBITMAP)SelectObject(s_bb_dc, s_bb_bmp);
-  return s_bb_dc;
+  *out_prev = (HBITMAP)SelectObject(b->dc, b->bmp);
+  return b->dc;
 }
 
-static void popup_snapshot_background(int w, int h) {
-  if (s_bb_bits && s_bb_bg_bits)
-    memcpy(s_bb_bg_bits, s_bb_bits, (size_t)w * (size_t)h * 4u);
+static void popup_snapshot_background(HWND hwnd, int w, int h) {
+  PopupBuffer *b = popup_buffer_for(hwnd);
+  if (b && b->bits && b->bg_bits)
+    memcpy(b->bg_bits, b->bits, (size_t)w * (size_t)h * 4u);
 }
 
 static void popup_apply_alpha(HWND hwnd, HDC memDC, int w, int h) {
   GdiFlush();
-  if (!s_bb_bits || !s_bb_bg_bits)
+  PopupBuffer *b = popup_buffer_for(hwnd);
+  if (!b || !b->bits || !b->bg_bits)
     return;
-  unsigned int *px = (unsigned int *)s_bb_bits;
-  const unsigned int *bg = (const unsigned int *)s_bb_bg_bits;
+  unsigned int *px = (unsigned int *)b->bits;
+  const unsigned int *bg = (const unsigned int *)b->bg_bits;
   float opacity = WindowOpacity;
   if (opacity < 0.0f)
     opacity = 0.0f;
@@ -688,7 +709,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     bool useRenderBuf = (rect.right > 0 && rect.bottom > 0);
     if (useRenderBuf) {
       HBITMAP prev = NULL;
-      HDC buf = popup_back_buffer(hdc, rect.right, rect.bottom, &prev);
+      HDC buf = popup_back_buffer(hwnd, rect.right, rect.bottom, &prev);
       if (buf) {
         oldBmp = prev;
         memDC = buf;
@@ -716,13 +737,16 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       }
     }
     if (useRenderBuf)
-      popup_snapshot_background(rect.right, rect.bottom);
+      popup_snapshot_background(hwnd, rect.right, rect.bottom);
     Popup *anim_popup =
         prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
     bool resize_animating =
         anim_popup && prompt_popup_resize_animating(anim_popup);
     if (SkaldContext_Get()->window.prompt_callbacks.render) {
       PromptState *state = win32_prompt_state_from_hwnd(hwnd);
+      Popup *owner = prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
+      if (owner && !owner->user_data)
+        state = NULL;
       if (state && state->callbacks && state->callbacks->render) {
         long long now_ticks = Platform_TimerNowTicks();
         long long freq = Platform_TimerTickFrequency();
@@ -764,6 +788,9 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       }
     } else {
       PromptState *estate = win32_prompt_state_from_hwnd(hwnd);
+      Popup *eowner = prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
+      if (eowner && !eowner->user_data)
+        estate = NULL;
       if (estate && !resize_animating) {
         focus_frame_begin(
             estate->lb != NULL, 0, prompt_list_top(), estate->width,
@@ -909,7 +936,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       s_bg_brush = NULL;
       s_bg_color = (COLORREF)-1;
     }
-    popup_free_back_buffer();
+    popup_free_back_buffer(popup_buffer_for(hwnd));
     s_repaint_queued = false;
     break;
   }

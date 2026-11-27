@@ -87,7 +87,6 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
     self->handle = SkaldContext_Get()->window.hPopupWnd;
   win32_apply_rounded_corners(hwnd, w, h);
   ShowWindow(hwnd, SW_SHOW);
-  UpdateWindow(hwnd);
   win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd);
   return true;
 }
@@ -104,7 +103,6 @@ bool Platform_PromptPopupResize(Popup *self, int x, int y, int w, int h) {
                     SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER))
     return false;
   win32_apply_rounded_corners(hwnd, w, h);
-  UpdateWindow(hwnd);
   return true;
 }
 

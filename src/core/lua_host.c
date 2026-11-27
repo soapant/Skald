@@ -408,9 +408,19 @@ static void fill_struct_depth(lua_State *L, const char *sname, int idx,
     case LSF_DOUBLE:
       *(double *)dst = lua_tonumber(L, -1);
       break;
-    case LSF_STR:
-      *(const char **)dst = lua_tostring(L, -1);
+    case LSF_STR: {
+      size_t len = 0;
+      const char *s = lua_tolstring(L, -1, &len);
+      char *copy = (char *)calloc(len + 1, 1);
+      *(const char **)dst = NULL;
+      if (copy) {
+        if (s)
+          memcpy(copy, s, len);
+        track_alloc(f, copy);
+        *(const char **)dst = copy;
+      }
       break;
+    }
     case LSF_STR_INLINE: {
       size_t cap = fd->aux > 0 ? fd->aux : 1;
       size_t len = 0;
@@ -430,8 +440,15 @@ static void fill_struct_depth(lua_State *L, const char *sname, int idx,
       if (lua_istable(L, -1)) {
         for (size_t ai = 0; ai < n; ai++) {
           lua_geti(L, -1, (lua_Integer)ai + 1);
-          if (lua_isstring(L, -1))
-            arr[ai] = lua_tostring(L, -1);
+          size_t len = 0;
+          const char *s2 = lua_tolstring(L, -1, &len);
+          char *copy = (char *)calloc(len + 1, 1);
+          if (copy) {
+            if (s2)
+              memcpy(copy, s2, len);
+            arr[ai] = copy;
+            track_alloc(f, copy);
+          }
           lua_pop(L, 1);
         }
       }
