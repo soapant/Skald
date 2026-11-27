@@ -640,8 +640,57 @@ static const luaL_Reg native_funcs[] = {
     {NULL, NULL},
 };
 
+void *ski_lua_callback(void *L, int idx, int kind) {
+  return make_callback((lua_State *)L, idx, kind, lua_feature((lua_State *)L));
+}
+
+void ski_lua_fill_struct(void *L, const char *name, int idx, void *base) {
+  fill_struct((lua_State *)L, name, idx, base, lua_feature((lua_State *)L));
+}
+
+void ski_lua_push_struct(void *L, const char *name, const void *base) {
+  lua_State *ls = (lua_State *)L;
+  const LuaStructDesc *desc = ski_lua_struct_find(name);
+  if (!desc) {
+    lua_pushnil(ls);
+    return;
+  }
+  lua_newtable(ls);
+  for (int i = 0; i < desc->count; i++) {
+    const LuaFieldDesc *fd = &desc->fields[i];
+    const char *p = (const char *)base + fd->off;
+    switch (fd->kind) {
+    case LSF_INT:
+      lua_pushinteger(ls, (lua_Integer) * (int *)p);
+      break;
+    case LSF_BOOL:
+      lua_pushboolean(ls, *(bool *)p != 0);
+      break;
+    case LSF_FLOAT:
+      lua_pushnumber(ls, *(float *)p);
+      break;
+    case LSF_DOUBLE:
+      lua_pushnumber(ls, *(double *)p);
+      break;
+    case LSF_STR:
+      lua_pushstring(ls, *(const char *const *)p ? *(const char *const *)p : "");
+      break;
+    default:
+      lua_pushnil(ls);
+      break;
+    }
+    lua_setfield(ls, -2, fd->name);
+  }
+}
+
+void ski_lua_owner_from_state(void *L) {
+  LuaFeature *f = lua_feature((lua_State *)L);
+  ski_lua_owner_set(f ? f->owner : NULL);
+}
+
 static int luaopen_skapi_native(lua_State *L) {
   luaL_newlib(L, native_funcs);
+  ski_lua_register_thunks(L);
   return 1;
 }
 

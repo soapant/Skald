@@ -12,6 +12,8 @@
 #define LINE_SZ 4096
 #define NAME_SZ 128
 
+static void clean(char *s);
+
 static const char *ret_kind(const char *line) {
   if (strncmp(line, "bool", 4) == 0)
     return "b";
@@ -43,8 +45,17 @@ typedef struct {
   const char *kind;
 } RetEntry;
 
+typedef struct {
+  char name[NAME_SZ];
+  char ret[NAME_SZ];
+  char params[1024];
+  bool varargs;
+} FuncDesc;
+
 static RetEntry rets[512];
 static int ret_count;
+static FuncDesc funcs[512];
+static int func_count;
 static char struct_names[256][NAME_SZ];
 static char struct_sources[256][512];
 static int struct_name_count;
@@ -87,6 +98,39 @@ static void collect_rets(char lines[MAX_LINES][LINE_SZ], int line_count) {
     snprintf(rets[ret_count].name, NAME_SZ, "%s", name);
     rets[ret_count].kind = ret_kind(p);
     ret_count++;
+
+    if (func_count < 512) {
+      FuncDesc *fd = &funcs[func_count++];
+      snprintf(fd->name, NAME_SZ, "%s", name);
+      size_t rn = (size_t)(start - p);
+      if (rn >= NAME_SZ)
+        rn = NAME_SZ - 1;
+      memcpy(fd->ret, p, rn);
+      fd->ret[rn] = '\0';
+      clean(fd->ret);
+      int depth = 0;
+      char *close_paren = NULL;
+      for (char *q = open; *q; q++) {
+        if (*q == '(')
+          depth++;
+        else if (*q == ')') {
+          depth--;
+          if (depth == 0) {
+            close_paren = q;
+            break;
+          }
+        }
+      }
+      if (close_paren) {
+        size_t pn = (size_t)(close_paren - open - 1);
+        if (pn >= sizeof(fd->params))
+          pn = sizeof(fd->params) - 1;
+        memcpy(fd->params, open + 1, pn);
+        fd->params[pn] = '\0';
+        clean(fd->params);
+        fd->varargs = strstr(fd->params, "...") != NULL;
+      }
+    }
   }
 }
 
@@ -314,6 +358,9 @@ static void parse_callback_typedefs(const char *src) {
   free(buf);
 }
 
+static FuncDesc *func_for(const char *name);
+static bool can_thunk(const FuncDesc *fd);
+
 static void lua_expr(char *out, size_t cap, const char *expr) {
   char e[256];
   snprintf(e, sizeof(e), "%s", expr);
@@ -368,6 +415,11 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
       strcmp(kind, "b") != 0 && strcmp(kind, "s") != 0 &&
       strcmp(kind, "f") != 0)
     kind = "v";
+
+  if (can_thunk(func_for(name))) {
+    fprintf(out, "M.%s = function(...) return native.%s(...) end\n", name, name);
+    return;
+  }
 
   if (strstr(rest, "SK_STORE_NAME")) {
     fprintf(out,
@@ -560,6 +612,313 @@ static int split_decls(const char *decl, char out[16][512]) {
   return count;
 }
 
+static FuncDesc *func_for(const char *name) {
+  for (int i = 0; i < func_count; i++)
+    if (strcmp(funcs[i].name, name) == 0)
+      return &funcs[i];
+  return NULL;
+}
+
+static bool is_simple_type(const char *t) {
+  if (strcmp(t, "void") == 0)
+    return true;
+  if (strstr(t, "char") || strstr(t, "bool") || strstr(t, "int") ||
+      strstr(t, "long") || strstr(t, "short") || strstr(t, "unsigned") ||
+      strstr(t, "size_t") || strstr(t, "float") || strstr(t, "double") ||
+      strstr(t, "void *") || strstr(t, "void*") || strstr(t, "uint") ||
+      strstr(t, "Slot") || strstr(t, "Kind") || strstr(t, "Status") ||
+      strstr(t, "Direction") || strstr(t, "Preset") || strstr(t, "Event") || strstr(t, "SkKey") ||
+      strstr(t, "WindowHandle"))
+    return true;
+  return false;
+}
+
+static bool is_struct_type(const char *t) {
+  for (int i = 0; i < struct_name_count; i++) {
+    if (strcmp(t, struct_names[i]) == 0)
+      return true;
+    const char *base = t;
+    for (int pass = 0; pass < 8; pass++) {
+      const char *next = base;
+      for (int j = 0; j < alias_count; j++)
+        if (strcmp(next, aliases[j].from) == 0) {
+          next = aliases[j].to;
+          break;
+        }
+      if (strcmp(next, base) == 0)
+        break;
+      base = next;
+      if (strcmp(base, struct_names[i]) == 0)
+        return true;
+    }
+  }
+  return false;
+}
+
+static int callback_kind_for_type(const char *t) {
+  const char *base = t;
+  for (int pass = 0; pass < 8; pass++) {
+    const char *next = base;
+    for (int j = 0; j < alias_count; j++)
+      if (strcmp(next, aliases[j].from) == 0) {
+        next = aliases[j].to;
+        break;
+      }
+    if (strcmp(next, base) == 0)
+      break;
+    base = next;
+  }
+  for (int i = 0; i < cb_type_count; i++) {
+    if (strcmp(base, cb_types[i].name) != 0)
+      continue;
+    const char *k = cb_kind_for_sig(cb_types[i].sig);
+    if (!k)
+      return -1;
+    if (strcmp(k, "LCB_V") == 0)
+      return 0;
+    if (strcmp(k, "LCB_PS") == 0)
+      return 1;
+    if (strcmp(k, "LCB_BPS") == 0)
+      return 2;
+    return 3;
+  }
+  if (strstr(t, "Callback") || strstr(t, "Fn") || strstr(t, "(*"))
+    return 0;
+  return -1;
+}
+
+static bool is_out_param(const char *t) {
+  if (strchr(t, '*') == NULL)
+    return false;
+  if (strstr(t, "char") || strstr(t, "void") || strstr(t, "(*"))
+    return false;
+  char base[256];
+  snprintf(base, sizeof(base), "%.255s", t);
+  size_t n = strlen(base);
+  while (n && (base[n - 1] == '*' || base[n - 1] == ' '))
+    base[--n] = '\0';
+  return is_simple_type(base) && !is_struct_type(base);
+}
+
+static bool can_thunk(const FuncDesc *fd) {
+  if (!fd || fd->varargs || strncmp(fd->name, "ski_", 4) == 0)
+    return false;
+  if (strchr(fd->ret, '*') || strstr(fd->params, "...") != NULL)
+    return false;
+  if (strcmp(fd->ret, "void") != 0 && !is_simple_type(fd->ret) &&
+      !is_struct_type(fd->ret))
+    return false;
+  const char *k = ret_kind(fd->ret);
+  if (strcmp(k, "v") != 0 && strcmp(k, "b") != 0 && strcmp(k, "i") != 0 &&
+      strcmp(k, "s") != 0 && strcmp(k, "f") != 0)
+    return false;
+  char segs[16][512];
+  int n = split_decls(fd->params, segs);
+  for (int i = 0; i < n; i++) {
+    const char *p = segs[i];
+    if (strchr(p, '[') || strstr(p, "...") || strstr(p, "**"))
+      return false;
+    if (strstr(p, "(*"))
+      continue;
+    char ptype[256] = {0};
+    snprintf(ptype, sizeof(ptype), "%.255s", p);
+    char *last_space = strrchr(ptype, ' ');
+    if (last_space)
+      *last_space = '\0';
+    clean(ptype);
+    if (!is_simple_type(ptype) && !is_struct_type(ptype) &&
+        callback_kind_for_type(ptype) < 0 && !is_out_param(ptype))
+      return false;
+  }
+  return true;
+}
+
+typedef struct {
+  char type[256];
+  char name[NAME_SZ];
+} ParamDesc;
+
+static int parse_params(const char *params, ParamDesc out[16]) {
+  char segs[16][512];
+  int n = split_decls(params, segs);
+  int count = 0;
+  for (int i = 0; i < n; i++) {
+    const char *p = segs[i];
+    if (strcmp(p, "void") == 0)
+      continue;
+    const char *end = p + strlen(p);
+    const char *start = end;
+    while (start > p && (isalnum((unsigned char)start[-1]) || start[-1] == '_'))
+      start--;
+    if (start == end)
+      continue;
+    ParamDesc *pd = &out[count++];
+    size_t nn = (size_t)(end - start);
+    if (nn >= NAME_SZ)
+      nn = NAME_SZ - 1;
+    memcpy(pd->name, start, nn);
+    pd->name[nn] = '\0';
+    size_t tn = (size_t)(start - p);
+    if (tn >= sizeof(pd->type))
+      tn = sizeof(pd->type) - 1;
+    memcpy(pd->type, p, tn);
+    pd->type[tn] = '\0';
+    clean(pd->type);
+  }
+  return count;
+}
+
+static void base_type(const char *t, char *out, size_t cap) {
+  snprintf(out, cap, "%s", t);
+  size_t n = strlen(out);
+  while (n && (out[n - 1] == '*' || out[n - 1] == ' '))
+    out[--n] = '\0';
+}
+
+static void callback_cast_type(const char *t, char *out, size_t cap) {
+  const char *p = strstr(t, "(*");
+  if (!p) {
+    snprintf(out, cap, "%s", t);
+    return;
+  }
+  size_t prefix = (size_t)(p - t);
+  size_t n = 0;
+  for (size_t i = 0; i < prefix && n < cap - 1; i++)
+    out[n++] = t[i];
+  out[n++] = '(';
+  out[n++] = '*';
+  out[n++] = ')';
+  const char *close = strchr(p, ')');
+  if (close) {
+    for (const char *q = close + 1; *q && n < cap - 1; q++)
+      out[n++] = *q;
+  }
+  out[n] = '\0';
+}
+
+static bool is_handle_type(const char *t) {
+  return strstr(t, "WindowHandle") != NULL;
+}
+
+static void gen_thunk(FILE *out, const FuncDesc *fd) {
+  const char *k = ret_kind(fd->ret);
+  ParamDesc params[16];
+  int n = parse_params(fd->params, params);
+  fprintf(out, "static inline int lthunk_%s(lua_State *L) {\n", fd->name);
+  fprintf(out, "  ski_lua_owner_from_state(L);\n");
+  int out_count = 0;
+  for (int i = 0; i < n; i++) {
+    const char *t = params[i].type;
+    int idx = i + 1;
+    int ck = callback_kind_for_type(t);
+    if (ck >= 0) {
+      fprintf(out, "  void *a%d = ski_lua_callback(L, %d, %d);\n", i, idx, ck);
+    } else if (is_struct_type(t)) {
+      fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d));\n", t, i, i, i);
+      fprintf(out, "  ski_lua_fill_struct(L, \"%s\", %d, &a%d);\n", t, idx, i);
+    } else if (is_out_param(t)) {
+      char base[256];
+      base_type(t, base, sizeof(base));
+      fprintf(out, "  %s a%d = 0;\n", base, i);
+      out_count++;
+    } else if (is_handle_type(t)) {
+      fprintf(out,
+              "  %s a%d; memset(&a%d, 0, sizeof(a%d)); uintptr_t v%d = "
+              "lua_isnoneornil(L, %d) ? 0 : (uintptr_t)lua_tointeger(L, %d); "
+              "memcpy(&a%d, &v%d, sizeof(a%d) < sizeof(uintptr_t) ? "
+              "sizeof(a%d) : sizeof(uintptr_t));\n",
+              t, i, i, i, i, idx, idx, i, i, i, i);
+    } else if (strstr(t, "const char") || strstr(t, "char *") ||
+               strstr(t, "char*")) {
+      fprintf(out,
+              "  const char *a%d = lua_isnoneornil(L, %d) ? \"\" : "
+              "luaL_checkstring(L, %d);\n",
+              i, idx, idx);
+    } else if (strstr(t, "bool") == t) {
+      fprintf(out, "  bool a%d = lua_toboolean(L, %d) != 0;\n", i, idx);
+    } else if (strstr(t, "float") == t || strstr(t, "double") == t) {
+      fprintf(out,
+              "  double a%d = lua_isnoneornil(L, %d) ? 0 : "
+              "lua_tonumber(L, %d);\n",
+              i, idx, idx);
+    } else if (strchr(t, '*')) {
+      fprintf(out,
+              "  void *a%d = (void *)(uintptr_t)(lua_isnoneornil(L, %d) ? 0 : "
+              "lua_tointeger(L, %d));\n",
+              i, idx, idx);
+    } else {
+      fprintf(out, "  long a%d = lua_isnoneornil(L, %d) ? 0 : "
+                   "lua_tointeger(L, %d);\n",
+              i, idx, idx);
+    }
+  }
+  fprintf(out, "  void *sym = Platform_GetMainSymbol(\"%s\");\n", fd->name);
+  fprintf(out,
+          "  if (!sym) { ski_lua_owner_clear(); return luaL_error(L, "
+          "\"unknown skapi function '%%s'\", \"%s\"); }\n",
+          fd->name);
+  fprintf(out, "  typedef %s (*fn_t)(", fd->ret);
+  for (int i = 0; i < n; i++) {
+    if (i)
+      fprintf(out, ", ");
+    fprintf(out, "%s", params[i].type);
+  }
+  if (n == 0)
+    fprintf(out, "void");
+  fprintf(out, ");\n  ");
+  if (strcmp(k, "v") != 0)
+    fprintf(out, "%s r = ", fd->ret);
+  fprintf(out, "((fn_t)sym)(");
+  for (int i = 0; i < n; i++) {
+    if (i)
+      fprintf(out, ", ");
+    const char *t = params[i].type;
+    if (is_struct_type(t) || is_handle_type(t))
+      fprintf(out, "a%d", i);
+    else if (callback_kind_for_type(t) >= 0) {
+      char ct[512];
+      callback_cast_type(t, ct, sizeof(ct));
+      fprintf(out, "(%s)a%d", ct, i);
+    }
+    else if (is_out_param(t))
+      fprintf(out, "&a%d", i);
+    else
+      fprintf(out, "(%s)a%d", t, i);
+  }
+  fprintf(out, ");\n  ski_lua_owner_clear();\n");
+  if (is_struct_type(fd->ret)) {
+    fprintf(out, "  ski_lua_push_struct(L, \"%s\", &r);\n", fd->ret);
+  } else if (is_handle_type(fd->ret)) {
+    fprintf(out, "  uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) "
+                 "? sizeof(rv) : sizeof(r)); lua_pushinteger(L, "
+                 "(lua_Integer)rv);\n");
+  } else if (strcmp(k, "b") == 0)
+    fprintf(out, "  lua_pushboolean(L, r != 0);\n");
+  else if (strcmp(k, "i") == 0)
+    fprintf(out, "  lua_pushinteger(L, (lua_Integer)r);\n");
+  else if (strcmp(k, "s") == 0)
+    fprintf(out, "  lua_pushstring(L, r ? r : \"\");\n");
+  else if (strcmp(k, "f") == 0)
+    fprintf(out, "  lua_pushnumber(L, (double)r);\n");
+  for (int i = 0; i < n; i++) {
+    if (!is_out_param(params[i].type))
+      continue;
+    fprintf(out, "  lua_pushinteger(L, (lua_Integer)a%d);\n", i);
+  }
+  fprintf(out, "  return %d;\n}\n", (strcmp(k, "v") == 0 ? 0 : 1) + out_count);
+}
+
+static void gen_thunk_registry(FILE *out) {
+  fprintf(out, "static inline void ski_lua_register_thunks(void *Lp) {\n");
+  fprintf(out, "  lua_State *L = (lua_State *)Lp;\n");
+  for (int i = 0; i < func_count; i++)
+    if (can_thunk(&funcs[i]))
+      fprintf(out,
+              "  lua_pushcfunction(L, lthunk_%s); lua_setfield(L, -2, \"%s\");\n",
+              funcs[i].name, funcs[i].name);
+  fprintf(out, "}\n");
+}
+
 static int gen_struct_header(void) {
   collect_headers("include");
 
@@ -574,7 +933,12 @@ static int gen_struct_header(void) {
           "#ifndef SKAPI_LUA_GENERATED_H\n"
           "#define SKAPI_LUA_GENERATED_H\n\n"
           "#include \"core/skapi.h\"\n"
+          "#include \"core/lua_host.h\"\n"
           "#include \"core/lua_struct.h\"\n"
+          "#include \"platform/lib.h\"\n"
+          "#include \"deps/lua/lua.h\"\n"
+          "#include \"deps/lua/lauxlib.h\"\n"
+          "#include <stdint.h>\n"
           "#include <string.h>\n\n");
 
   for (int h = 0; h < header_count; h++)
@@ -810,8 +1174,12 @@ static int gen_struct_header(void) {
           "    if (strcmp(name, lua_generated_structs[i]->name) == 0)\n"
           "      return lua_generated_structs[i];\n"
           "  return NULL;\n"
-          "}\n\n"
-          "#endif\n");
+          "}\n\n");
+  for (int i = 0; i < func_count; i++)
+    if (can_thunk(&funcs[i]))
+      gen_thunk(out, &funcs[i]);
+  gen_thunk_registry(out);
+  fprintf(out, "\n#endif\n");
   fclose(out);
   return 0;
 }
@@ -866,6 +1234,7 @@ int main(void) {
   fclose(in);
   collect_rets(lines, line_count);
   parse_bool_globals();
+  int gen_rc = gen_struct_header();
 
   fprintf(out,
           "-- Generated by tools/gen_skapi_lua.c. Do not edit.\n"
@@ -929,6 +1298,9 @@ int main(void) {
       continue;
     if (strstr(fname, "_fmt")) {
       gen_wrapper(out, fname, p, "");
+    } else if (can_thunk(func_for(fname))) {
+      fprintf(out, "M.%s = function(...) return native.%s(...) end\n", fname,
+              fname);
     } else {
       fprintf(out, "function M.%s(...) return native.%s(\"%s\", ...) end\n",
               fname, ret_kind(p), fname);
@@ -937,5 +1309,5 @@ int main(void) {
 
   fprintf(out, "\nreturn M\n");
   fclose(out);
-  return gen_struct_header();
+  return gen_rc;
 }
