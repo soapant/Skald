@@ -518,13 +518,6 @@ static int l_cap_register(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
-static int l_struct_from_ptr(lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  void *ptr = lua_touserdata(L, 2);
-  slua_push_struct(L, name, ptr);
-  return 1;
-}
-
 static int l_struct_call(lua_State *L) {
   const char *fn = luaL_checkstring(L, 1);
   const char *sname = luaL_checkstring(L, 2);
@@ -651,7 +644,6 @@ static const luaL_Reg native_funcs[] = {
     {"call_fn", l_call_fn},
     {"fmt_call", l_fmt_call},
     {"struct_call", l_struct_call},
-    {"struct_from_ptr", l_struct_from_ptr},
     {NULL, NULL},
 };
 

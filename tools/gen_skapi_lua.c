@@ -63,8 +63,6 @@ static FuncDesc funcs[4096];
 static int func_count;
 static char struct_names[2048][NAME_SZ];
 static char struct_sources[2048][512];
-static char struct_fields[2048][64][NAME_SZ];
-static int struct_field_counts[2048];
 static int struct_name_count;
 
 static const char *ret_for(const char *name) {
@@ -477,29 +475,6 @@ static void emit_defaults(FILE *out, const char *rest) {
   }
 }
 
-static int find_field_list(const char *name, char out[64][NAME_SZ]) {
-  const char *base = name;
-  for (int pass = 0; pass < 8; pass++) {
-    const char *next = base;
-    for (int j = 0; j < alias_count; j++)
-      if (strcmp(next, aliases[j].from) == 0) {
-        next = aliases[j].to;
-        break;
-      }
-    if (strcmp(next, base) == 0)
-      break;
-    base = next;
-  }
-  for (int i = 0; i < struct_name_count; i++) {
-    if (strcmp(base, struct_names[i]) != 0)
-      continue;
-    for (int f = 0; f < struct_field_counts[i]; f++)
-      snprintf(out[f], NAME_SZ, "%s", struct_fields[i][f]);
-    return struct_field_counts[i];
-  }
-  return 0;
-}
-
 static void gen_wrapper(FILE *out, const char *name, const char *rest,
                         const char *params) {
   char raw[NAME_SZ] = {0};
@@ -600,69 +575,38 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
       stype[si++] = *st++;
     stype[si] = '\0';
 
-    char lead_names[16][NAME_SZ];
-    int lead_count = 0;
+    fprintf(out,
+            "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
+            "v[k] = x end ",
+            name);
+    emit_defaults(out, rest);
+    fprintf(out, "return native.struct_call(\"%s\", \"%s\", v, \"%s\"", target,
+            stype, kind);
+    char lead[NAME_SZ] = {0};
     if (params) {
       const char *pp = params;
-      while (*pp && *pp != '(')
+      while (*pp && *pp != '.') {
+        if (isalnum((unsigned char)*pp) || *pp == '_') {
+          size_t n = strlen(lead);
+          if (n < NAME_SZ - 2) {
+            lead[n] = *pp;
+            lead[n + 1] = '\0';
+          }
+        } else if (*pp == ',' && lead[0]) {
+          strcat(lead, ",");
+        }
         pp++;
-      if (*pp == '(')
-        pp++;
-      while (*pp && *pp != ')' && lead_count < 16) {
-        while (*pp == ' ' || *pp == ',')
-          pp++;
-        if (!*pp || *pp == ')' || strncmp(pp, "...", 3) == 0)
-          break;
-        int ni = 0;
-        while (*pp && ni < NAME_SZ - 1 &&
-               (isalnum((unsigned char)*pp) || *pp == '_'))
-          lead_names[lead_count][ni++] = *pp++;
-        lead_names[lead_count][ni] = '\0';
-        if (lead_names[lead_count][0])
-          lead_count++;
-        while (*pp && *pp != ',' && *pp != ')')
-          pp++;
       }
     }
-
-    char fields[64][NAME_SZ];
-    int field_count = find_field_list(stype, fields);
-    if (field_count == 0) {
-      fprintf(out,
-              "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
-              "v[k] = x end ",
-              name);
-      emit_defaults(out, rest);
-      fprintf(out, "return native.struct_call(\"%s\", \"%s\", v, \"%s\"", target,
-              stype, kind);
-      for (int i = 0; i < lead_count; i++)
-        fprintf(out, ",%s", lead_names[i]);
-      fprintf(out, ") end\n");
-      return;
+    if (lead[0]) {
+      char lead_args[NAME_SZ];
+      snprintf(lead_args, sizeof(lead_args), "%s", lead);
+      size_t ln = strlen(lead_args);
+      if (ln && lead_args[ln - 1] == ',')
+        lead_args[ln - 1] = '\0';
+      fprintf(out, ",%s", lead_args);
     }
-
-    fprintf(out, "M.%s = function(", name);
-    for (int i = 0; i < lead_count; i++)
-      fprintf(out, "%s%s", i ? ", " : "", lead_names[i]);
-    for (int i = 0; i < field_count; i++)
-      fprintf(out, "%s%s", (i || lead_count) ? ", " : "", fields[i]);
-    fprintf(out, ")\n  local v\n");
-    if (lead_count == 0)
-      fprintf(out, "  if type(%s) == \"table\" then v = %s else ", fields[0],
-              fields[0]);
-    fprintf(out, "v = {");
-    for (int i = 0; i < field_count; i++)
-      fprintf(out, "%s%s = %s", i ? ", " : "", fields[i], fields[i]);
-    fprintf(out, "}");
-    if (lead_count == 0)
-      fprintf(out, " end");
-    fprintf(out, "\n  ");
-    emit_defaults(out, rest);
-    fprintf(out, "\n  return native.struct_call(\"%s\", \"%s\", v, \"%s\"",
-            target, stype, kind);
-    for (int i = 0; i < lead_count; i++)
-      fprintf(out, ", %s", lead_names[i]);
-    fprintf(out, ")\nend\n");
+    fprintf(out, ") end\n");
     return;
   }
 
@@ -1407,13 +1351,7 @@ static int gen_struct_header(void) {
                 }
               }
             }
-            if (field[0] && kind != LSF_SKIP) {
-              int si2 = struct_name_count - 1;
-              if (si2 >= 0 && si2 < 2048 && struct_field_counts[si2] < 64) {
-                snprintf(struct_fields[si2][struct_field_counts[si2]], NAME_SZ,
-                         "%s", field);
-                struct_field_counts[si2]++;
-              }
+            if (field[0] && kind != LSF_SKIP)
               fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %s, %d},\n",
                       field,
                       kind == LSF_INT          ? "LSF_INT"
@@ -1426,7 +1364,6 @@ static int gen_struct_header(void) {
                       : kind == LSF_PTR        ? "LSF_PTR"
                                                : "LSF_CB",
                       name, field, aux, cb_kind);
-            }
           }
         }
         fprintf(out, "};\n");
@@ -1536,9 +1473,7 @@ int main(void) {
   fprintf(out,
           "-- Generated by tools/gen_skapi_lua.c. Do not edit.\n"
           "local native = require(\"skapi_native\")\n"
-          "local M = {}\n\n"
-          "M.struct_from_ptr = function(name, ptr) return "
-          "native.struct_from_ptr(name, ptr) end\n");
+          "local M = {}\n\n");
 
   for (int i = 0; i < line_count; i++) {
     char *p = lines[i];
