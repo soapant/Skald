@@ -701,6 +701,12 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_PAINT: {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
+    Popup *anim_popup =
+        prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
+    if (anim_popup)
+      prompt_popup_tick_resize_animation_popup(anim_popup);
+    bool resize_animating =
+        anim_popup && prompt_popup_resize_animating(anim_popup);
     RECT rect;
     GetClientRect(hwnd, &rect);
     HDC paintDC = hdc;
@@ -738,10 +744,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     if (useRenderBuf)
       popup_snapshot_background(hwnd, rect.right, rect.bottom);
-    Popup *anim_popup =
-        prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
-    bool resize_animating =
-        anim_popup && prompt_popup_resize_animating(anim_popup);
     if (SkaldContext_Get()->window.prompt_callbacks.render) {
       PromptState *state = win32_prompt_state_from_hwnd(hwnd);
       Popup *owner = prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
@@ -764,10 +766,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         win32_set_draw_context(paintDC);
         draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;
-        if (anim_popup)
-          prompt_popup_tick_resize_animation_popup(anim_popup);
-        resize_animating =
-            anim_popup && prompt_popup_resize_animating(anim_popup);
         if (!resize_animating) {
           prompt_band_take_placed();
           bool sep_prev = draw_state_get()->suppress_separators;
