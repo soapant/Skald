@@ -4240,51 +4240,6 @@ static void sk_config_trim_inplace(char *s) {
     s[--n] = '\0';
 }
 
-static void sk_config_migrate_hotkeys_txt(const char *dir) {
-  char mkpath[1088];
-  snprintf(mkpath, sizeof(mkpath), "%s%ccontrol_center%chotkeys.txt", dir,
-           SK_PATH_SEP, SK_PATH_SEP);
-  FILE *f = fopen(mkpath, "r");
-  if (!f)
-    return;
-
-  size_t migrated = 0;
-  char line[640];
-  while (fgets(line, sizeof(line), f)) {
-    char copy[640];
-    snprintf(copy, sizeof(copy), "%s", line);
-    char *tab = strchr(copy, '\t');
-    if (!tab)
-      continue;
-    *tab = '\0';
-    char *hotkey = copy;
-    char *action = tab + 1;
-    sk_config_trim_inplace(hotkey);
-    while (*action == ' ' || *action == '\t')
-      action++;
-    sk_config_trim_inplace(action);
-    if (!hotkey[0] || !action[0])
-      continue;
-    HotkeyKey key;
-    if (!hotkey_string_parse(hotkey, &key))
-      continue;
-    if (hotkey_index_of(action) >= 0 || hotkey_index_by_key(hotkey) >= 0)
-      continue;
-    hotkey_entries_set(action, hotkey);
-    migrated++;
-  }
-  fclose(f);
-  if (migrated > 0) {
-    log_info("sk_config: migrated %zu hotkey(s) from "
-             "control_center/hotkeys.txt",
-             migrated);
-    if (sk_config_ready())
-      for (size_t i = 0; i < hotkey_entry_count; i++)
-        config_section_set(sk_config_path, "hotkeys", hotkey_entries[i].name,
-                           hotkey_entries[i].hotkey);
-  }
-}
-
 static bool feature_shortcut_parse(const char *target, char *feature,
                                    size_t feature_cap, char *filter,
                                    size_t filter_cap) {
@@ -4499,9 +4454,6 @@ static void sk_config_init_locked(void) {
     log_error("sk_config: %s failed at line %d (%s): %s, keeping defaults",
               sk_config_path, err.line, config_toml_status_name(st),
               err.message[0] ? err.message : "invalid config");
-
-  if (dir[0])
-    sk_config_migrate_hotkeys_txt(dir);
 
   for (size_t i = 0; i < alias_entry_count; i++)
     sk_register_alias(alias_entries[i].alias, alias_entries[i].target);
