@@ -334,10 +334,10 @@ static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
       if (!arr)
         break;
       if (lua_istable(L, -1)) {
-        for (size_t i = 0; i < n; i++) {
-          lua_geti(L, -1, (lua_Integer)i + 1);
+        for (size_t ai = 0; ai < n; ai++) {
+          lua_geti(L, -1, (lua_Integer)ai + 1);
           if (lua_isstring(L, -1))
-            arr[i] = lua_tostring(L, -1);
+            arr[ai] = lua_tostring(L, -1);
           lua_pop(L, 1);
         }
       }
@@ -549,7 +549,11 @@ static int l_struct_call(lua_State *L) {
     lua_pushboolean(L, r != 0);
   else if (strcmp(ret, "i") == 0)
     lua_pushinteger(L, (lua_Integer)r);
-  else
+  else if (strcmp(ret, "f") == 0) {
+    double d = 0;
+    memcpy(&d, &r, sizeof(d));
+    lua_pushnumber(L, d);
+  } else
     lua_pushboolean(L, 1);
   return 1;
 }
@@ -574,6 +578,51 @@ static int l_call_fn(lua_State *L) {
   return 1;
 }
 
+static int l_fmt_call(lua_State *L) {
+  const char *kind = luaL_checkstring(L, 1);
+  const char *name = luaL_checkstring(L, 2);
+  int n = lua_gettop(L) - 2;
+  lua_getglobal(L, "string");
+  lua_getfield(L, -1, "format");
+  lua_remove(L, -2);
+  for (int i = 3; i <= lua_gettop(L); i++)
+    lua_pushvalue(L, i);
+  lua_call(L, n, 1);
+  const char *text = lua_tostring(L, -1);
+  void *fn = Platform_GetMainSymbol(name);
+  if (!fn)
+    luaL_error(L, "unknown skapi function '%s'", name);
+  uintptr_t a[6] = {(uintptr_t)text};
+  uintptr_t r = 0;
+  if (strcmp(kind, "b") == 0)
+    r = ((bool (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                   uintptr_t))fn)(a[0], 0, 0, 0, 0, 0);
+  else if (strcmp(kind, "i") == 0)
+    r = (uintptr_t)((int (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                             uintptr_t, uintptr_t))fn)(a[0], 0, 0, 0, 0, 0);
+  else if (strcmp(kind, "s") == 0) {
+    char *out = ((char *(*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                            uintptr_t, uintptr_t))fn)(a[0], 0, 0, 0, 0, 0);
+    if (out)
+      lua_pushstring(L, out);
+    else
+      lua_pushnil(L);
+    lua_remove(L, -2);
+    return 1;
+  } else {
+    ((void (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+               uintptr_t))fn)(a[0], 0, 0, 0, 0, 0);
+    lua_pushboolean(L, 1);
+    return 1;
+  }
+  lua_pop(L, 1);
+  if (strcmp(kind, "b") == 0)
+    lua_pushboolean(L, r != 0);
+  else
+    lua_pushinteger(L, (lua_Integer)r);
+  return 1;
+}
+
 static const luaL_Reg native_funcs[] = {
     {"v", l_v},
     {"b", l_b},
@@ -586,6 +635,7 @@ static const luaL_Reg native_funcs[] = {
     {"image_size", l_image_size},
     {"cap_register", l_cap_register},
     {"call_fn", l_call_fn},
+    {"fmt_call", l_fmt_call},
     {"struct_call", l_struct_call},
     {NULL, NULL},
 };

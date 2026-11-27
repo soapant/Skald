@@ -1,6 +1,8 @@
 #include "core/lua_struct.h"
 #include <ctype.h>
+#include <dirent.h>
 #include <stdbool.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -13,10 +15,15 @@
 static const char *ret_kind(const char *line) {
   if (strncmp(line, "bool", 4) == 0)
     return "b";
-  if (strncmp(line, "char", 4) == 0)
+  if (strncmp(line, "const char", 10) == 0 ||
+      (strncmp(line, "char", 4) == 0 && strchr(line, '*') != NULL))
     return "s";
+  if (strncmp(line, "char", 4) == 0)
+    return "i";
   if (strncmp(line, "float", 5) == 0 || strncmp(line, "double", 6) == 0)
     return "f";
+  if (strncmp(line, "void *", 6) == 0 || strncmp(line, "void*", 5) == 0)
+    return "i";
   if (strncmp(line, "void", 4) == 0)
     return "v";
   return "i";
@@ -38,6 +45,9 @@ typedef struct {
 
 static RetEntry rets[512];
 static int ret_count;
+static char struct_names[256][NAME_SZ];
+static char struct_sources[256][512];
+static int struct_name_count;
 
 static const char *ret_for(const char *name) {
   for (int i = 0; i < ret_count; i++)
@@ -141,7 +151,7 @@ static void parse_aliases(const char *path) {
     snprintf(work, sizeof(work), "%s", line);
     clean(work);
     if (strncmp(work, "typedef ", 8) == 0 && strchr(work, '{') == NULL &&
-        strchr(work, '(') == NULL && strchr(work, '*') == NULL) {
+        strchr(work, '(') == NULL) {
       char *last = work + strlen(work);
       while (last > work && isspace((unsigned char)last[-1]))
         last--;
@@ -355,7 +365,8 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
   snprintf(raw, sizeof(raw), "ski_%s", name + 3);
   const char *kind = ret_for(raw);
   if (strcmp(kind, "v") != 0 && strcmp(kind, "i") != 0 &&
-      strcmp(kind, "b") != 0 && strcmp(kind, "s") != 0)
+      strcmp(kind, "b") != 0 && strcmp(kind, "s") != 0 &&
+      strcmp(kind, "f") != 0)
     kind = "v";
 
   if (strstr(rest, "SK_STORE_NAME")) {
@@ -389,11 +400,21 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
             name);
     return;
   }
-  if (strstr(name, "_fmt") || strstr(rest, "const SkMessageSpec")) {
+  if (strstr(rest, "const SkMessageSpec")) {
     fprintf(out,
             "M.%s = function(t, ...) return native.struct_call(\"ski_message\", "
             "\"SkMessageSpec\", t or {}, \"v\") end\n",
             name);
+    return;
+  }
+  if (strstr(name, "_fmt")) {
+    const char *fk = ret_for(name);
+    if (strcmp(fk, "v") != 0 && strcmp(fk, "i") != 0 &&
+        strcmp(fk, "b") != 0 && strcmp(fk, "s") != 0)
+      fk = "v";
+    fprintf(out, "M.%s = function(...) return native.fmt_call(\"%s\", \"%s\", "
+                 "...) end\n",
+            name, fk, name);
     return;
   }
 
@@ -462,18 +483,88 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
           name, target[0] ? target : name, kind, name);
 }
 
-static int gen_struct_header(void) {
-  const char *headers[] = {
-      "include/core/skapi.h",
-      "include/core/types/prompt.h",
-      "include/core/types/window.h",
-      "include/core/types/skapi_types.h",
-      "include/core/checkbox.h",
-      "include/core/cc_registry.h",
-  };
+static char header_paths[512][512];
+static int header_count;
 
-  parse_callback_typedefs("include/core/types/prompt.h");
-  parse_callback_typedefs("include/core/skapi.h");
+static void collect_headers(const char *dir) {
+  DIR *d = opendir(dir);
+  if (!d)
+    return;
+  struct dirent *e;
+  while ((e = readdir(d)) != NULL) {
+    if (strcmp(e->d_name, ".") == 0 || strcmp(e->d_name, "..") == 0)
+      continue;
+    char path[512];
+    snprintf(path, sizeof(path), "%.255s/%.255s", dir, e->d_name);
+    struct stat st;
+    if (stat(path, &st) != 0)
+      continue;
+    if (S_ISDIR(st.st_mode)) {
+      collect_headers(path);
+    } else if (S_ISREG(st.st_mode) && strstr(path, ".h") != NULL &&
+               strstr(path, "/win32/") == NULL &&
+               strstr(path, "/x11/") == NULL &&
+               strstr(path, "/macos/") == NULL &&
+               strstr(path, "/wayland/") == NULL &&
+               strstr(path, "/platform/") == NULL &&
+               strstr(path, "/deps/") == NULL &&
+               strstr(path, "skapi_lua_generated.h") == NULL &&
+               strstr(path, "lua_struct.h") == NULL &&
+               header_count < 512) {
+      snprintf(header_paths[header_count++], 512, "%s", path);
+    }
+  }
+  closedir(d);
+}
+
+static int split_decls(const char *decl, char out[16][512]) {
+  int count = 0;
+  const char *start = decl;
+  int depth = 0;
+  char prefix[256] = {0};
+  for (const char *p = decl;; p++) {
+    if (*p == '(' || *p == '[')
+      depth++;
+    else if (*p == ')' || *p == ']')
+      depth--;
+    if ((*p == ',' && depth == 0) || *p == '\0') {
+      size_t n = (size_t)(p - start);
+      if (n > 0 && count < 16) {
+        if (n > 511)
+          n = 511;
+        char seg[512] = {0};
+        memcpy(seg, start, n);
+        seg[n] = '\0';
+        clean(seg);
+        if (count == 0) {
+          char *last_space = strrchr(seg, ' ');
+          if (last_space) {
+            size_t pn = (size_t)(last_space - seg + 1);
+            if (pn < sizeof(prefix)) {
+              memcpy(prefix, seg, pn);
+              prefix[pn] = '\0';
+            }
+          }
+          snprintf(out[count++], 512, "%s", seg);
+        } else if (strchr(seg, ' ') == NULL && prefix[0]) {
+          snprintf(out[count++], 512, "%.255s%.255s", prefix, seg);
+        } else {
+          snprintf(out[count++], 512, "%s", seg);
+        }
+      }
+      if (*p == '\0')
+        break;
+      start = p + 1;
+    }
+  }
+  return count;
+}
+
+static int gen_struct_header(void) {
+  collect_headers("include");
+
+  for (int i = 0; i < header_count; i++)
+    parse_callback_typedefs(header_paths[i]);
   FILE *out = fopen("include/core/skapi_lua_generated.h", "w");
   if (!out) {
     fprintf(stderr, "gen_skapi_lua: cannot write generated struct header\n");
@@ -486,13 +577,13 @@ static int gen_struct_header(void) {
           "#include \"core/lua_struct.h\"\n"
           "#include <string.h>\n\n");
 
-  for (size_t h = 0; h < sizeof(headers) / sizeof(headers[0]); h++)
-    parse_aliases(headers[h]);
+  for (int h = 0; h < header_count; h++)
+    parse_aliases(header_paths[h]);
 
-  for (size_t h = 0; h < sizeof(headers) / sizeof(headers[0]); h++) {
-    char *buf = read_all(headers[h]);
+  for (int h = 0; h < header_count; h++) {
+    char *buf = read_all(header_paths[h]);
     if (!buf) {
-      fprintf(stderr, "cannot read %s\n", headers[h]);
+      fprintf(stderr, "cannot read %s\n", header_paths[h]);
       continue;
     }
     char *p = buf;
@@ -515,7 +606,21 @@ static int gen_struct_header(void) {
         np++;
       }
       name[name_i] = '\0';
+      if (name[0] && struct_name_count < 256) {
+        snprintf(struct_names[struct_name_count], NAME_SZ, "%s", name);
+        snprintf(struct_sources[struct_name_count], 512, "%.511s", header_paths[h]);
+        struct_name_count++;
+      }
       if (name[0]) {
+        int si = 0;
+        while (si < struct_name_count && strcmp(struct_names[si], name) != 0)
+          si++;
+        if (si < struct_name_count) {
+          const char *rel = struct_sources[si];
+          if (strncmp(rel, "include/", 8) == 0)
+            rel += 8;
+          fprintf(out, "#include \"%s\"\n", rel);
+        }
         fprintf(out, "static const LuaFieldDesc lf_%s[] = {\n", name);
         char *body = open + 1;
         char *end = close;
@@ -523,15 +628,20 @@ static int gen_struct_header(void) {
           char *semi = strchr(body, ';');
           if (!semi || semi > end)
             break;
-          char decl[512] = {0};
+          char raw_decl[512] = {0};
           size_t n = (size_t)(semi - body);
-          if (n > sizeof(decl) - 1)
-            n = sizeof(decl) - 1;
-          memcpy(decl, body, n);
-          decl[n] = '\0';
-          clean(decl);
+          if (n > sizeof(raw_decl) - 1)
+            n = sizeof(raw_decl) - 1;
+          memcpy(raw_decl, body, n);
+          raw_decl[n] = '\0';
+          clean(raw_decl);
           body = semi + 1;
 
+          char decls[16][512];
+          int decl_count = split_decls(raw_decl, decls);
+          for (int di = 0; di < decl_count; di++) {
+          char decl[512] = {0};
+          snprintf(decl, sizeof(decl), "%s", decls[di]);
           char field[NAME_SZ] = {0};
           LuaFieldKind kind = LSF_SKIP;
           int cb_kind = 0;
@@ -610,10 +720,18 @@ static int gen_struct_header(void) {
             }
             else if (is_cb_type)
               ;
-            else if (strcmp(field, "buffer") == 0 &&
-                     (strstr(decl, "char *") || strstr(decl, "char*"))) {
-              kind = LSF_BUFFER;
-              snprintf(aux, sizeof(aux), "offsetof(%s, buffer_size)", name);
+            else {
+              char size_name[NAME_SZ + 8];
+              snprintf(size_name, sizeof(size_name), "%.120s_size", field);
+              char *sz = strstr(body, size_name);
+              if (sz && sz < close && (strstr(decl, "char *") ||
+                                       strstr(decl, "char*"))) {
+                kind = LSF_BUFFER;
+                snprintf(aux, sizeof(aux), "offsetof(%.60s, %.60s)", name,
+                         size_name);
+              }
+            }
+            if (kind != LSF_SKIP) {
             } else if (strstr(decl, "char *") || strstr(decl, "char*") ||
                        strstr(decl, "const char"))
               kind = LSF_STR;
@@ -628,7 +746,10 @@ static int gen_struct_header(void) {
             else if (strstr(decl, "int") || strstr(decl, "unsigned") ||
                      strstr(decl, "long") || strstr(decl, "ColorRef") ||
                      strstr(decl, "MessageSlot") || strstr(decl, "size_t") ||
-                     strstr(decl, "Timer"))
+                     strstr(decl, "Timer") || strstr(decl, "uint") ||
+                     strstr(decl, "int8") || strstr(decl, "int16") ||
+                     strstr(decl, "int32") || strstr(decl, "int64") ||
+                     strstr(decl, "Slot") || strstr(decl, "Kind"))
               kind = LSF_INT;
             else
               kind = LSF_SKIP;
@@ -645,6 +766,7 @@ static int gen_struct_header(void) {
                     : kind == LSF_PTR    ? "LSF_PTR"
                                          : "LSF_CB",
                     name, field, aux, cb_kind);
+          }
         }
         fprintf(out, "};\n");
         fprintf(out,
@@ -658,10 +780,8 @@ static int gen_struct_header(void) {
   }
 
   fprintf(out, "static const LuaStructDesc *lua_generated_structs[] = {\n");
-  fprintf(out, "    &lsd_CcEntrySpec, &lsd_SkHotkeySpec, &lsd_PromptSpec,\n");
-  fprintf(out, "    &lsd_SkTextSpec, &lsd_DrawRect,\n");
-  fprintf(out, "    &lsd_CheckboxSpec, &lsd_SkMessageSpec, &lsd_SkEditSpec,\n");
-  fprintf(out, "    &lsd_ListSpec,\n");
+  for (int i = 0; i < struct_name_count; i++)
+    fprintf(out, "    &lsd_%s,\n", struct_names[i]);
   fprintf(out, "};\n");
   fprintf(out, "static const char *lua_alias_from[] = {\n");
   for (int i = 0; i < alias_count; i++)
@@ -672,10 +792,18 @@ static int gen_struct_header(void) {
   fprintf(out,
           "};\n"
           "static const LuaStructDesc *ski_lua_struct_find(const char *name) {\n"
-          "  for (size_t i = 0; i < "
+          "  for (int pass = 0; pass < 8; pass++) {\n"
+          "    const char *next = name;\n"
+          "    for (size_t i = 0; i < "
           "sizeof(lua_alias_from)/sizeof(lua_alias_from[0]); i++)\n"
-          "    if (strcmp(name, lua_alias_from[i]) == 0)\n"
-          "      name = lua_alias_to[i];\n"
+          "      if (strcmp(next, lua_alias_from[i]) == 0) {\n"
+          "        next = lua_alias_to[i];\n"
+          "        break;\n"
+          "      }\n"
+          "    if (strcmp(next, name) == 0)\n"
+          "      break;\n"
+          "    name = next;\n"
+          "  }\n"
           "  for (size_t i = 0; i < "
           "sizeof(lua_generated_structs)/sizeof(lua_generated_structs[0]); "
           "i++)\n"
@@ -704,6 +832,7 @@ int main(void) {
   static char lines[MAX_LINES][LINE_SZ];
   int line_count = 0;
   int cur = -1;
+  bool in_macro = false;
   char buf[LINE_SZ];
   while (fgets(buf, sizeof(buf), in)) {
     size_t n = strlen(buf);
@@ -716,13 +845,23 @@ int main(void) {
       if (line_count >= MAX_LINES)
         break;
       cur = line_count++;
+      in_macro = strncmp(buf, "#define ", 8) == 0;
       snprintf(lines[cur], LINE_SZ, "%s", buf);
     } else {
       size_t used = strlen(lines[cur]);
       snprintf(lines[cur] + used, LINE_SZ - used, "%s", buf);
     }
-    if (!cont)
-      cur = -1;
+    if (!cont) {
+      char *s = buf;
+      while (*s && isspace((unsigned char)*s))
+        s++;
+      bool preproc = *s == '#';
+      bool join = *s != '\0' && !preproc && strchr(buf, ';') == NULL &&
+                  (strchr(buf, '(') != NULL || strncmp(s, "typedef", 7) == 0);
+      cur = in_macro ? -1 : (join ? cur : -1);
+      if (cur < 0)
+        in_macro = false;
+    }
   }
   fclose(in);
   collect_rets(lines, line_count);
@@ -789,7 +928,7 @@ int main(void) {
     if (strstr(p, "typedef"))
       continue;
     if (strstr(fname, "_fmt")) {
-      gen_wrapper(out, fname, "const SkMessageSpec", "");
+      gen_wrapper(out, fname, p, "");
     } else {
       fprintf(out, "function M.%s(...) return native.%s(\"%s\", ...) end\n",
               fname, ret_kind(p), fname);
