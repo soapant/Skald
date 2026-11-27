@@ -10,7 +10,7 @@
 #include "deps/lua/lauxlib.h"
 #include "deps/lua/lualib.h"
 
-#include "core/skapi.h"
+#include "core/skapi_lua_generated.h"
 #include "core/owner_purge.h"
 #include "core/window_manager.h"
 #include "deps/log.h"
@@ -214,174 +214,13 @@ static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
   return NULL;
 }
 
-enum {
-  FLD_I,
-  FLD_B,
-  FLD_F,
-  FLD_D,
-  FLD_S,
-  FLD_CB_V,
-  FLD_CB_PS,
-  FLD_CB_BPS,
-  FLD_CB_B,
-  FLD_SKIP
-};
-
-typedef struct {
-  const char *name;
-  int kind;
-  size_t off;
-} Field;
-
-#define FD(k, t, f) {#f, k, offsetof(t, f)}
-
-static const Field f_cc[] = {
-    FD(FLD_S, SkCcEntrySpec, display_name),
-    FD(FLD_S, SkCcEntrySpec, internal_name),
-    FD(FLD_CB_B, SkCcEntrySpec, on_enter),
-    FD(FLD_CB_B, SkCcEntrySpec, on_ctrl_enter),
-    FD(FLD_CB_B, SkCcEntrySpec, on_shift_enter),
-    FD(FLD_CB_B, SkCcEntrySpec, on_ctrl_shift_enter),
-    FD(FLD_CB_B, SkCcEntrySpec, on_ctrl_alt_enter),
-    FD(FLD_CB_B, SkCcEntrySpec, on_shift_alt_enter),
-    FD(FLD_CB_B, SkCcEntrySpec, on_tab),
-    FD(FLD_CB_V, SkCcEntrySpec, on_action),
-    FD(FLD_S, SkCcEntrySpec, icon),
-    FD(FLD_S, SkCcEntrySpec, type),
-};
-static const Field f_hotkey[] = {
-    FD(FLD_S, SkHotkeySpec, hotkey),
-    FD(FLD_CB_V, SkHotkeySpec, cb),
-    FD(FLD_CB_B, SkHotkeySpec, should_swallow),
-    FD(FLD_B, SkHotkeySpec, swallow),
-};
-static const Field f_prompt[] = {
-    FD(FLD_S, PromptSpec, title),
-    FD(FLD_CB_PS, PromptSpec, refresh),
-    FD(FLD_CB_BPS, PromptSpec, enter),
-    FD(FLD_CB_BPS, PromptSpec, ctrl_enter),
-    FD(FLD_CB_BPS, PromptSpec, shift_enter),
-    FD(FLD_CB_PS, PromptSpec, render),
-    FD(FLD_CB_V, PromptSpec, on_close),
-    FD(FLD_I, PromptSpec, w),
-    FD(FLD_I, PromptSpec, h),
-    FD(FLD_I, PromptSpec, x),
-    FD(FLD_I, PromptSpec, y),
-    FD(FLD_B, PromptSpec, no_bg),
-    FD(FLD_I, PromptSpec, bg_color),
-    FD(FLD_B, PromptSpec, auto_scale),
-    FD(FLD_B, PromptSpec, password_mode),
-    FD(FLD_B, PromptSpec, subwindow),
-    FD(FLD_B, PromptSpec, no_separators),
-    FD(FLD_B, PromptSpec, rounded),
-    FD(FLD_I, PromptSpec, radius),
-};
-static const Field f_text[] = {
-    FD(FLD_S, SkTextSpec, text),
-    FD(FLD_I, SkTextSpec, x),
-    FD(FLD_I, SkTextSpec, y),
-    FD(FLD_I, SkTextSpec, color),
-    FD(FLD_I, SkTextSpec, font_size),
-    FD(FLD_S, SkTextSpec, align),
-    FD(FLD_I, SkTextSpec, pad),
-    FD(FLD_B, SkTextSpec, no_hscroll),
-    FD(FLD_F, SkTextSpec, angle),
-};
-static const Field f_rect[] = {
-    FD(FLD_I, DrawRect, x),       FD(FLD_I, DrawRect, y),
-    FD(FLD_I, DrawRect, w),       FD(FLD_I, DrawRect, h),
-    FD(FLD_I, DrawRect, color),   FD(FLD_F, DrawRect, thickness),
-    FD(FLD_B, DrawRect, transparent), FD(FLD_B, DrawRect, filled),
-    FD(FLD_I, DrawRect, radius),  FD(FLD_B, DrawRect, rounded),
-    FD(FLD_F, DrawRect, angle),   FD(FLD_I, DrawRect, border),
-};
-static const Field f_checkbox[] = {
-    FD(FLD_S, SkCheckboxSpec, name),   FD(FLD_S, SkCheckboxSpec, text),
-    FD(FLD_I, SkCheckboxSpec, font_size), FD(FLD_I, SkCheckboxSpec, x),
-    FD(FLD_I, SkCheckboxSpec, y),      FD(FLD_I, SkCheckboxSpec, w),
-    FD(FLD_I, SkCheckboxSpec, h),      FD(FLD_B, SkCheckboxSpec, checked),
-    FD(FLD_B, SkCheckboxSpec, button), FD(FLD_B, SkCheckboxSpec, checkbox),
-    FD(FLD_I, SkCheckboxSpec, thickness), FD(FLD_I, SkCheckboxSpec, text_color),
-    FD(FLD_B, SkCheckboxSpec, border), FD(FLD_B, SkCheckboxSpec, no_bg),
-    FD(FLD_CB_V, SkCheckboxSpec, on_click), FD(FLD_CB_V, SkCheckboxSpec, on_hover),
-};
-static const Field f_message[] = {
-    FD(FLD_S, SkMessageSpec, message),
-    FD(FLD_I, SkMessageSpec, slot),
-    FD(FLD_I, SkMessageSpec, x),
-    FD(FLD_I, SkMessageSpec, y),
-    FD(FLD_D, SkMessageSpec, timeout),
-    FD(FLD_I, SkMessageSpec, color_text),
-    FD(FLD_S, SkMessageSpec, hover_key),
-    FD(FLD_I, SkMessageSpec, fps),
-    FD(FLD_B, SkMessageSpec, no_bg),
-    FD(FLD_I, SkMessageSpec, color_bg),
-    FD(FLD_S, SkMessageSpec, name),
-    FD(FLD_B, SkMessageSpec, close_on_keypress),
-    FD(FLD_B, SkMessageSpec, rounded),
-    FD(FLD_I, SkMessageSpec, radius),
-};
-static const Field f_edit[] = {
-    FD(FLD_S, SkEditSpec, name),
-    FD(FLD_I, SkEditSpec, x),
-    FD(FLD_I, SkEditSpec, y),
-    FD(FLD_I, SkEditSpec, w),
-    FD(FLD_I, SkEditSpec, h),
-    FD(FLD_S, SkEditSpec, placeholder),
-    FD(FLD_S, SkEditSpec, initial_text),
-    FD(FLD_I, SkEditSpec, color_bg),
-    FD(FLD_I, SkEditSpec, color_text),
-    FD(FLD_I, SkEditSpec, font_size),
-    FD(FLD_I, SkEditSpec, caret_h),
-    FD(FLD_I, SkEditSpec, caret_w),
-    FD(FLD_B, SkEditSpec, primary),
-    FD(FLD_B, SkEditSpec, no_tab),
-    FD(FLD_B, SkEditSpec, wrapped),
-};
-static const Field f_list[] = {
-    FD(FLD_I, ListSpec, x),
-    FD(FLD_I, ListSpec, y),
-    FD(FLD_I, ListSpec, w),
-    FD(FLD_I, ListSpec, h),
-    FD(FLD_I, ListSpec, item_height),
-};
-static const Field f_skrect[] = {
-    FD(FLD_I, SkRect, x),
-    FD(FLD_I, SkRect, y),
-    FD(FLD_I, SkRect, w),
-    FD(FLD_I, SkRect, h),
-};
-
-static const Field *fields_for(const char *name, int *count) {
-#define FIELDS(key, n)                                                         \
-  if (strcmp(name, key) == 0) {                                                \
-    *count = (int)(sizeof(f_##n) / sizeof(f_##n[0]));                          \
-    return f_##n;                                                              \
-  }
-  FIELDS("SkCcEntrySpec", cc)
-  FIELDS("SkHotkeySpec", hotkey)
-  FIELDS("SkPromptSpec", prompt)
-  FIELDS("PromptSpec", prompt)
-  FIELDS("SkTextSpec", text)
-  FIELDS("DrawRect", rect)
-  FIELDS("SkCheckboxSpec", checkbox)
-  FIELDS("SkMessageSpec", message)
-  FIELDS("SkEditSpec", edit)
-  FIELDS("ListSpec", list)
-  FIELDS("SkRect", skrect)
-#undef FIELDS
-  *count = 0;
-  return NULL;
-}
-
 static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
                         LuaFeature *f) {
-  int count = 0;
-  const Field *fields = fields_for(sname, &count);
-  if (!fields)
+  const LuaStructDesc *desc = ski_lua_struct_find(sname);
+  if (!desc)
     luaL_error(L, "unsupported lua struct '%s'", sname);
-  for (int i = 0; i < count; i++) {
-    const Field *fd = &fields[i];
+  for (int i = 0; i < desc->count; i++) {
+    const LuaFieldDesc *fd = &desc->fields[i];
     lua_getfield(L, idx, fd->name);
     if (lua_isnil(L, -1)) {
       lua_pop(L, 1);
@@ -389,32 +228,23 @@ static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
     }
     char *dst = (char *)base + fd->off;
     switch (fd->kind) {
-    case FLD_I:
+    case LSF_INT:
       *(int *)dst = (int)lua_tointeger(L, -1);
       break;
-    case FLD_B:
+    case LSF_BOOL:
       *(bool *)dst = lua_toboolean(L, -1) != 0;
       break;
-    case FLD_F:
+    case LSF_FLOAT:
       *(float *)dst = (float)lua_tonumber(L, -1);
       break;
-    case FLD_D:
+    case LSF_DOUBLE:
       *(double *)dst = lua_tonumber(L, -1);
       break;
-    case FLD_S:
+    case LSF_STR:
       *(const char **)dst = lua_tostring(L, -1);
       break;
-    case FLD_CB_V:
-      *(void **)dst = make_callback(L, -1, CB_V, f);
-      break;
-    case FLD_CB_PS:
-      *(void **)dst = make_callback(L, -1, CB_PS, f);
-      break;
-    case FLD_CB_BPS:
-      *(void **)dst = make_callback(L, -1, CB_BPS, f);
-      break;
-    case FLD_CB_B:
-      *(void **)dst = make_callback(L, -1, CB_B, f);
+    case LSF_CB:
+      *(void **)dst = make_callback(L, -1, fd->cb_kind, f);
       break;
     default:
       break;
@@ -566,35 +396,6 @@ static int l_cap_register(lua_State *L) {
   ski_lua_owner_clear();
   return 0;
 }
-static int l_cap_call(lua_State *L) {
-  const char *key = lua_tostring(L, lua_upvalueindex(1));
-  void *fn = sk_cap_resolve(key);
-  if (!fn) {
-    lua_pushboolean(L, 0);
-    return 1;
-  }
-  uintptr_t a[6] = {0};
-  for (int i = 0; i < 6; i++)
-    a[i] = arg_value(L, 1 + i);
-  ((void (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
-             uintptr_t))fn)(a[0], a[1], a[2], a[3], a[4], a[5]);
-  lua_pushboolean(L, 1);
-  return 1;
-}
-static int l_cap_bind(lua_State *L) {
-  const char *key = luaL_checkstring(L, 1);
-  lua_pushstring(L, key);
-  lua_pushcclosure(L, l_cap_call, 1);
-  return 1;
-}
-static int l_message_fmt(lua_State *L) {
-  luaL_checktype(L, 1, LUA_TTABLE);
-  char storage[1024] = {0};
-  fill_struct(L, "SkMessageSpec", 1, storage, lua_feature(L));
-  ski_message((SkMessageSpec *)storage);
-  return 0;
-}
-
 static int l_struct_call(lua_State *L) {
   const char *fn = luaL_checkstring(L, 1);
   const char *sname = luaL_checkstring(L, 2);
@@ -629,6 +430,26 @@ static int l_struct_call(lua_State *L) {
   return 1;
 }
 
+static int l_call_fn(lua_State *L) {
+  const char *resolver = luaL_checkstring(L, 1);
+  void *rs = Platform_GetMainSymbol(resolver);
+  if (!rs)
+    luaL_error(L, "unknown resolver '%s'", resolver);
+  void *target = ((void *(*)(const char *))rs)(luaL_checkstring(L, 2));
+  if (!target) {
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+  uintptr_t a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = arg_value(L, 3 + i);
+  uintptr_t r = ((uintptr_t (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                                uintptr_t, uintptr_t))target)(
+      a[0], a[1], a[2], a[3], a[4], a[5]);
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+
 static const luaL_Reg native_funcs[] = {
     {"v", l_v},
     {"b", l_b},
@@ -640,8 +461,7 @@ static const luaL_Reg native_funcs[] = {
     {"global_b", l_global_b},
     {"image_size", l_image_size},
     {"cap_register", l_cap_register},
-    {"cap_bind", l_cap_bind},
-    {"message_fmt", l_message_fmt},
+    {"call_fn", l_call_fn},
     {"struct_call", l_struct_call},
     {NULL, NULL},
 };

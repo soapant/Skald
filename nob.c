@@ -2018,6 +2018,7 @@ int main(int argc, char **argv) {
   {
     Nob_Cmd gen = {0};
     append_cc(&gen);
+    nob_cmd_append(&gen, CC_FLAGS);
     nob_cmd_append(&gen, "-o", BUILD_FOLDER "/gen_skapi_lua",
                    "tools/gen_skapi_lua.c");
     if (!nob_cmd_run(&gen)) {

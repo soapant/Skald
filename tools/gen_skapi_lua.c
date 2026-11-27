@@ -1,6 +1,8 @@
+#include "core/lua_struct.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -48,9 +50,12 @@ static const Override overrides[] = {
      "t or {}, \"v\") end"},
     {"sk_cap_register",
      "M.sk_cap_register = function(key, fn) native.cap_register(key, fn) end"},
-    {"sk_cap_bind", "M.sk_cap_bind = function(key) return native.cap_bind(key) end"},
+    {"sk_cap_bind",
+     "M.sk_cap_bind = function(key) return function(...) return "
+     "native.call_fn(\"sk_cap_resolve\", key, ...) end end"},
     {"sk_message_fmt",
-     "M.sk_message_fmt = function(t, ...) native.message_fmt(t or {}, ...) end"},
+     "M.sk_message_fmt = function(t, ...) return native.struct_call(\"ski_message\", "
+     "\"SkMessageSpec\", t or {}, \"v\") end"},
     {"sk_overlay",
      "M.sk_overlay = function(t) local v = {} for k,x in pairs(t or {}) do "
      "v[k] = x end v.timeout = v.timeout or 10000000.0 return "
@@ -67,7 +72,7 @@ static const Override overrides[] = {
     {"sk_subwindow",
      "M.sk_subwindow = function(t) local v = {} for k,x in pairs(t or {}) do "
      "v[k] = x end v.subwindow = true return "
-     "native.struct_call(\"ski_window\", \"SkPromptSpec\", v, \"v\") end"},
+     "native.struct_call(\"ski_window\", \"PromptSpec\", v, \"v\") end"},
     {"sk_place_button",
      "M.sk_place_button = function(t) local v = {} for k,x in pairs(t or {}) "
      "do v[k] = x end v.border = true v.button = true return "
@@ -106,6 +111,358 @@ static char *trim(char *s) {
   while (n && isspace((unsigned char)s[n - 1]))
     s[--n] = '\0';
   return s;
+}
+
+typedef struct {
+  char name[NAME_SZ];
+  char sig[64];
+} CbTypedef;
+
+static CbTypedef cb_types[128];
+static int cb_type_count;
+static bool skip_field_name(const char *name) {
+  static const char *skip[] = {
+      "hovered",   "was_down",  "clicked",   "focused",    "render_data",
+      "ud",        "cb_ud",     "buffer",    "buffer_size", "items",
+      "lb",        "font",      "mw",        "mh",
+      "prompt_gap", "caret_x",  "caret_y",   "caret_pos",  "text_y",
+      "fps",       "anchor_y_to_prompt_h", "auto_focus", "hide_caret",
+      "whitelist", "blacklist", "frame",     "pad",        "created_at",
+      "ticks",     "out_index", "out"};
+  for (size_t i = 0; i < sizeof(skip) / sizeof(skip[0]); i++)
+    if (strcmp(name, skip[i]) == 0)
+      return true;
+  return false;
+}
+
+static char *read_all(const char *path) {
+  FILE *f = fopen(path, "rb");
+  if (!f)
+    return NULL;
+  fseek(f, 0, SEEK_END);
+  long n = ftell(f);
+  fseek(f, 0, SEEK_SET);
+  char *buf = (char *)malloc((size_t)n + 1);
+  if (!buf) {
+    fclose(f);
+    return NULL;
+  }
+  if (fread(buf, 1, (size_t)n, f) != (size_t)n) {
+    free(buf);
+    fclose(f);
+    return NULL;
+  }
+  buf[n] = '\0';
+  fclose(f);
+  return buf;
+}
+
+static void clean(char *s) {
+  for (char *p = s; *p; p++)
+    if (*p == '\n' || *p == '\r' || *p == '\t')
+      *p = ' ';
+  char *d = s;
+  while (*d == ' ')
+    d++;
+  if (d != s)
+    memmove(s, d, strlen(d) + 1);
+  size_t n = strlen(s);
+  while (n && (s[n - 1] == ' ' || s[n - 1] == ';' || s[n - 1] == ','))
+    s[--n] = '\0';
+}
+
+static const char *cb_kind_for_sig(const char *sig) {
+  if (strcmp(sig, "void()") == 0)
+    return "LCB_V";
+  if (strcmp(sig, "bool()") == 0)
+    return "LCB_B";
+  if (strcmp(sig, "void(p)") == 0)
+    return "LCB_PS";
+  if (strcmp(sig, "bool(p)") == 0)
+    return "LCB_BPS";
+  return NULL;
+}
+
+static void normalize_sig(char *out, size_t cap, const char *ret,
+                          const char *args) {
+  char r[32] = {0};
+  size_t i = 0;
+  while (*ret && i < sizeof(r) - 1 && !isspace((unsigned char)*ret))
+    r[i++] = *ret++;
+  r[i] = '\0';
+  char a[128] = {0};
+  char *dst = a;
+  const char *p = args;
+  while (*p && (size_t)(dst - a) < sizeof(a) - 2) {
+    if (strncmp(p, "void", 4) == 0 && p[4] == ')')
+      break;
+    if (strncmp(p, "PromptState", 11) == 0 ||
+        strncmp(p, "void *", 6) == 0 || strncmp(p, "void*", 5) == 0) {
+      *dst++ = 'p';
+    } else if (strncmp(p, "const char", 10) == 0 ||
+               strncmp(p, "char *", 6) == 0) {
+      *dst++ = 's';
+    } else if (strncmp(p, "int", 3) == 0) {
+      *dst++ = 'i';
+    }
+    while (*p && *p != ',')
+      p++;
+    if (*p == ',') {
+      *dst++ = ',';
+      p++;
+    } else {
+      break;
+    }
+  }
+  *dst = '\0';
+  snprintf(out, cap, "%s(%s)", r, a);
+}
+
+static void parse_callback_typedefs(const char *src) {
+  char *buf = read_all(src);
+  if (!buf)
+    return;
+  char *line = strtok(buf, "\n");
+  while (line) {
+    char *p = line;
+    clean(p);
+    char *lp = strstr(p, "(*");
+    if (strncmp(p, "typedef", 7) == 0 && lp) {
+      char name[NAME_SZ] = {0};
+      int ni = 0;
+      char *q = lp + 2;
+      while (*q && ni < NAME_SZ - 1 && *q != ')')
+        name[ni++] = *q++;
+      name[ni] = '\0';
+      char *args = strstr(q, ")(");
+      if (args && cb_type_count < 128) {
+        args += 2;
+        char *close = strchr(args, ')');
+        if (close) {
+          *close = '\0';
+          char ret[64] = {0};
+          size_t n = (size_t)(lp - p);
+          if (n > sizeof(ret) - 1)
+            n = sizeof(ret) - 1;
+          memcpy(ret, p, n);
+          ret[n] = '\0';
+          clean(ret);
+          if (strncmp(ret, "typedef ", 8) == 0)
+            memmove(ret, ret + 8, strlen(ret) - 7);
+          CbTypedef *t = &cb_types[cb_type_count++];
+          snprintf(t->name, sizeof(t->name), "%s", name);
+          normalize_sig(t->sig, sizeof(t->sig), ret, args);
+        }
+      }
+    }
+    line = strtok(NULL, "\n");
+  }
+  free(buf);
+}
+
+static int gen_struct_header(void) {
+  const char *headers[] = {
+      "include/core/skapi.h",
+      "include/core/types/prompt.h",
+      "include/core/types/window.h",
+      "include/core/types/skapi_types.h",
+      "include/core/checkbox.h",
+      "include/core/cc_registry.h",
+  };
+
+  parse_callback_typedefs("include/core/types/prompt.h");
+  parse_callback_typedefs("include/core/skapi.h");
+  FILE *out = fopen("include/core/skapi_lua_generated.h", "w");
+  if (!out) {
+    fprintf(stderr, "gen_skapi_lua: cannot write generated struct header\n");
+    return 1;
+  }
+  fprintf(out,
+          "#ifndef SKAPI_LUA_GENERATED_H\n"
+          "#define SKAPI_LUA_GENERATED_H\n\n"
+          "#include \"core/skapi.h\"\n"
+          "#include \"core/lua_struct.h\"\n"
+          "#include <string.h>\n\n");
+
+  for (size_t h = 0; h < sizeof(headers) / sizeof(headers[0]); h++) {
+    char *buf = read_all(headers[h]);
+    if (!buf) {
+      fprintf(stderr, "cannot read %s\n", headers[h]);
+      continue;
+    }
+    char *p = buf;
+    while ((p = strstr(p, "typedef struct {")) != NULL) {
+      char *open = strchr(p, '{');
+      char *close = strchr(open, '}');
+      if (!close)
+        break;
+      char *after = strchr(close, ';');
+      if (!after)
+        break;
+      char name[NAME_SZ] = {0};
+      char *np = close + 1;
+      while (*np && isspace((unsigned char)*np))
+        np++;
+      int name_i = 0;
+      while (*np && (isalnum((unsigned char)*np) || *np == '_')) {
+        if (name_i < NAME_SZ - 1)
+          name[name_i++] = *np;
+        np++;
+      }
+      name[name_i] = '\0';
+      if (name[0]) {
+        fprintf(out, "static const LuaFieldDesc lf_%s[] = {\n", name);
+        char *body = open + 1;
+        char *end = close;
+        while (body < end) {
+          char *semi = strchr(body, ';');
+          if (!semi || semi > end)
+            break;
+          char decl[512] = {0};
+          size_t n = (size_t)(semi - body);
+          if (n > sizeof(decl) - 1)
+            n = sizeof(decl) - 1;
+          memcpy(decl, body, n);
+          decl[n] = '\0';
+          clean(decl);
+          body = semi + 1;
+
+          char field[NAME_SZ] = {0};
+          LuaFieldKind kind = LSF_SKIP;
+          int cb_kind = 0;
+          char *fptr = strstr(decl, "(*");
+          if (fptr) {
+            int fi = 0;
+            char *q = fptr + 2;
+            while (*q && fi < NAME_SZ - 1 && *q != ')')
+              field[fi++] = *q++;
+            field[fi] = '\0';
+            char *args = strstr(q, ")(");
+            if (args && (strstr(decl, "void") == decl ||
+                         strncmp(decl, "bool", 4) == 0)) {
+              args += 2;
+              char *cl = strchr(args, ')');
+              if (cl) {
+                *cl = '\0';
+                char ret[64] = {0};
+                size_t rn = (size_t)(fptr - decl);
+                if (rn > sizeof(ret) - 1)
+                  rn = sizeof(ret) - 1;
+                memcpy(ret, decl, rn);
+                ret[rn] = '\0';
+                clean(ret);
+                char sig[64];
+                normalize_sig(sig, sizeof(sig), ret, args);
+                const char *ck = cb_kind_for_sig(sig);
+                if (ck && !skip_field_name(field)) {
+                  kind = LSF_CB;
+                  if (strcmp(ck, "LCB_V") == 0)
+                    cb_kind = 0;
+                  else if (strcmp(ck, "LCB_PS") == 0)
+                    cb_kind = 1;
+                  else if (strcmp(ck, "LCB_BPS") == 0)
+                    cb_kind = 2;
+                  else
+                    cb_kind = 3;
+                }
+              }
+            }
+          } else {
+            char *last = NULL;
+            for (char *q = decl; *q; q++)
+              if (isspace((unsigned char)*q) || *q == '*')
+                last = q;
+            if (last) {
+              int fi = 0;
+              char *q = last + 1;
+              while (*q && fi < NAME_SZ - 1 &&
+                     (isalnum((unsigned char)*q) || *q == '_'))
+                field[fi++] = *q++;
+              field[fi] = '\0';
+            }
+            bool is_cb_type = false;
+            for (int t = 0; t < cb_type_count && !is_cb_type; t++) {
+              char *found = strstr(decl, cb_types[t].name);
+              if (!found)
+                continue;
+              char next_char = found[strlen(cb_types[t].name)];
+              if (next_char != '\0' && next_char != ' ' && next_char != '*')
+                continue;
+              const char *ck = cb_kind_for_sig(cb_types[t].sig);
+              if (ck && !skip_field_name(field)) {
+                kind = LSF_CB;
+                cb_kind = strcmp(ck, "LCB_V") == 0     ? 0
+                          : strcmp(ck, "LCB_PS") == 0  ? 1
+                          : strcmp(ck, "LCB_BPS") == 0 ? 2
+                                                       : 3;
+              }
+              is_cb_type = true;
+            }
+            if (strstr(decl, "[") || skip_field_name(field))
+              kind = LSF_SKIP;
+            else if (is_cb_type)
+              ;
+            else if (strstr(decl, "bool") == decl)
+              kind = LSF_BOOL;
+            else if (strstr(decl, "float") == decl)
+              kind = LSF_FLOAT;
+            else if (strstr(decl, "double") == decl)
+              kind = LSF_DOUBLE;
+            else if (strstr(decl, "char *") || strstr(decl, "char*") ||
+                     strstr(decl, "const char"))
+              kind = LSF_STR;
+            else if (strstr(decl, "void") == decl && strstr(decl, "*"))
+              kind = LSF_SKIP;
+            else if (strstr(decl, "int") || strstr(decl, "unsigned") ||
+                     strstr(decl, "long") || strstr(decl, "ColorRef") ||
+                     strstr(decl, "MessageSlot") || strstr(decl, "size_t"))
+              kind = LSF_INT;
+            else
+              kind = LSF_SKIP;
+          }
+          if (field[0] && kind != LSF_SKIP)
+            fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %d},\n", field,
+                    kind == LSF_INT      ? "LSF_INT"
+                    : kind == LSF_BOOL   ? "LSF_BOOL"
+                    : kind == LSF_FLOAT  ? "LSF_FLOAT"
+                    : kind == LSF_DOUBLE ? "LSF_DOUBLE"
+                    : kind == LSF_STR    ? "LSF_STR"
+                                         : "LSF_CB",
+                    name, field, cb_kind);
+        }
+        fprintf(out, "};\n");
+        fprintf(out,
+                "static const LuaStructDesc lsd_%s = {\"%s\", sizeof(%s), "
+                "lf_%s, (int)(sizeof(lf_%s)/sizeof(lf_%s[0]))};\n",
+                name, name, name, name, name, name);
+      }
+      p = np;
+    }
+    free(buf);
+  }
+
+  fprintf(out, "static const LuaStructDesc *lua_generated_structs[] = {\n");
+  fprintf(out, "    &lsd_CcEntrySpec, &lsd_SkHotkeySpec, &lsd_PromptSpec,\n");
+  fprintf(out, "    &lsd_SkTextSpec, &lsd_DrawRect,\n");
+  fprintf(out, "    &lsd_CheckboxSpec, &lsd_SkMessageSpec, &lsd_SkEditSpec,\n");
+  fprintf(out, "    &lsd_ListSpec,\n");
+  fprintf(out,
+          "};\n"
+          "static const LuaStructDesc *ski_lua_struct_find(const char *name) {\n"
+          "  if (strcmp(name, \"SkCcEntrySpec\") == 0) name = \"CcEntrySpec\";\n"
+          "  if (strcmp(name, \"SkCheckboxSpec\") == 0) name = \"CheckboxSpec\";\n"
+          "  if (strcmp(name, \"SkPromptSpec\") == 0) name = \"PromptSpec\";\n"
+          "  if (strcmp(name, \"SkRect\") == 0) name = \"DrawRect\";\n"
+          "  for (size_t i = 0; i < "
+          "sizeof(lua_generated_structs)/sizeof(lua_generated_structs[0]); "
+          "i++)\n"
+          "    if (strcmp(name, lua_generated_structs[i]->name) == 0)\n"
+          "      return lua_generated_structs[i];\n"
+          "  return NULL;\n"
+          "}\n\n"
+          "#endif\n");
+  fclose(out);
+  return 0;
 }
 
 int main(void) {
@@ -239,5 +596,5 @@ int main(void) {
 
   fprintf(out, "\nreturn M\n");
   fclose(out);
-  return 0;
+  return gen_struct_header();
 }

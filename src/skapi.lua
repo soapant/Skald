@@ -535,12 +535,12 @@ M.sk_get_image_size = function(path) return native.image_size(path) end
 M.sk_set_window_geometry = function(window, t) return native.struct_call("ski_set_window_geometry", "SkRect", t or {}, "b", window) end
 M.sk_populate_listbox = function(t) return native.struct_call("ski_populate_listbox", "SkPopulateListboxSpec", t or {}, "v") end
 M.sk_cap_register = function(key, fn) native.cap_register(key, fn) end
-M.sk_cap_bind = function(key) return native.cap_bind(key) end
-M.sk_message_fmt = function(t, ...) native.message_fmt(t or {}, ...) end
+M.sk_cap_bind = function(key) return function(...) return native.call_fn("sk_cap_resolve", key, ...) end end
+M.sk_message_fmt = function(t, ...) return native.struct_call("ski_message", "SkMessageSpec", t or {}, "v") end
 M.sk_overlay = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end v.timeout = v.timeout or 10000000.0 return native.struct_call("ski_message", "SkMessageSpec", v, "v") end
 M.sk_draw_rect = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.border == nil then v.border = native.global_b("EnableBorders") end return native.struct_call("ski_draw_rect", "DrawRect", v, "b") end
 M.sk_add_feature = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end v.type = v.type or "Feature" return native.struct_call("ski_add_to_cc", "SkCcEntrySpec", v, "b") end
-M.sk_subwindow = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end v.subwindow = true return native.struct_call("ski_window", "SkPromptSpec", v, "v") end
+M.sk_subwindow = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end v.subwindow = true return native.struct_call("ski_window", "PromptSpec", v, "v") end
 M.sk_place_button = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end v.border = true v.button = true return native.struct_call("ski_place_checkbox", "SkCheckboxSpec", v, "b") end
 M.sk_place_checkbox = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end v.border = true v.checkbox = true return native.struct_call("ski_place_checkbox", "SkCheckboxSpec", v, "b") end
 
