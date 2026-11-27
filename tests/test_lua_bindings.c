@@ -35,9 +35,9 @@ TEST(lua_bindings_generated_wrappers) {
   char *lua = read_text("src/skapi.lua");
   ASSERT_TRUE(lua);
   ASSERT_TRUE(contains(lua, "native.s(\"sk_get_theme\""));
-  ASSERT_TRUE(contains(lua, "native.fmt_call(\"b\", \"sk_file_exists_fmt\""));
+  ASSERT_TRUE(contains(lua, "native.sk_file_exists"));
   ASSERT_TRUE(contains(lua, "native.global_b(\"EnableBorders\")"));
-  ASSERT_TRUE(contains(lua, "native.call_fn(\"sk_cap_resolve\", key"));
+  ASSERT_TRUE(contains(lua, "native.cap_resolve(key)"));
   ASSERT_TRUE(contains(lua, "native.struct_call(\"ski_place_checkbox\""));
   free(lua);
 }

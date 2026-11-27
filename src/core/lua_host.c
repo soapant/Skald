@@ -14,9 +14,12 @@
 #include "deps/lua/lualib.h"
 
 #include "core/skapi_lua_generated.h"
+#include "core/cap_registry.h"
 #include "core/owner_purge.h"
 #include "core/window_manager.h"
 #include "deps/log.h"
+#include "deps/stb_ds.h"
+#include "helpers/helpers_owner.h"
 #include "platform/lib.h"
 
 typedef struct {
@@ -727,14 +730,218 @@ static int l_image_size(lua_State *L) {
   return 2;
 }
 
+typedef struct {
+  char *key;
+  LuaFeature *owner;
+  int ref;
+  unsigned abi;
+} LuaCap;
+
+static LuaCap *g_lua_caps;
+#define lua_cap_count arrlenu(g_lua_caps)
+
+static LuaCap *lua_cap_find(const char *key) {
+  if (!key || !key[0])
+    return NULL;
+  for (size_t i = 0; i < lua_cap_count; i++)
+    if (g_lua_caps[i].key && strcmp(g_lua_caps[i].key, key) == 0)
+      return &g_lua_caps[i];
+  return NULL;
+}
+
+static void copy_lua_value(lua_State *from, int idx, lua_State *to, int depth) {
+  idx = lua_absindex(from, idx);
+  switch (lua_type(from, idx)) {
+  case LUA_TNIL:
+    lua_pushnil(to);
+    break;
+  case LUA_TBOOLEAN:
+    lua_pushboolean(to, lua_toboolean(from, idx));
+    break;
+  case LUA_TNUMBER:
+    if (lua_isinteger(from, idx))
+      lua_pushinteger(to, lua_tointeger(from, idx));
+    else
+      lua_pushnumber(to, lua_tonumber(from, idx));
+    break;
+  case LUA_TSTRING: {
+    size_t n = 0;
+    const char *s = lua_tolstring(from, idx, &n);
+    lua_pushlstring(to, s, n);
+    break;
+  }
+  case LUA_TLIGHTUSERDATA:
+    lua_pushlightuserdata(to, lua_touserdata(from, idx));
+    break;
+  case LUA_TTABLE:
+    if (depth >= 8) {
+      lua_pushnil(to);
+      break;
+    }
+    int table_idx = lua_gettop(to);
+    lua_newtable(to);
+    lua_pushnil(from);
+    while (lua_next(from, idx)) {
+      copy_lua_value(from, -2, to, depth + 1);
+      copy_lua_value(from, -1, to, depth + 1);
+      lua_settable(to, table_idx);
+      lua_pop(from, 1);
+    }
+    break;
+  default:
+    lua_pushnil(to);
+    break;
+  }
+}
+
 static int l_cap_register(lua_State *L) {
   const char *key = luaL_checkstring(L, 1);
+  luaL_checktype(L, 2, LUA_TFUNCTION);
+  unsigned abi = (unsigned)luaL_optinteger(L, 3, CAP_ABI_V1);
   LuaFeature *f = lua_feature(L);
   void *cb = make_callback(L, 2, CB_V, f);
+  lua_pushvalue(L, 2);
+  int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  track_ref(f, ref);
+
+  LuaCap *cap = lua_cap_find(key);
+  if (cap) {
+    LuaFeature *old = cap->owner;
+    if (old && old->L && cap->ref != LUA_NOREF) {
+      luaL_unref(old->L, LUA_REGISTRYINDEX, cap->ref);
+      untrack_ref(old, cap->ref);
+    }
+    free(cap->key);
+    cap->key = strdup(key);
+    if (!cap->key)
+      return luaL_error(L, "out of memory");
+    cap->owner = f;
+    cap->ref = ref;
+    cap->abi = abi;
+  } else {
+    cap = arraddnptr(g_lua_caps, 1);
+    cap->key = strdup(key);
+    if (!cap->key)
+      return luaL_error(L, "out of memory");
+    cap->owner = f;
+    cap->ref = ref;
+    cap->abi = abi;
+  }
+
   slua_owner_set(f ? f->owner : NULL);
-  ski_cap_register(key, cb);
+  cap_register_abi(key, abi, cb);
   slua_owner_clear();
   return 0;
+}
+
+static void cap_declare_noop(void) {}
+
+static int l_cap_bind_declare(lua_State *L) {
+  const char *key = luaL_checkstring(L, 1);
+  LuaFeature *f = lua_feature(L);
+  const char *saved = slua_current_owner();
+  char *saved_copy = saved ? strdup(saved) : NULL;
+  slua_owner_set(f ? f->owner : NULL);
+  cap_bind_declare(key, (void *)&cap_declare_noop);
+  slua_owner_clear();
+  if (saved_copy) {
+    slua_owner_set(saved_copy);
+    free(saved_copy);
+  }
+  return 0;
+}
+
+static int l_cap_call(lua_State *L) {
+  const char *key = lua_tostring(L, lua_upvalueindex(1));
+  unsigned abi = (unsigned)lua_tointeger(L, lua_upvalueindex(2));
+  LuaCap *cap = lua_cap_find(key);
+  if (cap && cap->owner && cap->owner->L && cap->ref != LUA_NOREF &&
+      cap->abi == abi) {
+    LuaFeature *f = cap->owner;
+    int base = lua_gettop(f->L);
+    lua_rawgeti(f->L, LUA_REGISTRYINDEX, cap->ref);
+    int nargs = lua_gettop(L);
+    for (int i = 1; i <= nargs; i++)
+      copy_lua_value(L, i, f->L, 0);
+    const char *saved = slua_current_owner();
+    char *saved_copy = saved ? strdup(saved) : NULL;
+    slua_owner_set(f->owner);
+    int rc = lua_pcall(f->L, nargs, LUA_MULTRET, 0);
+    slua_owner_clear();
+    if (saved_copy) {
+      slua_owner_set(saved_copy);
+      free(saved_copy);
+    }
+    if (rc != 0) {
+      const char *msg = lua_tostring(f->L, -1);
+      log_error("lua capability error (%s): %s", key, msg ? msg : "unknown");
+      lua_settop(f->L, base);
+      lua_pushnil(L);
+      return 1;
+    }
+    int nres = lua_gettop(f->L) - base;
+    if (nres > 8)
+      nres = 8;
+    for (int i = 0; i < nres; i++)
+      copy_lua_value(f->L, base + 1 + i, L, 0);
+    lua_settop(f->L, base);
+    return nres;
+  }
+
+  void *sym = Platform_GetMainSymbol("sk_cap_resolve_abi");
+  if (!sym) {
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+  void *target =
+      ((void *(*)(const char *, unsigned))sym)(key ? key : "", abi);
+  if (!target) {
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+  uintptr_t a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = arg_value(L, i + 1);
+  uintptr_t r =
+      ((uintptr_t(*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                     uintptr_t))target)(a[0], a[1], a[2], a[3], a[4], a[5]);
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+
+static int l_cap_resolve(lua_State *L) {
+  const char *key = luaL_checkstring(L, 1);
+  unsigned abi = (unsigned)luaL_optinteger(L, 2, CAP_ABI_V1);
+  LuaFeature *f = lua_feature(L);
+  const char *saved = slua_current_owner();
+  char *saved_copy = saved ? strdup(saved) : NULL;
+  slua_owner_set(f ? f->owner : NULL);
+  cap_bind_declare(key, (void *)&l_cap_call);
+  slua_owner_clear();
+  if (saved_copy) {
+    slua_owner_set(saved_copy);
+    free(saved_copy);
+  }
+  lua_pushstring(L, key);
+  lua_pushinteger(L, (lua_Integer)abi);
+  lua_pushcclosure(L, l_cap_call, 2);
+  return 1;
+}
+
+void slua_cap_purge_owner(const char *path_a, const char *path_b) {
+  for (size_t i = 0; i < lua_cap_count;) {
+    LuaCap *cap = &g_lua_caps[i];
+    if (cap->owner && owner_module_matches(cap->owner->owner, path_a, path_b)) {
+      if (cap->owner->L && cap->ref != LUA_NOREF) {
+        luaL_unref(cap->owner->L, LUA_REGISTRYINDEX, cap->ref);
+        untrack_ref(cap->owner, cap->ref);
+      }
+      free(cap->key);
+      arrdelswap(g_lua_caps, (int)i);
+      continue;
+    }
+    i++;
+  }
 }
 
 static int l_struct_from_ptr(lua_State *L) {
@@ -880,6 +1087,8 @@ static const luaL_Reg native_funcs[] = {
     {"global_i", l_global_i},
     {"image_size", l_image_size},
     {"cap_register", l_cap_register},
+    {"cap_resolve", l_cap_resolve},
+    {"cap_bind_declare", l_cap_bind_declare},
     {"call_fn", l_call_fn},
     {"fmt_call", l_fmt_call},
     {"struct_call", l_struct_call},
@@ -1044,6 +1253,7 @@ static void feature_shutdown(LuaFeature *f) {
   } else {
     lua_pop(f->L, 1);
   }
+  slua_cap_purge_owner(f->owner, NULL);
   for (int i = 0; i < CB_TOTAL; i++) {
     if (cb_owners[i] == f) {
       cb_refs[i] = LUA_NOREF;

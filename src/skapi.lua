@@ -106,7 +106,7 @@ M.register_config_hotkey = function(t) local v = {} for k,x in pairs(t or {}) do
 M.register_remapping = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_register_remapping", "SkRemappingSpec", v, "b") end
 M.register_snippet = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_register_snippet", "SkSnippetSpec", v, "b") end
 M.cap_register = function(key, fn) native.cap_register(key, fn) end
-M.cap_bind = function(key) return function(...) return native.call_fn("sk_cap_resolve", key, ...) end end
+M.cap_bind = function(key) return native.cap_resolve(key) end
 M.resize_window = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_resize_window", "SkRect", v, "b") end
 M.rgb = function(...) return native.sk_rgb(...) end
 M.hex = function(...) return native.sk_hex(...) end
@@ -463,11 +463,11 @@ M.unregister_snippet = function(...) return native.sk_unregister_snippet(...) en
 M.reload_feature = function(...) return native.sk_reload_feature(...) end
 M.reload_all_features = function(...) return native.sk_reload_all_features(...) end
 M.get_pid = function(...) return native.sk_get_pid(...) end
-M.cap_register_abi = function(...) return native.sk_cap_register_abi(...) end
-function M.cap_resolve_abi(...) return native.i("sk_cap_resolve_abi", ...) end
-function M.cap_resolve(...) return native.i("sk_cap_resolve", ...) end
+M.cap_register_abi = function(key, abi, fn) native.cap_register(key, fn, abi) end
+M.cap_resolve_abi = function(key, abi) return native.cap_resolve(key, abi) end
+M.cap_resolve = function(key) return native.cap_resolve(key) end
 M.cap_generation = function(...) return native.sk_cap_generation(...) end
-M.cap_bind_declare = function(...) return native.sk_cap_bind_declare(...) end
+M.cap_bind_declare = function(key) native.cap_bind_declare(key) end
 function M.get_metrics(...) return native.i("sk_get_metrics", ...) end
 function M.get_active_prompt(...) return native.i("sk_get_active_prompt", ...) end
 M.register_event = function(...) return native.sk_register_event(...) end

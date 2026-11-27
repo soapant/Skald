@@ -648,9 +648,7 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
     return;
   }
   if (strstr(rest, "sk_cap_generation")) {
-    fprintf(out,
-            "M.%s = function(key) return function(...) return "
-            "native.call_fn(\"sk_cap_resolve\", key, ...) end end\n",
+    fprintf(out, "M.%s = function(key) return native.cap_resolve(key) end\n",
             name);
     return;
   }
@@ -1902,6 +1900,30 @@ int main(void) {
       continue;
     if (strstr(p, "typedef"))
       continue;
+    if (strcmp(fname, "sk_cap_resolve") == 0) {
+      fprintf(out,
+              "M.cap_resolve = function(key) return native.cap_resolve(key) "
+              "end\n");
+      continue;
+    }
+    if (strcmp(fname, "sk_cap_resolve_abi") == 0) {
+      fprintf(out,
+              "M.cap_resolve_abi = function(key, abi) return "
+              "native.cap_resolve(key, abi) end\n");
+      continue;
+    }
+    if (strcmp(fname, "sk_cap_register_abi") == 0) {
+      fprintf(out,
+              "M.cap_register_abi = function(key, abi, fn) "
+              "native.cap_register(key, fn, abi) end\n");
+      continue;
+    }
+    if (strcmp(fname, "sk_cap_bind_declare") == 0) {
+      fprintf(out,
+              "M.cap_bind_declare = function(key) "
+              "native.cap_bind_declare(key) end\n");
+      continue;
+    }
     if (strstr(fname, "_fmt")) {
       gen_wrapper(out, fname, p, "");
     } else if (can_thunk(func_for(fname))) {
