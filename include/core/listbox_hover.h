@@ -4,6 +4,21 @@
 #include <stdbool.h>
 #include "core/types.h"
 
+typedef struct {
+  int idx;
+  bool selected;
+  int x;
+  int y;
+  int w;
+  int h;
+  const char *text;
+} ListItemCtx;
+
+bool listbox_begin_common(const ListSpec *spec);
+bool listbox_next_common(ListItemCtx *out);
+void listbox_common_end(void);
+int listbox_common_item_height(void);
+
 #define LISTBOX_WHEEL_ROWS 3
 #define MOUSE_RECHECK_INTERVAL_MS 80
 

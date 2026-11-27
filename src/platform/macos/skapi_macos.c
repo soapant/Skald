@@ -3,6 +3,7 @@
 #include <time.h>
 #include "core/types/skapi_types.h"
 #include "helpers/helpers_owner.h"
+#include "platform/platform.h"
 
 bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload) {
   (void)payload;
@@ -26,20 +27,6 @@ bool sk_launch_with_args_as_admin_platform(const char *path, const char *args) {
   (void)path;
   (void)args;
   return false;
-}
-
-bool sk_place_editbox_platform(const SkEditSpec *spec) {
-  (void)spec;
-  return false;
-}
-
-void sk_sleep_platform(double seconds) {
-  if (seconds <= 0.0)
-    return;
-  struct timespec ts;
-  ts.tv_sec = (time_t)seconds;
-  ts.tv_nsec = (long)((seconds - (double)ts.tv_sec) * 1000000000.0);
-  nanosleep(&ts, NULL);
 }
 
 SkNetStatus sk_net_status_platform(void) { return SK_NET_OFFLINE; }

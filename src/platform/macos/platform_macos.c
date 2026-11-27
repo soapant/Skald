@@ -713,3 +713,16 @@ bool Platform_AtomicRename(const char *old_path, const char *new_path) {
 }
 
 void Platform_InvalidatePrompt(void) {}
+
+void Platform_SleepSeconds(double seconds) {
+  if (seconds <= 0)
+    return;
+  struct timespec req;
+  req.tv_sec = (time_t)seconds;
+  req.tv_nsec = (long)((seconds - (double)req.tv_sec) * 1000000000.0);
+  nanosleep(&req, NULL);
+}
+
+bool Platform_PlaceEditbox(const EditSpec *spec) {
+  return false;
+}

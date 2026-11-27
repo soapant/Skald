@@ -45,12 +45,6 @@
 #include "core/skapi.h"
 #include "core/listbox_hover.h"
 
-static PromptState *sk_current_prompt_state(void) {
-  SkaldContext *ctx = SkaldContext_Get();
-  return (ctx && ctx->window.headless.state)
-             ? ctx->window.headless.state
-             : prompt_popup_get_top_prompt_state();
-}
 #include "core/config_section.h"
 #include "core/listbox_hover.h"
 #include "helpers/helpers_monitor.h"
@@ -59,6 +53,7 @@ static PromptState *sk_current_prompt_state(void) {
 #include "core/draw_state.h"
 #include "core/feature_loader.h"
 #include "core/feature_path.h"
+#include "core/reload_lib.h"
 #include "core/cap_registry.h"
 #include "core/owner_registry.h"
 #include "helpers/helpers_owner.h"
@@ -202,20 +197,6 @@ bool sk_launch_with_args_as_admin(const char *path, const char *args) {
   return sk_launch_with_args_as_admin_platform(expanded, args);
 }
 
-static bool cc_add_dep(const char *dep_name, const char *owner_file) {
-  if (!dep_name || !dep_name[0] || !owner_file || !owner_file[0])
-    return false;
-  char dep[64];
-  snprintf(dep, sizeof(dep), "%s", dep_name);
-  char *dot = strrchr(dep, '.');
-  if (dot)
-    *dot = '\0';
-  if (!dep[0])
-    return false;
-  feature_loader_manifest_add_depends(owner_file, dep);
-  return true;
-}
-
 bool ski_add_dep(const char *dep_name, const char *owner_file) {
   return cc_add_dep(dep_name, owner_file);
 }
@@ -237,65 +218,15 @@ void sk_cap_bind_declare(const char *key, void *consumer) {
   cap_bind_declare(key, consumer);
 }
 
-static bool sk_resolve_caller_path(void *caller_ret, const char *name,
-                                   char *full, size_t cap, const char *func) {
-  if (!feature_path_resolve_data_path(caller_ret, name, full, cap)) {
-    log_warn("%s resolve failed name='%s' feature='%s'", func, name,
-             SkaldContext_Get()->window.current_feature
-                 ? SkaldContext_Get()->window.current_feature
-                 : "(null)");
-    return false;
-  }
-  return true;
-}
-
-static bool sk_resolve_caller_path_silent(void *caller_ret, const char *name,
-                                          char *full, size_t cap) {
-  return feature_path_resolve_data_path(caller_ret, name, full, cap);
-}
-
 SkStringList sk_load_file_list(const char *filepath) {
-  SkStringList list = {0};
-  if (!filepath)
-    return list;
-  char full[MAX_PATH];
-  if (!sk_resolve_caller_path(__builtin_return_address(0), filepath, full,
-                              sizeof(full), "sk_load_file_list"))
-    return list;
-  list = File_ReadLines(full);
-  return list;
-}
-
-static char *file_read_all_alloc(const char *path) {
-  FILE *f = fopen(path, "rb");
-  if (!f)
-    return NULL;
-  if (fseek(f, 0, SEEK_END) != 0) {
-    fclose(f);
-    return NULL;
-  }
-  long sz = ftell(f);
-  if (sz < 0) {
-    fclose(f);
-    return NULL;
-  }
-  rewind(f);
-  char *buf = (char *)malloc((size_t)sz + 1);
-  if (!buf) {
-    fclose(f);
-    return NULL;
-  }
-  size_t got = fread(buf, 1, (size_t)sz, f);
-  buf[got] = '\0';
-  fclose(f);
-  return buf;
+  return load_file_list_from(__builtin_return_address(0), filepath);
 }
 
 char *sk_load_file(const char *filepath) {
   if (!filepath)
     return NULL;
   char full[MAX_PATH];
-  if (!sk_resolve_caller_path(__builtin_return_address(0), filepath, full,
+  if (!resolve_caller_path(__builtin_return_address(0), filepath, full,
                               sizeof(full), "sk_load_file"))
     return NULL;
   return file_read_all_alloc(full);
@@ -348,7 +279,7 @@ bool sk_append_to_file(const char *filepath, const char *line) {
   if (!filepath || !line)
     return false;
   char full[MAX_PATH];
-  if (!sk_resolve_caller_path_silent(__builtin_return_address(0), filepath,
+  if (!resolve_caller_path_silent(__builtin_return_address(0), filepath,
                                      full, sizeof(full)))
     return false;
   filepath = full;
@@ -387,28 +318,7 @@ bool sk_append_to_file(const char *filepath, const char *line) {
 }
 
 bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
-  if (!filepath)
-    return false;
-  if (count < 0)
-    return false;
-  if (count > 0 && !lines)
-    return false;
-  char full[MAX_PATH];
-  if (!sk_resolve_caller_path_silent(__builtin_return_address(0), filepath,
-                                     full, sizeof(full)))
-    return false;
-  filepath = full;
-  FILE *f = fopen(filepath, "w");
-  if (!f)
-    return false;
-  for (int i = 0; i < count; i++) {
-    if (lines[i])
-      fprintf(f, "%s\n", lines[i]);
-    else
-      fprintf(f, "\n");
-  }
-  fclose(f);
-  return true;
+  return write_lines_from(__builtin_return_address(0), filepath, lines, count);
 }
 
 ColorRef sk_rgb(unsigned r, unsigned g, unsigned b) {
@@ -476,31 +386,11 @@ char *sk_read_file_to_string(const char *path, size_t *out_len) {
   char expanded[MAX_PATH];
   if (!expand_path(path, expanded, sizeof(expanded)))
     safe_copy(expanded, sizeof(expanded), path);
-  FILE *f = fopen(expanded, "rb");
-  if (!f)
+  char *buf = file_read_all_alloc(expanded);
+  if (!buf)
     return NULL;
-  if (fseek(f, 0, SEEK_END) != 0) {
-    fclose(f);
-    {
-      return NULL;
-    }
-  }
-  long sz = ftell(f);
-  if (sz < 0)
-    sz = 0;
-  rewind(f);
-  char *buf = (char *)malloc((size_t)sz + 1);
-  if (!buf) {
-    fclose(f);
-    {
-      return NULL;
-    }
-  }
-  size_t read = fread(buf, 1, (size_t)sz, f);
-  buf[read] = '\0';
-  fclose(f);
   if (out_len)
-    *out_len = read;
+    *out_len = strlen(buf);
   return buf;
 }
 
@@ -559,42 +449,16 @@ bool sk_append_unique_line(const char *path, const char *line) {
   return ok;
 }
 
-static bool filter_lines(const char *path, const char *needle,
-                         bool match_substr) {
-  SkStringList files = sk_load_file_list(path);
-  const char **kept =
-      (const char **)malloc(sizeof(char *) * (files.count ? files.count : 1));
-  if (!kept) {
-    sk_free_string_list(&files);
-    return false;
-  }
-  int k = 0;
-  for (size_t i = 0; i < files.count; i++) {
-    bool drop = match_substr ? strstr(files.items[i], needle) != NULL
-                             : strcmp(files.items[i], needle) == 0;
-    if (!drop)
-      kept[k++] = files.items[i];
-    else {
-      free(files.items[i]);
-      files.items[i] = NULL;
-    }
-  }
-  bool ok = sk_write_to_file(path, kept, k);
-  free(kept);
-  sk_free_string_list(&files);
-  return ok;
-}
-
 bool sk_remove_line(const char *path, const char *line) {
   if (!path || !line)
     return false;
-  return filter_lines(path, line, false);
+  return filter_lines_from(__builtin_return_address(0), path, line, false);
 }
 
 bool sk_remove_line_contains(const char *path, const char *substr) {
   if (!path || !substr)
     return false;
-  return filter_lines(path, substr, true);
+  return filter_lines_from(__builtin_return_address(0), path, substr, true);
 }
 
 char *sk_parse_desktop_file(const char *path, bool *out_nodisplay) {
@@ -637,17 +501,6 @@ char *sk_parse_desktop_file(const char *path, bool *out_nodisplay) {
   return found ? strdup(name_buf) : NULL;
 }
 
-static void resolve_window_list(const char *const *wl, const char *const *bl,
-                                const char *const **out_windows,
-                                bool *out_whitelist) {
-  bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
-  const char *const *windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
-  if (out_windows)
-    *out_windows = windows;
-  if (out_whitelist)
-    *out_whitelist = whitelist;
-}
-
 bool ski_register_remapping(const SkRemappingSpec *spec) {
   if (!spec || !spec->src || !spec->dst)
     return false;
@@ -658,23 +511,6 @@ bool ski_register_remapping(const SkRemappingSpec *spec) {
   resolve_window_list(wl, bl, &windows, &whitelist);
   return remap_register_internal(spec->src, spec->dst, whitelist, windows,
                                  (void *)__builtin_return_address(0));
-}
-
-static void snippet_fire(int idx, int del) {
-
-  const SnippetBinding *b = snippet_get_binding(idx);
-  if (!b || !b->trigger) {
-    return;
-  }
-  // Hackish but snippets are only a few characters
-  for (int i = 0; i < del; i++) {
-    Platform_EmitKey(VK_BACK, 1);
-    Platform_EmitKey(VK_BACK, 0);
-  }
-  if (b->text)
-    sk_type_text(b->text);
-  else if (b->func)
-    b->func();
 }
 
 bool ski_register_snippet(const SkSnippetSpec *spec) {
@@ -695,70 +531,21 @@ bool sk_unregister_snippet(const char *trigger) {
   return snippet_unregister_internal(trigger);
 }
 
-typedef struct {
-  char name[128];
-  void (*cb)(void);
-  char icon[512];
-  OwnerTag tag;
-} FeatureReg;
-
-static FeatureReg **feature_order = NULL;
-static int feature_order_count = 0;
-static int feature_order_cap = 0;
-
-static int feature_list_find(const char *name, void (*cb)(void)) {
-  for (int i = 0; i < feature_order_count; i++) {
-    if (cb && feature_order[i]->cb == cb)
-      return i;
-    if (name && feature_order[i]->name[0] &&
-        strcmp(feature_order[i]->name, name) == 0)
-      return i;
+SkFeatureList sk_get_feature_list(void) {
+  SkFeatureList list = {NULL, 0};
+  int count = feature_list_count();
+  if (count <= 0)
+    return list;
+  SkFeature *items =
+      (SkFeature *)malloc((size_t)count * sizeof(*items));
+  if (!items)
+    return list;
+  for (int i = 0; i < count; i++) {
+    feature_list_at(i, &items[i].name, &items[i].callback, &items[i].icon);
   }
-  return -1;
-}
-
-static bool feature_list_add(const char *name, void (*cb)(void),
-                             const char *icon, const char *owner) {
-  if (!name || !name[0])
-    return false;
-  int idx = feature_list_find(name, cb);
-  if (idx < 0) {
-    if (feature_order_count >= feature_order_cap) {
-      int ncap = feature_order_cap ? feature_order_cap * 2 : 32;
-      FeatureReg **grown =
-          (FeatureReg **)realloc(feature_order, (size_t)ncap * sizeof(*grown));
-      if (!grown)
-        return false;
-      feature_order = grown;
-      feature_order_cap = ncap;
-    }
-    idx = feature_order_count;
-    feature_order[idx] = (FeatureReg *)calloc(1, sizeof(**feature_order));
-    if (!feature_order[idx])
-      return false;
-    feature_order_count++;
-  }
-  FeatureReg *reg = feature_order[idx];
-  snprintf(reg->name, sizeof(reg->name), "%s", name);
-  reg->cb = cb;
-  snprintf(reg->icon, sizeof(reg->icon), "%s", icon ? icon : "");
-  owner_tag_set(&reg->tag, owner, 0);
-  return true;
-}
-
-void feature_list_purge_owner(const char *path_a, const char *path_b) {
-  if (owner_purge_inactive(path_a, path_b))
-    return;
-  int n = 0;
-  for (int i = 0; i < feature_order_count; i++) {
-    if (owner_tag_matches(&feature_order[i]->tag, path_a, path_b)) {
-      owner_tag_clear(&feature_order[i]->tag);
-      free(feature_order[i]);
-      continue;
-    }
-    feature_order[n++] = feature_order[i];
-  }
-  feature_order_count = n;
+  list.items = items;
+  list.count = (size_t)count;
+  return list;
 }
 
 bool ski_register_hotkey(const SkHotkeySpec *spec) {
@@ -809,16 +596,6 @@ void sk_hotkey_capture_end(void) { hotkey_capture_end(); }
 
 int sk_hotkey_count(void) { return hotkey_count(); }
 
-static char *hotkey_binding_format(const HotkeyBinding *b) {
-  if (!b)
-    return NULL;
-  HotkeyKey key = {.vk = b->vk, .mods = b->modifiers};
-  char tmp[256];
-  if (!hotkey_string_format(key, tmp, (int)sizeof(tmp)))
-    return NULL;
-  return strdup(tmp);
-}
-
 char *sk_hotkey_string_at(int index) {
   return hotkey_binding_format(hotkey_get(index));
 }
@@ -840,24 +617,6 @@ bool sk_hotkey_taken(const char *hotkey) {
   if (!hotkey_string_parse(hotkey, &key))
     return false;
   return hotkey_is_taken(key.vk, key.mods);
-}
-
-SkFeatureList sk_get_feature_list(void) {
-  SkFeatureList list = {NULL, 0};
-  if (feature_order_count <= 0)
-    return list;
-  SkFeature *items =
-      (SkFeature *)malloc((size_t)feature_order_count * sizeof(*items));
-  if (!items)
-    return list;
-  for (int i = 0; i < feature_order_count; i++) {
-    items[i].name = feature_order[i]->name;
-    items[i].callback = feature_order[i]->cb;
-    items[i].icon = feature_order[i]->icon[0] ? feature_order[i]->icon : NULL;
-  }
-  list.items = items;
-  list.count = (size_t)feature_order_count;
-  return list;
 }
 
 void sk_free_feature_list(SkFeatureList *list) {
@@ -1001,9 +760,6 @@ char *sk_string_slice(const char *str, int start, int end) {
 }
 
 StringList sk_string_split(const char *str, const char *delimiter) {
-  StringList empty = {NULL, 0};
-  if (!str || !delimiter || !delimiter[0])
-    return empty;
   return String_Split(str, delimiter);
 }
 
@@ -1068,16 +824,15 @@ bool sk_is_selected(ListBox *lb) {
 }
 
 void sk_set_edit_text(const char *text) {
-  PromptState *state = sk_current_prompt_state();
+  PromptState *state = current_prompt_state();
   if (!state || !state->eb)
     return;
-  snprintf(state->eb->filter, sizeof(state->eb->filter), "%s",
-           text ? text : "");
+  safe_copy(state->eb->filter, sizeof(state->eb->filter), text);
   state->eb->cursor = (size_t)strlen(state->eb->filter);
 }
 
 void sk_set_edit_cursor(int position) {
-  PromptState *state = sk_current_prompt_state();
+  PromptState *state = current_prompt_state();
   if (!state || !state->eb)
     return;
   size_t len = strlen(state->eb->filter);
@@ -1086,50 +841,13 @@ void sk_set_edit_cursor(int position) {
 }
 
 int sk_get_edit_cursor(void) {
-  PromptState *state = sk_current_prompt_state();
+  PromptState *state = current_prompt_state();
   return state && state->eb ? (int)state->eb->cursor : 0;
 }
 
 char *sk_get_edit_text(void) {
-  PromptState *state = sk_current_prompt_state();
+  PromptState *state = current_prompt_state();
   return state && state->eb ? strdup(state->eb->filter) : strdup("");
-}
-
-static void hover_popup_frame(void *ud) {
-  SkHoverPopupCtx *p = (SkHoverPopupCtx *)ud;
-  if (!p || !p->render) {
-    return;
-  }
-  p->frame++;
-  set_draw_offset(0, 0);
-  begin_measure();
-  p->render(p->render_data);
-  int mw = 0, mh = 0;
-  end_measure(&mw, &mh);
-  if (mw > 0 && mh > 0) {
-    p->w = mw + p->pad;
-    p->h = mh + p->pad;
-  }
-}
-
-static SkHoverPopupCtx *hover_popup_ctx_new(const SkMessageSpec *spec) {
-
-  SkHoverPopupCtx *p = (SkHoverPopupCtx *)calloc(1, sizeof(*p));
-  if (!p)
-    return NULL;
-  p->render = spec->render;
-  p->render_data = spec->render_data;
-  p->w = spec->w > 0 ? spec->w : WIDGET_PROVISIONAL_W;
-  p->h = spec->h > 0 ? spec->h : WIDGET_PROVISIONAL_H;
-  p->created_at = sk_timer_start();
-  p->pad = WIDGET_DEFAULT_PAD;
-  return p;
-}
-
-static void hover_popup_ctx_free(void *ud) {
-  SkHoverPopupCtx *p = (SkHoverPopupCtx *)ud;
-  if (p)
-    free(p);
 }
 
 #define SK_FMT_BUFFER()                                                        \
@@ -1169,24 +887,28 @@ void ski_message(const SkMessageSpec *spec) {
   ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
   if (spec->hover_key && spec->hover_key[0]) {
     if (spec->render) {
-      SkHoverPopupCtx *ctx = hover_popup_ctx_new(spec);
-      if (ctx) {
+      HoverPopupCtx *popup = hover_popup_ctx_new(&(HoverPopupCreateSpec){
+          .render = spec->render,
+          .render_data = spec->render_data,
+          .w = spec->w,
+          .h = spec->h});
+      if (popup) {
         hover_widget_show((HoverWidgetShowSpec){
             .key = spec->hover_key,
             .render = hover_popup_frame,
-            .ud = ctx,
+            .ud = popup,
             .owner_src = (void *)spec->render,
             .x = spec->x,
             .y = spec->y,
-            .w = ctx->w,
-            .h = ctx->h,
+            .w = popup->w,
+            .h = popup->h,
             .fps = spec->fps > 0 ? spec->fps : 1,
             .no_bg = spec->no_bg,
             .bg_hex = spec->color_bg
                           ? rgb_to_hex(spec->color_bg)
                           : (spec->no_bg ? 0UL : rgb_to_hex(COLOR_BG)),
             .release = hover_popup_ctx_free,
-            .release_ud = ctx});
+            .release_ud = popup});
       }
       return;
     }
@@ -1289,23 +1011,6 @@ bool sk_paste(const char *content) {
   return Platform_PasteContent(content);
 }
 
-// needed for returning of the buffer to function properly
-static bool popup_enter(PromptState *state) {
-  (void)state;
-  return true;
-}
-
-typedef struct {
-  const char *placeholder;
-  const char *initial_text;
-} SkTextPromptRenderData;
-
-static void sk_text_prompt_render(PromptState *state) {
-  const SkTextPromptRenderData *data = state ? state->render_data : NULL;
-  sk_place_editbox(.placeholder = data ? data->placeholder : NULL,
-                   .initial_text = data ? data->initial_text : NULL,.y=state->height /2 - 17);
-}
-
 char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   if (!spec)
     return NULL;
@@ -1325,15 +1030,9 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   WindowManager *wm = WindowManager_Get();
   if (!wm)
     return NULL;
-  SkTextPromptRenderData render_data = {NULL, initial_text};
-  PromptSpec pspec = {0};
-  pspec.enter = popup_enter;
-  pspec.render = sk_text_prompt_render;
-  pspec.render_data = &render_data;
-  pspec.x = x;
-  pspec.y = y;
-  pspec.w = w;
-  pspec.h = h;
+  TextPromptRenderData render_data = {0};
+  PromptSpec pspec = text_prompt_spec(&render_data, NULL, initial_text, x, y,
+                                        w, h);
   {
     SkaldContext *ctx = SkaldContext_Get();
     if (ctx) {
@@ -1531,7 +1230,7 @@ void sk_refresh_ui(void) {
 }
 
 void sk_request_refresh(void) {
-  prompt_refresh(sk_current_prompt_state());
+  prompt_refresh(current_prompt_state());
   UI_RequestPopupRepaint();
 }
 
@@ -1578,54 +1277,27 @@ char *ski_popup(const PopupSpec *spec) {
   const char *placeholder = spec->placeholder;
   if (spec->password_mode && (!placeholder || !placeholder[0]))
     placeholder = "Enter Password:";
-  SkTextPromptRenderData render_data = {placeholder, NULL};
-  PromptSpec pspec = {0};
-  pspec.enter = popup_enter;
-  pspec.render = sk_text_prompt_render;
-  pspec.render_data = &render_data;
+  TextPromptRenderData render_data = {0};
+  PromptSpec pspec = text_prompt_spec(&render_data, placeholder, NULL,
+                                        spec->x, spec->y,
+                                        spec->w ? spec->w : 600,
+                                        spec->h ? spec->h : 70);
   pspec.password_mode = spec->password_mode;
-  pspec.x = spec->x;
-  pspec.y = spec->y;
-  pspec.w = spec->w ? spec->w : 600;
-  pspec.h = spec->h ? spec->h : 70;
   char *r = WindowManager_ShowPrompt(wm, &pspec);
   return r ? strdup(r) : NULL;
 }
-
-static __thread ListBox *sk_list_lb;
-static __thread ListSpec sk_list_spec;
-static __thread int sk_list_y0, sk_list_itemH, sk_list_visible, sk_list_cur,
-    sk_list_h;
-static __thread int sk_list_bx, sk_list_bw, sk_list_fw, sk_list_fh;
-static __thread bool sk_list_separators;
 
 bool ski_draw_text(const SkTextSpec *spec) {
   if (!spec) {
     return false;
   }
-  const char *real_text = spec->text;
   char tmp[2] = {0};
-  if ((uintptr_t)real_text < 256) {
-    if (!real_text) {
-      return false;
-    }
-    tmp[0] = (char)(uintptr_t)real_text;
-    tmp[1] = '\0';
-    real_text = tmp;
-  }
-  if (!real_text) {
+  const char *real_text = text_resolve(spec->text, tmp);
+  if (!real_text)
     return false;
-  }
-  if (search_index_current()) {
-    if (real_text[0])
-      search_index_add_text(NULL, real_text, SK_SEARCH_TEXT, NULL, NULL);
+  if (capture_text(real_text))
     return true;
-  }
-  unsigned long col = spec->color;
-  if (col == 0 || col == COLOR_AUTO)
-    col = rgb_to_hex(COLOR_TEXT);
-  else
-    col = rgb_to_hex(col);
+  unsigned long col = draw_color(spec->color);
   int draw_x = spec->x - (spec->no_hscroll ? 0 : listbox_get_row_h_scroll());
   int draw_y = spec->y;
   if (draw_state_get()->listbox_rows && draw_state_get()->win32_listbox_surface)
@@ -1641,13 +1313,6 @@ bool ski_draw_text(const SkTextSpec *spec) {
                                                 .pad = spec->pad,
                                                 .font_size = spec->font_size,
                                                  .angle = spec->angle});
-}
-
-static int text_segment_width(const SkTextSegment *seg, int font_size) {
-  if (!seg || !seg->text)
-    return 0;
-  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
-      .text = seg->text, .len = (int)strlen(seg->text), .font_size = font_size});
 }
 
 bool ski_draw_text_segments(const SkTextSegmentsSpec *spec) {
@@ -1686,43 +1351,6 @@ bool ski_draw_text_segments(const SkTextSegmentsSpec *spec) {
   return ok;
 }
 
-typedef struct {
-  char text[256];
-  unsigned long color;
-  int width;
-  int lead;
-  int breaks;
-  int x;
-  int line;
-} SkWrappedWord;
-
-static void wrapped_word_push(SkWrappedWord **words, int *count, int *cap,
-                              const char *s, size_t len, unsigned long color,
-                              int lead, int breaks, int font_size) {
-  if (!len)
-    return;
-  if (*count >= *cap) {
-    int nc = *cap ? *cap * 2 : 32;
-    SkWrappedWord *grown = realloc(*words, (size_t)nc * sizeof(**words));
-    if (!grown)
-      return;
-    *words = grown;
-    *cap = nc;
-  }
-  SkWrappedWord *w = &(*words)[(*count)++];
-  if (len >= sizeof(w->text))
-    len = sizeof(w->text) - 1;
-  memcpy(w->text, s, len);
-  w->text[len] = '\0';
-  w->color = color;
-  w->width = Platform_MeasureTextWidth((MeasureTextWidthSpec){
-      .text = w->text, .len = (int)len, .font_size = font_size});
-  w->lead = lead;
-  w->breaks = breaks;
-  w->x = 0;
-  w->line = 0;
-}
-
 int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
   if (!spec)
     return 0;
@@ -1745,7 +1373,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
   int nseg = use_segments ? spec->count : (spec->text ? 1 : 0);
   if (!nseg)
     return spec->y;
-  SkWrappedWord *words = NULL;
+  WrappedWord *words = NULL;
   int count = 0, cap = 0;
   int space_w = sk_get_text_width(" ", fs);
   int pending_breaks = 0;
@@ -1790,7 +1418,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
   }
   int line = 0, cx = 0, max_line = 0;
   for (int i = 0; i < count; i++) {
-    SkWrappedWord *w = &words[i];
+    WrappedWord *w = &words[i];
     if (w->breaks) {
       line += w->breaks;
       cx = 0;
@@ -1813,7 +1441,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
     return spec->y;
   }
   for (int i = 0; i < count; i++) {
-    SkWrappedWord *w = &words[i];
+    WrappedWord *w = &words[i];
     int end = w->x + w->width;
     if (line_w[w->line] < end)
       line_w[w->line] = end;
@@ -1821,7 +1449,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
   if (!spec->measure_only) {
     const char *align = spec->align ? spec->align : "LEFT";
     for (int i = 0; i < count; i++) {
-      SkWrappedWord *w = &words[i];
+      WrappedWord *w = &words[i];
       int offset = 0;
       if (string_contains_ci(align, "CENTER"))
         offset = (max_w - line_w[w->line]) / 2;
@@ -1848,27 +1476,13 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
 bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
   if (!spec)
     return false;
-  const char *real_text = spec->text;
   char tmp[2] = {0};
-  if ((uintptr_t)real_text < 256) {
-    if (!real_text)
-      return false;
-    tmp[0] = (char)(uintptr_t)real_text;
-    tmp[1] = '\0';
-    real_text = tmp;
-  }
+  const char *real_text = text_resolve(spec->text, tmp);
   if (!real_text)
     return false;
-  if (search_index_current()) {
-    if (real_text[0])
-      search_index_add_text(NULL, real_text, SK_SEARCH_TEXT, NULL, NULL);
+  if (capture_text(real_text))
     return true;
-  }
-  unsigned long col = spec->color;
-  if (col == 0 || col == COLOR_AUTO)
-    col = rgb_to_hex(COLOR_TEXT);
-  else
-    col = rgb_to_hex(col);
+  unsigned long col = draw_color(spec->color);
   Platform_DrawTextCentered(
       (DrawTextCenteredSpec){.x = spec->x,
                              .y = spec->y,
@@ -1888,18 +1502,6 @@ int ski_text_wrap_layout(const char *text, SkPos pos, int max_width,
                           ctx, out, maxout);
 }
 
-typedef struct {
-  unsigned long color;
-  int font_size;
-} SkWrapCtx;
-
-static int wrap_measure_thunk(void *ctx, const char *s, int n) {
-
-  SkWrapCtx *c = (SkWrapCtx *)ctx;
-  return Platform_MeasureTextWidth(
-      (MeasureTextWidthSpec){.text = s, .len = n, .font_size = c->font_size});
-}
-
 int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
   if (!spec || !spec->text) {
     return 0;
@@ -1910,7 +1512,7 @@ int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
   int line_height = spec->line_height;
   if (line_height <= 0)
     line_height = font_size + 4;
-  SkWrapCtx ctx;
+  WrapCtx ctx;
   ctx.color = 0;
   ctx.font_size = font_size;
   int cap = (int)strlen(spec->text) + 1;
@@ -1920,109 +1522,46 @@ int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
 }
 
 bool ski_place_editbox(const SkEditSpec *spec) {
-  if (!spec) {
+  if (!spec)
     return false;
-  }
-  if (search_index_current()) {
-    const char *name = (spec->name && spec->name[0])
-                           ? spec->name
-                           : PROMPT_PRIMARY_EDITBOX_NAME;
-    if (strncmp(name, "settings-search:", 16) != 0)
-      search_index_add_text(NULL, spec->buffer, SK_SEARCH_EDITBOX, name, NULL);
-    return true;
-  }
-  SkaldContext_Get()->window.editbox_placed = true;
-  SkEditSpec copy = *spec;
-  copy.hide_caret = false;
-  PromptState *state = sk_current_prompt_state();
-  const char *name = spec->name;
-  char *buffer = spec->buffer;
-  size_t buffer_size = spec->buffer_size;
-  bool primary = spec->primary || !name || !name[0];
-  if (primary && copy.w <= 0 && state)
-    copy.w = state->width;
-  if (state && primary && !buffer && state->default_eb) {
-    buffer = state->default_eb->filter;
-    buffer_size = sizeof(state->default_eb->filter);
-  }
-  if (state && (!name || !name[0]))
-    name = PROMPT_PRIMARY_EDITBOX_NAME;
-  bool fresh = state && name && name[0] && !editbox_registry_find(state, name);
-  if (state && name && name[0]) {
-    int dx = 0, dy = 0;
-    get_draw_offset(&dx, &dy);
-    int idx =
-        editbox_registry_place(state, name, buffer, buffer_size, spec->x + dx,
-                               spec->y + dy, copy.w, spec->h);
-    if (idx >= 0) {
-      PromptEditbox *entry = &state->editboxes[idx];
-      if (state->active_editbox < 0)
-        state->active_editbox = idx;
-      entry->primary = primary;
-      entry->no_tab = spec->no_tab;
-      entry->wrapped = spec->wrapped;
-      entry->font_size = spec->font_size > 0 ? spec->font_size : FontSize;
-      if (fresh && spec->auto_focus)
-        editbox_registry_set_active(state, name);
-      const char *ph = copy.placeholder;
-      if (primary && (!ph || !ph[0]) && state->default_eb)
-        ph = state->default_eb->placeholder;
-      if (ph && ph[0]) {
-        if (!entry->eb.placeholder || strcmp(entry->eb.placeholder, ph) != 0) {
-          free(entry->eb.placeholder);
-          entry->eb.placeholder = strdup(ph);
-        }
-      } else {
-        free(entry->eb.placeholder);
-        entry->eb.placeholder = NULL;
-      }
-      copy.placeholder = entry->eb.placeholder;
-      if (fresh && copy.initial_text && copy.initial_text[0]) {
-        size_t cap = buffer && buffer_size ? buffer_size
-                                            : sizeof(entry->eb.filter);
-        size_t n = strnlen(copy.initial_text, cap - 1);
-        if (n >= sizeof(entry->eb.filter))
-          n = sizeof(entry->eb.filter) - 1;
-        memcpy(entry->eb.filter, copy.initial_text, n);
-        entry->eb.filter[n] = '\0';
-        entry->eb.cursor = (int)n;
-        if (buffer && buffer_size) {
-          memcpy(buffer, copy.initial_text, n);
-          buffer[n] = '\0';
-        }
-      }
-      copy.buffer = entry->eb.filter;
-      copy.hide_caret = state->active_editbox != idx;
-      if (state->active_editbox == idx) {
-        state->eb = &entry->eb;
-      } else {
-        EditBox tmp;
-        memset(&tmp, 0, sizeof(tmp));
-        snprintf(tmp.filter, sizeof(tmp.filter), "%s", entry->eb.filter);
-        tmp.cursor = strlen(tmp.filter);
-        EditBox *saved = state->eb;
-        int saved_active = state->active_editbox;
-        state->eb = &tmp;
-        state->active_editbox = idx;
-        bool ok = sk_place_editbox_platform(&copy);
-        state->active_editbox = saved_active;
-        state->eb = saved;
-        return ok;
-      }
-    }
-  }
-  return sk_place_editbox_platform(&copy);
+  EditSpec copy = {
+      .name = spec->name,
+      .buffer = spec->buffer,
+      .buffer_size = spec->buffer_size,
+      .x = spec->x,
+      .y = spec->y,
+      .w = spec->w,
+      .h = spec->h,
+      .placeholder = spec->placeholder,
+      .initial_text = spec->initial_text,
+      .color_bg = spec->color_bg,
+      .color_text = spec->color_text,
+      .font = spec->font,
+      .font_size = spec->font_size,
+      .caret_h = spec->caret_h,
+      .caret_w = spec->caret_w,
+      .caret_x = spec->caret_x,
+      .caret_y = spec->caret_y,
+      .caret_pos = spec->caret_pos,
+      .text_y = spec->text_y,
+      .auto_focus = spec->auto_focus,
+      .hide_caret = spec->hide_caret,
+      .primary = spec->primary,
+      .no_tab = spec->no_tab,
+      .wrapped = spec->wrapped,
+  };
+  return place_editbox(&copy);
 }
 
 const char *sk_editbox_text(const char *name) {
-  EditBox *eb = editbox_registry_lookup(sk_current_prompt_state(), name);
+  EditBox *eb = editbox_registry_lookup(current_prompt_state(), name);
   return eb ? eb->filter : NULL;
 }
 
 bool sk_editbox_set_text(const char *name, const char *text) {
   if (!text)
     return false;
-  PromptState *state = sk_current_prompt_state();
+  PromptState *state = current_prompt_state();
   EditBox *eb = editbox_registry_lookup(state, name);
   if (!eb)
     return false;
@@ -2036,27 +1575,19 @@ bool sk_editbox_set_text(const char *name, const char *text) {
 }
 
 const char *sk_editbox_active(void) {
-  return editbox_registry_active_name(sk_current_prompt_state());
+  return editbox_registry_active_name(current_prompt_state());
 }
 
 void sk_editbox_set_active(const char *name) {
-  editbox_registry_set_active(sk_current_prompt_state(), name);
+  editbox_registry_set_active(current_prompt_state(), name);
 }
 
 SkImage sk_image_from_window_title(const char *title) {
-  ImageBuffer *img = Platform_CaptureWindowByTitle(title);
-  SkImage out = img ? *img : (SkImage){0};
-  Platform_FreeImage(img);
-  free(img);
-  return out;
+  return image_take(Platform_CaptureWindowByTitle(title));
 }
 
 SkImage sk_image_from_window_id(const char *id) {
-  ImageBuffer *img = Platform_CaptureWindowById(id);
-  SkImage out = img ? *img : (SkImage){0};
-  Platform_FreeImage(img);
-  free(img);
-  return out;
+  return image_take(Platform_CaptureWindowById(id));
 }
 
 void sk_image_free(SkImage image) { Platform_FreeImage(&image); }
@@ -2107,44 +1638,18 @@ SkSize ski_get_image_size(const char *path, int *w, int *h) {
 }
 
 bool ski_draw_rect(const DrawRect *spec) {
-  if (!spec) {
+  if (!spec)
     return false;
-  }
   if (search_index_current())
     return true;
-  unsigned long col = spec->color;
   bool transparent = spec->transparent;
-  if (col == 0 || col == COLOR_AUTO)
-    col = COLOR_TEXT;
-  col = rgb_to_hex(col);
-  bool ok = Platform_DrawRectRaw((DrawRectRawSpec){
-      .x = spec->x,
-      .y = spec->y,
-      .w = spec->w,
-      .h = spec->h,
-      .color = col,
-      .radius = spec->radius ? spec->radius : 0,
-      .rounded = spec->rounded ? spec->rounded : RoundedCorners,
-      .opaque = !transparent,
-      .thickness = spec->thickness,
-      .filled = spec->filled,
-      .angle = spec->angle});
-
+  bool ok = draw_rect_raw(spec, draw_color(spec->color), spec->thickness,
+                             spec->filled, transparent);
   if (!spec->border)
     return ok;
-
-  Platform_DrawRectRaw((DrawRectRawSpec){
-      .x = spec->x,
-      .y = spec->y,
-      .w = spec->w,
-      .h = spec->h,
-      .color = rgb_to_hex(COLOR_BORDER),
-      .radius = spec->radius ? spec->radius : 0,
-      .rounded = spec->rounded ? spec->rounded : RoundedCorners,
-      .opaque = !transparent,
-      .thickness = spec->thickness > 0.0f ? spec->thickness : 1.0f,
-      .filled = false,
-      .angle = spec->angle});
+  draw_rect_raw(spec, rgb_to_hex(COLOR_BORDER),
+                   spec->thickness > 0.0f ? spec->thickness : 1.0f, false,
+                   transparent);
   return ok;
 }
 
@@ -2264,16 +1769,11 @@ bool ski_draw_line(const Line *spec) {
   }
   if (search_index_current())
     return true;
-  unsigned long col = spec->color;
-  if (col == 0 || col == COLOR_AUTO)
-    col = COLOR_TEXT;
-  else
-    col = rgb_to_hex(col);
   return Platform_DrawLineRaw((DrawLineRawSpec){.x1 = spec->x1,
-                                                .y1 = spec->y1,
-                                                .x2 = spec->x2,
-                                                .y2 = spec->y2,
-                                                .color = col,
+                                                 .y1 = spec->y1,
+                                                 .x2 = spec->x2,
+                                                 .y2 = spec->y2,
+                                                 .color = draw_color(spec->color),
                                                 .thickness = spec->thickness});
 }
 
@@ -2283,98 +1783,15 @@ bool ski_draw_circle(const Circle *spec) {
   }
   if (search_index_current())
     return true;
-  unsigned long col = spec->color;
-  if (col == 0 || col == COLOR_AUTO)
-    col = COLOR_TEXT;
-  else
-    col = rgb_to_hex(col);
   return Platform_DrawCircleRaw(
       (DrawCircleRawSpec){.cx = spec->x,
                           .cy = spec->y,
                           .radius = spec->radius,
-                          .color = col,
+                          .color = draw_color(spec->color),
                           .thickness = spec->thickness});
 }
 
-static bool listbox_begin_common(const ListSpec *spec) {
-  if (!spec)
-    return false;
-  ListBox *lb = spec->lb;
-  if (!lb) {
-    return false;
-  }
-  int item_h = spec->item_height ? spec->item_height : 0;
-  ListboxBackendInit bi;
-  if (!Platform_ListboxBackendBegin(item_h, &bi))
-    return false;
-  item_h = item_h > 0 ? item_h : bi.item_h;
-  PromptState *st = Platform_ListboxBackendPromptState(lb);
-  ListboxLayout lay;
-  listbox_compute_layout(spec, bi.list_top, item_h, st ? st->width : PromptW,
-                         st ? st->height : PromptH, lb->item_count, &lay);
-  sk_list_spec = *spec;
-  sk_list_lb = lb;
-  sk_list_itemH = item_h;
-  sk_list_y0 = lay.y0;
-  sk_list_bx = lay.bx;
-  sk_list_bw = lay.bw;
-  sk_list_fw = lay.fw;
-  sk_list_fh = lay.fh;
-  sk_list_h = lay.list_h;
-  sk_list_separators = lay.list_h >= LISTBOX_SEPARATOR_MIN_LIST_H;
-  sk_list_visible = lay.visible;
-  sk_list_cur = 0;
-  UI_LB_SetVisibleCount(lay.visible);
-  listbox_apply_pending_scroll(lb, lay.visible);
-  listbox_set_geometry(sk_list_y0, sk_list_itemH, lay.visible);
-  listbox_hover_focus(lb, sk_list_y0, sk_list_itemH, lb->view_offset,
-                      lay.visible, sk_list_bx, sk_list_bx + sk_list_bw);
-  draw_state_get()->listbox_rows = true;
-  SkaldContext_Get()->window.listbox_placed = true;
-  return true;
-}
-
-static bool listbox_next_common(SkListItemCtx *out) {
-  if (!out || !sk_list_lb)
-    return false;
-  if (sk_list_cur >= sk_list_visible)
-    return false;
-  int idx = sk_list_lb->view_offset + sk_list_cur;
-  if (idx < 0 || idx >= sk_list_lb->item_count)
-    return false;
-  int y = sk_list_y0 + sk_list_cur * sk_list_itemH;
-  if (sk_list_separators && sk_list_cur == 0)
-    draw_prompt_separator(
-        (DrawPromptSeparatorSpec){.y = sk_list_y0, .width = sk_list_fw});
-  bool sel = (idx == sk_list_lb->selected_index);
-  Platform_ListboxBackendDrawSelection(sk_list_bx, sk_list_bw, y, sk_list_itemH,
-                                       sk_list_fw, sk_list_fh, sel);
-  listbox_set_row_h_scroll(sel ? sk_list_lb->text_hscroll : 0);
-  out->idx = idx;
-  out->selected = sel;
-  out->x = sk_list_spec.x;
-  out->y = y;
-  out->w = sk_list_spec.w;
-  out->h = sk_list_itemH;
-  out->text = sk_list_lb->items[idx];
-  sk_list_cur++;
-  return true;
-}
-
-void sk_listbox_end(void) {
-  listbox_set_row_h_scroll(0);
-  if (sk_list_separators && prompt_list_bottom_margin() > 0 &&
-      sk_list_y0 >= 0) {
-    draw_prompt_separator((DrawPromptSeparatorSpec){.y = sk_list_y0 + sk_list_h,
-                                                    .width = sk_list_fw});
-  }
-  Platform_ListboxBackendEnd();
-  sk_list_lb = NULL;
-  sk_list_visible = 0;
-  sk_list_cur = 0;
-  sk_list_y0 = -1;
-  draw_state_get()->listbox_rows = false;
-}
+void sk_listbox_end(void) { listbox_common_end(); }
 
 bool ski_listbox_begin(const SkListSpec *spec) {
   if (!spec)
@@ -2390,7 +1807,7 @@ bool ski_listbox_begin(const SkListSpec *spec) {
 bool sk_listbox_next(SkListItemCtx *out) {
   if (!out)
     return false;
-  return listbox_next_common(out);
+  return listbox_next_common((ListItemCtx *)out);
 }
 
 bool ski_place_listbox(const SkListSpec *spec) {
@@ -2401,7 +1818,7 @@ bool ski_place_listbox(const SkListSpec *spec) {
     return false;
   }
   int line_h = Platform_GetTextLineHeight(0);
-  int pad_top = (sk_list_itemH - line_h) / 2;
+  int pad_top = (listbox_common_item_height() - line_h) / 2;
   if (pad_top < 0)
     pad_top = 0;
   SkListItemCtx ctx;
@@ -2532,20 +1949,6 @@ bool sk_click_button_at(SkPos pos, int button) {
 }
 bool sk_mouse_scroll(int notches) { return Platform_MouseScroll(notches); }
 
-static bool rel_to_abs(SkPos pos, SkPos *out) {
-
-  if (!out) {
-    return false;
-  }
-  int vx = 0, vy = 0, vw = 0, vh = 0;
-  if (!Platform_GetVirtualBounds(&vx, &vy, &vw, &vh)) {
-    return false;
-  }
-  out->x = vx + pos.x;
-  out->y = vy + pos.y;
-  return true;
-}
-
 bool sk_move_to_pos_rel(SkPos pos) {
   SkPos abs;
   if (!rel_to_abs(pos, &abs)) {
@@ -2587,7 +1990,7 @@ bool sk_replay_hotkey(SkKey key) {
 
 bool sk_execute_hotkey(SkKey key) {
   bool handled = hotkey_execute(key.vk, key.mods);
-  PromptState *state = sk_current_prompt_state();
+  PromptState *state = current_prompt_state();
   if (!state)
     return handled;
 
@@ -2609,52 +2012,10 @@ bool sk_execute_hotkey(SkKey key) {
   return handled;
 }
 
-static bool type_text_common(const char *s) {
-  if (!s)
-    return false;
-  // yes this is literally just ctrl c ctrl v
-  char *old = Platform_GetClipboardEntry();
-  Platform_CopyToClipboard(s);
-  Platform_EmitKey(VK_LCONTROL, 1);
-  Platform_EmitKey('V', 1);
-  Platform_EmitKey('V', 0);
-  Platform_EmitKey(VK_LCONTROL, 0);
-  WindowManager *wm = WindowManager_Get();
-  // we have to wait ~200ms for the WM to process the paste event before
-  // restoring the clipboard
-  for (int i = 0; i < 40; i++) {
-    if (wm)
-      WindowManager_ProcessEvents(wm);
-    sk_sleep_platform(0.005);
-  }
-  if (old) {
-    Platform_CopyToClipboard(old);
-    free(old);
-  }
-  return true;
-}
-
 bool sk_type_text(const char *s) { return type_text_common(s); }
 
-void sk_sleep(double seconds) { sk_sleep_platform(seconds); }
+void sk_sleep(double seconds) { Platform_SleepSeconds(seconds); }
 
-static bool pixel_color_matches_tol(SkColor c, SkColor target, int tolerance) {
-  int tol = tolerance > 0 ? tolerance : 0;
-  int dr = (int)c.r - (int)target.r;
-  if (dr < 0)
-    dr = -dr;
-  if (dr > tol)
-    return false;
-  int dg = (int)c.g - (int)target.g;
-  if (dg < 0)
-    dg = -dg;
-  if (dg > tol)
-    return false;
-  int db = (int)c.b - (int)target.b;
-  if (db < 0)
-    db = -db;
-  return db <= tol;
-}
 bool sk_color_matches(SkPos pos, SkColor color, int tolerance) {
   SkColor c = sk_get_pixel_color(pos);
   return pixel_color_matches_tol(c, color, tolerance);
@@ -2674,54 +2035,13 @@ bool sk_wait_pixel(SkPos pos, SkColor color, int tolerance, double timeout) {
   }
 }
 
-typedef struct {
-  SkLibrary lib;
-  char canon[MAX_PATH];
-} SkiLibTrack;
-
-static SkiLibTrack *ski_lib_track;
-#define ski_lib_track_count arrlenu(ski_lib_track)
-
-static bool sk_lib_canonical_path(const char *path, char *out, size_t cap) {
-  if (!path || !out || cap == 0)
-    return false;
-#if defined(_WIN32)
-  return _fullpath(out, path, cap) != NULL;
-#else
-  char *resolved = realpath(path, NULL);
-  if (!resolved)
-    return false;
-  snprintf(out, cap, "%s", resolved);
-  free(resolved);
-  return true;
-#endif
-}
-
-static bool sk_lib_path_equal(const char *a, const char *b) {
-#if defined(_WIN32)
-  return _stricmp(a, b) == 0;
-#else
-  return strcmp(a, b) == 0;
-#endif
-}
-
-static void ski_lib_track_add(SkLibrary lib, const char *canon) {
-  SkiLibTrack *e = arraddnptr(ski_lib_track, 1);
-  e->lib = lib;
-  snprintf(e->canon, sizeof(e->canon), "%s", canon);
-}
-
-static void ski_lib_track_remove(size_t idx) {
-  arrdelswap(ski_lib_track, idx);
-}
-
 SkLibrary sk_library_open(const char *path) {
   SkLibrary lib = (SkLibrary)Platform_LoadLibrary(path);
   if (!lib)
     return NULL;
   char canon[MAX_PATH];
-  if (sk_lib_canonical_path(path, canon, sizeof(canon)))
-    ski_lib_track_add(lib, canon);
+  if (canonical_path(path, canon, sizeof(canon)))
+    library_track_add(lib, canon);
   return lib;
 }
 
@@ -2736,19 +2056,19 @@ void sk_library_close(SkLibrary lib) {
       owner_resolve_for_func_alloc((void *)__builtin_return_address(0));
   char canon_caller[MAX_PATH];
   bool have_caller =
-      caller && sk_lib_canonical_path(caller, canon_caller, sizeof(canon_caller));
-  for (size_t i = 0; i < ski_lib_track_count; i++) {
-    if (ski_lib_track[i].lib == lib && have_caller &&
-        sk_lib_path_equal(ski_lib_track[i].canon, canon_caller)) {
+      caller && canonical_path(caller, canon_caller, sizeof(canon_caller));
+  for (size_t i = 0; i < library_track_count(); i++) {
+    if (library_track_lib(i) == lib && have_caller &&
+        paths_equal(library_track_canon(i), canon_caller)) {
       log_error(
           "sk_library_close: refusing to unload the caller's own library");
       owner_strfree(&caller);
       return;
     }
   }
-  for (size_t i = 0; i < ski_lib_track_count; i++) {
-    if (ski_lib_track[i].lib == lib) {
-      ski_lib_track_remove(i);
+  for (size_t i = 0; i < library_track_count(); i++) {
+    if (library_track_lib(i) == lib) {
+      library_track_remove(i);
       break;
     }
   }
@@ -2757,45 +2077,6 @@ void sk_library_close(SkLibrary lib) {
 }
 
 const char *sk_library_error(void) { return Platform_GetLoadError(); }
-
-typedef struct {
-  SkThreadFunc fn;
-  void *arg;
-  OwnerTag tag;
-} SkThreadCtx;
-
-static void *thread_trampoline(void *p) {
-  SkThreadCtx *ctx = (SkThreadCtx *)p;
-  SkThreadFunc fn = ctx->fn;
-  void *arg = ctx->arg;
-  void *ret = fn ? fn(arg) : NULL;
-  thread_registry_finish(ctx);
-  owner_tag_clear(&ctx->tag);
-  free(ctx);
-  return ret;
-}
-
-static SkThread thread_create_ex(SkThreadFunc fn, void *arg, void *owner_src) {
-  if (!fn)
-    return NULL;
-  SkThreadCtx *ctx = malloc(sizeof(*ctx));
-  if (!ctx)
-    return NULL;
-  ctx->fn = fn;
-  ctx->arg = arg;
-  memset(&ctx->tag, 0, sizeof(ctx->tag));
-  owner_tag_set_for_func(
-      &ctx->tag, owner_src ? owner_src : (void *)(uintptr_t)fn, 0);
-  thread_registry_add(ctx, ctx->tag.owner ? ctx->tag.owner : "");
-  void *thread = Platform_ThreadCreate(thread_trampoline, ctx);
-  if (!thread) {
-    thread_registry_finish(ctx);
-    owner_tag_clear(&ctx->tag);
-    free(ctx);
-    return NULL;
-  }
-  return (SkThread)thread;
-}
 
 SkThread sk_thread_create(SkThreadFunc fn, void *arg) {
   return thread_create_ex(fn, arg, NULL);
@@ -2961,12 +2242,7 @@ char *sk_extract_flag_name(const char *p) {
   size_t n = 0;
   while (p[n] && !isspace((unsigned char)p[n]) && p[n] != '=')
     n++;
-  char *out = (char *)malloc(n + 1);
-  if (!out)
-    return NULL;
-  memcpy(out, p, n);
-  out[n] = '\0';
-  return out;
+  return dup_substring(p, n);
 }
 
 char *sk_extract_quoted(char **pp) {
@@ -2976,11 +2252,7 @@ char *sk_extract_quoted(char **pp) {
   while (*p && *p != q)
     p++;
   size_t len = (size_t)(p - s);
-  char *out = (char *)malloc(len + 1);
-  if (!out)
-    return NULL;
-  memcpy(out, s, len);
-  out[len] = '\0';
+  char *out = dup_substring(s, len);
   if (*p == q)
     p++;
   *pp = p;
@@ -2997,11 +2269,9 @@ char *sk_extract_value(char **pp) {
   size_t len = (size_t)(p - s);
   if (len == 0)
     return NULL;
-  char *out = (char *)malloc(len + 1);
+  char *out = dup_substring(s, len);
   if (!out)
     return NULL;
-  memcpy(out, s, len);
-  out[len] = '\0';
   *pp = p;
   return out;
 }
@@ -3077,10 +2347,10 @@ SkFlagList sk_parse_flags(const char *input) {
     }
     SkFlag *f = &arr[out.count++];
     memset(f, 0, sizeof(*f));
-    snprintf(f->name, sizeof(f->name), "%s", name);
+    safe_copy(f->name, sizeof(f->name), name);
     free(name);
     if (has_val) {
-      snprintf(f->value, sizeof(f->value), "%s", valbuf);
+      safe_copy(f->value, sizeof(f->value), valbuf);
       f->has_value = true;
       free(valbuf);
     }
@@ -3126,19 +2396,11 @@ SkTimer sk_timer_start(void) { return Platform_StartTimer(); }
 double sk_timer_end(SkTimer t) { return Platform_EndTimer(t); }
 
 char *sk_get_active_window_title(void) {
-  char *title = Platform_GetActiveWindowTitle();
-  if (!title || !title[0]) {
-    return NULL;
-  }
-  return strdup(title);
+  return owner_strdup(Platform_GetActiveWindowTitle());
 }
 
 char *sk_get_active_window_id(void) {
-  char *id = Platform_GetActiveWindowId();
-  if (!id || !id[0]) {
-    return NULL;
-  }
-  return strdup(id);
+  return owner_strdup(Platform_GetActiveWindowId());
 }
 
 bool sk_is_window_open(const char *title) {
@@ -3160,7 +2422,7 @@ char *sk_resolve_data_path(const char *name) {
   if (!name || !name[0])
     return NULL;
   char full[MAX_PATH];
-  if (!sk_resolve_caller_path_silent(__builtin_return_address(0), name, full,
+  if (!resolve_caller_path_silent(__builtin_return_address(0), name, full,
                                      sizeof(full)))
     return NULL;
   return strdup(full);
@@ -3278,7 +2540,7 @@ void sk_library_register(const char *name, SkLibrary handle) {
     }
   }
   LibraryEntry *e = arraddnptr(library_registry, 1);
-  snprintf(e->name, sizeof(e->name), "%s", name);
+  safe_copy(e->name, sizeof(e->name), name);
   e->handle = handle;
 }
 
@@ -3370,7 +2632,7 @@ bool sk_monitor_at(int index, SkMonitorInfo *out) {
   out->w = info.w;
   out->h = info.h;
   out->is_primary = info.is_primary;
-  snprintf(out->name, sizeof(out->name), "%s", info.name);
+  safe_copy(out->name, sizeof(out->name), info.name);
   return true;
 }
 
@@ -3409,79 +2671,6 @@ int sk_get_screen_height(void) {
   return h;
 }
 
-#define SK_CONFIG_SETTING_KEY_MAX 384
-#define SK_CONFIG_SETTING_VALUE_MAX 1024
-
-static void sk_config_init_locked(void);
-static void sk_config_lock(void);
-static void sk_config_unlock(void);
-
-typedef struct {
-  char *key;
-  char *value;
-} SkConfigSettingEntry;
-
-static SkConfigSettingEntry *setting_entries;
-#define setting_entry_count arrlenu(setting_entries)
-
-static const char *setting_lookup_locked(const char *key) {
-  for (size_t i = 0; i < setting_entry_count; i++)
-    if (strcmp(setting_entries[i].key, key) == 0)
-      return setting_entries[i].value;
-  return NULL;
-}
-
-static void setting_entries_set(const char *key, const char *value) {
-  for (size_t i = 0; i < setting_entry_count; i++) {
-    if (strcmp(setting_entries[i].key, key) == 0) {
-      free(setting_entries[i].value);
-      setting_entries[i].value = strdup(value ? value : "");
-      return;
-    }
-  }
-  SkConfigSettingEntry *e = arraddnptr(setting_entries, 1);
-  e->key = strdup(key);
-  e->value = strdup(value ? value : "");
-}
-
-static bool setting_parse_bool(const char *v, bool *out) {
-  if (!v || !out)
-    return false;
-  if (!strcmp(v, "true") || !strcmp(v, "TRUE") || !strcmp(v, "True") ||
-      !strcmp(v, "1") || !strcmp(v, "yes") || !strcmp(v, "on")) {
-    *out = true;
-    return true;
-  }
-  if (!strcmp(v, "false") || !strcmp(v, "FALSE") || !strcmp(v, "False") ||
-      !strcmp(v, "0") || !strcmp(v, "no") || !strcmp(v, "off")) {
-    *out = false;
-    return true;
-  }
-  return false;
-}
-
-static bool setting_parse_float(const char *v, float *out) {
-  if (!v || !*v || !out)
-    return false;
-  char *end = NULL;
-  float f = strtof(v, &end);
-  if (!end || *end != '\0')
-    return false;
-  *out = f;
-  return true;
-}
-
-static bool setting_parse_int(const char *v, int *out) {
-  if (!v || !*v || !out)
-    return false;
-  char *end = NULL;
-  long n = strtol(v, &end, 10);
-  if (!end || *end != '\0' || n < INT_MIN || n > INT_MAX)
-    return false;
-  *out = (int)n;
-  return true;
-}
-
 int sk_parse_int(const char *text, int fallback) {
   int out = fallback;
   setting_parse_int(text, &out);
@@ -3494,164 +2683,9 @@ float sk_parse_float(const char *text, float fallback) {
   return out;
 }
 
-typedef struct {
-  SkCcEntrySpec pub;
-  char display_name[1024];
-  char internal_name[1024];
-  char icon[1024];
-  char type[128];
-  OwnerTag tag;
-} SkCcEntry;
-
-static SkCcEntry *cc_entries;
-#define cc_entry_count arrlenu(cc_entries)
-
-static void cc_rebind_all(void) {
-  for (size_t i = 0; i < cc_entry_count; i++) {
-    SkCcEntry *e = &cc_entries[i];
-    e->pub.display_name = e->display_name;
-    e->pub.internal_name = e->internal_name;
-    e->pub.icon = e->icon;
-    e->pub.type = e->type;
-  }
-}
-
-static char **cc_dep_owners;
-#define cc_dep_owner_count arrlenu(cc_dep_owners)
-
-static bool cc_dep_seen(const char *owner) {
-  if (!owner)
-    return false;
-  for (size_t i = 0; i < cc_dep_owner_count; i++)
-    if (cc_dep_owners[i] && strcmp(cc_dep_owners[i], owner) == 0)
-      return true;
-  return false;
-}
-
-static void cc_dep_mark(const char *owner) {
-  char *copy = owner_strdup(owner);
-  if (!copy)
-    return;
-  arrput(cc_dep_owners, copy);
-}
-
-static void cc_dep_unmark(const char *owner) {
-  if (!owner)
-    return;
-  for (size_t i = 0; i < cc_dep_owner_count;) {
-    if (cc_dep_owners[i] && strcmp(cc_dep_owners[i], owner) == 0) {
-      owner_strfree(&cc_dep_owners[i]);
-      arrdel(cc_dep_owners, i);
-      continue;
-    }
-    i++;
-  }
-}
-
-static void cc_entry_destroy(void *element) {
-  SkCcEntry *e = (SkCcEntry *)element;
-  if (!e)
-    return;
-  cc_dep_unmark(e->tag.owner);
-  owner_tag_clear(&e->tag);
-}
-
-static const char *cc_dup(char *dst, size_t cap, const char *src) {
-  snprintf(dst, cap, "%s", src ? src : "");
-  return dst;
-}
-
-static bool sk_resolve_icon_path(void *caller, const char *icon, char *out,
-                                 size_t cap) {
-  if (!icon || (icon[0] != '/' && icon[0] != '\\') || !out || cap == 0)
-    return false;
-  char asset[MAX_PATH];
-  const char *owner = slua_current_owner();
-  if (owner && feature_path_resolve_asset_for_owner(owner, icon, asset,
-                                                    sizeof(asset)))
-    return safe_copy(out, cap, asset);
-  if (feature_path_resolve_asset_path(caller, icon, asset, sizeof(asset)))
-    return safe_copy(out, cap, asset);
-  return false;
-}
-
 bool ski_add_to_cc(const SkCcEntrySpec *spec) {
-  if (!spec)
-    return false;
-  int slot = -1;
-  for (size_t i = 0; i < cc_entry_count; i++) {
-    if (spec->display_name && cc_entries[i].display_name[0] &&
-        strcmp(cc_entries[i].display_name, spec->display_name) == 0) {
-      slot = (int)i;
-      break;
-    }
-  }
-  if (slot < 0) {
-    slot = (int)cc_entry_count;
-    arrput(cc_entries, (SkCcEntry){0});
-  }
-  SkCcEntry *e = &cc_entries[slot];
-  owner_tag_clear(&e->tag);
-  memset(e, 0, sizeof(*e));
-  e->pub.on_enter = spec->on_enter;
-  e->pub.on_ctrl_enter = spec->on_ctrl_enter;
-  e->pub.on_shift_enter = spec->on_shift_enter;
-  e->pub.on_ctrl_shift_enter = spec->on_ctrl_shift_enter;
-  e->pub.on_ctrl_alt_enter = spec->on_ctrl_alt_enter;
-  e->pub.on_shift_alt_enter = spec->on_shift_alt_enter;
-  e->pub.on_tab = spec->on_tab;
-  e->pub.on_action = spec->on_action;
-  e->pub.display_name =
-      cc_dup(e->display_name, sizeof(e->display_name), spec->display_name);
-  char icon_asset[MAX_PATH];
-  if (sk_resolve_icon_path(__builtin_return_address(0), spec->icon, icon_asset,
-                           sizeof(icon_asset))) {
-    e->pub.icon = cc_dup(e->icon, sizeof(e->icon), icon_asset);
-  } else {
-    e->pub.icon = cc_dup(e->icon, sizeof(e->icon), spec->icon);
-  }
-  e->pub.type = cc_dup(e->type, sizeof(e->type), spec->type);
-  if (spec->internal_name) {
-    e->pub.internal_name =
-        cc_dup(e->internal_name, sizeof(e->internal_name), spec->internal_name);
-  } else {
-    e->pub.internal_name =
-        cc_dup(e->internal_name, sizeof(e->internal_name), spec->display_name);
-  }
-  void *anchor = (void *)(uintptr_t)spec->on_enter;
-  if (!anchor)
-    anchor = (void *)(uintptr_t)spec->on_ctrl_enter;
-  if (!anchor)
-    anchor = (void *)(uintptr_t)spec->on_shift_enter;
-  if (!anchor)
-    anchor = (void *)(uintptr_t)spec->on_ctrl_shift_enter;
-  if (!anchor)
-    anchor = (void *)(uintptr_t)spec->on_ctrl_alt_enter;
-  if (!anchor)
-    anchor = (void *)(uintptr_t)spec->on_shift_alt_enter;
-  if (!anchor)
-    anchor = (void *)(uintptr_t)spec->on_tab;
-  if (!anchor)
-    anchor = (void *)(uintptr_t)spec->on_action;
-  owner_tag_set_for_func(&e->tag, anchor, 0);
-  const char *owner = e->tag.owner ? e->tag.owner : "";
-  if (owner[0] && !cc_dep_seen(owner)) {
-    cc_dep_mark(owner);
-    cc_add_dep("control_center.c", owner);
-  }
-  if (spec->type && strcmp(spec->type, "Feature") == 0)
-    feature_list_add(spec->display_name, spec->on_action, e->pub.icon, owner);
-  cc_rebind_all();
-  return true;
+  return cc_add_from_spec(spec, __builtin_return_address(0));
 }
-
-static void settings_config_sync(const char *key, const char *value) {
-  sk_config_lock();
-  sk_config_init_locked();
-  setting_entries_set(key, value);
-  sk_config_unlock();
-}
-
 SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
   if (!spec)
     return NULL;
@@ -3661,7 +2695,7 @@ SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
       owner_resolve_for_func_alloc((void *)__builtin_return_address(0));
   copy.owner = owner;
   char icon[MAX_PATH];
-  if (sk_resolve_icon_path(__builtin_return_address(0), spec->icon, icon,
+  if (resolve_icon_path(__builtin_return_address(0), spec->icon, icon,
                            sizeof(icon)))
     copy.icon = icon;
   SkSettingsEntry *result = settings_entry_add(&copy);
@@ -3719,70 +2753,15 @@ const SettingsEntrySpec *sk_settings_entry_at(int index) {
   return settings_entry_at(index);
 }
 
-int sk_cc_entry_count(void) { return (int)cc_entry_count; }
-
+int sk_cc_entry_count(void) { return cc_registry_count(); }
 const SkCcEntrySpec *sk_cc_entry_at(int index) {
-  if (index < 0 || (size_t)index >= cc_entry_count)
-    return NULL;
-  return &cc_entries[index].pub;
+  return cc_registry_at(index);
 }
-
-void cc_registry_purge_owner(const char *path_a, const char *path_b) {
-  if (!path_a && !path_b)
-    return;
-  OWNER_PURGE_STRUCT(cc_entries, SkCcEntry, path_a, path_b, 0, cc_entry_destroy);
-  cc_rebind_all();
-}
-
-typedef struct {
-  char *alias;
-  char *target;
-} SkAliasEntry;
-
-static SkAliasEntry *sk_alias_entries;
-#define alias_count arrlenu(sk_alias_entries)
-
 bool sk_register_alias(const char *alias, const char *target) {
-  if (!alias || !target)
-    return false;
-  for (size_t i = 0; i < alias_count; i++) {
-    if (strcmp(sk_alias_entries[i].target, target) == 0) {
-      free(sk_alias_entries[i].alias);
-      sk_alias_entries[i].alias = strdup(alias);
-      return true;
-    }
-  }
-  SkAliasEntry *e = arraddnptr(sk_alias_entries, 1);
-  e->alias = strdup(alias);
-  e->target = strdup(target);
-  return true;
+  return alias_register(alias, target);
 }
-
-bool sk_remove_alias(const char *alias) {
-  if (!alias)
-    return false;
-  for (size_t i = 0; i < alias_count;) {
-    if (strcmp(sk_alias_entries[i].alias, alias) == 0) {
-      free(sk_alias_entries[i].alias);
-      free(sk_alias_entries[i].target);
-      arrdel(sk_alias_entries, i);
-      return true;
-    }
-    i++;
-  }
-  return false;
-}
-
-const char *sk_alias_for(const char *target) {
-  if (!target)
-    return NULL;
-  for (size_t i = 0; i < alias_count; i++) {
-    if (strcmp(sk_alias_entries[i].target, target) == 0)
-      return sk_alias_entries[i].alias;
-  }
-  return NULL;
-}
-
+bool sk_remove_alias(const char *alias) { return alias_remove(alias); }
+const char *sk_alias_for(const char *target) { return alias_for(target); }
 void ski_window(const SkPromptSpec *spec) {
   SkaldContext *ctx = SkaldContext_Get();
   if (ctx && ctx->window.headless.active) {
@@ -3837,119 +2816,12 @@ void sk_register_key_interceptor(SkKeyInterceptorFn fn) {
   key_register_interceptor((KeyInterceptorFn)fn);
 }
 
-typedef struct {
-  double seconds;
-  void (*callback)(void);
-  int stop;
-} SkRunEveryArgs;
-
-typedef struct SkRunEveryEntry {
-  SkRunEveryArgs *args;
-  void *thread;
-  OwnerTag tag;
-  struct SkRunEveryEntry *next;
-} SkRunEveryEntry;
-
-static SkRunEveryEntry *run_every_head = NULL;
-static void *run_every_mtx = NULL;
-
-static void run_every_lock(void) {
-  lazy_mutex_get(&run_every_mtx);
-  if (run_every_mtx)
-    Platform_MutexLock(run_every_mtx);
-}
-
-static void run_every_unlock(void) {
-  if (run_every_mtx)
-    Platform_MutexUnlock(run_every_mtx);
-}
-
-static void *run_every_thread(void *arg) {
-  SkRunEveryArgs *args = (SkRunEveryArgs *)arg;
-  for (;;) {
-    if (__atomic_load_n(&args->stop, __ATOMIC_RELAXED))
-      return NULL;
-    double remaining = args->seconds;
-    while (remaining > 0.0) {
-      if (__atomic_load_n(&args->stop, __ATOMIC_RELAXED))
-        return NULL;
-      double step = remaining >= 0.05 ? 0.05 : remaining;
-      sk_sleep(step);
-      remaining -= step;
-    }
-    if (__atomic_load_n(&args->stop, __ATOMIC_RELAXED))
-      return NULL;
-    args->callback();
-  }
-}
-
 void sk_run_every(double seconds, void (*callback)(void)) {
-  if (!callback)
-    return;
-  if (!(seconds > 0.0))
-    seconds = 0.01;
-  SkRunEveryArgs *args = malloc(sizeof(SkRunEveryArgs));
-  if (!args) {
-    log_error("sk_run_every: malloc failed");
-    return;
-  }
-  args->seconds = seconds;
-  args->callback = callback;
-  args->stop = 0;
-  SkRunEveryEntry *entry = malloc(sizeof(SkRunEveryEntry));
-  if (!entry) {
-    log_error("sk_run_every: malloc failed");
-    free(args);
-    return;
-  }
-  entry->args = args;
-  memset(&entry->tag, 0, sizeof(entry->tag));
-  owner_tag_set_for_func(&entry->tag, (void *)(uintptr_t)callback, 0);
-  entry->next = NULL;
-  entry->thread =
-      thread_create_ex(run_every_thread, args, (void *)(uintptr_t)callback);
-  if (!entry->thread) {
-    log_error("sk_run_every: thread creation failed");
-    owner_tag_clear(&entry->tag);
-    free(entry);
-    free(args);
-    return;
-  }
-  run_every_lock();
-  entry->next = run_every_head;
-  run_every_head = entry;
-  run_every_unlock();
-}
-
-void run_every_purge_owner(const char *path_a, const char *path_b) {
-  SkRunEveryEntry *mine = NULL;
-  run_every_lock();
-  SkRunEveryEntry **pp = &run_every_head;
-  while (*pp) {
-    SkRunEveryEntry *e = *pp;
-    if (owner_tag_matches(&e->tag, path_a, path_b)) {
-      *pp = e->next;
-      e->next = mine;
-      mine = e;
-    } else {
-      pp = &e->next;
-    }
-  }
-  run_every_unlock();
-  while (mine) {
-    SkRunEveryEntry *e = mine;
-    mine = e->next;
-    __atomic_store_n(&e->args->stop, 1, __ATOMIC_RELAXED);
-    if (e->thread)
-      Platform_ThreadJoin(e->thread);
-    owner_tag_clear(&e->tag);
-    free(e->args);
-    free(e);
-  }
+  run_every_start(seconds, callback);
 }
 
 SkMetrics *sk_get_metrics(void) {
-  PromptState *state = sk_current_prompt_state();
+  PromptState *state = current_prompt_state();
   if (state && state->active_editbox >= 0 &&
       state->active_editbox < state->editbox_count)
     return &state->editboxes[state->active_editbox].metrics;
@@ -3998,917 +2870,81 @@ SkRect sk_get_window_bounds(void) {
   return rect;
 }
 
-#if defined(_WIN32)
-#define SK_PATH_SEP '\\'
-#else
-#define SK_PATH_SEP '/'
-#endif
-
-#define SK_CONFIG_NAME_MAX 384
-#define SK_CONFIG_HOTKEY_MAX 64
-#define SK_CONFIG_ALIAS_MAX 128
-#define SK_CONFIG_TARGET_MAX 256
-#define SK_CONFIG_QUICKLINK_TARGET_MAX 1024
-#define SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX 1024
-
-typedef struct {
-  char name[SK_CONFIG_NAME_MAX];
-  char hotkey[SK_CONFIG_HOTKEY_MAX];
-} SkConfigHotkeyEntry;
-
-typedef struct {
-  char target[SK_CONFIG_TARGET_MAX];
-  char alias[SK_CONFIG_ALIAS_MAX];
-} SkConfigAliasEntry;
-
-typedef struct {
-  char name[SK_CONFIG_NAME_MAX];
-  char target[SK_CONFIG_QUICKLINK_TARGET_MAX];
-} SkConfigQuicklinkEntry;
-
-static SkConfigHotkeyEntry *hotkey_entries;
-#define hotkey_entry_count arrlenu(hotkey_entries)
-
-static SkConfigAliasEntry *alias_entries;
-#define alias_entry_count arrlenu(alias_entries)
-
-static SkConfigQuicklinkEntry *quicklink_entries;
-#define quicklink_entry_count arrlenu(quicklink_entries)
-
-typedef struct {
-  char name[SK_CONFIG_NAME_MAX];
-  char target[SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
-} SkConfigFeatureShortcutEntry;
-
-static SkConfigFeatureShortcutEntry *feature_shortcut_entries;
-#define feature_shortcut_entry_count arrlenu(feature_shortcut_entries)
-
-typedef struct {
-  char *display_name;
-  char *key;
-  char *default_hotkey;
-  char **whitelist;
-  char **blacklist;
-  void (*cb)(void);
-  HotkeyCallbackUd cb_ud;
-  void *ud;
-  bool (*should_swallow)(void);
-  OwnerTag tag;
-} ConfigHotkeyBinding;
-
-static ConfigHotkeyBinding *config_hotkey_bindings;
-#define config_hotkey_binding_count arrlenu(config_hotkey_bindings)
-
-static void config_hotkey_register_bound(const char *name, const char *hotkey,
-                                         SkConfigFn cb, void *ud);
-
-static void *sk_config_mutex = NULL;
-static char sk_config_path[1024];
-static bool sk_config_loaded = false;
-
-static void sk_config_lock(void) {
-  lazy_mutex_get(&sk_config_mutex);
-  if (sk_config_mutex)
-    Platform_MutexLock(sk_config_mutex);
-}
-
-static void sk_config_unlock(void) {
-  if (sk_config_mutex)
-    Platform_MutexUnlock(sk_config_mutex);
-}
-
-static int hotkey_index_of(const char *name) {
-  if (!name)
-    return -1;
-  for (size_t i = 0; i < hotkey_entry_count; i++)
-    if (sk_string_equals_ci(hotkey_entries[i].name, name))
-      return i;
-  return -1;
-}
-
-static int hotkey_index_by_key(const char *hotkey) {
-  if (!hotkey)
-    return -1;
-  for (size_t i = 0; i < hotkey_entry_count; i++)
-    if (sk_string_equals_ci(hotkey_entries[i].hotkey, hotkey))
-      return i;
-  return -1;
-}
-
-static int alias_index_of(const char *target) {
-  if (!target)
-    return -1;
-  for (size_t i = 0; i < alias_entry_count; i++)
-    if (sk_string_equals_ci(alias_entries[i].target, target))
-      return i;
-  return -1;
-}
-
-static int quicklink_index_of(const char *name) {
-  if (!name)
-    return -1;
-  for (size_t i = 0; i < quicklink_entry_count; i++)
-    if (sk_string_equals_ci(quicklink_entries[i].name, name))
-      return i;
-  return -1;
-}
-
-static int feature_shortcut_index_of(const char *name) {
-  if (!name)
-    return -1;
-  for (size_t i = 0; i < feature_shortcut_entry_count; i++)
-    if (sk_string_equals_ci(feature_shortcut_entries[i].name, name))
-      return i;
-  return -1;
-}
-
-static void hotkey_entries_remove(int i) { arrdel(hotkey_entries, i); }
-
-static void quicklink_entries_remove(int i) { arrdel(quicklink_entries, i); }
-
-static void feature_shortcut_entries_remove(int i) {
-  arrdel(feature_shortcut_entries, i);
-}
-
-static void alias_entries_remove(int i) { arrdel(alias_entries, i); }
-
-static void hotkey_entries_set(const char *name, const char *hotkey) {
-  int i = hotkey_index_of(name);
-  if (i >= 0) {
-    snprintf(hotkey_entries[i].hotkey, sizeof(hotkey_entries[i].hotkey), "%s",
-             hotkey);
-    return;
-  }
-  SkConfigHotkeyEntry *e = arraddnptr(hotkey_entries, 1);
-  snprintf(e->name, sizeof(e->name), "%s", name);
-  snprintf(e->hotkey, sizeof(e->hotkey), "%s", hotkey);
-}
-
-static void quicklink_entries_set(const char *name, const char *target) {
-  int i = quicklink_index_of(name);
-  if (i >= 0) {
-    snprintf(quicklink_entries[i].target, sizeof(quicklink_entries[i].target),
-             "%s", target);
-    return;
-  }
-  SkConfigQuicklinkEntry *e = arraddnptr(quicklink_entries, 1);
-  snprintf(e->name, sizeof(e->name), "%s", name);
-  snprintf(e->target, sizeof(e->target), "%s", target);
-}
-
-static void feature_shortcut_entries_set(const char *name,
-                                          const char *target) {
-  int i = feature_shortcut_index_of(name);
-  if (i >= 0) {
-    snprintf(feature_shortcut_entries[i].target,
-             sizeof(feature_shortcut_entries[i].target), "%s", target);
-    return;
-  }
-  SkConfigFeatureShortcutEntry *e =
-      arraddnptr(feature_shortcut_entries, 1);
-  snprintf(e->name, sizeof(e->name), "%s", name);
-  snprintf(e->target, sizeof(e->target), "%s", target);
-}
-
-static void alias_entries_set(const char *target, const char *alias) {
-  int i = alias_index_of(target);
-  if (i >= 0) {
-    snprintf(alias_entries[i].alias, sizeof(alias_entries[i].alias), "%s",
-             alias);
-    return;
-  }
-  SkConfigAliasEntry *e = arraddnptr(alias_entries, 1);
-  snprintf(e->target, sizeof(e->target), "%s", target);
-  snprintf(e->alias, sizeof(e->alias), "%s", alias);
-}
-
-static bool sk_config_parse_path(void) {
-  char dir[512];
-  if (!data_dir(dir, sizeof(dir)))
-    return false;
-  Platform_MkdirIfNotExists(dir);
-  char core_dir[512];
-  snprintf(core_dir, sizeof(core_dir), "%s%ccore", dir, SK_PATH_SEP);
-  Platform_MkdirIfNotExists(core_dir);
-  snprintf(sk_config_path, sizeof(sk_config_path), "%s%ccore%cskald.toml", dir,
-           SK_PATH_SEP, SK_PATH_SEP);
-  return true;
-}
-
-static bool sk_config_ready(void) {
-  return sk_config_path[0] != '\0' || sk_config_parse_path();
-}
-
-static bool sk_config_apply_entry(const ConfigTomlEntry *e, void *user) {
-  (void)user;
-  char body[1024];
-  if (e->type != CONFIG_TOML_STRING) {
-    log_error("sk_config: skipping non-string value for '%s' in [%s]", e->key,
-              e->section);
-    return true;
-  }
-  if (!config_toml_decode_string(e->raw, body, sizeof(body))) {
-    log_error("sk_config: bad string for '%s' in [%s]", e->key, e->section);
-    return true;
-  }
-  if (strcmp(e->section, "hotkeys") == 0) {
-    HotkeyKey key;
-    if (!hotkey_string_parse(body, &key)) {
-      log_error("sk_config: unparsable hotkey '%s' for '%s'", body, e->key);
-      return true;
-    }
-    hotkey_entries_set(e->key, body);
-  } else if (strcmp(e->section, "aliases") == 0) {
-    alias_entries_set(e->key, body);
-  } else if (strcmp(e->section, "quicklinks") == 0) {
-    quicklink_entries_set(e->key, body);
-  } else if (strcmp(e->section, "feature_shortcuts") == 0) {
-    log_info("feature_shortcut: config '%s' = '%s'", e->key, body);
-    feature_shortcut_entries_set(e->key, body);
-  } else if (strcmp(e->section, "settings") == 0) {
-    setting_entries_set(e->key, body);
-  } else {
-    log_warn("sk_config: unknown section [%s], ignoring", e->section);
-  }
-  return true;
-}
-
-static void sk_config_trim_inplace(char *s) {
-  size_t n = strlen(s);
-  while (n > 0 && (s[n - 1] == '\n' || s[n - 1] == '\r' || s[n - 1] == ' ' ||
-                   s[n - 1] == '\t'))
-    s[--n] = '\0';
-}
-
-static bool feature_shortcut_parse(const char *target, char *feature,
-                                   size_t feature_cap, char *filter,
-                                   size_t filter_cap) {
-  if (!target || !feature || !filter)
-    return false;
-  const char *first = strchr(target, '|');
-  if (!first)
-    return false;
-  const char *second = strchr(first + 1, '|');
-  const char *feature_start = second ? first + 1 : target;
-  const char *filter_start = second ? second + 1 : first + 1;
-  size_t feature_len =
-      second ? (size_t)(second - feature_start) : (size_t)(first - target);
-  size_t filter_len = strlen(filter_start);
-  if (!feature_len || !filter_len)
-    return false;
-  if (feature_len >= feature_cap || filter_len >= filter_cap)
-    return false;
-  memcpy(feature, feature_start, feature_len);
-  feature[feature_len] = '\0';
-  memcpy(filter, filter_start, filter_len);
-  filter[filter_len] = '\0';
-  return true;
-}
-
-static void feature_shortcut_select(ListBox *lb, const char *filter) {
-  if (!lb || !filter || !filter[0])
-    return;
-  int fallback = -1;
-  for (int i = 0; i < lb->item_count; i++) {
-    const char *row = listbox_info_row(lb, i);
-    if (!row || !row[0])
-      continue;
-    if (strcmp(row, filter) == 0) {
-      UI_SetSelection(lb, i);
-      return;
-    }
-    if (fallback < 0 && strstr(row, filter))
-      fallback = i;
-  }
-  if (fallback >= 0)
-    UI_SetSelection(lb, fallback);
-}
-
-static PromptCallbacks feature_shortcut_make_callbacks(
-    const PromptSpec *spec, const PromptCallbacks *saved) {
-  PromptCallbacks cb = *saved;
-  if (spec->refresh)
-    cb.refresh = spec->refresh;
-  if (spec->enter)
-    cb.enter = spec->enter;
-  if (spec->ctrl_enter)
-    cb.ctrl_enter = spec->ctrl_enter;
-  if (spec->shift_enter)
-    cb.shift_enter = spec->shift_enter;
-  if (spec->ctrl_shift_enter)
-    cb.ctrl_shift_enter = spec->ctrl_shift_enter;
-  if (spec->ctrl_alt_enter)
-    cb.ctrl_alt_enter = spec->ctrl_alt_enter;
-  if (spec->shift_alt_enter)
-    cb.shift_alt_enter = spec->shift_alt_enter;
-  if (spec->render)
-    cb.render = spec->render;
-  if (spec->edit)
-    cb.edit = spec->edit;
-  if (spec->filter)
-    cb.filter = spec->filter;
-  if (spec->help)
-    cb.help = spec->help;
-  return cb;
-}
-
-static bool feature_shortcut_run(const char *name) {
-  bool should_close = false;
-  log_info("feature_shortcut: dispatch start '%s'", name ? name : "(null)");
-  int index = feature_shortcut_index_of(name);
-  if (index < 0) {
-    log_error("feature_shortcut: unknown name '%s'", name ? name : "(null)");
-    goto done;
-  }
-  char feature[128];
-  char filter[SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
-  if (!feature_shortcut_parse(feature_shortcut_entries[index].target, feature,
-                              sizeof(feature), filter, sizeof(filter))) {
-    log_error("feature_shortcut: bad target '%s'",
-              feature_shortcut_entries[index].target);
-    goto done;
-  }
-  log_info("feature_shortcut: parsed feature='%s' filter='%s'", feature,
-           filter);
-  const CcEntrySpec *target = NULL;
-  for (int i = 0; i < sk_cc_entry_count(); i++) {
-    const CcEntrySpec *entry = sk_cc_entry_at(i);
-    if (entry && entry->display_name &&
-        strcmp(entry->display_name, feature) == 0) {
-      target = entry;
-      break;
-    }
-  }
-  if (!target || !target->on_action) {
-    log_error("feature_shortcut: feature '%s' not found or has no action",
-              feature);
-    goto done;
-  }
-  log_info("feature_shortcut: found feature '%s'", feature);
-
-  SkaldContext *ctx = SkaldContext_Get();
-  PromptCallbacks base_callbacks =
-      ctx ? ctx->window.prompt_callbacks : (PromptCallbacks){0};
-
-  HeadlessDispatch *headless = ctx ? &ctx->window.headless : NULL;
-  if (!headless)
-    goto done;
-  arrfree(headless->filter);
-  headless->filter = NULL;
-  headless->active = true;
-  headless->capturing = true;
-  headless->spec_valid = false;
-  headless->state = NULL;
-  target->on_action();
-  headless->capturing = false;
-  if (!headless->spec_valid) {
-    log_error("feature_shortcut: feature '%s' did not call sk_window", feature);
-    goto done;
-  }
-  log_info("feature_shortcut: captured sk_window spec");
-
-  PromptSpec spec = headless->spec;
-  PromptState *live = prompt_popup_get_top_prompt_state();
-  log_info("feature_shortcut: live prompt %s", live ? "found" : "missing");
-  if (!live || !live->eb) {
-    for (const char *p = filter; *p; p++)
-      arrput(headless->filter, *p);
-    arrput(headless->filter, '\0');
-    ctx->window.initial_text_pending = headless->filter;
-    spec.subwindow = false;
-    headless->active = false;
-    headless->capturing = false;
-    headless->spec_valid = false;
-    headless->state = NULL;
-    ctx->window.auto_enter_pending = true;
-    WindowManager_ShowPrompt(WindowManager_Get(), &spec);
-    ctx->window.auto_enter_pending = false;
-    goto done;
-  }
-  PromptCallbacks cb = feature_shortcut_make_callbacks(&spec, &base_callbacks);
-  if (live->callbacks)
-    *live->callbacks = cb;
-  live->render_data = spec.render_data;
-  live->window_title = (char *)spec.title;
-  snprintf(live->eb->filter, sizeof(live->eb->filter), "%s", filter);
-  live->eb->cursor = (size_t)strlen(filter);
-  ctx->window.prompt_callbacks = cb;
-  ctx->window.current_feature = (char *)feature;
-  ctx->window.title = spec.title;
-  headless->state = live;
-  if (cb.refresh)
-    cb.refresh(live);
-  feature_shortcut_select(live->lb, filter);
-  log_info("feature_shortcut: live listbox count=%d selected=%d",
-           live->lb ? live->lb->item_count : -1,
-           live->lb ? live->lb->selected_index : -1);
-  if (cb.enter)
-    should_close = cb.enter(live);
-  log_info("feature_shortcut: enter done close=%d filter='%s'", should_close,
-           live->eb->filter);
-  headless->state = NULL;
-  UI_RequestPopupRepaint();
-  log_info("feature_shortcut: installed callbacks into live prompt");
-  if (should_close) {
-    ctx->window.selection_complete = true;
-    if (spec.on_close)
-      spec.on_close();
-  }
-
-done:
-  log_info("feature_shortcut: dispatch end close=%d", should_close);
-  if (ctx) {
-    arrfree(ctx->window.headless.filter);
-    ctx->window.headless.filter = NULL;
-    ctx->window.headless.active = false;
-    ctx->window.headless.spec_valid = false;
-    ctx->window.headless.state = NULL;
-  }
-  return should_close;
-}
-
 bool sk_run_feature_shortcut(const char *name) {
   if (!name || !name[0])
     return false;
   return feature_shortcut_run(name);
 }
-
-static void sk_config_init_locked(void) {
-  if (sk_config_loaded)
-    return;
-  sk_config_loaded = true;
-  char dir[512];
-  if (!data_dir(dir, sizeof(dir)))
-    dir[0] = '\0';
-  if (!sk_config_parse_path()) {
-    log_error("sk_config: data dir unavailable, config persistence disabled");
-    return;
-  }
-  ConfigTomlError err;
-  ConfigTomlStatus st = config_toml_parse_ex(sk_config_path,
-                                             sk_config_apply_entry, NULL, &err);
-  if (st == CONFIG_TOML_ERR_IO)
-    log_info("sk_config: %s not found, starting with empty tables",
-             sk_config_path);
-  else if (st != CONFIG_TOML_OK)
-    log_error("sk_config: %s failed at line %d (%s): %s, keeping defaults",
-              sk_config_path, err.line, config_toml_status_name(st),
-              err.message[0] ? err.message : "invalid config");
-
-  for (size_t i = 0; i < alias_entry_count; i++)
-    sk_register_alias(alias_entries[i].alias, alias_entries[i].target);
-}
-
-void sk_config_init(void) {
-  sk_config_lock();
-  sk_config_init_locked();
-  sk_config_unlock();
-}
-
-static void hotkey_bind_live(const char *name, const char *hotkey,
-                             SkConfigFn cb, void *ud) {
-  if (!name || !hotkey || !cb)
-    return;
-  sk_unregister_hotkey(hotkey);
-  sk_register_hotkey(.hotkey = (char *)hotkey, .cb_ud = (HotkeyCallbackUd)cb,
-                     .ud = ud);
-  config_hotkey_register_bound(name, hotkey, cb, ud);
-}
-
 bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
-  if (!spec || !spec->name || !spec->name[0])
+  if (!spec)
     return false;
-  if (spec->name[0] && strlen(spec->name) >= SK_CONFIG_NAME_MAX)
-    return false;
-  if (!spec->hotkey || !spec->hotkey[0])
-    return false;
-  if (strlen(spec->hotkey) >= SK_CONFIG_HOTKEY_MAX)
-    return false;
-  HotkeyKey key;
-  if (!hotkey_string_parse(spec->hotkey, &key))
-    return false;
-
-  sk_config_lock();
-  sk_config_init_locked();
-  int displaced = hotkey_index_by_key(spec->hotkey);
-  int self = hotkey_index_of(spec->name);
-  if (displaced >= 0 && displaced != self) {
-    log_warn("sk_config: '%s' overwrites hotkey '%s' previously bound to "
-             "'%s'",
-             spec->name, spec->hotkey, hotkey_entries[displaced].name);
-    hotkey_entries_remove(displaced);
-    if (displaced < self)
-      self--;
-  }
-
-  char old_hotkey[SK_CONFIG_HOTKEY_MAX] = "";
-  int i = hotkey_index_of(spec->name);
-  if (i >= 0)
-    snprintf(old_hotkey, sizeof(old_hotkey), "%s", hotkey_entries[i].hotkey);
-
-  hotkey_entries_set(spec->name, spec->hotkey);
-  if (!sk_config_ready() ||
-      !config_section_set(sk_config_path, "hotkeys", spec->name, spec->hotkey))
-    log_error("sk_config: failed to save %s", sk_config_path);
-
-  if (old_hotkey[0] && !sk_string_equals_ci(old_hotkey, spec->hotkey))
-    sk_unregister_hotkey(old_hotkey);
-  if (spec->cb)
-    hotkey_bind_live(spec->name, spec->hotkey, spec->cb, spec->ud);
-  sk_config_unlock();
-  return true;
+  return config_hotkey_set(spec->name, spec->hotkey,
+                           (void (*)(void *))spec->cb, spec->ud);
 }
-
 char *sk_config_get_hotkey(const char *name) {
-  if (!name)
-    return NULL;
-  sk_config_lock();
-  sk_config_init_locked();
-  int i = hotkey_index_of(name);
-  char *out = i >= 0 ? strdup(hotkey_entries[i].hotkey) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_hotkey_get(name);
 }
-
 bool sk_config_clear_hotkey(const char *name) {
-  if (!name)
-    return false;
-  sk_config_lock();
-  sk_config_init_locked();
-  int i = hotkey_index_of(name);
-  if (i < 0) {
-    sk_config_unlock();
-    return false;
-  }
-  char hk[SK_CONFIG_HOTKEY_MAX];
-  snprintf(hk, sizeof(hk), "%s", hotkey_entries[i].hotkey);
-  hotkey_entries_remove(i);
-  if (sk_config_ready())
-    config_section_clear(sk_config_path, "hotkeys", name);
-  sk_unregister_hotkey(hk);
-  sk_config_unlock();
-  return true;
+  return config_hotkey_clear(name);
 }
-
 bool sk_config_bind_hotkey(const char *name, SkConfigFn cb, void *ud) {
-  if (!name || !cb)
-    return false;
-  sk_config_lock();
-  sk_config_init_locked();
-  int i = hotkey_index_of(name);
-  if (i < 0) {
-    sk_config_unlock();
-    return false;
-  }
-  char hk[SK_CONFIG_HOTKEY_MAX];
-  snprintf(hk, sizeof(hk), "%s", hotkey_entries[i].hotkey);
-  hotkey_bind_live(name, hk, cb, ud);
-  sk_config_unlock();
-  return true;
+  return config_hotkey_bind(name, (void (*)(void *))cb, ud);
 }
-
 int sk_config_hotkey_count(void) {
-  sk_config_lock();
-  sk_config_init_locked();
-  int n = (int)hotkey_entry_count;
-  sk_config_unlock();
-  return n;
+  return config_entry_count(CONFIG_ENTRY_HOTKEY);
 }
-
 char *sk_config_hotkey_name_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool ok = index >= 0 && (size_t)index < hotkey_entry_count;
-  char *out = ok ? strdup(hotkey_entries[index].name) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_dup_key_at(CONFIG_ENTRY_HOTKEY, index);
 }
-
 char *sk_config_hotkey_value_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool ok = index >= 0 && (size_t)index < hotkey_entry_count;
-  char *out = ok ? strdup(hotkey_entries[index].hotkey) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_value_at(CONFIG_ENTRY_HOTKEY, index);
 }
-
-static int config_hotkey_binding_index(const char *key) {
-  if (!key)
-    return -1;
-  for (size_t i = 0; i < config_hotkey_binding_count; i++)
-    if (sk_string_equals_ci(config_hotkey_bindings[i].key, key))
-      return (int)i;
-  return -1;
-}
-
 char *sk_config_hotkey_display_name_at(int index) {
-  char *key = sk_config_hotkey_name_at(index);
-  if (!key)
-    return NULL;
-  int binding = config_hotkey_binding_index(key);
-  free(key);
-  if (binding < 0)
-    return NULL;
-  return strdup(config_hotkey_bindings[binding].display_name);
+  return config_hotkey_display_name_at(index);
 }
-
-static void config_hotkey_strings_free(char **strings) {
-  for (size_t i = 0; i < arrlenu(strings); i++)
-    free(strings[i]);
-  arrfree(strings);
-}
-
-static void config_hotkey_strings_copy(char ***out, const char *const *src) {
-  arrfree(*out);
-  *out = NULL;
-  if (!src)
-    return;
-  for (int i = 0; src[i]; i++)
-    arrput(*out, strdup(src[i]));
-}
-
-static void config_hotkey_binding_free(void *ptr) {
-  ConfigHotkeyBinding *b = (ConfigHotkeyBinding *)ptr;
-  if (!b)
-    return;
-  free(b->display_name);
-  free(b->key);
-  free(b->default_hotkey);
-  owner_tag_clear(&b->tag);
-  config_hotkey_strings_free(b->whitelist);
-  config_hotkey_strings_free(b->blacklist);
-}
-
-static void config_hotkey_register_bound(const char *name, const char *hotkey,
-                                         SkConfigFn cb, void *ud) {
-  if (!name || !hotkey || !cb)
-    return;
-  int existing = config_hotkey_binding_index(name);
-  if (existing >= 0) {
-    ConfigHotkeyBinding *b = &config_hotkey_bindings[existing];
-    b->cb = NULL;
-    b->cb_ud = (HotkeyCallbackUd)cb;
-    b->ud = ud;
-    return;
-  }
-
-  ConfigHotkeyBinding b = {0};
-  b.display_name = strdup(name);
-  b.key = strdup(name);
-  b.default_hotkey = strdup(hotkey);
-  b.cb_ud = (HotkeyCallbackUd)cb;
-  b.ud = ud;
-  owner_tag_set_for_func(&b.tag, (void *)(uintptr_t)cb, 0);
-  arrput(config_hotkey_bindings, b);
-}
-
-static const char **config_hotkey_string_view(char **strings) {
-  const char **out = NULL;
-  for (size_t i = 0; i < arrlenu(strings); i++)
-    arrput(out, strings[i]);
-  return out;
-}
-
-static bool config_hotkey_binding_bind(ConfigHotkeyBinding *b) {
-  if (!b)
-    return false;
-  char *hotkey = sk_config_get_hotkey(b->key);
-  if (!hotkey)
-    return false;
-  sk_unregister_hotkey(hotkey);
-  const char **wl = config_hotkey_string_view(b->whitelist);
-  const char **bl = config_hotkey_string_view(b->blacklist);
-  const char *const *windows = NULL;
-  bool whitelist = false;
-  resolve_window_list(wl, bl, &windows, &whitelist);
-  HotkeyBinding binding =
-      hotkey_convert_into_binding(hotkey, b->cb, NULL, windows, whitelist,
-                                  b->ud);
-  if (!binding.valid) {
-    arrfree(wl);
-    arrfree(bl);
-    free(hotkey);
-    return false;
-  }
-  binding.hotkey_callback_ud = b->cb_ud;
-  binding.hold = false;
-  binding.should_swallow = b->should_swallow;
-  bool ok = hotkey_register_internal(binding);
-  arrfree(wl);
-  arrfree(bl);
-  free(hotkey);
-  return ok;
-}
-
 bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec) {
-  if (!spec || !spec->name || !spec->name[0] || !spec->key || !spec->key[0] ||
-      !spec->default_hotkey || !spec->default_hotkey[0] ||
-      (!spec->cb && !spec->cb_ud))
-    return false;
-  HotkeyKey parsed;
-  if (!hotkey_string_parse(spec->default_hotkey, &parsed))
-    return false;
-
-  int existing = config_hotkey_binding_index(spec->key);
-  if (existing >= 0) {
-    config_hotkey_binding_free(&config_hotkey_bindings[existing]);
-    arrdel(config_hotkey_bindings, existing);
-  }
-
-  ConfigHotkeyBinding b = {0};
-  b.display_name = strdup(spec->name);
-  b.key = strdup(spec->key);
-  b.default_hotkey = strdup(spec->default_hotkey);
-  config_hotkey_strings_copy(&b.whitelist,
-                             (const char *const *)spec->whitelist);
-  config_hotkey_strings_copy(&b.blacklist,
-                             (const char *const *)spec->blacklist);
-  b.cb = spec->cb;
-  b.cb_ud = spec->cb_ud;
-  b.ud = spec->ud;
-  b.should_swallow = spec->should_swallow;
-
-  void *anchor = (void *)__builtin_return_address(0);
-  if (spec->cb)
-    anchor = (void *)(uintptr_t)spec->cb;
-  else if (spec->cb_ud)
-    anchor = (void *)(uintptr_t)spec->cb_ud;
-  owner_tag_set_for_func(&b.tag, anchor, 0);
-
-  arrput(config_hotkey_bindings, b);
-  int index = (int)config_hotkey_binding_count - 1;
-
-  char *stored = sk_config_get_hotkey(spec->key);
-  if (!stored)
-    sk_config_set_hotkey(.name = spec->key, .hotkey = spec->default_hotkey);
-  else
-    free(stored);
-  return config_hotkey_binding_bind(&config_hotkey_bindings[index]);
+  return config_hotkey_register((const ConfigHotkeyRegisterSpec *)spec);
 }
-
-void sk_init_all_hotkeys(void) {
-  for (size_t i = 0; i < config_hotkey_binding_count; i++)
-    config_hotkey_binding_bind(&config_hotkey_bindings[i]);
-}
-
-void config_hotkey_registry_purge_owner(const char *path_a,
-                                        const char *path_b) {
-  OWNER_PURGE_STRUCT(config_hotkey_bindings, ConfigHotkeyBinding, path_a, path_b,
-                     0, config_hotkey_binding_free);
-}
-
+void sk_init_all_hotkeys(void) { config_hotkey_bind_all(); }
 bool sk_config_set_alias(const char *target, const char *alias) {
-  if (!target || !target[0])
-    return false;
-  if (strlen(target) >= SK_CONFIG_TARGET_MAX)
-    return false;
-  bool clearing = !alias || !alias[0];
-  if (!clearing && strlen(alias) >= SK_CONFIG_ALIAS_MAX)
-    return false;
-
-  sk_config_lock();
-  sk_config_init_locked();
-  if (clearing) {
-    int i = alias_index_of(target);
-    if (i >= 0) {
-      const char *cur = sk_alias_for(target);
-      if (cur)
-        sk_remove_alias(cur);
-      alias_entries_remove(i);
-      if (sk_config_ready())
-        config_section_clear(sk_config_path, "aliases", target);
-    } else {
-      const char *cur = sk_alias_for(target);
-      if (cur)
-        sk_remove_alias(cur);
-    }
-    sk_config_unlock();
-    return true;
-  }
-
-  alias_entries_set(target, alias);
-  if (!sk_config_ready() ||
-      !config_section_set(sk_config_path, "aliases", target, alias))
-    log_error("sk_config: failed to save %s", sk_config_path);
-  sk_register_alias(alias, target);
-  sk_config_unlock();
-  return true;
+  return config_alias_set(target, alias);
 }
-
 char *sk_config_get_alias(const char *target) {
-  if (!target)
-    return NULL;
-  sk_config_lock();
-  sk_config_init_locked();
-  int i = alias_index_of(target);
-  char *out = i >= 0 ? strdup(alias_entries[i].alias) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_alias_get(target);
 }
-
 bool sk_config_clear_alias(const char *target) {
-  if (!target)
-    return false;
-  return sk_config_set_alias(target, NULL);
+  return config_alias_set(target, NULL);
 }
-
 int sk_config_alias_count(void) {
-  sk_config_lock();
-  sk_config_init_locked();
-  int n = (int)alias_entry_count;
-  sk_config_unlock();
-  return n;
+  return config_entry_count(CONFIG_ENTRY_ALIAS);
 }
-
 char *sk_config_alias_target_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool ok = index >= 0 && (size_t)index < alias_entry_count;
-  char *out = ok ? strdup(alias_entries[index].target) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_dup_key_at(CONFIG_ENTRY_ALIAS, index);
 }
-
 char *sk_config_alias_value_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool ok = index >= 0 && (size_t)index < alias_entry_count;
-  char *out = ok ? strdup(alias_entries[index].alias) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_value_at(CONFIG_ENTRY_ALIAS, index);
 }
-
 int sk_config_quicklink_count(void) {
-  sk_config_lock();
-  sk_config_init_locked();
-  int n = (int)quicklink_entry_count;
-  sk_config_unlock();
-  return n;
+  return config_entry_count(CONFIG_ENTRY_QUICKLINK);
 }
-
 char *sk_config_quicklink_name_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool ok = index >= 0 && (size_t)index < quicklink_entry_count;
-  char *out = ok ? strdup(quicklink_entries[index].name) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_dup_key_at(CONFIG_ENTRY_QUICKLINK, index);
 }
-
 char *sk_config_quicklink_value_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool ok = index >= 0 && (size_t)index < quicklink_entry_count;
-  char *out = ok ? strdup(quicklink_entries[index].target) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_value_at(CONFIG_ENTRY_QUICKLINK, index);
 }
-
 int sk_config_feature_shortcut_count(void) {
-  sk_config_lock();
-  sk_config_init_locked();
-  int n = (int)feature_shortcut_entry_count;
-  sk_config_unlock();
-  return n;
+  return config_entry_count(CONFIG_ENTRY_FEATURE_SHORTCUT);
 }
-
 char *sk_config_feature_shortcut_name_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool ok = index >= 0 && (size_t)index < feature_shortcut_entry_count;
-  char *out = ok ? strdup(feature_shortcut_entries[index].name) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_dup_key_at(CONFIG_ENTRY_FEATURE_SHORTCUT, index);
 }
-
 char *sk_config_feature_shortcut_value_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool ok = index >= 0 && (size_t)index < feature_shortcut_entry_count;
-  char *out = ok ? strdup(feature_shortcut_entries[index].target) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_value_at(CONFIG_ENTRY_FEATURE_SHORTCUT, index);
 }
-
 bool sk_config_set_setting(const char *key, const char *value) {
-  if (!key || !key[0] || !value)
-    return false;
-  if (strlen(key) >= SK_CONFIG_SETTING_KEY_MAX ||
-      strlen(value) >= SK_CONFIG_SETTING_VALUE_MAX) {
-    log_error("sk_config: setting '%.80s' too long", key);
-    return false;
-  }
-  sk_config_lock();
-  sk_config_init_locked();
-  setting_entries_set(key, value);
-  if (!sk_config_ready() ||
-      !config_section_set(sk_config_path, "settings", key, value))
-    log_error("sk_config: failed to save %s", sk_config_path);
-  sk_config_unlock();
-  return true;
+  return config_setting_set(key, value);
 }
-
 bool sk_config_set_setting_int(const char *key, int value) {
   char buf[32];
   snprintf(buf, sizeof(buf), "%d", value);
@@ -4922,166 +2958,56 @@ bool sk_config_set_setting_float(const char *key, float value) {
 }
 
 char *sk_config_get_setting(const char *key) {
-  if (!key || !key[0])
-    return NULL;
-  sk_config_lock();
-  sk_config_init_locked();
-  const char *p = setting_lookup_locked(key);
-  char *out = p ? strdup(p) : NULL;
-  sk_config_unlock();
-  return out;
+  return config_setting_get(key);
 }
-
 bool sk_config_get_setting_string(const char *key, char *out, size_t out_len,
                                   const char *fallback) {
   if (!out || out_len == 0)
     return false;
   char *saved = sk_config_get_setting(key);
   const char *value = (saved && saved[0]) ? saved : (fallback ? fallback : "");
-  snprintf(out, out_len, "%s", value);
+  safe_copy(out, out_len, value);
   free(saved);
   return true;
 }
 
 bool sk_config_get_setting_bool(const char *key) {
-  if (!key)
-    return false;
-  sk_config_lock();
-  sk_config_init_locked();
-  const char *p = setting_lookup_locked(key);
   bool value = false;
-  setting_parse_bool(p, &value);
-  sk_config_unlock();
+  config_setting_get_value(key, config_parse_bool_value, &value);
   return value;
 }
-
 int sk_config_get_setting_int(const char *key, int fallback) {
-  if (!key)
-    return fallback;
-  sk_config_lock();
-  sk_config_init_locked();
-  const char *p = setting_lookup_locked(key);
   int value = fallback;
-  setting_parse_int(p, &value);
-  sk_config_unlock();
+  config_setting_get_value(key, config_parse_int_value, &value);
   return value;
 }
-
 float sk_config_get_setting_float(const char *key) {
   return sk_config_get_setting_float_or(key, 0.0f);
 }
-
 float sk_config_get_setting_float_or(const char *key, float fallback) {
-  if (!key)
-    return fallback;
-  sk_config_lock();
-  sk_config_init_locked();
-  const char *p = setting_lookup_locked(key);
   float value = fallback;
-  setting_parse_float(p, &value);
-  sk_config_unlock();
+  config_setting_get_value(key, config_parse_float_value, &value);
   return value;
 }
-
 bool sk_config_has_setting(const char *key) {
-  sk_config_lock();
-  sk_config_init_locked();
-  bool out = key && setting_lookup_locked(key) != NULL;
-  sk_config_unlock();
-  return out;
+  return config_setting_has(key);
 }
-
 int sk_config_setting_count(void) {
-  sk_config_lock();
-  sk_config_init_locked();
-  int n = (int)setting_entry_count;
-  sk_config_unlock();
-  return n;
+  return config_entry_count(CONFIG_ENTRY_SETTING);
 }
-
 const char *sk_config_setting_name_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  const char *out = (index >= 0 && (size_t)index < setting_entry_count)
-                        ? setting_entries[index].key
-                        : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_key_at(CONFIG_ENTRY_SETTING, index);
 }
-
 const char *sk_config_setting_value_at(int index) {
-  sk_config_lock();
-  sk_config_init_locked();
-  const char *out = (index >= 0 && (size_t)index < setting_entry_count)
-                        ? setting_entries[index].value
-                        : NULL;
-  sk_config_unlock();
-  return out;
+  return config_entry_value_at(CONFIG_ENTRY_SETTING, index);
 }
 
 bool sk_config_set_quicklink(const char *name, const char *target) {
-  if (!name || !name[0])
-    return false;
-  sk_config_lock();
-  sk_config_init_locked();
-  int i = quicklink_index_of(name);
-  if (!target || !target[0]) {
-    if (i >= 0) {
-      quicklink_entries_remove(i);
-      if (sk_config_ready())
-        config_section_clear(sk_config_path, "quicklinks", name);
-    }
-    sk_config_unlock();
-    return true;
-  }
-  if (strlen(name) >= SK_CONFIG_NAME_MAX ||
-      strlen(target) >= SK_CONFIG_QUICKLINK_TARGET_MAX) {
-    sk_config_unlock();
-    return false;
-  }
-  quicklink_entries_set(name, target);
-  if (!sk_config_ready() ||
-      !config_section_set(sk_config_path, "quicklinks", name, target))
-    log_error("sk_config: failed to save %s", sk_config_path);
-  sk_config_unlock();
-  return true;
+  return config_quicklink_set(name, target);
 }
-
 bool sk_config_set_feature_shortcut(const char *name, const char *target) {
-  if (!name || !name[0])
-    return false;
-  sk_config_lock();
-  sk_config_init_locked();
-  int i = feature_shortcut_index_of(name);
-  if (!target || !target[0]) {
-    if (i >= 0) {
-      feature_shortcut_entries_remove(i);
-      if (sk_config_ready())
-        config_section_clear(sk_config_path, "feature_shortcuts", name);
-    }
-    sk_config_unlock();
-    return true;
-  }
-  if (strlen(name) >= SK_CONFIG_NAME_MAX ||
-      strlen(target) >= SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX) {
-    sk_config_unlock();
-    return false;
-  }
-  char feature[128];
-  char filter[SK_CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
-  if (!feature_shortcut_parse(target, feature, sizeof(feature), filter,
-                              sizeof(filter))) {
-    sk_config_unlock();
-    return false;
-  }
-  feature_shortcut_entries_set(name, target);
-  if (!sk_config_ready() ||
-      !config_section_set(sk_config_path, "feature_shortcuts", name, target))
-    log_error("sk_config: failed to save %s", sk_config_path);
-  sk_config_unlock();
-  return true;
+  return config_feature_shortcut_set(name, target);
 }
-
 bool sk_copy_to_clipboard_fmt(const char *fmt, ...) {
   SK_FMT_BUFFER();
   return sk_copy_to_clipboard(buf);

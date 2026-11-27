@@ -8,6 +8,34 @@
 
 typedef int (*TextWrapMeasureFn)(void *ctx, const char *text, int len);
 
+typedef struct {
+  const char *text;
+  ColorRef color;
+} TextSegment;
+
+typedef struct {
+  char text[256];
+  unsigned long color;
+  int width;
+  int lead;
+  int breaks;
+  int x;
+  int line;
+} WrappedWord;
+
+const char *text_resolve(const char *text, char tmp[2]);
+bool capture_text(const char *text);
+int text_segment_width(const void *seg, int font_size);
+void wrapped_word_push(WrappedWord **words, int *count, int *cap,
+                       const char *s, size_t len, unsigned long color,
+                       int lead, int breaks, int font_size);
+typedef struct {
+  unsigned long color;
+  int font_size;
+} WrapCtx;
+
+int wrap_measure_thunk(void *ctx, const char *s, int n);
+
 int text_wrap_layout(const char *text, int x0, int y0, int max_width,
                      int line_height, TextWrapMeasureFn measure, void *ctx,
                      Pos *out, int maxout);

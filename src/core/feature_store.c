@@ -1,6 +1,9 @@
 #include "core/feature_store.h"
+#include "core/cc_registry.h"
+#include "core/owner_registry.h"
 #include "helpers/helpers_fs.h"
 #include "helpers/helpers_misc.h"
+#include "helpers/helpers_owner.h"
 #include "helpers/helpers_text.h"
 #include "platform/platform.h"
 #include <ctype.h>
@@ -225,4 +228,86 @@ bool feature_store_clear(const char *feature, const char *key) {
   bool ok = store_remove_unlocked(path);
   Platform_MutexUnlock(mutex);
   return ok;
+}
+
+typedef struct {
+  char name[128];
+  void (*cb)(void);
+  char icon[512];
+  OwnerTag tag;
+} FeatureReg;
+
+static FeatureReg **feature_order = NULL;
+static int feature_order_count = 0;
+static int feature_order_cap = 0;
+
+int feature_list_find(const char *name, void (*cb)(void)) {
+  for (int i = 0; i < feature_order_count; i++) {
+    if (cb && feature_order[i]->cb == cb)
+      return i;
+    if (name && feature_order[i]->name[0] &&
+        strcmp(feature_order[i]->name, name) == 0)
+      return i;
+  }
+  return -1;
+}
+
+bool feature_list_add(const char *name, void (*cb)(void), const char *icon,
+                      const char *owner) {
+  if (!name || !name[0])
+    return false;
+  int idx = feature_list_find(name, cb);
+  if (idx < 0) {
+    if (feature_order_count >= feature_order_cap) {
+      int ncap = feature_order_cap ? feature_order_cap * 2 : 32;
+      FeatureReg **grown =
+          (FeatureReg **)realloc(feature_order, (size_t)ncap * sizeof(*grown));
+      if (!grown)
+        return false;
+      feature_order = grown;
+      feature_order_cap = ncap;
+    }
+    idx = feature_order_count;
+    feature_order[idx] = (FeatureReg *)calloc(1, sizeof(**feature_order));
+    if (!feature_order[idx])
+      return false;
+    feature_order_count++;
+  }
+  FeatureReg *reg = feature_order[idx];
+  safe_copy(reg->name, sizeof(reg->name), name);
+  reg->cb = cb;
+  safe_copy(reg->icon, sizeof(reg->icon), icon);
+  owner_tag_set(&reg->tag, owner, 0);
+  return true;
+}
+
+void feature_list_purge_owner(const char *path_a, const char *path_b) {
+  if (owner_purge_inactive(path_a, path_b))
+    return;
+  int n = 0;
+  for (int i = 0; i < feature_order_count; i++) {
+    if (owner_tag_matches(&feature_order[i]->tag, path_a, path_b)) {
+      owner_tag_clear(&feature_order[i]->tag);
+      free(feature_order[i]);
+      continue;
+    }
+    feature_order[n++] = feature_order[i];
+  }
+  feature_order_count = n;
+}
+
+int feature_list_count(void) { return feature_order_count; }
+
+bool feature_list_at(int index, const char **name, void (**cb)(void),
+                     const char **icon) {
+  if (index < 0 || index >= feature_order_count)
+    return false;
+  FeatureReg *reg = feature_order[index];
+  if (name)
+    *name = reg->name;
+  if (cb)
+    *cb = reg->cb;
+  if (icon)
+    *icon = reg->icon[0] ? reg->icon : NULL;
+  return true;
 }

@@ -165,96 +165,6 @@ char *sk_search_file_in_dir_platform(const char *directory,
   return NULL;
 }
 
-bool sk_place_editbox_platform(const SkEditSpec *spec) {
-  if (!spec)
-    return false;
-  HDC hdc = NULL;
-  win32_get_draw_context(&hdc);
-  if (!hdc)
-    return false;
-  PromptState *state = prompt_popup_get_top_prompt_state();
-  EditboxPlace place;
-  editbox_resolve_place(&(EditboxPlaceSpec){.buffer = spec->buffer,
-                                            .x = spec->x,
-                                            .y = spec->y,
-                                             .w = spec->w,
-                                             .h = spec->h,
-                                             .font_size = spec->font_size,
-                                             .wrapped = spec->wrapped},
-                        state, &place);
-  int fs = place.font_size;
-  const char *buf = place.buf;
-  int x = place.x;
-  int y = place.y;
-  int w = place.w;
-  int h = place.h;
-  int text_len = place.text_len;
-  int cursor = place.cursor;
-  HFONT hfont_created = NULL;
-  HFONT hfont = spec->font.hfont
-                    ? spec->font.hfont
-                    : FH_TO_HFONT(Platform_CreateFont(fs, UsedFont));
-  if (hfont && !spec->font.hfont)
-    hfont_created = hfont;
-  HFONT old = NULL;
-  if (hfont)
-    old = (HFONT)SelectObject(hdc, hfont);
-  SetBkMode(hdc, TRANSPARENT);
-  int cursor_x = 0;
-  int text_w = 0;
-  int ascent = 0;
-  int descent = 0;
-  if (hfont) {
-    TEXTMETRIC tm;
-    memset(&tm, 0, sizeof(tm));
-    GetTextMetrics(hdc, &tm);
-    ascent = tm.tmAscent;
-    descent = tm.tmDescent;
-    SIZE szCur;
-    GetTextExtentPoint32A(hdc, buf, cursor, &szCur);
-    cursor_x = szCur.cx;
-    SIZE szText;
-    GetTextExtentPoint32A(hdc, buf, text_len, &szText);
-    text_w = szText.cx;
-  } else {
-    RECT textRc = {x + PROMPT_EDIT_INSET, y, x + w, y + h};
-    DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
-  }
-  EditboxUiSpec ui = {.color_text = spec->color_text,
-                      .color_bg = spec->color_bg,
-                      .placeholder = spec->placeholder,
-                      .caret_h = spec->caret_h,
-                      .caret_w = spec->caret_w,
-                      .caret_x = spec->caret_x,
-                      .caret_y = spec->caret_y,
-                      .caret_pos = spec->caret_pos};
-  EditboxSpec eb;
-  editbox_spec_from_place(&eb, &place, state, &ui,
-                          &(EditboxMetrics){.text_w = text_w,
-                                            .cursor_x = cursor_x,
-                                            .ascent = ascent,
-                                            .descent = descent,
-                                            .font = spec->font});
-  eb.text_y += spec->text_y;
-  eb.caret_y += spec->text_y;
-
-  bool prev_lb = draw_state_get()->win32_listbox_surface;
-  draw_state_get()->win32_listbox_surface = false;
-  EditboxLayout lay;
-  editbox_layout(&eb, &lay);
-  editbox_draw(&eb, &lay,
-               spec->hide_caret ? (EDITBOX_PART_TINT | EDITBOX_PART_TEXT)
-                                : EDITBOX_PART_ALL);
-  draw_state_get()->win32_listbox_surface = prev_lb;
-  if (state)
-    state->eb->scroll_offset = eb.scroll;
-
-  if (old)
-    SelectObject(hdc, old);
-  if (hfont_created)
-    DeleteObject(hfont_created);
-  return true;
-}
 
 static VOID CALLBACK win32_timer_trampoline(PVOID lpParam,
                                             BOOLEAN TimerOrWaitFired) {
@@ -271,7 +181,6 @@ static VOID CALLBACK win32_timer_trampoline(PVOID lpParam,
 }
 
 bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload) {
-
   DWORD delay_ms = (DWORD)(payload->seconds * 1000.0);
   HANDLE hTimer = NULL;
   if (!CreateTimerQueueTimer(&hTimer, NULL, win32_timer_trampoline, payload,
@@ -280,18 +189,6 @@ bool sk_run_after_time_arm_platform(SkRunAfterPayload *payload) {
   }
   return true;
 }
-
-void sk_sleep_platform(double seconds) {
-  if (seconds <= 0) {
-    return;
-  }
-  double ms = seconds * 1000.0;
-  if (ms > (double)0xFFFFFFFF)
-    ms = (double)0xFFFFFFFF;
-  Sleep((DWORD)ms);
-}
-
-#define SK_NET_ADAPTER_TTL_MS 5000
 
 typedef struct {
   ULONG index;
@@ -370,7 +267,7 @@ static SkNetAdapter net_active_adapter(void) {
 
   net_lock();
   DWORD now = GetTickCount();
-  if (net_adapter.valid && (now - net_adapter.at_ms) < SK_NET_ADAPTER_TTL_MS) {
+  if (net_adapter.valid && (now - net_adapter.at_ms) < 5000) {
     SkNetAdapter cached = net_adapter;
     net_unlock();
     return cached;

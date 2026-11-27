@@ -7,7 +7,9 @@
 #include "core/types/window.h"
 #include "core/types.h"
 #include "platform/platform.h"
+#include "platform/draw.h"
 #include "core/hotkey_manager.h"
+#include "core/search_index.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_text.h"
 
@@ -1078,4 +1080,64 @@ bool window_list_allows(int window_count, bool whitelist, char *const *windows,
       return true;
   }
   return false;
+}
+
+const char *text_resolve(const char *text, char tmp[2]) {
+  if (!text)
+    return NULL;
+  if ((uintptr_t)text < 256) {
+    tmp[0] = (char)(uintptr_t)text;
+    tmp[1] = '\0';
+    return tmp;
+  }
+  return text;
+}
+
+bool capture_text(const char *text) {
+  if (!search_index_current())
+    return false;
+  if (text[0])
+    search_index_add_text(NULL, text, SEARCH_KIND_TEXT, NULL, NULL);
+  return true;
+}
+
+int text_segment_width(const void *seg_ptr, int font_size) {
+  const TextSegment *seg = (const TextSegment *)seg_ptr;
+  if (!seg || !seg->text)
+    return 0;
+  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
+      .text = seg->text, .len = (int)strlen(seg->text), .font_size = font_size});
+}
+
+void wrapped_word_push(WrappedWord **words, int *count, int *cap,
+                       const char *s, size_t len, unsigned long color,
+                       int lead, int breaks, int font_size) {
+  if (!len)
+    return;
+  if (*count >= *cap) {
+    int nc = *cap ? *cap * 2 : 32;
+    WrappedWord *grown = realloc(*words, (size_t)nc * sizeof(**words));
+    if (!grown)
+      return;
+    *words = grown;
+    *cap = nc;
+  }
+  WrappedWord *w = &(*words)[(*count)++];
+  if (len >= sizeof(w->text))
+    len = sizeof(w->text) - 1;
+  memcpy(w->text, s, len);
+  w->text[len] = '\0';
+  w->color = color;
+  w->width = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+      .text = w->text, .len = (int)len, .font_size = font_size});
+  w->lead = lead;
+  w->breaks = breaks;
+  w->x = 0;
+  w->line = 0;
+}
+
+int wrap_measure_thunk(void *ctx, const char *s, int n) {
+  WrapCtx *c = (WrapCtx *)ctx;
+  return Platform_MeasureTextWidth(
+      (MeasureTextWidthSpec){.text = s, .len = n, .font_size = c->font_size});
 }

@@ -33,6 +33,16 @@
 static HotkeyBinding *hotkeys = NULL;
 static atomic_bool hotkeys_suspended = false;
 
+char *hotkey_binding_format(const HotkeyBinding *b) {
+  if (!b)
+    return NULL;
+  char tmp[256];
+  if (!hotkey_string_format((HotkeyKey){.vk = b->vk, .mods = b->modifiers}, tmp,
+                            (int)sizeof(tmp)))
+    return NULL;
+  return strdup(tmp);
+}
+
 static void hotkey_binding_free_window_list(HotkeyBinding *b) {
   if (!b)
     return;

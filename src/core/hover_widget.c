@@ -4,12 +4,18 @@
 #include <string.h>
 
 #include "core/types/window.h"
+#include "core/draw_state.h"
+#include "core/context.h"
+#include "core/window_manager.h"
+#include "config_values.h"
+#include "helpers/helpers_misc.h"
 #include "platform/platform.h"
 #include "platform/widget.h"
 #include "core/hover_widget.h"
 #include "core/owner_registry.h"
 #include "core/widget_registry.h"
 #include "helpers/helpers_render_thread.h"
+#include "helpers/helpers_ui.h"
 #include "helpers/helpers_owner.h"
 #include "deps/stb_ds.h"
 
@@ -289,4 +295,68 @@ void hover_widget_show(HoverWidgetShowSpec spec) {
     if (release)
       release(release_ud);
   }
+}
+
+HoverPopupCtx *hover_popup_ctx_new(const HoverPopupCreateSpec *spec) {
+  HoverPopupCtx *p = (HoverPopupCtx *)calloc(1, sizeof(*p));
+  if (!p)
+    return NULL;
+  p->render = spec->render;
+  p->render_data = spec->render_data;
+  p->w = spec->w > 0 ? spec->w : WIDGET_PROVISIONAL_W;
+  p->h = spec->h > 0 ? spec->h : WIDGET_PROVISIONAL_H;
+  p->created_at = Platform_StartTimer();
+  p->pad = WIDGET_DEFAULT_PAD;
+  return p;
+}
+
+void hover_popup_ctx_free(void *ud) {
+  HoverPopupCtx *p = (HoverPopupCtx *)ud;
+  if (p)
+    free(p);
+}
+
+void hover_popup_frame(void *ud) {
+  HoverPopupCtx *p = (HoverPopupCtx *)ud;
+  if (!p || !p->render) {
+    return;
+  }
+  p->frame++;
+  set_draw_offset(0, 0);
+  begin_measure();
+  p->render(p->render_data);
+  int mw = 0, mh = 0;
+  end_measure(&mw, &mh);
+  if (mw > 0 && mh > 0) {
+    p->w = mw + p->pad;
+    p->h = mh + p->pad;
+  }
+}
+
+static bool text_prompt_enter(PromptState *state) {
+  (void)state;
+  return true;
+}
+
+static void text_prompt_render(PromptState *state) {
+  const TextPromptRenderData *data = state ? state->render_data : NULL;
+  place_editbox(&(EditSpec){.placeholder = data ? data->placeholder : NULL,
+                            .initial_text = data ? data->initial_text : NULL,
+                            .y = state->height / 2 - 17});
+}
+
+PromptSpec text_prompt_spec(TextPromptRenderData *render_data,
+                            const char *placeholder, const char *initial_text,
+                            int x, int y, int w, int h) {
+  render_data->placeholder = placeholder;
+  render_data->initial_text = initial_text;
+  PromptSpec spec = {0};
+  spec.enter = text_prompt_enter;
+  spec.render = text_prompt_render;
+  spec.render_data = render_data;
+  spec.x = x;
+  spec.y = y;
+  spec.w = w;
+  spec.h = h;
+  return spec;
 }

@@ -8,6 +8,11 @@
 #include "deps/log.h"
 #include "platform/platform.h"
 #include "helpers/helpers_fs.h"
+#include "helpers/helpers_misc.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wundef"
+#include "deps/stb_ds.h"
+#pragma GCC diagnostic pop
 
 bool reload_lib_is_fresh(const char *src, const char *out) {
   long long src_mt = 0, out_mt = 0;
@@ -160,4 +165,29 @@ int reload_lib_sweep_stale_hot_libs(const char *dir, const char *lib_ext) {
   }
   Platform_DirClose(d);
   return nremoved;
+}
+
+typedef struct {
+  void *lib;
+  char canon[MAX_PATH];
+} LibraryTrack;
+
+static LibraryTrack *library_track;
+
+void library_track_add(void *lib, const char *canon) {
+  LibraryTrack *e = arraddnptr(library_track, 1);
+  e->lib = lib;
+  safe_copy(e->canon, sizeof(e->canon), canon);
+}
+
+void library_track_remove(size_t idx) { arrdelswap(library_track, idx); }
+
+size_t library_track_count(void) { return arrlenu(library_track); }
+
+void *library_track_lib(size_t idx) {
+  return idx < arrlenu(library_track) ? library_track[idx].lib : NULL;
+}
+
+const char *library_track_canon(size_t idx) {
+  return idx < arrlenu(library_track) ? library_track[idx].canon : NULL;
 }

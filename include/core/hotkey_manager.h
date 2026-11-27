@@ -9,6 +9,7 @@
 
 bool hotkey_string_parse(const char *str, HotkeyKey *out);
 bool hotkey_string_format(HotkeyKey key, char *out, int out_size);
+char *hotkey_binding_format(const HotkeyBinding *b);
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;

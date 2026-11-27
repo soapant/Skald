@@ -312,6 +312,8 @@ Timer Platform_StartTimer(void);
 double Platform_EndTimer(Timer t);
 int64_t Platform_TimerNowTicks(void);
 int64_t Platform_TimerTickFrequency(void);
+void Platform_SleepSeconds(double seconds);
+bool Platform_PlaceEditbox(const EditSpec *spec);
 
 bool Platform_EmitKey(int vk, int down);
 

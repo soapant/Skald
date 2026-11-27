@@ -20,4 +20,34 @@ void hover_widget_show(HoverWidgetShowSpec spec);
 void hover_widget_hide(const char *key);
 void hover_widget_purge_owner(const char *path_a, const char *path_b);
 
+typedef struct {
+  void (*render)(void *ud);
+  void *render_data;
+  int w;
+  int h;
+} HoverPopupCreateSpec;
+
+typedef struct {
+  void (*render)(void *ud);
+  void *render_data;
+  int w;
+  int h;
+  unsigned long frame;
+  Timer created_at;
+  int pad;
+} HoverPopupCtx;
+
+HoverPopupCtx *hover_popup_ctx_new(const HoverPopupCreateSpec *spec);
+void hover_popup_frame(void *ud);
+void hover_popup_ctx_free(void *ud);
+
+typedef struct {
+  const char *placeholder;
+  const char *initial_text;
+} TextPromptRenderData;
+
+PromptSpec text_prompt_spec(TextPromptRenderData *render_data,
+                            const char *placeholder, const char *initial_text,
+                            int x, int y, int w, int h);
+
 #endif

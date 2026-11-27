@@ -6,10 +6,12 @@
 #include "helpers/win32/win32_state.h"
 #include "helpers/helpers_fs.h"
 #include "helpers/win32/subclasses_win32.h"
+#include "core/window_manager.h"
+#include "core/draw_state.h"
+#include "core/editbox.h"
 #include "wm/wm.h"
 
 #ifdef _MSC_VER
-
 #pragma comment(lib, "winhttp.lib")
 
 #endif
@@ -2217,4 +2219,105 @@ WindowHandle Platform_GetWindowById(const char *id) {
   win32_exe_find_ctx ctx = {id, NULL};
   EnumWindows(win32_find_by_exe_enum, (LPARAM)&ctx);
   return ctx.hwnd ? WH_FROM_HWND(ctx.hwnd) : WH_NULL;
+}
+
+void Platform_SleepSeconds(double seconds) {
+  if (seconds <= 0) {
+    return;
+  }
+  double ms = seconds * 1000.0;
+  if (ms > (double)0xFFFFFFFF)
+    ms = (double)0xFFFFFFFF;
+  Sleep((DWORD)ms);
+}
+
+bool Platform_PlaceEditbox(const EditSpec *spec) {
+  if (!spec)
+    return false;
+  HDC hdc = NULL;
+  win32_get_draw_context(&hdc);
+  if (!hdc)
+    return false;
+  PromptState *state = prompt_popup_get_top_prompt_state();
+  EditboxPlace place;
+  editbox_resolve_place(&(EditboxPlaceSpec){.buffer = spec->buffer,
+                                            .x = spec->x,
+                                            .y = spec->y,
+                                             .w = spec->w,
+                                             .h = spec->h,
+                                             .font_size = spec->font_size,
+                                             .wrapped = spec->wrapped},
+                        state, &place);
+  int fs = place.font_size;
+  const char *buf = place.buf;
+  int x = place.x;
+  int y = place.y;
+  int w = place.w;
+  int h = place.h;
+  int text_len = place.text_len;
+  int cursor = place.cursor;
+  HFONT hfont_created = NULL;
+  HFONT hfont = spec->font.hfont
+                    ? spec->font.hfont
+                    : FH_TO_HFONT(Platform_CreateFont(fs, UsedFont));
+  if (hfont && !spec->font.hfont)
+    hfont_created = hfont;
+  HFONT old = NULL;
+  if (hfont)
+    old = (HFONT)SelectObject(hdc, hfont);
+  SetBkMode(hdc, TRANSPARENT);
+  int cursor_x = 0;
+  int text_w = 0;
+  int ascent = 0;
+  int descent = 0;
+  if (hfont) {
+    TEXTMETRIC tm;
+    memset(&tm, 0, sizeof(tm));
+    GetTextMetrics(hdc, &tm);
+    ascent = tm.tmAscent;
+    descent = tm.tmDescent;
+    SIZE szCur;
+    GetTextExtentPoint32A(hdc, buf, cursor, &szCur);
+    cursor_x = szCur.cx;
+    SIZE szText;
+    GetTextExtentPoint32A(hdc, buf, text_len, &szText);
+    text_w = szText.cx;
+  } else {
+    RECT textRc = {x + PROMPT_EDIT_INSET, y, x + w, y + h};
+    DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+  }
+  EditboxUiSpec ui = {.color_text = spec->color_text,
+                      .color_bg = spec->color_bg,
+                      .placeholder = spec->placeholder,
+                      .caret_h = spec->caret_h,
+                      .caret_w = spec->caret_w,
+                      .caret_x = spec->caret_x,
+                      .caret_y = spec->caret_y,
+                      .caret_pos = spec->caret_pos};
+  EditboxSpec eb;
+  editbox_spec_from_place(&eb, &place, state, &ui,
+                          &(EditboxMetrics){.text_w = text_w,
+                                            .cursor_x = cursor_x,
+                                            .ascent = ascent,
+                                            .descent = descent,
+                                            .font = spec->font});
+  eb.text_y += spec->text_y;
+  eb.caret_y += spec->text_y;
+
+  bool prev_lb = draw_state_get()->win32_listbox_surface;
+  draw_state_get()->win32_listbox_surface = false;
+  EditboxLayout lay;
+  editbox_layout(&eb, &lay);
+  editbox_draw(&eb, &lay,
+               spec->hide_caret ? (EDITBOX_PART_TINT | EDITBOX_PART_TEXT)
+                                : EDITBOX_PART_ALL);
+  draw_state_get()->win32_listbox_surface = prev_lb;
+  if (state)
+    state->eb->scroll_offset = eb.scroll;
+
+  if (old)
+    SelectObject(hdc, old);
+  if (hfont_created)
+    DeleteObject(hfont_created);
+  return true;
 }

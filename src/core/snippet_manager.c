@@ -1,4 +1,5 @@
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_misc.h"
 #include "helpers/helpers_input_state.h"
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"
@@ -24,6 +25,21 @@ static char buf[SNIPPET_BUF_CAP];
 static int buf_len = 0;
 
 void snippet_set_fire_fn(SnippetFireFn fn) { fire_fn = fn; }
+
+void snippet_fire(int idx, int del) {
+  const SnippetBinding *b = snippet_get_binding(idx);
+  if (!b || !b->trigger) {
+    return;
+  }
+  for (int i = 0; i < del; i++) {
+    Platform_EmitKey(VK_BACK, 1);
+    Platform_EmitKey(VK_BACK, 0);
+  }
+  if (b->text)
+    type_text_common(b->text);
+  else if (b->func)
+    b->func();
+}
 
 void snippet_reset_buffer(void) { buf_len = 0; }
 

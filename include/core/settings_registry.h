@@ -116,6 +116,7 @@ int settings_entry_count(void);
 void settings_scroll_to_block(const char *entry_name, int block_index);
 const SettingsEntrySpec *settings_entry_at(int index);
 
+void settings_config_sync(const char *key, const char *value);
 void settings_config_set_notify(void (*notify)(const char *key,
                                                const char *value));
 void settings_registry_purge_owner(const char *path_a, const char *path_b);

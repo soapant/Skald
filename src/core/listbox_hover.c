@@ -6,6 +6,8 @@
 
 #include "core/context.h"
 #include "core/focus.h"
+#include "core/draw_state.h"
+#include "core/prompt_geometry.h"
 #include "config_values.h"
 #include "core/timer.h"
 #include "core/types/window.h"
@@ -398,3 +400,91 @@ void listbox_info_init(ListBox *lb) {
   lb->view_offset = 0;
   lb->text_hscroll = 0;
 }
+
+static __thread ListBox *common_lb;
+static __thread ListSpec common_spec;
+static __thread int common_y0, common_item_h, common_visible, common_cur,
+    common_h;
+static __thread int common_bx, common_bw, common_fw, common_fh;
+static __thread bool common_separators;
+
+bool listbox_begin_common(const ListSpec *spec) {
+  if (!spec)
+    return false;
+  ListBox *lb = spec->lb;
+  if (!lb) {
+    return false;
+  }
+  int item_h = spec->item_height ? spec->item_height : 0;
+  ListboxBackendInit bi;
+  if (!Platform_ListboxBackendBegin(item_h, &bi))
+    return false;
+  item_h = item_h > 0 ? item_h : bi.item_h;
+  PromptState *st = Platform_ListboxBackendPromptState(lb);
+  ListboxLayout lay;
+  listbox_compute_layout(spec, bi.list_top, item_h, st ? st->width : PromptW,
+                         st ? st->height : PromptH, lb->item_count, &lay);
+  common_spec = *spec;
+  common_lb = lb;
+  common_item_h = item_h;
+  common_y0 = lay.y0;
+  common_bx = lay.bx;
+  common_bw = lay.bw;
+  common_fw = lay.fw;
+  common_fh = lay.fh;
+  common_h = lay.list_h;
+  common_separators = lay.list_h >= LISTBOX_SEPARATOR_MIN_LIST_H;
+  common_visible = lay.visible;
+  common_cur = 0;
+  UI_LB_SetVisibleCount(lay.visible);
+  listbox_apply_pending_scroll(lb, lay.visible);
+  listbox_set_geometry(common_y0, common_item_h, lay.visible);
+  listbox_hover_focus(lb, common_y0, common_item_h, lb->view_offset,
+                      lay.visible, common_bx, common_bx + common_bw);
+  draw_state_get()->listbox_rows = true;
+  SkaldContext_Get()->window.listbox_placed = true;
+  return true;
+}
+
+bool listbox_next_common(ListItemCtx *out) {
+  if (!out || !common_lb)
+    return false;
+  if (common_cur >= common_visible)
+    return false;
+  int idx = common_lb->view_offset + common_cur;
+  if (idx < 0 || idx >= common_lb->item_count)
+    return false;
+  int y = common_y0 + common_cur * common_item_h;
+  if (common_separators && common_cur == 0)
+    draw_prompt_separator(
+        (DrawPromptSeparatorSpec){.y = common_y0, .width = common_fw});
+  bool sel = (idx == common_lb->selected_index);
+  Platform_ListboxBackendDrawSelection(common_bx, common_bw, y, common_item_h,
+                                       common_fw, common_fh, sel);
+  listbox_set_row_h_scroll(sel ? common_lb->text_hscroll : 0);
+  out->idx = idx;
+  out->selected = sel;
+  out->x = common_spec.x;
+  out->y = y;
+  out->w = common_spec.w;
+  out->h = common_item_h;
+  out->text = common_lb->items[idx];
+  common_cur++;
+  return true;
+}
+
+void listbox_common_end(void) {
+  listbox_set_row_h_scroll(0);
+  if (common_separators && prompt_list_bottom_margin() > 0 && common_y0 >= 0) {
+    draw_prompt_separator((DrawPromptSeparatorSpec){.y = common_y0 + common_h,
+                                                    .width = common_fw});
+  }
+  Platform_ListboxBackendEnd();
+  common_lb = NULL;
+  common_visible = 0;
+  common_cur = 0;
+  common_y0 = -1;
+  draw_state_get()->listbox_rows = false;
+}
+
+int listbox_common_item_height(void) { return common_item_h; }

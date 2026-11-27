@@ -14,6 +14,7 @@
 #include "helpers/x11/drawing_x11.h"
 #include "helpers/helpers_misc.h"
 #include "helpers/x11/clipboard_backend_x11.h"
+#include "core/window_manager.h"
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 
@@ -2179,4 +2180,112 @@ char *Platform_FindExecutable(const char *name) {
     hit = strdup(line);
   free(out);
   return hit;
+}
+
+void Platform_SleepSeconds(double seconds) {
+  if (seconds <= 0)
+    return;
+  struct timespec req;
+  req.tv_sec = (time_t)seconds;
+  req.tv_nsec = (long)((seconds - (double)req.tv_sec) * 1000000000.0);
+  nanosleep(&req, NULL);
+}
+
+bool Platform_PlaceEditbox(const EditSpec *spec) {
+  if (!spec)
+    return false;
+  Display *dpy;
+  XftDraw *xd;
+  Visual *vis;
+  Colormap cmap;
+  x11_get_draw_context(&dpy, &xd, &vis, &cmap);
+  if (!dpy || !xd)
+    return false;
+  WindowManager *wm = WindowManager_Get();
+  PromptState *state = NULL;
+  if (wm) {
+    Popup *top = WindowManager_GetTopPopup(wm);
+    if (top && top->user_data && top->type == POPUP_PROMPT)
+      state = (PromptState *)top->user_data;
+  }
+  EditboxPlace place;
+  editbox_resolve_place(&(EditboxPlaceSpec){.buffer = spec->buffer,
+                                            .x = spec->x,
+                                            .y = spec->y,
+                                             .w = spec->w,
+                                             .h = spec->h,
+                                             .font_size = spec->font_size,
+                                             .wrapped = spec->wrapped},
+                        state, &place);
+  int fs = place.font_size;
+  const char *buf = place.buf;
+  int text_len = place.text_len;
+  int cursor = place.cursor;
+  FontHandle fh = spec->font;
+  bool needDestroy = false;
+  if (!FH_TO_XFT(fh)) {
+    fh = x11_create_font_on_display(dpy, fs, UsedFont);
+    needDestroy = true;
+  }
+  XftFont *xf = FH_TO_XFT(fh);
+  x11_set_draw_context(dpy, xd, vis, cmap);
+
+  EditboxX11Metrics metrics = {dpy, xf};
+  int cursor_x = 0;
+  int text_w = 0;
+  if (xf) {
+    XGlyphInfo ce;
+    XftTextExtentsUtf8(dpy, xf, (FcChar8 *)buf, cursor, &ce);
+    cursor_x = ce.xOff;
+    XGlyphInfo te;
+    XftTextExtentsUtf8(dpy, xf, (FcChar8 *)buf, text_len, &te);
+    text_w = te.xOff;
+  }
+
+  EditboxUiSpec ui = {.color_text = spec->color_text,
+                      .color_bg = spec->color_bg,
+                      .placeholder = spec->placeholder,
+                      .caret_h = spec->caret_h,
+                      .caret_w = spec->caret_w,
+                      .caret_x = spec->caret_x,
+                      .caret_y = spec->caret_y,
+                      .caret_pos = spec->caret_pos};
+  EditboxSpec eb;
+  editbox_spec_from_place(&eb, &place, state, &ui,
+                          &(EditboxMetrics){.text_w = text_w,
+                                            .cursor_x = cursor_x,
+                                            .ascent = xf ? xf->ascent : 0,
+                                            .descent = xf ? xf->descent : 0,
+                                            .font = fh});
+  eb.text_y += spec->text_y;
+  eb.caret_y += spec->text_y;
+  eb.measure = x11_editbox_measure;
+  eb.measure_user = &metrics;
+
+  EditboxLayout lay;
+  editbox_layout(&eb, &lay);
+  editbox_draw(&eb, &lay,
+               spec->hide_caret ? (EDITBOX_PART_TINT | EDITBOX_PART_TEXT)
+                                : EDITBOX_PART_ALL);
+  if (state)
+    state->eb->scroll_offset = eb.scroll;
+
+  if (state) {
+    if (WindowTitleText && state->window_title) {
+      unsigned long title_col = rgb_to_hex(COLOR_TEXT);
+      x11_set_draw_context(dpy, xd, vis, cmap);
+      Platform_DrawTextRaw(
+          (DrawTextRawSpec){.x = PROMPT_FOOTER_X,
+                            .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
+                            .text = state->window_title,
+                            .color = title_col,
+                            .font = fh,
+                            .align = "LEFT",
+                            .pad = PROMPT_FOOTER_PAD,
+                            .font_size = FontSize});
+    }
+  }
+  if (needDestroy)
+    Platform_DestroyFont(fh);
+  return true;
 }

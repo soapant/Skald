@@ -63,8 +63,6 @@ char *sk_search_file_in_dir_platform(const char *directory,
                                      const char *search_string);
 bool sk_launch_with_args_platform(const char *path, const char *args);
 bool sk_launch_with_args_as_admin_platform(const char *path, const char *args);
-bool sk_place_editbox_platform(const SkEditSpec *spec);
-void sk_sleep_platform(double seconds);
 SkNetStatus sk_net_status_platform(void);
 int sk_get_active_interface_platform(char out[], size_t max_len);
 unsigned long long sk_net_rx_bytes_platform(void);

@@ -10,6 +10,33 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "helpers/helpers_misc.h"
+static const LuaFieldDesc lf_EditSpec[] = {
+    {"name", LSF_STR, offsetof(EditSpec, name), 0, 0, NULL},
+    {"buffer", LSF_BUFFER, offsetof(EditSpec, buffer), offsetof(EditSpec, buffer_size), 8, NULL},
+    {"buffer_size", LSF_INT, offsetof(EditSpec, buffer_size), 0, 0, NULL},
+    {"x", LSF_INT, offsetof(EditSpec, x), 0, 0, NULL},
+    {"y", LSF_INT, offsetof(EditSpec, y), 0, 0, NULL},
+    {"w", LSF_INT, offsetof(EditSpec, w), 0, 0, NULL},
+    {"h", LSF_INT, offsetof(EditSpec, h), 0, 0, NULL},
+    {"placeholder", LSF_STR, offsetof(EditSpec, placeholder), 0, 0, NULL},
+    {"initial_text", LSF_STR, offsetof(EditSpec, initial_text), 0, 0, NULL},
+    {"color_bg", LSF_INT, offsetof(EditSpec, color_bg), 0, 0, NULL},
+    {"color_text", LSF_INT, offsetof(EditSpec, color_text), 0, 0, NULL},
+    {"font_size", LSF_INT, offsetof(EditSpec, font_size), 0, 0, NULL},
+    {"caret_h", LSF_INT, offsetof(EditSpec, caret_h), 0, 0, NULL},
+    {"caret_w", LSF_INT, offsetof(EditSpec, caret_w), 0, 0, NULL},
+    {"caret_x", LSF_INT, offsetof(EditSpec, caret_x), 0, 0, NULL},
+    {"caret_y", LSF_INT, offsetof(EditSpec, caret_y), 0, 0, NULL},
+    {"caret_pos", LSF_INT, offsetof(EditSpec, caret_pos), 0, 0, NULL},
+    {"text_y", LSF_INT, offsetof(EditSpec, text_y), 0, 0, NULL},
+    {"auto_focus", LSF_BOOL, offsetof(EditSpec, auto_focus), 0, 0, NULL},
+    {"hide_caret", LSF_BOOL, offsetof(EditSpec, hide_caret), 0, 0, NULL},
+    {"primary", LSF_BOOL, offsetof(EditSpec, primary), 0, 0, NULL},
+    {"no_tab", LSF_BOOL, offsetof(EditSpec, no_tab), 0, 0, NULL},
+    {"wrapped", LSF_BOOL, offsetof(EditSpec, wrapped), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_EditSpec = {"EditSpec", sizeof(EditSpec), lf_EditSpec, (int)(sizeof(lf_EditSpec)/sizeof(lf_EditSpec[0]))};
 #include "helpers/helpers_hotkey.h"
 static const LuaFieldDesc lf_HotkeyBinding[] = {
     {"vk", LSF_INT, offsetof(HotkeyBinding, vk), 0, 0, NULL},
@@ -77,6 +104,29 @@ static const LuaFieldDesc lf_WidgetMouseState[] = {
     {"down", LSF_BOOL, offsetof(WidgetMouseState, down), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_WidgetMouseState = {"WidgetMouseState", sizeof(WidgetMouseState), lf_WidgetMouseState, (int)(sizeof(lf_WidgetMouseState)/sizeof(lf_WidgetMouseState[0]))};
+#include "helpers/helpers_text.h"
+static const LuaFieldDesc lf_TextSegment[] = {
+    {"text", LSF_STR, offsetof(TextSegment, text), 0, 0, NULL},
+    {"color", LSF_INT, offsetof(TextSegment, color), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_TextSegment = {"TextSegment", sizeof(TextSegment), lf_TextSegment, (int)(sizeof(lf_TextSegment)/sizeof(lf_TextSegment[0]))};
+#include "helpers/helpers_text.h"
+static const LuaFieldDesc lf_WrappedWord[] = {
+    {"text", LSF_STR_INLINE, offsetof(WrappedWord, text), 256, 0, NULL},
+    {"color", LSF_INT, offsetof(WrappedWord, color), 0, 0, NULL},
+    {"width", LSF_INT, offsetof(WrappedWord, width), 0, 0, NULL},
+    {"lead", LSF_INT, offsetof(WrappedWord, lead), 0, 0, NULL},
+    {"breaks", LSF_INT, offsetof(WrappedWord, breaks), 0, 0, NULL},
+    {"x", LSF_INT, offsetof(WrappedWord, x), 0, 0, NULL},
+    {"line", LSF_INT, offsetof(WrappedWord, line), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_WrappedWord = {"WrappedWord", sizeof(WrappedWord), lf_WrappedWord, (int)(sizeof(lf_WrappedWord)/sizeof(lf_WrappedWord[0]))};
+#include "helpers/helpers_text.h"
+static const LuaFieldDesc lf_WrapCtx[] = {
+    {"color", LSF_INT, offsetof(WrapCtx, color), 0, 0, NULL},
+    {"font_size", LSF_INT, offsetof(WrapCtx, font_size), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_WrapCtx = {"WrapCtx", sizeof(WrapCtx), lf_WrapCtx, (int)(sizeof(lf_WrapCtx)/sizeof(lf_WrapCtx[0]))};
 #include "helpers/helpers_text.h"
 static const LuaFieldDesc lf_StringList[] = {
     {"items", LSF_STR_LIST, offsetof(StringList, items), offsetof(StringList, count), 8, NULL},
@@ -169,6 +219,19 @@ static const LuaFieldDesc lf_ConfigTomlError[] = {
     {"message", LSF_STR_INLINE, offsetof(ConfigTomlError, message), 256, 0, NULL},
 };
 static const LuaStructDesc lsd_ConfigTomlError = {"ConfigTomlError", sizeof(ConfigTomlError), lf_ConfigTomlError, (int)(sizeof(lf_ConfigTomlError)/sizeof(lf_ConfigTomlError[0]))};
+#include "core/config_section.h"
+static const LuaFieldDesc lf_ConfigHotkeyRegisterSpec[] = {
+    {"name", LSF_STR, offsetof(ConfigHotkeyRegisterSpec, name), 0, 0, NULL},
+    {"key", LSF_STR, offsetof(ConfigHotkeyRegisterSpec, key), 0, 0, NULL},
+    {"default_hotkey", LSF_STR, offsetof(ConfigHotkeyRegisterSpec, default_hotkey), 0, 0, NULL},
+    {"cb", LSF_CB, offsetof(ConfigHotkeyRegisterSpec, cb), 0, 0, NULL},
+    {"cb_ud", LSF_CB, offsetof(ConfigHotkeyRegisterSpec, cb_ud), 0, 1, NULL},
+    {"should_swallow", LSF_CB, offsetof(ConfigHotkeyRegisterSpec, should_swallow), 0, 3, NULL},
+    {"whitelist", LSF_STR_ARRAY, offsetof(ConfigHotkeyRegisterSpec, whitelist), 16, 0, NULL},
+    {"blacklist", LSF_STR_ARRAY, offsetof(ConfigHotkeyRegisterSpec, blacklist), 16, 0, NULL},
+    {"ud", LSF_PTR, offsetof(ConfigHotkeyRegisterSpec, ud), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_ConfigHotkeyRegisterSpec = {"ConfigHotkeyRegisterSpec", sizeof(ConfigHotkeyRegisterSpec), lf_ConfigHotkeyRegisterSpec, (int)(sizeof(lf_ConfigHotkeyRegisterSpec)/sizeof(lf_ConfigHotkeyRegisterSpec[0]))};
 #include "core/search_index.h"
 static const LuaFieldDesc lf_SearchHit[] = {
     {"source_id", LSF_INT, offsetof(SearchHit, source_id), 0, 0, NULL},
@@ -607,6 +670,30 @@ static const LuaFieldDesc lf_HoverWidgetShowSpec[] = {
     {"release_ud", LSF_PTR, offsetof(HoverWidgetShowSpec, release_ud), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_HoverWidgetShowSpec = {"HoverWidgetShowSpec", sizeof(HoverWidgetShowSpec), lf_HoverWidgetShowSpec, (int)(sizeof(lf_HoverWidgetShowSpec)/sizeof(lf_HoverWidgetShowSpec[0]))};
+#include "core/hover_widget.h"
+static const LuaFieldDesc lf_HoverPopupCreateSpec[] = {
+    {"render", LSF_CB, offsetof(HoverPopupCreateSpec, render), 0, 1, NULL},
+    {"render_data", LSF_PTR, offsetof(HoverPopupCreateSpec, render_data), 0, 0, NULL},
+    {"w", LSF_INT, offsetof(HoverPopupCreateSpec, w), 0, 0, NULL},
+    {"h", LSF_INT, offsetof(HoverPopupCreateSpec, h), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_HoverPopupCreateSpec = {"HoverPopupCreateSpec", sizeof(HoverPopupCreateSpec), lf_HoverPopupCreateSpec, (int)(sizeof(lf_HoverPopupCreateSpec)/sizeof(lf_HoverPopupCreateSpec[0]))};
+#include "core/hover_widget.h"
+static const LuaFieldDesc lf_HoverPopupCtx[] = {
+    {"render", LSF_CB, offsetof(HoverPopupCtx, render), 0, 1, NULL},
+    {"render_data", LSF_PTR, offsetof(HoverPopupCtx, render_data), 0, 0, NULL},
+    {"w", LSF_INT, offsetof(HoverPopupCtx, w), 0, 0, NULL},
+    {"h", LSF_INT, offsetof(HoverPopupCtx, h), 0, 0, NULL},
+    {"frame", LSF_INT, offsetof(HoverPopupCtx, frame), 0, 0, NULL},
+    {"pad", LSF_INT, offsetof(HoverPopupCtx, pad), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_HoverPopupCtx = {"HoverPopupCtx", sizeof(HoverPopupCtx), lf_HoverPopupCtx, (int)(sizeof(lf_HoverPopupCtx)/sizeof(lf_HoverPopupCtx[0]))};
+#include "core/hover_widget.h"
+static const LuaFieldDesc lf_TextPromptRenderData[] = {
+    {"placeholder", LSF_STR, offsetof(TextPromptRenderData, placeholder), 0, 0, NULL},
+    {"initial_text", LSF_STR, offsetof(TextPromptRenderData, initial_text), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_TextPromptRenderData = {"TextPromptRenderData", sizeof(TextPromptRenderData), lf_TextPromptRenderData, (int)(sizeof(lf_TextPromptRenderData)/sizeof(lf_TextPromptRenderData[0]))};
 #include "core/types.h"
 static const LuaFieldDesc lf_ImageBuffer[] = {
     {"w", LSF_INT, offsetof(ImageBuffer, w), 0, 0, NULL},
@@ -1250,6 +1337,17 @@ static const LuaFieldDesc lf_DrawCanvas[] = {
     {"repaint_pending", LSF_BOOL, offsetof(DrawCanvas, repaint_pending), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_DrawCanvas = {"DrawCanvas", sizeof(DrawCanvas), lf_DrawCanvas, (int)(sizeof(lf_DrawCanvas)/sizeof(lf_DrawCanvas[0]))};
+#include "core/listbox_hover.h"
+static const LuaFieldDesc lf_ListItemCtx[] = {
+    {"idx", LSF_INT, offsetof(ListItemCtx, idx), 0, 0, NULL},
+    {"selected", LSF_BOOL, offsetof(ListItemCtx, selected), 0, 0, NULL},
+    {"x", LSF_INT, offsetof(ListItemCtx, x), 0, 0, NULL},
+    {"y", LSF_INT, offsetof(ListItemCtx, y), 0, 0, NULL},
+    {"w", LSF_INT, offsetof(ListItemCtx, w), 0, 0, NULL},
+    {"h", LSF_INT, offsetof(ListItemCtx, h), 0, 0, NULL},
+    {"text", LSF_STR, offsetof(ListItemCtx, text), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_ListItemCtx = {"ListItemCtx", sizeof(ListItemCtx), lf_ListItemCtx, (int)(sizeof(lf_ListItemCtx)/sizeof(lf_ListItemCtx[0]))};
 #include "core/cc_registry.h"
 static const LuaFieldDesc lf_CcEntrySpec[] = {
     {"display_name", LSF_STR, offsetof(CcEntrySpec, display_name), 0, 0, NULL},
@@ -1374,11 +1472,15 @@ static const LuaFieldDesc lf_SnapRect[] = {
 };
 static const LuaStructDesc lsd_SnapRect = {"SnapRect", sizeof(SnapRect), lf_SnapRect, (int)(sizeof(lf_SnapRect)/sizeof(lf_SnapRect[0]))};
 static const LuaStructDesc *lua_generated_structs[] = {
+    &lsd_EditSpec,
     &lsd_HotkeyBinding,
     &lsd_ListboxLayout,
     &lsd_SlotRect,
     &lsd_MessageSlotSpec,
     &lsd_WidgetMouseState,
+    &lsd_TextSegment,
+    &lsd_WrappedWord,
+    &lsd_WrapCtx,
     &lsd_StringList,
     &lsd_KeyEvent,
     &lsd_MouseEvent,
@@ -1389,6 +1491,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_Popup,
     &lsd_ConfigTomlEntry,
     &lsd_ConfigTomlError,
+    &lsd_ConfigHotkeyRegisterSpec,
     &lsd_SearchHit,
     &lsd_SettingsEntrySpec,
     &lsd_SettingsEditboxField,
@@ -1431,6 +1534,9 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_SkSnippetSpec,
     &lsd_FeatureManifest,
     &lsd_HoverWidgetShowSpec,
+    &lsd_HoverPopupCreateSpec,
+    &lsd_HoverPopupCtx,
+    &lsd_TextPromptRenderData,
     &lsd_ImageBuffer,
     &lsd_SubwindowInfo,
     &lsd_HeadlessDispatch,
@@ -1481,6 +1587,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_EditboxMetrics,
     &lsd_EditboxInitFromSpec,
     &lsd_DrawCanvas,
+    &lsd_ListItemCtx,
     &lsd_CcEntrySpec,
     &lsd_ScrollAreaSpec,
     &lsd_WidgetKey,

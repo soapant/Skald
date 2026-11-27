@@ -1,8 +1,10 @@
 #include "config_values.h"
 #include "helpers/helpers_ui.h"
+#include "helpers/helpers_text.h"
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +16,11 @@
 #include "core/lua_host.h"
 #include "core/types/keys.h"
 #include "core/window_manager.h"
+#include "core/feature_path.h"
+#include "core/search_index.h"
+#include "core/hotkey_manager.h"
+#include "core/editbox.h"
+#include "core/prompt_keys.h"
 #include "platform/platform.h"
 #include "platform/lib.h"
 #include "deps/log.h"
@@ -491,3 +498,468 @@ bool svg_file_size(const char *path, int *out_w, int *out_h) {
   *out_h = h;
   return true;
 }
+
+char *file_read_all_alloc(const char *path) {
+  FILE *f = fopen(path, "rb");
+  if (!f)
+    return NULL;
+  if (fseek(f, 0, SEEK_END) != 0) {
+    fclose(f);
+    return NULL;
+  }
+  long sz = ftell(f);
+  if (sz < 0) {
+    fclose(f);
+    return NULL;
+  }
+  rewind(f);
+  char *buf = (char *)malloc((size_t)sz + 1);
+  if (!buf) {
+    fclose(f);
+    return NULL;
+  }
+  size_t got = fread(buf, 1, (size_t)sz, f);
+  buf[got] = '\0';
+  fclose(f);
+  return buf;
+}
+
+void resolve_window_list(const char *const *wl, const char *const *bl,
+                         const char *const **out_windows,
+                         bool *out_whitelist) {
+  bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
+  const char *const *windows =
+      (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
+  if (out_windows)
+    *out_windows = windows;
+  if (out_whitelist)
+    *out_whitelist = whitelist;
+}
+
+bool setting_parse_bool(const char *v, bool *out) {
+  if (!v || !out)
+    return false;
+  if (lookup_ci_eq(v, "true") || lookup_ci_eq(v, "1") ||
+      lookup_ci_eq(v, "yes") || lookup_ci_eq(v, "on")) {
+    *out = true;
+    return true;
+  }
+  if (lookup_ci_eq(v, "false") || lookup_ci_eq(v, "0") ||
+      lookup_ci_eq(v, "no") || lookup_ci_eq(v, "off")) {
+    *out = false;
+    return true;
+  }
+  return false;
+}
+
+bool setting_parse_float(const char *v, float *out) {
+  if (!v || !*v || !out)
+    return false;
+  char *end = NULL;
+  float f = strtof(v, &end);
+  if (!end || *end != '\0')
+    return false;
+  *out = f;
+  return true;
+}
+
+bool setting_parse_int(const char *v, int *out) {
+  if (!v || !*v || !out)
+    return false;
+  char *end = NULL;
+  long n = strtol(v, &end, 10);
+  if (!end || *end != '\0' || n < INT_MIN || n > INT_MAX)
+    return false;
+  *out = (int)n;
+  return true;
+}
+
+int config_index_of(const void *entries, size_t count, size_t elem_size,
+                    size_t key_off, size_t key_size, const char *key) {
+  (void)key_size;
+  if (!entries || !key)
+    return -1;
+  for (size_t i = 0; i < count; i++) {
+    const char *field = (const char *)entries + i * elem_size + key_off;
+    if (lookup_ci_eq(field, key))
+      return (int)i;
+  }
+  return -1;
+}
+
+char *dup_substring(const char *s, size_t len) {
+  char *out = (char *)malloc(len + 1);
+  if (!out)
+    return NULL;
+  memcpy(out, s, len);
+  out[len] = '\0';
+  return out;
+}
+
+bool canonical_path(const char *path, char *out, size_t cap) {
+  if (!path || !out || cap == 0)
+    return false;
+#if defined(_WIN32)
+  return _fullpath(out, path, cap) != NULL;
+#else
+  char *resolved = realpath(path, NULL);
+  if (!resolved)
+    return false;
+  safe_copy(out, cap, resolved);
+  free(resolved);
+  return true;
+#endif
+}
+
+bool paths_equal(const char *a, const char *b) {
+#if defined(_WIN32)
+  return _stricmp(a, b) == 0;
+#else
+  return strcmp(a, b) == 0;
+#endif
+}
+
+bool rel_to_abs(Pos pos, Pos *out) {
+  if (!out)
+    return false;
+  int vx = 0, vy = 0, vw = 0, vh = 0;
+  if (!Platform_GetVirtualBounds(&vx, &vy, &vw, &vh))
+    return false;
+  out->x = vx + pos.x;
+  out->y = vy + pos.y;
+  return true;
+}
+
+bool pixel_color_matches_tol(RgbColor c, RgbColor target, int tolerance) {
+  int tol = tolerance > 0 ? tolerance : 0;
+  int dr = (int)c.r - (int)target.r;
+  if (dr < 0)
+    dr = -dr;
+  if (dr > tol)
+    return false;
+  int dg = (int)c.g - (int)target.g;
+  if (dg < 0)
+    dg = -dg;
+  if (dg > tol)
+    return false;
+  int db = (int)c.b - (int)target.b;
+  if (db < 0)
+    db = -db;
+  return db <= tol;
+}
+
+bool feature_shortcut_parse(const char *target, char *feature,
+                            size_t feature_cap, char *filter,
+                            size_t filter_cap) {
+  if (!target || !feature || !filter)
+    return false;
+  const char *first = strchr(target, '|');
+  if (!first)
+    return false;
+  const char *second = strchr(first + 1, '|');
+  const char *feature_start = second ? first + 1 : target;
+  const char *filter_start = second ? second + 1 : first + 1;
+  size_t feature_len =
+      second ? (size_t)(second - feature_start) : (size_t)(first - target);
+  size_t filter_len = strlen(filter_start);
+  if (!feature_len || !filter_len)
+    return false;
+  if (feature_len >= feature_cap || filter_len >= filter_cap)
+    return false;
+  memcpy(feature, feature_start, feature_len);
+  feature[feature_len] = '\0';
+  memcpy(filter, filter_start, filter_len);
+  filter[filter_len] = '\0';
+  return true;
+}
+
+void feature_shortcut_select(ListBox *lb, const char *filter) {
+  if (!lb || !filter || !filter[0])
+    return;
+  int fallback = -1;
+  for (int i = 0; i < lb->item_count; i++) {
+    const char *row = listbox_info_row(lb, i);
+    if (!row || !row[0])
+      continue;
+    if (strcmp(row, filter) == 0) {
+      UI_SetSelection(lb, i);
+      return;
+    }
+    if (fallback < 0 && strstr(row, filter))
+      fallback = i;
+  }
+  if (fallback >= 0)
+    UI_SetSelection(lb, fallback);
+}
+
+PromptCallbacks feature_shortcut_make_callbacks(
+    const PromptSpec *spec, const PromptCallbacks *saved) {
+  PromptCallbacks cb = *saved;
+  if (spec->refresh)
+    cb.refresh = spec->refresh;
+  if (spec->enter)
+    cb.enter = spec->enter;
+  if (spec->ctrl_enter)
+    cb.ctrl_enter = spec->ctrl_enter;
+  if (spec->shift_enter)
+    cb.shift_enter = spec->shift_enter;
+  if (spec->ctrl_shift_enter)
+    cb.ctrl_shift_enter = spec->ctrl_shift_enter;
+  if (spec->ctrl_alt_enter)
+    cb.ctrl_alt_enter = spec->ctrl_alt_enter;
+  if (spec->shift_alt_enter)
+    cb.shift_alt_enter = spec->shift_alt_enter;
+  if (spec->render)
+    cb.render = spec->render;
+  if (spec->edit)
+    cb.edit = spec->edit;
+  if (spec->filter)
+    cb.filter = spec->filter;
+  if (spec->help)
+    cb.help = spec->help;
+  return cb;
+}
+
+PromptState *current_prompt_state(void) {
+  SkaldContext *ctx = SkaldContext_Get();
+  return (ctx && ctx->window.headless.state)
+             ? ctx->window.headless.state
+             : prompt_popup_get_top_prompt_state();
+}
+
+unsigned long draw_color(unsigned long color) {
+  return rgb_to_hex((color == 0 || color == COLOR_AUTO) ? COLOR_TEXT : color);
+}
+
+bool resolve_caller_path_silent(void *caller_ret, const char *name, char *full,
+                                size_t cap) {
+  return feature_path_resolve_data_path(caller_ret, name, full, cap);
+}
+
+bool resolve_caller_path(void *caller_ret, const char *name, char *full,
+                         size_t cap, const char *func) {
+  if (!resolve_caller_path_silent(caller_ret, name, full, cap)) {
+    log_warn("%s resolve failed name='%s' feature='%s'", func, name,
+             SkaldContext_Get()->window.current_feature
+                 ? SkaldContext_Get()->window.current_feature
+                 : "(null)");
+    return false;
+  }
+  return true;
+}
+
+bool resolve_icon_path(void *caller, const char *icon, char *out, size_t cap) {
+  if (!icon || (icon[0] != '/' && icon[0] != '\\') || !out || cap == 0)
+    return false;
+  char asset[MAX_PATH];
+  const char *owner = slua_current_owner();
+  if (owner &&
+      feature_path_resolve_asset_for_owner(owner, icon, asset, sizeof(asset)))
+    return safe_copy(out, cap, asset);
+  if (feature_path_resolve_asset_path(caller, icon, asset, sizeof(asset)))
+    return safe_copy(out, cap, asset);
+  return false;
+}
+
+StringList load_file_list_from(void *caller, const char *filepath) {
+  StringList list = {0};
+  if (!filepath)
+    return list;
+  char full[MAX_PATH];
+  if (!resolve_caller_path(caller, filepath, full, sizeof(full),
+                           "sk_load_file_list"))
+    return list;
+  list = File_ReadLines(full);
+  return list;
+}
+
+bool write_lines_from(void *caller, const char *filepath, const char *lines[],
+                      int count) {
+  if (!filepath)
+    return false;
+  if (count < 0)
+    return false;
+  if (count > 0 && !lines)
+    return false;
+  char full[MAX_PATH];
+  if (!resolve_caller_path_silent(caller, filepath, full, sizeof(full)))
+    return false;
+  FILE *f = fopen(full, "w");
+  if (!f)
+    return false;
+  for (int i = 0; i < count; i++) {
+    if (lines[i])
+      fprintf(f, "%s\n", lines[i]);
+    else
+      fprintf(f, "\n");
+  }
+  fclose(f);
+  return true;
+}
+
+bool filter_lines_from(void *caller, const char *path, const char *needle,
+                       bool match_substr) {
+  StringList files = load_file_list_from(caller, path);
+  const char **kept =
+      (const char **)malloc(sizeof(char *) * (files.count ? files.count : 1));
+  if (!kept) {
+    string_list_free(&files);
+    return false;
+  }
+  int k = 0;
+  for (size_t i = 0; i < files.count; i++) {
+    bool drop = match_substr ? strstr(files.items[i], needle) != NULL
+                             : strcmp(files.items[i], needle) == 0;
+    if (!drop)
+      kept[k++] = files.items[i];
+    else {
+      free(files.items[i]);
+      files.items[i] = NULL;
+    }
+  }
+  bool ok = write_lines_from(caller, path, kept, k);
+  free(kept);
+  string_list_free(&files);
+  return ok;
+}
+
+bool type_text_common(const char *s) {
+  if (!s)
+    return false;
+  char *old = Platform_GetClipboardEntry();
+  Platform_CopyToClipboard(s);
+  Platform_EmitKey(VK_LCONTROL, 1);
+  Platform_EmitKey('V', 1);
+  Platform_EmitKey('V', 0);
+  Platform_EmitKey(VK_LCONTROL, 0);
+  WindowManager *wm = WindowManager_Get();
+  for (int i = 0; i < 40; i++) {
+    if (wm)
+      WindowManager_ProcessEvents(wm);
+    Platform_SleepSeconds(0.005);
+  }
+  if (old) {
+    Platform_CopyToClipboard(old);
+    free(old);
+  }
+  return true;
+}
+
+ImageBuffer image_take(ImageBuffer *img) {
+  ImageBuffer out = img ? *img : (ImageBuffer){0};
+  Platform_FreeImage(img);
+  free(img);
+  return out;
+}
+
+bool draw_rect_raw(const DrawRect *spec, unsigned long color, float thickness,
+                   bool filled, bool transparent) {
+  return Platform_DrawRectRaw(
+      (DrawRectRawSpec){.x = spec->x,
+                        .y = spec->y,
+                        .w = spec->w,
+                        .h = spec->h,
+                        .color = color,
+                        .radius = spec->radius ? spec->radius : 0,
+                        .rounded = spec->rounded ? spec->rounded : RoundedCorners,
+                        .opaque = !transparent,
+                        .thickness = thickness,
+                        .filled = filled,
+                        .angle = spec->angle});
+}
+
+bool place_editbox(const EditSpec *spec) {
+  if (!spec) {
+    return false;
+  }
+  if (search_index_current()) {
+    const char *name = (spec->name && spec->name[0])
+                           ? spec->name
+                           : PROMPT_PRIMARY_EDITBOX_NAME;
+    if (strncmp(name, "settings-search:", 16) != 0)
+      search_index_add_text(NULL, spec->buffer, SEARCH_KIND_EDITBOX, name, NULL);
+    return true;
+  }
+  SkaldContext_Get()->window.editbox_placed = true;
+  EditSpec copy = *spec;
+  copy.hide_caret = false;
+  PromptState *state = current_prompt_state();
+  const char *name = spec->name;
+  char *buffer = spec->buffer;
+  size_t buffer_size = spec->buffer_size;
+  bool primary = spec->primary || !name || !name[0];
+  if (primary && copy.w <= 0 && state)
+    copy.w = state->width;
+  if (state && primary && !buffer && state->default_eb) {
+    buffer = state->default_eb->filter;
+    buffer_size = sizeof(state->default_eb->filter);
+  }
+  if (state && (!name || !name[0]))
+    name = PROMPT_PRIMARY_EDITBOX_NAME;
+  bool fresh = state && name && name[0] && !editbox_registry_find(state, name);
+  if (state && name && name[0]) {
+    int dx = 0, dy = 0;
+    get_draw_offset(&dx, &dy);
+    int idx =
+        editbox_registry_place(state, name, buffer, buffer_size, spec->x + dx,
+                               spec->y + dy, copy.w, spec->h);
+    if (idx >= 0) {
+      PromptEditbox *entry = &state->editboxes[idx];
+      if (state->active_editbox < 0)
+        state->active_editbox = idx;
+      entry->primary = primary;
+      entry->no_tab = spec->no_tab;
+      entry->wrapped = spec->wrapped;
+      entry->font_size = spec->font_size > 0 ? spec->font_size : FontSize;
+      if (fresh && spec->auto_focus)
+        editbox_registry_set_active(state, name);
+      const char *ph = copy.placeholder;
+      if (primary && (!ph || !ph[0]) && state->default_eb)
+        ph = state->default_eb->placeholder;
+      if (ph && ph[0]) {
+        if (!entry->eb.placeholder || strcmp(entry->eb.placeholder, ph) != 0) {
+          free(entry->eb.placeholder);
+          entry->eb.placeholder = strdup(ph);
+        }
+      } else {
+        free(entry->eb.placeholder);
+        entry->eb.placeholder = NULL;
+      }
+      copy.placeholder = entry->eb.placeholder;
+      if (fresh && copy.initial_text && copy.initial_text[0]) {
+        size_t cap = buffer && buffer_size ? buffer_size
+                                           : sizeof(entry->eb.filter);
+        size_t n = strnlen(copy.initial_text, cap - 1);
+        if (n >= sizeof(entry->eb.filter))
+          n = sizeof(entry->eb.filter) - 1;
+        memcpy(entry->eb.filter, copy.initial_text, n);
+        entry->eb.filter[n] = '\0';
+        entry->eb.cursor = (int)n;
+        if (buffer && buffer_size) {
+          memcpy(buffer, copy.initial_text, n);
+          buffer[n] = '\0';
+        }
+      }
+      copy.buffer = entry->eb.filter;
+      copy.hide_caret = state->active_editbox != idx;
+      if (state->active_editbox == idx) {
+        state->eb = &entry->eb;
+      } else {
+        EditBox tmp;
+        memset(&tmp, 0, sizeof(tmp));
+        safe_copy(tmp.filter, sizeof(tmp.filter), entry->eb.filter);
+        tmp.cursor = strlen(tmp.filter);
+        EditBox *saved = state->eb;
+        int saved_active = state->active_editbox;
+        state->eb = &tmp;
+        state->active_editbox = idx;
+        bool ok = Platform_PlaceEditbox(&copy);
+        state->active_editbox = saved_active;
+        state->eb = saved;
+        return ok;
+      }
+    }
+  }
+  return Platform_PlaceEditbox(&copy);
+}
+
