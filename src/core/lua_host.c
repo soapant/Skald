@@ -64,6 +64,18 @@ static void track_ref(LuaFeature *f, int ref) {
   f->refs[f->ref_count++] = ref;
 }
 
+static void untrack_ref(LuaFeature *f, int ref) {
+  if (!f)
+    return;
+  for (int i = 0; i < f->ref_count; i++) {
+    if (f->refs[i] != ref)
+      continue;
+    f->refs[i] = f->refs[f->ref_count - 1];
+    f->ref_count--;
+    return;
+  }
+}
+
 static void untrack_refs(LuaFeature *f) {
   if (!f || !f->L)
     return;
@@ -84,11 +96,15 @@ enum { CB_V, CB_PS, CB_BPS, CB_B };
 
 static int cb_refs[CB_TOTAL];
 static LuaFeature *cb_owners[CB_TOTAL];
+static int cb_gen[CB_TOTAL];
+static int cb_next_gen = 1;
+static bool cb_in_use[CB_TOTAL];
 
 static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool) {
   LuaFeature *f = cb_owners[slot];
   if (!f || !f->L)
     return;
+  cb_in_use[slot] = true;
   const char *saved = ski_lua_current_owner();
   char *saved_copy = saved ? strdup(saved) : NULL;
   ski_lua_owner_set(f->owner);
@@ -104,6 +120,7 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool) {
     *out_bool = lua_toboolean(f->L, -1) != 0;
     lua_pop(f->L, 1);
   }
+  cb_in_use[slot] = false;
   ski_lua_owner_clear();
   if (saved_copy) {
     ski_lua_owner_set(saved_copy);
@@ -170,6 +187,26 @@ static void *cb_b_table[CB_B_COUNT] = {
     lua_cb_b_4, lua_cb_b_5, lua_cb_b_6,  lua_cb_b_7,
     lua_cb_b_8, lua_cb_b_9, lua_cb_b_10, lua_cb_b_11};
 
+typedef struct {
+  lua_State *L;
+  const void *fn;
+  int slot;
+  LuaFeature *f;
+} CbCacheEntry;
+
+static CbCacheEntry cb_cache[CB_TOTAL];
+static int cb_cache_count;
+
+static void *cb_fn_for(int slot, int kind) {
+  if (kind == CB_V)
+    return cb_v_table[slot];
+  if (kind == CB_PS)
+    return cb_ps_table[slot - CB_V_COUNT];
+  if (kind == CB_BPS)
+    return cb_bps_table[slot - CB_V_COUNT - CB_PS_COUNT];
+  return cb_b_table[slot - CB_V_COUNT - CB_PS_COUNT - CB_BPS_COUNT];
+}
+
 static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
   static bool cb_init = false;
   if (!cb_init) {
@@ -177,41 +214,72 @@ static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
       cb_refs[i] = LUA_NOREF;
     cb_init = true;
   }
+  const void *key = lua_topointer(L, idx);
+  for (int i = 0; i < cb_cache_count; i++) {
+    if (cb_cache[i].L == L && cb_cache[i].fn == key &&
+        cb_cache[i].f == f)
+      return cb_fn_for(cb_cache[i].slot, kind);
+  }
+
+  int base = 0, count = 0;
+  if (kind == CB_V) {
+    base = 0;
+    count = CB_V_COUNT;
+  } else if (kind == CB_PS) {
+    base = CB_V_COUNT;
+    count = CB_PS_COUNT;
+  } else if (kind == CB_BPS) {
+    base = CB_V_COUNT + CB_PS_COUNT;
+    count = CB_BPS_COUNT;
+  } else {
+    base = CB_V_COUNT + CB_PS_COUNT + CB_BPS_COUNT;
+    count = CB_B_COUNT;
+  }
+  int slot = -1;
+  for (int i = 0; i < count; i++)
+    if (cb_refs[base + i] == LUA_NOREF) {
+      slot = base + i;
+      break;
+    }
+  if (slot < 0) {
+    for (int i = 0; i < count; i++) {
+      int s = base + i;
+      if (cb_in_use[s])
+        continue;
+      if (slot < 0 || cb_gen[s] < cb_gen[slot])
+        slot = s;
+    }
+    if (slot < 0) {
+      luaL_error(L, "no free lua callback slots");
+      return NULL;
+    }
+    int old_ref = cb_refs[slot];
+    LuaFeature *old_owner = cb_owners[slot];
+    if (old_ref != LUA_NOREF && old_owner && old_owner->L)
+      luaL_unref(old_owner->L, LUA_REGISTRYINDEX, old_ref);
+    untrack_ref(old_owner, old_ref);
+    for (int i = 0; i < cb_cache_count;) {
+      if (cb_cache[i].slot == slot) {
+        cb_cache[i] = cb_cache[--cb_cache_count];
+        continue;
+      }
+      i++;
+    }
+  }
+  cb_gen[slot] = cb_next_gen++;
   lua_pushvalue(L, idx);
   int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-  for (int i = 0; i < CB_TOTAL; i++) {
-    if (cb_refs[i] != LUA_NOREF)
-      continue;
-    int base = 0, count = 0;
-    void **table = NULL;
-    if (kind == CB_V) {
-      base = 0;
-      count = CB_V_COUNT;
-      table = cb_v_table;
-    } else if (kind == CB_PS) {
-      base = CB_V_COUNT;
-      count = CB_PS_COUNT;
-      table = cb_ps_table;
-    } else if (kind == CB_BPS) {
-      base = CB_V_COUNT + CB_PS_COUNT;
-      count = CB_BPS_COUNT;
-      table = cb_bps_table;
-    } else {
-      base = CB_V_COUNT + CB_PS_COUNT + CB_BPS_COUNT;
-      count = CB_B_COUNT;
-      table = cb_b_table;
-    }
-    int slot = base + i - base;
-    if (slot < base || slot >= base + count)
-      continue;
-    cb_refs[i] = ref;
-    cb_owners[i] = f;
-    track_ref(f, ref);
-    return table[slot - base];
+  cb_refs[slot] = ref;
+  cb_owners[slot] = f;
+  track_ref(f, ref);
+  if (cb_cache_count < CB_TOTAL) {
+    CbCacheEntry *e = &cb_cache[cb_cache_count++];
+    e->L = L;
+    e->fn = key;
+    e->slot = slot;
+    e->f = f;
   }
-  luaL_unref(L, LUA_REGISTRYINDEX, ref);
-  luaL_error(L, "no free lua callback slots");
-  return NULL;
+  return cb_fn_for(slot, kind);
 }
 
 static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
@@ -501,6 +569,13 @@ static void feature_shutdown(LuaFeature *f) {
       cb_refs[i] = LUA_NOREF;
       cb_owners[i] = NULL;
     }
+  }
+  for (int i = 0; i < cb_cache_count;) {
+    if (cb_cache[i].f == f) {
+      cb_cache[i] = cb_cache[--cb_cache_count];
+      continue;
+    }
+    i++;
   }
   untrack_refs(f);
   purge_owner_set(f->owner, NULL, widget_bump_generation());
