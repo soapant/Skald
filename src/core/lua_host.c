@@ -343,6 +343,10 @@ static void *lua_raw_ptr(lua_State *L, int idx) {
   return NULL;
 }
 
+void *slua_raw_ptr(void *L, int idx) {
+  return lua_raw_ptr((lua_State *)L, idx);
+}
+
 static size_t aux_count_get(const void *base, const LuaFieldDesc *fd) {
   const char *p = (const char *)base + fd->aux;
   int bytes = fd->cb_kind ? fd->cb_kind : (int)sizeof(size_t);

@@ -1910,48 +1910,44 @@ static inline int lthunk_sk_get_icon_size(lua_State *L) {
 }
 static inline int lthunk_sk_free_string_list(lua_State *L) {
   slua_owner_from_state(L);
-  StringList a0; memset(&a0, 0, sizeof(a0));
+  StringList *a0 = (StringList *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_free_string_list");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_string_list"); }
   typedef void (*fn_t)(SkStringList *);
-  ((fn_t)sym)(&a0);
+  ((fn_t)sym)(a0);
   slua_owner_clear();
-  slua_push_struct(L, "StringList", &a0);
-  return 1;
+  return 0;
 }
 static inline int lthunk_sk_free_files_list(lua_State *L) {
   slua_owner_from_state(L);
-  ListOfFiles a0; memset(&a0, 0, sizeof(a0));
+  ListOfFiles *a0 = (ListOfFiles *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_free_files_list");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_files_list"); }
   typedef void (*fn_t)(ListOfFiles *);
-  ((fn_t)sym)(&a0);
+  ((fn_t)sym)(a0);
   slua_owner_clear();
-  slua_push_struct(L, "ListOfFiles", &a0);
-  return 1;
+  return 0;
 }
 static inline int lthunk_sk_free_window_list(lua_State *L) {
   slua_owner_from_state(L);
-  WindowList a0; memset(&a0, 0, sizeof(a0));
+  WindowList *a0 = (WindowList *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_free_window_list");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_window_list"); }
   typedef bool (*fn_t)(SkWindowList *);
-  bool r = ((fn_t)sym)(&a0);
+  bool r = ((fn_t)sym)(a0);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
-  slua_push_struct(L, "WindowList", &a0);
-  return 2;
+  return 1;
 }
 static inline int lthunk_sk_string_list_free(lua_State *L) {
   slua_owner_from_state(L);
-  StringList a0; memset(&a0, 0, sizeof(a0));
+  StringList *a0 = (StringList *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_string_list_free");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_string_list_free"); }
   typedef void (*fn_t)(StringList *);
-  ((fn_t)sym)(&a0);
+  ((fn_t)sym)(a0);
   slua_owner_clear();
-  slua_push_struct(L, "StringList", &a0);
-  return 1;
+  return 0;
 }
 static inline int lthunk_sk_launch_with_args(lua_State *L) {
   slua_owner_from_state(L);
@@ -2034,14 +2030,13 @@ static inline int lthunk_sk_get_feature_list(lua_State *L) {
 }
 static inline int lthunk_sk_free_feature_list(lua_State *L) {
   slua_owner_from_state(L);
-  SkFeatureList a0; memset(&a0, 0, sizeof(a0));
+  SkFeatureList *a0 = (SkFeatureList *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_free_feature_list");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_feature_list"); }
   typedef void (*fn_t)(SkFeatureList *);
-  ((fn_t)sym)(&a0);
+  ((fn_t)sym)(a0);
   slua_owner_clear();
-  slua_push_struct(L, "SkFeatureList", &a0);
-  return 1;
+  return 0;
 }
 static inline int lthunk_sk_init_all_hotkeys(lua_State *L) {
   slua_owner_from_state(L);
@@ -2548,15 +2543,14 @@ static inline int lthunk_sk_string_split(lua_State *L) {
 }
 static inline int lthunk_sk_is_selected(lua_State *L) {
   slua_owner_from_state(L);
-  ListBox a0; memset(&a0, 0, sizeof(a0));
+  ListBox *a0 = (ListBox *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_is_selected");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_selected"); }
   typedef bool (*fn_t)(ListBox *);
-  bool r = ((fn_t)sym)(&a0);
+  bool r = ((fn_t)sym)(a0);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
-  slua_push_struct(L, "ListBox", &a0);
-  return 2;
+  return 1;
 }
 static inline int lthunk_sk_set_edit_text(lua_State *L) {
   slua_owner_from_state(L);
@@ -3001,29 +2995,27 @@ static inline int lthunk_sk_monitor_at(lua_State *L) {
 }
 static inline int lthunk_sk_widget_valid(lua_State *L) {
   slua_owner_from_state(L);
-  Widget a0; memset(&a0, 0, sizeof(a0));
+  Widget *a0 = (Widget *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_widget_valid");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_valid"); }
   typedef bool (*fn_t)(SkWidget *);
-  bool r = ((fn_t)sym)(&a0);
+  bool r = ((fn_t)sym)(a0);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
-  slua_push_struct(L, "Widget", &a0);
-  return 2;
+  return 1;
 }
 static inline int lthunk_sk_widget_poll_key(lua_State *L) {
   slua_owner_from_state(L);
-  Widget a0; memset(&a0, 0, sizeof(a0));
+  Widget *a0 = (Widget *)slua_raw_ptr(L, 1);
   WidgetKey a1; memset(&a1, 0, sizeof(a1));
   void *sym = Platform_GetMainSymbol("sk_widget_poll_key");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_poll_key"); }
   typedef bool (*fn_t)(SkWidget *, SkWidgetKey *);
-  bool r = ((fn_t)sym)(&a0, &a1);
+  bool r = ((fn_t)sym)(a0, &a1);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
-  slua_push_struct(L, "Widget", &a0);
   slua_push_struct(L, "WidgetKey", &a1);
-  return 3;
+  return 2;
 }
 static inline int lthunk_sk_get_widget_pos(lua_State *L) {
   slua_owner_from_state(L);
@@ -3038,36 +3030,33 @@ static inline int lthunk_sk_get_widget_pos(lua_State *L) {
 }
 static inline int lthunk_sk_widget_show(lua_State *L) {
   slua_owner_from_state(L);
-  Widget a0; memset(&a0, 0, sizeof(a0));
+  Widget *a0 = (Widget *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_widget_show");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_show"); }
   typedef void (*fn_t)(SkWidget *);
-  ((fn_t)sym)(&a0);
+  ((fn_t)sym)(a0);
   slua_owner_clear();
-  slua_push_struct(L, "Widget", &a0);
-  return 1;
+  return 0;
 }
 static inline int lthunk_sk_widget_hide(lua_State *L) {
   slua_owner_from_state(L);
-  Widget a0; memset(&a0, 0, sizeof(a0));
+  Widget *a0 = (Widget *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_widget_hide");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_hide"); }
   typedef void (*fn_t)(SkWidget *);
-  ((fn_t)sym)(&a0);
+  ((fn_t)sym)(a0);
   slua_owner_clear();
-  slua_push_struct(L, "Widget", &a0);
-  return 1;
+  return 0;
 }
 static inline int lthunk_sk_widget_destroy(lua_State *L) {
   slua_owner_from_state(L);
-  Widget a0; memset(&a0, 0, sizeof(a0));
+  Widget *a0 = (Widget *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_widget_destroy");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_destroy"); }
   typedef void (*fn_t)(SkWidget *);
-  ((fn_t)sym)(&a0);
+  ((fn_t)sym)(a0);
   slua_owner_clear();
-  slua_push_struct(L, "Widget", &a0);
-  return 1;
+  return 0;
 }
 static inline int lthunk_sk_rand_num_between(lua_State *L) {
   slua_owner_from_state(L);
@@ -3206,14 +3195,13 @@ static inline int lthunk_sk_next_flag(lua_State *L) {
 }
 static inline int lthunk_sk_free_flags(lua_State *L) {
   slua_owner_from_state(L);
-  SkFlagList a0; memset(&a0, 0, sizeof(a0));
+  SkFlagList *a0 = (SkFlagList *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_free_flags");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_free_flags"); }
   typedef void (*fn_t)(SkFlagList *);
-  ((fn_t)sym)(&a0);
+  ((fn_t)sym)(a0);
   slua_owner_clear();
-  slua_push_struct(L, "SkFlagList", &a0);
-  return 1;
+  return 0;
 }
 static inline int lthunk_sk_timer_start(lua_State *L) {
   slua_owner_from_state(L);
@@ -3314,42 +3302,39 @@ static inline int lthunk_sk_run_every(lua_State *L) {
 }
 static inline int lthunk_sk_hashmap_get(lua_State *L) {
   slua_owner_from_state(L);
-  SkHashMap a0; memset(&a0, 0, sizeof(a0));
+  SkHashMap *a0 = (SkHashMap *)slua_raw_ptr(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
   void *sym = Platform_GetMainSymbol("sk_hashmap_get");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_get"); }
   typedef long (*fn_t)(SkHashMap *, const char *, long);
-  long r = ((fn_t)sym)(&a0, (const char *)a1, (long)a2);
+  long r = ((fn_t)sym)(a0, (const char *)a1, (long)a2);
   slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
-  slua_push_struct(L, "SkHashMap", &a0);
-  return 2;
+  return 1;
 }
 static inline int lthunk_sk_hashmap_has(lua_State *L) {
   slua_owner_from_state(L);
-  SkHashMap a0; memset(&a0, 0, sizeof(a0));
+  SkHashMap *a0 = (SkHashMap *)slua_raw_ptr(L, 1);
   const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
   void *sym = Platform_GetMainSymbol("sk_hashmap_has");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_has"); }
   typedef bool (*fn_t)(SkHashMap *, const char *);
-  bool r = ((fn_t)sym)(&a0, (const char *)a1);
+  bool r = ((fn_t)sym)(a0, (const char *)a1);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
-  slua_push_struct(L, "SkHashMap", &a0);
-  return 2;
+  return 1;
 }
 static inline int lthunk_sk_hashmap_len(lua_State *L) {
   slua_owner_from_state(L);
-  SkHashMap a0; memset(&a0, 0, sizeof(a0));
+  SkHashMap *a0 = (SkHashMap *)slua_raw_ptr(L, 1);
   void *sym = Platform_GetMainSymbol("sk_hashmap_len");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_hashmap_len"); }
   typedef size_t (*fn_t)(SkHashMap *);
-  size_t r = ((fn_t)sym)(&a0);
+  size_t r = ((fn_t)sym)(a0);
   slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
-  slua_push_struct(L, "SkHashMap", &a0);
-  return 2;
+  return 1;
 }
 static inline int lthunk_sk_get_all_window_titles(lua_State *L) {
   slua_owner_from_state(L);

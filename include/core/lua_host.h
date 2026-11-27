@@ -18,5 +18,6 @@ void *slua_callback(void *L, int idx, int kind);
 char **slua_string_array(void *L, int idx);
 void slua_fill_struct(void *L, const char *name, int idx, void *base);
 void slua_push_struct(void *L, const char *name, const void *base);
+void *slua_raw_ptr(void *L, int idx);
 
 #endif

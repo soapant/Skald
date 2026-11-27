@@ -57,6 +57,7 @@ TEST(lua_bindings_generated_structs) {
   ASSERT_TRUE(contains(hdr, "lua_alias_from[]"));
   ASSERT_TRUE(contains(hdr, "\"SkRect\""));
   ASSERT_TRUE(contains(hdr, "\"DrawRect\""));
+  ASSERT_TRUE(contains(hdr, "ListBox *a0 = (ListBox *)slua_raw_ptr(L, 1);"));
   free(hdr);
 }
 

@@ -954,6 +954,22 @@ static const char *out_struct_type(const char *t) {
   return struct_name_for_type(t);
 }
 
+static bool is_out_struct_param(const char *t, const char *name) {
+  if (!out_struct_type(t))
+    return false;
+  if (!name || !*name)
+    return true;
+  return strstr(name, "out") != NULL || strstr(name, "result") != NULL ||
+         strstr(name, "dst") != NULL;
+}
+
+static const char *in_struct_ptr_type(const char *t, const char *name) {
+  if (is_out_struct_param(t, name) || !strchr(t, '*') ||
+      strstr(t, "const ") != NULL)
+    return NULL;
+  return struct_name_for_type(t);
+}
+
 static bool can_thunk(const FuncDesc *fd) {
   if (!fd || fd->varargs)
     return false;
@@ -975,14 +991,30 @@ static bool can_thunk(const FuncDesc *fd) {
     if (strstr(p, "(*"))
       continue;
     char ptype[256] = {0};
+    char pname[NAME_SZ] = {0};
+    const char *pend = p + strlen(p);
+    const char *pstart = pend;
+    while (pstart > p && (isalnum((unsigned char)pstart[-1]) || pstart[-1] == '_'))
+      pstart--;
+    if (pstart != pend) {
+      size_t nn = (size_t)(pend - pstart);
+      if (nn >= sizeof(pname))
+        nn = sizeof(pname) - 1;
+      memcpy(pname, pstart, nn);
+      pname[nn] = '\0';
+    }
     snprintf(ptype, sizeof(ptype), "%.255s", p);
     char *last_space = strrchr(ptype, ' ');
     if (last_space)
       *last_space = '\0';
     clean(ptype);
+    bool in_struct_ptr = struct_name_for_type(ptype) != NULL &&
+                         strchr(ptype, '*') != NULL &&
+                         strstr(ptype, "const ") == NULL &&
+                         !is_out_struct_param(ptype, pname);
     if (!is_simple_type(ptype) && !is_struct_type(ptype) &&
         callback_kind_for_type(ptype) < 0 && !is_out_param(ptype) &&
-        !out_struct_type(ptype))
+        !out_struct_type(ptype) && !in_struct_ptr)
       return false;
   }
   return true;
@@ -1081,11 +1113,15 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
     const char *t = params[i].type;
     int idx = i + 1;
     int ck = callback_kind_for_type(t);
+    const char *in_struct = in_struct_ptr_type(t, params[i].name);
     if (ck >= 0) {
       fprintf(out, "  void *a%d = slua_callback(L, %d, %d);\n", i, idx, ck);
-    } else if (out_struct_type(t)) {
+    } else if (is_out_struct_param(t, params[i].name)) {
       fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d));\n",
               out_struct_type(t), i, i, i);
+    } else if (in_struct) {
+      fprintf(out, "  %s *a%d = (%s *)slua_raw_ptr(L, %d);\n", in_struct, i,
+              in_struct, idx);
     } else if (is_struct_type(t)) {
       fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d));\n", t, i, i, i);
       fprintf(out, "  slua_fill_struct(L, \"%s\", %d, &a%d);\n", t, idx, i);
@@ -1149,9 +1185,10 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
     if (i)
       fprintf(out, ", ");
     const char *t = params[i].type;
-    if (out_struct_type(t))
+    if (is_out_struct_param(t, params[i].name))
       fprintf(out, "&a%d", i);
-    else if (is_struct_type(t) || is_handle_type(t))
+    else if (is_struct_type(t) || is_handle_type(t) ||
+             in_struct_ptr_type(t, params[i].name))
       fprintf(out, "a%d", i);
     else if (callback_kind_for_type(t) >= 0) {
       char ct[512];
@@ -1179,7 +1216,9 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
   else if (strcmp(k, "f") == 0)
     fprintf(out, "  lua_pushnumber(L, (double)r);\n");
   for (int i = 0; i < n; i++) {
-    const char *osn = out_struct_type(params[i].type);
+    const char *osn = is_out_struct_param(params[i].type, params[i].name)
+                          ? out_struct_type(params[i].type)
+                          : NULL;
     if (osn) {
       fprintf(out, "  slua_push_struct(L, \"%s\", &a%d);\n", osn, i);
       continue;
@@ -1200,7 +1239,7 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
   }
   int extra = out_count;
   for (int i = 0; i < n; i++)
-    if (out_struct_type(params[i].type))
+    if (is_out_struct_param(params[i].type, params[i].name))
       extra++;
   fprintf(out, "  return %d;\n}\n", (strcmp(k, "v") == 0 ? 0 : 1) + extra);
 }
