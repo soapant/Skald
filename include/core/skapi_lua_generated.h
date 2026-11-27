@@ -140,19 +140,31 @@ static const LuaFieldDesc lf_PopupVTable[] = {
     {"on_show", LSF_CB, offsetof(PopupVTable, on_show), 0, 0},
     {"on_hide", LSF_CB, offsetof(PopupVTable, on_hide), 0, 0},
     {"on_render", LSF_CB, offsetof(PopupVTable, on_render), 0, 0},
+    {"on_key", LSF_CB, offsetof(PopupVTable, on_key), 0, 3},
     {"on_focus_lost", LSF_CB, offsetof(PopupVTable, on_focus_lost), 0, 0},
     {"destroy", LSF_CB, offsetof(PopupVTable, destroy), 0, 0},
 };
 static const LuaStructDesc lsd_PopupVTable = {"PopupVTable", sizeof(PopupVTable), lf_PopupVTable, (int)(sizeof(lf_PopupVTable)/sizeof(lf_PopupVTable[0]))};
+#include "core/window_manager.h"
+static const LuaFieldDesc lf_Popup[] = {
+    {"vtable", LSF_PTR, offsetof(Popup, vtable), 0, 0},
+    {"manager", LSF_PTR, offsetof(Popup, manager), 0, 0},
+    {"visible", LSF_BOOL, offsetof(Popup, visible), 0, 0},
+    {"user_data", LSF_PTR, offsetof(Popup, user_data), 0, 0},
+    {"type", LSF_INT, offsetof(Popup, type), 0, 0},
+};
+static const LuaStructDesc lsd_Popup = {"Popup", sizeof(Popup), lf_Popup, (int)(sizeof(lf_Popup)/sizeof(lf_Popup[0]))};
 #include "core/config_toml.h"
 static const LuaFieldDesc lf_ConfigTomlEntry[] = {
     {"section", LSF_STR_ARRAY, offsetof(ConfigTomlEntry, section), 32, 0},
     {"key", LSF_STR_ARRAY, offsetof(ConfigTomlEntry, key), 384, 0},
+    {"type", LSF_INT, offsetof(ConfigTomlEntry, type), 0, 0},
     {"raw", LSF_STR_ARRAY, offsetof(ConfigTomlEntry, raw), 1024, 0},
 };
 static const LuaStructDesc lsd_ConfigTomlEntry = {"ConfigTomlEntry", sizeof(ConfigTomlEntry), lf_ConfigTomlEntry, (int)(sizeof(lf_ConfigTomlEntry)/sizeof(lf_ConfigTomlEntry[0]))};
 #include "core/config_toml.h"
 static const LuaFieldDesc lf_ConfigTomlError[] = {
+    {"status", LSF_INT, offsetof(ConfigTomlError, status), 0, 0},
     {"line", LSF_INT, offsetof(ConfigTomlError, line), 0, 0},
     {"message", LSF_STR_ARRAY, offsetof(ConfigTomlError, message), 256, 0},
 };
@@ -173,6 +185,7 @@ static const LuaFieldDesc lf_SettingsEntrySpec[] = {
     {"icon", LSF_STR, offsetof(SettingsEntrySpec, icon), 0, 0},
     {"desc", LSF_STR, offsetof(SettingsEntrySpec, desc), 0, 0},
     {"owner", LSF_STR, offsetof(SettingsEntrySpec, owner), 0, 0},
+    {"render", LSF_CB, offsetof(SettingsEntrySpec, render), 0, 0},
     {"ud", LSF_PTR, offsetof(SettingsEntrySpec, ud), 0, 0},
 };
 static const LuaStructDesc lsd_SettingsEntrySpec = {"SettingsEntrySpec", sizeof(SettingsEntrySpec), lf_SettingsEntrySpec, (int)(sizeof(lf_SettingsEntrySpec)/sizeof(lf_SettingsEntrySpec[0]))};
@@ -185,6 +198,7 @@ static const LuaFieldDesc lf_SettingsEditboxField[] = {
     {"width", LSF_INT, offsetof(SettingsEditboxField, width), 0, 0},
     {"config_key", LSF_STR, offsetof(SettingsEditboxField, config_key), 0, 0},
     {"default_value", LSF_STR, offsetof(SettingsEditboxField, default_value), 0, 0},
+    {"type", LSF_INT, offsetof(SettingsEditboxField, type), 0, 0},
     {"min_value", LSF_FLOAT, offsetof(SettingsEditboxField, min_value), 0, 0},
     {"max_value", LSF_FLOAT, offsetof(SettingsEditboxField, max_value), 0, 0},
 };
@@ -196,6 +210,7 @@ static const LuaFieldDesc lf_SettingsEditboxSpec[] = {
     {"fields", LSF_PTR, offsetof(SettingsEditboxSpec, fields), 0, 0},
     {"field_count", LSF_INT, offsetof(SettingsEditboxSpec, field_count), 0, 0},
     {"x_offset", LSF_INT, offsetof(SettingsEditboxSpec, x_offset), 0, 0},
+    {"on_change", LSF_CB, offsetof(SettingsEditboxSpec, on_change), 0, 0},
 };
 static const LuaStructDesc lsd_SettingsEditboxSpec = {"SettingsEditboxSpec", sizeof(SettingsEditboxSpec), lf_SettingsEditboxSpec, (int)(sizeof(lf_SettingsEditboxSpec)/sizeof(lf_SettingsEditboxSpec[0]))};
 #include "core/settings_registry.h"
@@ -209,7 +224,9 @@ static const LuaFieldDesc lf_SettingsDropdownSpec[] = {
     {"key", LSF_STR, offsetof(SettingsDropdownSpec, key), 0, 0},
     {"title", LSF_STR, offsetof(SettingsDropdownSpec, title), 0, 0},
     {"sub", LSF_STR, offsetof(SettingsDropdownSpec, sub), 0, 0},
+    {"refresh_options", LSF_CB, offsetof(SettingsDropdownSpec, refresh_options), 0, 0},
     {"initial", LSF_INT, offsetof(SettingsDropdownSpec, initial), 0, 0},
+    {"on_select", LSF_CB, offsetof(SettingsDropdownSpec, on_select), 0, 0},
     {"on_hover", LSF_CB, offsetof(SettingsDropdownSpec, on_hover), 0, 0},
 };
 static const LuaStructDesc lsd_SettingsDropdownSpec = {"SettingsDropdownSpec", sizeof(SettingsDropdownSpec), lf_SettingsDropdownSpec, (int)(sizeof(lf_SettingsDropdownSpec)/sizeof(lf_SettingsDropdownSpec[0]))};
@@ -307,6 +324,7 @@ static const LuaFieldDesc lf_SkPopulateListboxSpec[] = {
     {"filter", LSF_STR, offsetof(SkPopulateListboxSpec, filter), 0, 0},
     {"items", LSF_STR, offsetof(SkPopulateListboxSpec, items), 0, 0},
     {"count", LSF_INT, offsetof(SkPopulateListboxSpec, count), 0, 0},
+    {"filter_match", LSF_CB, offsetof(SkPopulateListboxSpec, filter_match), 0, 3},
 };
 static const LuaStructDesc lsd_SkPopulateListboxSpec = {"SkPopulateListboxSpec", sizeof(SkPopulateListboxSpec), lf_SkPopulateListboxSpec, (int)(sizeof(lf_SkPopulateListboxSpec)/sizeof(lf_SkPopulateListboxSpec[0]))};
 #include "core/skapi.h"
@@ -352,7 +370,6 @@ static const LuaFieldDesc lf_SkHoverPopupCtx[] = {
     {"w", LSF_INT, offsetof(SkHoverPopupCtx, w), 0, 0},
     {"h", LSF_INT, offsetof(SkHoverPopupCtx, h), 0, 0},
     {"frame", LSF_INT, offsetof(SkHoverPopupCtx, frame), 0, 0},
-    {"created_at", LSF_INT, offsetof(SkHoverPopupCtx, created_at), 0, 0},
     {"pad", LSF_INT, offsetof(SkHoverPopupCtx, pad), 0, 0},
 };
 static const LuaStructDesc lsd_SkHoverPopupCtx = {"SkHoverPopupCtx", sizeof(SkHoverPopupCtx), lf_SkHoverPopupCtx, (int)(sizeof(lf_SkHoverPopupCtx)/sizeof(lf_SkHoverPopupCtx[0]))};
@@ -566,9 +583,9 @@ static const LuaStructDesc lsd_SkSnippetSpec = {"SkSnippetSpec", sizeof(SkSnippe
 static const LuaFieldDesc lf_FeatureManifest[] = {
     {"name", LSF_STR_ARRAY, offsetof(FeatureManifest, name), 64, 0},
     {"description", LSF_STR_ARRAY, offsetof(FeatureManifest, description), 256, 0},
-    {"deps", LSF_STR_ARRAY, offsetof(FeatureManifest, deps), 0, 0},
+    {"deps", LSF_STR_ARRAY, offsetof(FeatureManifest, deps), sizeof(((FeatureManifest *)0)->deps)/sizeof(((FeatureManifest *)0)->deps[0]), 0},
     {"dep_count", LSF_INT, offsetof(FeatureManifest, dep_count), 0, 0},
-    {"provides", LSF_STR_ARRAY, offsetof(FeatureManifest, provides), 0, 0},
+    {"provides", LSF_STR_ARRAY, offsetof(FeatureManifest, provides), sizeof(((FeatureManifest *)0)->provides)/sizeof(((FeatureManifest *)0)->provides[0]), 0},
     {"provide_count", LSF_INT, offsetof(FeatureManifest, provide_count), 0, 0},
     {"valid", LSF_BOOL, offsetof(FeatureManifest, valid), 0, 0},
 };
@@ -635,6 +652,7 @@ static const LuaFieldDesc lf_SkaldContext[] = {
 static const LuaStructDesc lsd_SkaldContext = {"SkaldContext", sizeof(SkaldContext), lf_SkaldContext, (int)(sizeof(lf_SkaldContext)/sizeof(lf_SkaldContext[0]))};
 #include "core/clipboard_history.h"
 static const LuaFieldDesc lf_ClipboardEntry[] = {
+    {"type", LSF_INT, offsetof(ClipboardEntry, type), 0, 0},
     {"timestamp", LSF_INT, offsetof(ClipboardEntry, timestamp), 0, 0},
     {"text", LSF_STR, offsetof(ClipboardEntry, text), 0, 0},
     {"image_path", LSF_STR, offsetof(ClipboardEntry, image_path), 0, 0},
@@ -686,6 +704,8 @@ static const LuaFieldDesc lf_CheckboxSpec[] = {
 static const LuaStructDesc lsd_CheckboxSpec = {"CheckboxSpec", sizeof(CheckboxSpec), lf_CheckboxSpec, (int)(sizeof(lf_CheckboxSpec)/sizeof(lf_CheckboxSpec[0]))};
 #include "core/http.h"
 static const LuaFieldDesc lf_HttpTransport[] = {
+    {"save_to_file", LSF_CB, offsetof(HttpTransport, save_to_file), 0, 3},
+    {"atomic_rename", LSF_CB, offsetof(HttpTransport, atomic_rename), 0, 3},
 };
 static const LuaStructDesc lsd_HttpTransport = {"HttpTransport", sizeof(HttpTransport), lf_HttpTransport, (int)(sizeof(lf_HttpTransport)/sizeof(lf_HttpTransport[0]))};
 #include "core/types/prompt.h"
@@ -742,6 +762,57 @@ static const LuaFieldDesc lf_PromptEditbox[] = {
 };
 static const LuaStructDesc lsd_PromptEditbox = {"PromptEditbox", sizeof(PromptEditbox), lf_PromptEditbox, (int)(sizeof(lf_PromptEditbox)/sizeof(lf_PromptEditbox[0]))};
 #include "core/types/prompt.h"
+static const LuaFieldDesc lf_ListBox[] = {
+    {"items", LSF_STR, offsetof(ListBox, items), 0, 0},
+    {"items_cap", LSF_INT, offsetof(ListBox, items_cap), 0, 0},
+    {"item_count", LSF_INT, offsetof(ListBox, item_count), 0, 0},
+    {"matching_indices", LSF_PTR, offsetof(ListBox, matching_indices), 0, 0},
+    {"matches_cap", LSF_INT, offsetof(ListBox, matches_cap), 0, 0},
+    {"total_matches", LSF_INT, offsetof(ListBox, total_matches), 0, 0},
+    {"selected_index", LSF_INT, offsetof(ListBox, selected_index), 0, 0},
+    {"selected_text", LSF_STR, offsetof(ListBox, selected_text), 0, 0},
+    {"view_offset", LSF_INT, offsetof(ListBox, view_offset), 0, 0},
+    {"text_hscroll", LSF_INT, offsetof(ListBox, text_hscroll), 0, 0},
+    {"last_filter", LSF_STR_ARRAY, offsetof(ListBox, last_filter), 256, 0},
+};
+static const LuaStructDesc lsd_ListBox = {"ListBox", sizeof(ListBox), lf_ListBox, (int)(sizeof(lf_ListBox)/sizeof(lf_ListBox[0]))};
+#include "core/types/prompt.h"
+static const LuaFieldDesc lf_PromptState[] = {
+    {"width", LSF_INT, offsetof(PromptState, width), 0, 0},
+    {"height", LSF_INT, offsetof(PromptState, height), 0, 0},
+    {"window_title", LSF_STR, offsetof(PromptState, window_title), 0, 0},
+    {"eb", LSF_PTR, offsetof(PromptState, eb), 0, 0},
+    {"default_eb", LSF_PTR, offsetof(PromptState, default_eb), 0, 0},
+    {"editboxes", LSF_STR_ARRAY, offsetof(PromptState, editboxes), sizeof(((PromptState *)0)->editboxes)/sizeof(((PromptState *)0)->editboxes[0]), 0},
+    {"editbox_count", LSF_INT, offsetof(PromptState, editbox_count), 0, 0},
+    {"active_editbox", LSF_INT, offsetof(PromptState, active_editbox), 0, 0},
+    {"lb", LSF_PTR, offsetof(PromptState, lb), 0, 0},
+    {"callbacks", LSF_PTR, offsetof(PromptState, callbacks), 0, 0},
+    {"render_data", LSF_PTR, offsetof(PromptState, render_data), 0, 0},
+    {"no_bg", LSF_BOOL, offsetof(PromptState, no_bg), 0, 0},
+    {"password_mode", LSF_BOOL, offsetof(PromptState, password_mode), 0, 0},
+    {"bg_color", LSF_INT, offsetof(PromptState, bg_color), 0, 0},
+    {"no_separators", LSF_BOOL, offsetof(PromptState, no_separators), 0, 0},
+    {"delta_time", LSF_DOUBLE, offsetof(PromptState, delta_time), 0, 0},
+    {"last_frame_ticks", LSF_INT, offsetof(PromptState, last_frame_ticks), 0, 0},
+};
+static const LuaStructDesc lsd_PromptState = {"PromptState", sizeof(PromptState), lf_PromptState, (int)(sizeof(lf_PromptState)/sizeof(lf_PromptState[0]))};
+#include "core/types/prompt.h"
+static const LuaFieldDesc lf_PromptCallbacks[] = {
+    {"refresh", LSF_CB, offsetof(PromptCallbacks, refresh), 0, 1},
+    {"enter", LSF_CB, offsetof(PromptCallbacks, enter), 0, 2},
+    {"ctrl_enter", LSF_CB, offsetof(PromptCallbacks, ctrl_enter), 0, 2},
+    {"shift_enter", LSF_CB, offsetof(PromptCallbacks, shift_enter), 0, 2},
+    {"ctrl_shift_enter", LSF_CB, offsetof(PromptCallbacks, ctrl_shift_enter), 0, 2},
+    {"ctrl_alt_enter", LSF_CB, offsetof(PromptCallbacks, ctrl_alt_enter), 0, 2},
+    {"shift_alt_enter", LSF_CB, offsetof(PromptCallbacks, shift_alt_enter), 0, 2},
+    {"help", LSF_CB, offsetof(PromptCallbacks, help), 0, 0},
+    {"render", LSF_CB, offsetof(PromptCallbacks, render), 0, 1},
+    {"edit", LSF_CB, offsetof(PromptCallbacks, edit), 0, 1},
+    {"filter", LSF_CB, offsetof(PromptCallbacks, filter), 0, 0},
+};
+static const LuaStructDesc lsd_PromptCallbacks = {"PromptCallbacks", sizeof(PromptCallbacks), lf_PromptCallbacks, (int)(sizeof(lf_PromptCallbacks)/sizeof(lf_PromptCallbacks[0]))};
+#include "core/types/prompt.h"
 static const LuaFieldDesc lf_PromptSpec[] = {
     {"title", LSF_STR, offsetof(PromptSpec, title), 0, 0},
     {"items", LSF_STR, offsetof(PromptSpec, items), 0, 0},
@@ -754,6 +825,7 @@ static const LuaFieldDesc lf_PromptSpec[] = {
     {"shift_alt_enter", LSF_CB, offsetof(PromptSpec, shift_alt_enter), 0, 2},
     {"render", LSF_CB, offsetof(PromptSpec, render), 0, 1},
     {"edit", LSF_CB, offsetof(PromptSpec, edit), 0, 1},
+    {"filter", LSF_CB, offsetof(PromptSpec, filter), 0, 0},
     {"help", LSF_CB, offsetof(PromptSpec, help), 0, 0},
     {"on_close", LSF_CB, offsetof(PromptSpec, on_close), 0, 0},
     {"render_data", LSF_PTR, offsetof(PromptSpec, render_data), 0, 0},
@@ -788,6 +860,7 @@ static const LuaStructDesc lsd_PopupSpec = {"PopupSpec", sizeof(PopupSpec), lf_P
 #include "core/types/prompt.h"
 static const LuaFieldDesc lf_SortOption[] = {
     {"name", LSF_STR, offsetof(SortOption, name), 0, 0},
+    {"func", LSF_CB, offsetof(SortOption, func), 0, 0},
 };
 static const LuaStructDesc lsd_SortOption = {"SortOption", sizeof(SortOption), lf_SortOption, (int)(sizeof(lf_SortOption)/sizeof(lf_SortOption[0]))};
 #include "core/types/keys.h"
@@ -844,6 +917,13 @@ static const LuaFieldDesc lf_SkListItemCtx[] = {
     {"text", LSF_STR, offsetof(SkListItemCtx, text), 0, 0},
 };
 static const LuaStructDesc lsd_SkListItemCtx = {"SkListItemCtx", sizeof(SkListItemCtx), lf_SkListItemCtx, (int)(sizeof(lf_SkListItemCtx)/sizeof(lf_SkListItemCtx[0]))};
+#include "core/types/skapi_types.h"
+static const LuaFieldDesc lf_SkRunAfterPayload[] = {
+    {"seconds", LSF_DOUBLE, offsetof(SkRunAfterPayload, seconds), 0, 0},
+    {"callback", LSF_CB, offsetof(SkRunAfterPayload, callback), 0, 0},
+    {"owner", LSF_STR, offsetof(SkRunAfterPayload, owner), 0, 0},
+};
+static const LuaStructDesc lsd_SkRunAfterPayload = {"SkRunAfterPayload", sizeof(SkRunAfterPayload), lf_SkRunAfterPayload, (int)(sizeof(lf_SkRunAfterPayload)/sizeof(lf_SkRunAfterPayload[0]))};
 #include "core/types/window.h"
 static const LuaFieldDesc lf_WindowLayout[] = {
     {"x", LSF_INT, offsetof(WindowLayout, x), 0, 0},
@@ -927,7 +1007,7 @@ static const LuaStructDesc lsd_ListSpec = {"ListSpec", sizeof(ListSpec), lf_List
 #include "core/types/file.h"
 static const LuaFieldDesc lf_FileItem[] = {
     {"name", LSF_STR_ARRAY, offsetof(FileItem, name), 256, 0},
-    {"path", LSF_STR_ARRAY, offsetof(FileItem, path), 0, 0},
+    {"path", LSF_STR_ARRAY, offsetof(FileItem, path), sizeof(((FileItem *)0)->path)/sizeof(((FileItem *)0)->path[0]), 0},
 };
 static const LuaStructDesc lsd_FileItem = {"FileItem", sizeof(FileItem), lf_FileItem, (int)(sizeof(lf_FileItem)/sizeof(lf_FileItem[0]))};
 #include "core/types/file.h"
@@ -1007,6 +1087,7 @@ static const LuaFieldDesc lf_EditboxSpec[] = {
     {"sel_start", LSF_INT, offsetof(EditboxSpec, sel_start), 0, 0},
     {"sel_end", LSF_INT, offsetof(EditboxSpec, sel_end), 0, 0},
     {"has_selection", LSF_BOOL, offsetof(EditboxSpec, has_selection), 0, 0},
+    {"sel_mode", LSF_INT, offsetof(EditboxSpec, sel_mode), 0, 0},
     {"x", LSF_INT, offsetof(EditboxSpec, x), 0, 0},
     {"y", LSF_INT, offsetof(EditboxSpec, y), 0, 0},
     {"w", LSF_INT, offsetof(EditboxSpec, w), 0, 0},
@@ -1029,6 +1110,7 @@ static const LuaFieldDesc lf_EditboxSpec[] = {
     {"caret_w", LSF_INT, offsetof(EditboxSpec, caret_w), 0, 0},
     {"caret_x", LSF_INT, offsetof(EditboxSpec, caret_x), 0, 0},
     {"caret_pos", LSF_INT, offsetof(EditboxSpec, caret_pos), 0, 0},
+    {"measure", LSF_CB, offsetof(EditboxSpec, measure), 0, 0},
     {"measure_user", LSF_PTR, offsetof(EditboxSpec, measure_user), 0, 0},
     {"wrap_cache", LSF_PTR, offsetof(EditboxSpec, wrap_cache), 0, 0},
 };
@@ -1230,6 +1312,61 @@ static const LuaFieldDesc lf_WidgetSpec[] = {
     {"monitor_name", LSF_STR, offsetof(WidgetSpec, monitor_name), 0, 0},
 };
 static const LuaStructDesc lsd_WidgetSpec = {"WidgetSpec", sizeof(WidgetSpec), lf_WidgetSpec, (int)(sizeof(lf_WidgetSpec)/sizeof(lf_WidgetSpec[0]))};
+#include "core/widget_registry.h"
+static const LuaFieldDesc lf_WidgetState[] = {
+    {"width", LSF_INT, offsetof(WidgetState, width), 0, 0},
+    {"height", LSF_INT, offsetof(WidgetState, height), 0, 0},
+    {"frame", LSF_INT, offsetof(WidgetState, frame), 0, 0},
+    {"elapsed", LSF_DOUBLE, offsetof(WidgetState, elapsed), 0, 0},
+    {"hovered", LSF_BOOL, offsetof(WidgetState, hovered), 0, 0},
+    {"widget", LSF_PTR, offsetof(WidgetState, widget), 0, 0},
+};
+static const LuaStructDesc lsd_WidgetState = {"WidgetState", sizeof(WidgetState), lf_WidgetState, (int)(sizeof(lf_WidgetState)/sizeof(lf_WidgetState[0]))};
+#include "core/widget_registry.h"
+static const LuaFieldDesc lf_Widget[] = {
+    {"name", LSF_STR_ARRAY, offsetof(Widget, name), sizeof(((Widget *)0)->name)/sizeof(((Widget *)0)->name[0]), 0},
+    {"w", LSF_INT, offsetof(Widget, w), 0, 0},
+    {"h", LSF_INT, offsetof(Widget, h), 0, 0},
+    {"gap_override", LSF_INT, offsetof(Widget, gap_override), 0, 0},
+    {"fps", LSF_INT, offsetof(Widget, fps), 0, 0},
+    {"slot", LSF_INT, offsetof(Widget, slot), 0, 0},
+    {"order", LSF_INT, offsetof(Widget, order), 0, 0},
+    {"seq", LSF_INT, offsetof(Widget, seq), 0, 0},
+    {"order_set", LSF_BOOL, offsetof(Widget, order_set), 0, 0},
+    {"free_pos", LSF_BOOL, offsetof(Widget, free_pos), 0, 0},
+    {"x", LSF_INT, offsetof(Widget, x), 0, 0},
+    {"y", LSF_INT, offsetof(Widget, y), 0, 0},
+    {"auto_w", LSF_BOOL, offsetof(Widget, auto_w), 0, 0},
+    {"auto_h", LSF_BOOL, offsetof(Widget, auto_h), 0, 0},
+    {"origin_x", LSF_INT, offsetof(Widget, origin_x), 0, 0},
+    {"origin_y", LSF_INT, offsetof(Widget, origin_y), 0, 0},
+    {"bg_color", LSF_INT, offsetof(Widget, bg_color), 0, 0},
+    {"has_bg", LSF_BOOL, offsetof(Widget, has_bg), 0, 0},
+    {"no_bg", LSF_BOOL, offsetof(Widget, no_bg), 0, 0},
+    {"pad", LSF_INT, offsetof(Widget, pad), 0, 0},
+    {"mapped", LSF_BOOL, offsetof(Widget, mapped), 0, 0},
+    {"dead", LSF_INT, offsetof(Widget, dead), 0, 0},
+    {"hover_running", LSF_BOOL, offsetof(Widget, hover_running), 0, 0},
+    {"hover_thread", LSF_PTR, offsetof(Widget, hover_thread), 0, 0},
+    {"hover_epoch", LSF_INT, offsetof(Widget, hover_epoch), 0, 0},
+    {"win", LSF_PTR, offsetof(Widget, win), 0, 0},
+    {"render", LSF_CB, offsetof(Widget, render), 0, 0},
+    {"frame", LSF_INT, offsetof(Widget, frame), 0, 0},
+    {"monitor", LSF_INT, offsetof(Widget, monitor), 0, 0},
+    {"on_click", LSF_CB, offsetof(Widget, on_click), 0, 0},
+    {"on_hover", LSF_CB, offsetof(Widget, on_hover), 0, 0},
+    {"clickable", LSF_BOOL, offsetof(Widget, clickable), 0, 0},
+    {"hovered", LSF_BOOL, offsetof(Widget, hovered), 0, 0},
+    {"capture_keys", LSF_BOOL, offsetof(Widget, capture_keys), 0, 0},
+    {"key_hovered", LSF_BOOL, offsetof(Widget, key_hovered), 0, 0},
+    {"pinned_keys", LSF_BOOL, offsetof(Widget, pinned_keys), 0, 0},
+    {"prev_click_down", LSF_BOOL, offsetof(Widget, prev_click_down), 0, 0},
+    {"key_queue", LSF_STR_ARRAY, offsetof(Widget, key_queue), sizeof(((Widget *)0)->key_queue)/sizeof(((Widget *)0)->key_queue[0]), 0},
+    {"key_head", LSF_INT, offsetof(Widget, key_head), 0, 0},
+    {"key_tail", LSF_INT, offsetof(Widget, key_tail), 0, 0},
+    {"key_dropped", LSF_INT, offsetof(Widget, key_dropped), 0, 0},
+};
+static const LuaStructDesc lsd_Widget = {"Widget", sizeof(Widget), lf_Widget, (int)(sizeof(lf_Widget)/sizeof(lf_Widget[0]))};
 #include "wm/wm.h"
 static const LuaFieldDesc lf_SnapRect[] = {
     {"x", LSF_INT, offsetof(SnapRect, x), 0, 0},
@@ -1251,6 +1388,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_MonitorEntry,
     &lsd_MonitorInfo,
     &lsd_PopupVTable,
+    &lsd_Popup,
     &lsd_ConfigTomlEntry,
     &lsd_ConfigTomlError,
     &lsd_SearchHit,
@@ -1310,6 +1448,9 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_EditBox,
     &lsd_EditboxWrapCache,
     &lsd_PromptEditbox,
+    &lsd_ListBox,
+    &lsd_PromptState,
+    &lsd_PromptCallbacks,
     &lsd_PromptSpec,
     &lsd_PopupSpec,
     &lsd_SortOption,
@@ -1317,6 +1458,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_PopupKeyEvent,
     &lsd_SkEditSpec,
     &lsd_SkListItemCtx,
+    &lsd_SkRunAfterPayload,
     &lsd_WindowLayout,
     &lsd_WindowData,
     &lsd_RgbColor,
@@ -1345,6 +1487,8 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_ScrollAreaSpec,
     &lsd_WidgetKey,
     &lsd_WidgetSpec,
+    &lsd_WidgetState,
+    &lsd_Widget,
     &lsd_SnapRect,
 };
 static const char *lua_alias_from[] = {
@@ -1685,6 +1829,70 @@ static inline int lthunk_sk_append_to_file(lua_State *L) {
   lua_pushboolean(L, r != 0);
   return 1;
 }
+static inline int lthunk_ski_store_set(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
+  const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
+  void *sym = Platform_GetMainSymbol("ski_store_set");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_store_set"); }
+  typedef bool (*fn_t)(const char *, const char *, const char *);
+  bool r = ((fn_t)sym)((const char *)a0, (const char *)a1, (const char *)a2);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_store_append(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
+  const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
+  void *sym = Platform_GetMainSymbol("ski_store_append");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_store_append"); }
+  typedef bool (*fn_t)(const char *, const char *, const char *);
+  bool r = ((fn_t)sym)((const char *)a0, (const char *)a1, (const char *)a2);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_store_get_all(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
+  void *sym = Platform_GetMainSymbol("ski_store_get_all");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_store_get_all"); }
+  typedef SkStringList (*fn_t)(const char *, const char *);
+  SkStringList r = ((fn_t)sym)((const char *)a0, (const char *)a1);
+  slua_owner_clear();
+  slua_push_struct(L, "SkStringList", &r);
+  return 1;
+}
+static inline int lthunk_ski_store_replace_all(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
+  const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
+  long a3 = lua_isnoneornil(L, 4) ? 0 : lua_tointeger(L, 4);
+  void *sym = Platform_GetMainSymbol("ski_store_replace_all");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_store_replace_all"); }
+  typedef bool (*fn_t)(const char *, const char *, const char *const *, int);
+  bool r = ((fn_t)sym)((const char *)a0, (const char *)a1, (const char *const *)a2, (int)a3);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_store_clear(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
+  void *sym = Platform_GetMainSymbol("ski_store_clear");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_store_clear"); }
+  typedef bool (*fn_t)(const char *, const char *);
+  bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_get_icon_size(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -1897,137 +2105,6 @@ static inline int lthunk_sk_focus_window_by_title(lua_State *L) {
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_window_by_title"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
-  slua_owner_clear();
-  lua_pushboolean(L, r != 0);
-  return 1;
-}
-static inline int lthunk_sk_find_window_by_title(lua_State *L) {
-  slua_owner_from_state(L);
-  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol("sk_find_window_by_title");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_title"); }
-  typedef SkWindowHandle (*fn_t)(const char *);
-  SkWindowHandle r = ((fn_t)sym)((const char *)a0);
-  slua_owner_clear();
-  uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) ? sizeof(rv) : sizeof(r)); lua_pushinteger(L, (lua_Integer)rv);
-  return 1;
-}
-static inline int lthunk_sk_find_window_by_root_atom(lua_State *L) {
-  slua_owner_from_state(L);
-  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol("sk_find_window_by_root_atom");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_root_atom"); }
-  typedef SkWindowHandle (*fn_t)(const char *);
-  SkWindowHandle r = ((fn_t)sym)((const char *)a0);
-  slua_owner_clear();
-  uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) ? sizeof(rv) : sizeof(r)); lua_pushinteger(L, (lua_Integer)rv);
-  return 1;
-}
-static inline int lthunk_sk_find_window_by_id(lua_State *L) {
-  slua_owner_from_state(L);
-  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol("sk_find_window_by_id");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_find_window_by_id"); }
-  typedef SkWindowHandle (*fn_t)(const char *);
-  SkWindowHandle r = ((fn_t)sym)((const char *)a0);
-  slua_owner_clear();
-  uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) ? sizeof(rv) : sizeof(r)); lua_pushinteger(L, (lua_Integer)rv);
-  return 1;
-}
-static inline int lthunk_sk_get_held_window(lua_State *L) {
-  slua_owner_from_state(L);
-  void *sym = Platform_GetMainSymbol("sk_get_held_window");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_held_window"); }
-  typedef SkWindowHandle (*fn_t)(void);
-  SkWindowHandle r = ((fn_t)sym)();
-  slua_owner_clear();
-  uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) ? sizeof(rv) : sizeof(r)); lua_pushinteger(L, (lua_Integer)rv);
-  return 1;
-}
-static inline int lthunk_sk_move_window(lua_State *L) {
-  slua_owner_from_state(L);
-  SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
-  SkPos a1; memset(&a1, 0, sizeof(a1));
-  slua_fill_struct(L, "SkPos", 2, &a1);
-  void *sym = Platform_GetMainSymbol("sk_move_window");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_move_window"); }
-  typedef bool (*fn_t)(SkWindowHandle, SkPos);
-  bool r = ((fn_t)sym)(a0, a1);
-  slua_owner_clear();
-  lua_pushboolean(L, r != 0);
-  return 1;
-}
-static inline int lthunk_sk_set_window_size(lua_State *L) {
-  slua_owner_from_state(L);
-  SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
-  long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
-  long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
-  void *sym = Platform_GetMainSymbol("sk_set_window_size");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_window_size"); }
-  typedef bool (*fn_t)(SkWindowHandle, int, int);
-  bool r = ((fn_t)sym)(a0, (int)a1, (int)a2);
-  slua_owner_clear();
-  lua_pushboolean(L, r != 0);
-  return 1;
-}
-static inline int lthunk_sk_set_window_opacity(lua_State *L) {
-  slua_owner_from_state(L);
-  SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
-  long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
-  void *sym = Platform_GetMainSymbol("sk_set_window_opacity");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_set_window_opacity"); }
-  typedef bool (*fn_t)(SkWindowHandle, int);
-  bool r = ((fn_t)sym)(a0, (int)a1);
-  slua_owner_clear();
-  lua_pushboolean(L, r != 0);
-  return 1;
-}
-static inline int lthunk_sk_get_window_geometry(lua_State *L) {
-  slua_owner_from_state(L);
-  SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
-  void *sym = Platform_GetMainSymbol("sk_get_window_geometry");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_window_geometry"); }
-  typedef SkRect (*fn_t)(SkWindowHandle);
-  SkRect r = ((fn_t)sym)(a0);
-  slua_owner_clear();
-  slua_push_struct(L, "SkRect", &r);
-  return 1;
-}
-static inline int lthunk_sk_window_set_string_property(lua_State *L) {
-  slua_owner_from_state(L);
-  SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
-  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
-  const char *a2 = lua_isnoneornil(L, 3) ? "" : luaL_checkstring(L, 3);
-  void *sym = Platform_GetMainSymbol("sk_window_set_string_property");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_set_string_property"); }
-  typedef bool (*fn_t)(SkWindowHandle, const char *, const char *);
-  bool r = ((fn_t)sym)(a0, (const char *)a1, (const char *)a2);
-  slua_owner_clear();
-  lua_pushboolean(L, r != 0);
-  return 1;
-}
-static inline int lthunk_sk_window_set_long_property(lua_State *L) {
-  slua_owner_from_state(L);
-  SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
-  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
-  long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
-  void *sym = Platform_GetMainSymbol("sk_window_set_long_property");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_set_long_property"); }
-  typedef bool (*fn_t)(SkWindowHandle, const char *, long);
-  bool r = ((fn_t)sym)(a0, (const char *)a1, (long)a2);
-  slua_owner_clear();
-  lua_pushboolean(L, r != 0);
-  return 1;
-}
-static inline int lthunk_sk_window_send_message(lua_State *L) {
-  slua_owner_from_state(L);
-  SkWindowHandle a0; memset(&a0, 0, sizeof(a0)); uintptr_t v0 = lua_isnoneornil(L, 1) ? 0 : (uintptr_t)lua_tointeger(L, 1); memcpy(&a0, &v0, sizeof(a0) < sizeof(uintptr_t) ? sizeof(a0) : sizeof(uintptr_t));
-  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
-  long a2 = lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3);
-  void *sym = Platform_GetMainSymbol("sk_window_send_message");
-  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_window_send_message"); }
-  typedef bool (*fn_t)(SkWindowHandle, const char *, long);
-  bool r = ((fn_t)sym)(a0, (const char *)a1, (long)a2);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
@@ -2460,6 +2537,17 @@ static inline int lthunk_sk_string_split(lua_State *L) {
   slua_push_struct(L, "SkStringList", &r);
   return 1;
 }
+static inline int lthunk_sk_is_selected(lua_State *L) {
+  slua_owner_from_state(L);
+  void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
+  void *sym = Platform_GetMainSymbol("sk_is_selected");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_is_selected"); }
+  typedef bool (*fn_t)(ListBox *);
+  bool r = ((fn_t)sym)((ListBox *)a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_set_edit_text(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -2535,6 +2623,21 @@ static inline int lthunk_sk_image_free(lua_State *L) {
   ((fn_t)sym)(a0);
   slua_owner_clear();
   return 0;
+}
+static inline int lthunk_ski_get_image_size(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  int a1 = 0;
+  int a2 = 0;
+  void *sym = Platform_GetMainSymbol("ski_get_image_size");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_get_image_size"); }
+  typedef SkSize (*fn_t)(const char *, int *, int *);
+  SkSize r = ((fn_t)sym)((const char *)a0, &a1, &a2);
+  slua_owner_clear();
+  slua_push_struct(L, "SkSize", &r);
+  lua_pushinteger(L, (lua_Integer)a1);
+  lua_pushinteger(L, (lua_Integer)a2);
+  return 3;
 }
 static inline int lthunk_sk_editbox_set_text(lua_State *L) {
   slua_owner_from_state(L);
@@ -2753,6 +2856,17 @@ static inline int lthunk_sk_focus_move_before(lua_State *L) {
   lua_pushboolean(L, r != 0);
   return 1;
 }
+static inline int lthunk_sk_focus_move_dir(lua_State *L) {
+  slua_owner_from_state(L);
+  long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
+  void *sym = Platform_GetMainSymbol("sk_focus_move_dir");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_focus_move_dir"); }
+  typedef bool (*fn_t)(SkFocusDir);
+  bool r = ((fn_t)sym)((SkFocusDir)a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_activate_focused(lua_State *L) {
   slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_activate_focused");
@@ -2873,6 +2987,29 @@ static inline int lthunk_sk_monitor_at(lua_State *L) {
   lua_pushboolean(L, r != 0);
   return 1;
 }
+static inline int lthunk_sk_widget_valid(lua_State *L) {
+  slua_owner_from_state(L);
+  void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
+  void *sym = Platform_GetMainSymbol("sk_widget_valid");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_valid"); }
+  typedef bool (*fn_t)(SkWidget *);
+  bool r = ((fn_t)sym)((SkWidget *)a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_sk_widget_poll_key(lua_State *L) {
+  slua_owner_from_state(L);
+  void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
+  void *a1 = (void *)(uintptr_t)(lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2));
+  void *sym = Platform_GetMainSymbol("sk_widget_poll_key");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_poll_key"); }
+  typedef bool (*fn_t)(SkWidget *, SkWidgetKey *);
+  bool r = ((fn_t)sym)((SkWidget *)a0, (SkWidgetKey *)a1);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_get_widget_pos(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -2883,6 +3020,36 @@ static inline int lthunk_sk_get_widget_pos(lua_State *L) {
   slua_owner_clear();
   slua_push_struct(L, "SkPos", &r);
   return 1;
+}
+static inline int lthunk_sk_widget_show(lua_State *L) {
+  slua_owner_from_state(L);
+  void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
+  void *sym = Platform_GetMainSymbol("sk_widget_show");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_show"); }
+  typedef void (*fn_t)(SkWidget *);
+  ((fn_t)sym)((SkWidget *)a0);
+  slua_owner_clear();
+  return 0;
+}
+static inline int lthunk_sk_widget_hide(lua_State *L) {
+  slua_owner_from_state(L);
+  void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
+  void *sym = Platform_GetMainSymbol("sk_widget_hide");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_hide"); }
+  typedef void (*fn_t)(SkWidget *);
+  ((fn_t)sym)((SkWidget *)a0);
+  slua_owner_clear();
+  return 0;
+}
+static inline int lthunk_sk_widget_destroy(lua_State *L) {
+  slua_owner_from_state(L);
+  void *a0 = (void *)(uintptr_t)(lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1));
+  void *sym = Platform_GetMainSymbol("sk_widget_destroy");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_widget_destroy"); }
+  typedef void (*fn_t)(SkWidget *);
+  ((fn_t)sym)((SkWidget *)a0);
+  slua_owner_clear();
+  return 0;
 }
 static inline int lthunk_sk_rand_num_between(lua_State *L) {
   slua_owner_from_state(L);
@@ -2915,6 +3082,19 @@ static inline int lthunk_sk_get_text_height(lua_State *L) {
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_get_text_height"); }
   typedef int (*fn_t)(int);
   int r = ((fn_t)sym)((int)a0);
+  slua_owner_clear();
+  lua_pushinteger(L, (lua_Integer)r);
+  return 1;
+}
+static inline int lthunk_sk_color_lerp(lua_State *L) {
+  slua_owner_from_state(L);
+  long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
+  long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
+  double a2 = lua_isnoneornil(L, 3) ? 0 : lua_tonumber(L, 3);
+  void *sym = Platform_GetMainSymbol("sk_color_lerp");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_color_lerp"); }
+  typedef ColorRef (*fn_t)(ColorRef, ColorRef, float);
+  ColorRef r = ((fn_t)sym)((ColorRef)a0, (ColorRef)a1, (float)a2);
   slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
@@ -2960,6 +3140,18 @@ static inline int lthunk_sk_http_download(lua_State *L) {
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
+}
+static inline int lthunk_sk_http_get_async(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  void *a1 = slua_callback(L, 2, 0);
+  void *a2 = (void *)(uintptr_t)(lua_isnoneornil(L, 3) ? 0 : lua_tointeger(L, 3));
+  void *sym = Platform_GetMainSymbol("sk_http_get_async");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_http_get_async"); }
+  typedef void (*fn_t)(const char *, SkHttpCallback, void *);
+  ((fn_t)sym)((const char *)a0, (SkHttpCallback)a1, (void *)a2);
+  slua_owner_clear();
+  return 0;
 }
 static inline int lthunk_sk_parse_flags(lua_State *L) {
   slua_owner_from_state(L);
@@ -3984,6 +4176,18 @@ static inline int lthunk_sk_settings_scroll_to_block(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static inline int lthunk_ski_add_dep(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  const char *a1 = lua_isnoneornil(L, 2) ? "" : luaL_checkstring(L, 2);
+  void *sym = Platform_GetMainSymbol("ski_add_dep");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_add_dep"); }
+  typedef bool (*fn_t)(const char *, const char *);
+  bool r = ((fn_t)sym)((const char *)a0, (const char *)a1);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_unregister_hotkey(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -4160,6 +4364,17 @@ static inline int lthunk_sk_cap_register_abi(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static inline int lthunk_ski_cap_register(lua_State *L) {
+  slua_owner_from_state(L);
+  const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
+  void *a1 = (void *)(uintptr_t)(lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2));
+  void *sym = Platform_GetMainSymbol("ski_cap_register");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_cap_register"); }
+  typedef void (*fn_t)(const char *, void *);
+  ((fn_t)sym)((const char *)a0, (void *)a1);
+  slua_owner_clear();
+  return 0;
+}
 static inline int lthunk_sk_cap_generation(lua_State *L) {
   slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_cap_generation");
@@ -4252,6 +4467,11 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_remove_line_contains); lua_setfield(L, -2, "sk_remove_line_contains");
   lua_pushcfunction(L, lthunk_sk_prewarm_image); lua_setfield(L, -2, "sk_prewarm_image");
   lua_pushcfunction(L, lthunk_sk_append_to_file); lua_setfield(L, -2, "sk_append_to_file");
+  lua_pushcfunction(L, lthunk_ski_store_set); lua_setfield(L, -2, "ski_store_set");
+  lua_pushcfunction(L, lthunk_ski_store_append); lua_setfield(L, -2, "ski_store_append");
+  lua_pushcfunction(L, lthunk_ski_store_get_all); lua_setfield(L, -2, "ski_store_get_all");
+  lua_pushcfunction(L, lthunk_ski_store_replace_all); lua_setfield(L, -2, "ski_store_replace_all");
+  lua_pushcfunction(L, lthunk_ski_store_clear); lua_setfield(L, -2, "ski_store_clear");
   lua_pushcfunction(L, lthunk_sk_get_icon_size); lua_setfield(L, -2, "sk_get_icon_size");
   lua_pushcfunction(L, lthunk_sk_free_string_list); lua_setfield(L, -2, "sk_free_string_list");
   lua_pushcfunction(L, lthunk_sk_free_files_list); lua_setfield(L, -2, "sk_free_files_list");
@@ -4272,17 +4492,6 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_launch_browser); lua_setfield(L, -2, "sk_launch_browser");
   lua_pushcfunction(L, lthunk_sk_query_browser); lua_setfield(L, -2, "sk_query_browser");
   lua_pushcfunction(L, lthunk_sk_focus_window_by_title); lua_setfield(L, -2, "sk_focus_window_by_title");
-  lua_pushcfunction(L, lthunk_sk_find_window_by_title); lua_setfield(L, -2, "sk_find_window_by_title");
-  lua_pushcfunction(L, lthunk_sk_find_window_by_root_atom); lua_setfield(L, -2, "sk_find_window_by_root_atom");
-  lua_pushcfunction(L, lthunk_sk_find_window_by_id); lua_setfield(L, -2, "sk_find_window_by_id");
-  lua_pushcfunction(L, lthunk_sk_get_held_window); lua_setfield(L, -2, "sk_get_held_window");
-  lua_pushcfunction(L, lthunk_sk_move_window); lua_setfield(L, -2, "sk_move_window");
-  lua_pushcfunction(L, lthunk_sk_set_window_size); lua_setfield(L, -2, "sk_set_window_size");
-  lua_pushcfunction(L, lthunk_sk_set_window_opacity); lua_setfield(L, -2, "sk_set_window_opacity");
-  lua_pushcfunction(L, lthunk_sk_get_window_geometry); lua_setfield(L, -2, "sk_get_window_geometry");
-  lua_pushcfunction(L, lthunk_sk_window_set_string_property); lua_setfield(L, -2, "sk_window_set_string_property");
-  lua_pushcfunction(L, lthunk_sk_window_set_long_property); lua_setfield(L, -2, "sk_window_set_long_property");
-  lua_pushcfunction(L, lthunk_sk_window_send_message); lua_setfield(L, -2, "sk_window_send_message");
   lua_pushcfunction(L, lthunk_sk_close_active_window); lua_setfield(L, -2, "sk_close_active_window");
   lua_pushcfunction(L, lthunk_sk_dismiss_message); lua_setfield(L, -2, "sk_dismiss_message");
   lua_pushcfunction(L, lthunk_sk_message_active); lua_setfield(L, -2, "sk_message_active");
@@ -4324,6 +4533,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_string_ends_with); lua_setfield(L, -2, "sk_string_ends_with");
   lua_pushcfunction(L, lthunk_sk_string_equals_ci); lua_setfield(L, -2, "sk_string_equals_ci");
   lua_pushcfunction(L, lthunk_sk_string_split); lua_setfield(L, -2, "sk_string_split");
+  lua_pushcfunction(L, lthunk_sk_is_selected); lua_setfield(L, -2, "sk_is_selected");
   lua_pushcfunction(L, lthunk_sk_set_edit_text); lua_setfield(L, -2, "sk_set_edit_text");
   lua_pushcfunction(L, lthunk_sk_set_edit_cursor); lua_setfield(L, -2, "sk_set_edit_cursor");
   lua_pushcfunction(L, lthunk_sk_get_edit_cursor); lua_setfield(L, -2, "sk_get_edit_cursor");
@@ -4331,6 +4541,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_image_from_window_title); lua_setfield(L, -2, "sk_image_from_window_title");
   lua_pushcfunction(L, lthunk_sk_image_from_window_id); lua_setfield(L, -2, "sk_image_from_window_id");
   lua_pushcfunction(L, lthunk_sk_image_free); lua_setfield(L, -2, "sk_image_free");
+  lua_pushcfunction(L, lthunk_ski_get_image_size); lua_setfield(L, -2, "ski_get_image_size");
   lua_pushcfunction(L, lthunk_sk_editbox_set_text); lua_setfield(L, -2, "sk_editbox_set_text");
   lua_pushcfunction(L, lthunk_sk_editbox_set_active); lua_setfield(L, -2, "sk_editbox_set_active");
   lua_pushcfunction(L, lthunk_sk_checkbox_is_checked); lua_setfield(L, -2, "sk_checkbox_is_checked");
@@ -4351,6 +4562,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_focus_has_entries); lua_setfield(L, -2, "sk_focus_has_entries");
   lua_pushcfunction(L, lthunk_sk_focus_move_next); lua_setfield(L, -2, "sk_focus_move_next");
   lua_pushcfunction(L, lthunk_sk_focus_move_before); lua_setfield(L, -2, "sk_focus_move_before");
+  lua_pushcfunction(L, lthunk_sk_focus_move_dir); lua_setfield(L, -2, "sk_focus_move_dir");
   lua_pushcfunction(L, lthunk_sk_activate_focused); lua_setfield(L, -2, "sk_activate_focused");
   lua_pushcfunction(L, lthunk_sk_focus_adjust); lua_setfield(L, -2, "sk_focus_adjust");
   lua_pushcfunction(L, lthunk_sk_set_focus); lua_setfield(L, -2, "sk_set_focus");
@@ -4362,14 +4574,21 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_draw_image_auto); lua_setfield(L, -2, "sk_draw_image_auto");
   lua_pushcfunction(L, lthunk_sk_monitor_count); lua_setfield(L, -2, "sk_monitor_count");
   lua_pushcfunction(L, lthunk_sk_monitor_at); lua_setfield(L, -2, "sk_monitor_at");
+  lua_pushcfunction(L, lthunk_sk_widget_valid); lua_setfield(L, -2, "sk_widget_valid");
+  lua_pushcfunction(L, lthunk_sk_widget_poll_key); lua_setfield(L, -2, "sk_widget_poll_key");
   lua_pushcfunction(L, lthunk_sk_get_widget_pos); lua_setfield(L, -2, "sk_get_widget_pos");
+  lua_pushcfunction(L, lthunk_sk_widget_show); lua_setfield(L, -2, "sk_widget_show");
+  lua_pushcfunction(L, lthunk_sk_widget_hide); lua_setfield(L, -2, "sk_widget_hide");
+  lua_pushcfunction(L, lthunk_sk_widget_destroy); lua_setfield(L, -2, "sk_widget_destroy");
   lua_pushcfunction(L, lthunk_sk_rand_num_between); lua_setfield(L, -2, "sk_rand_num_between");
   lua_pushcfunction(L, lthunk_sk_get_text_width); lua_setfield(L, -2, "sk_get_text_width");
   lua_pushcfunction(L, lthunk_sk_get_text_height); lua_setfield(L, -2, "sk_get_text_height");
+  lua_pushcfunction(L, lthunk_sk_color_lerp); lua_setfield(L, -2, "sk_color_lerp");
   lua_pushcfunction(L, lthunk_sk_set_draw_offset); lua_setfield(L, -2, "sk_set_draw_offset");
   lua_pushcfunction(L, lthunk_sk_get_draw_offset); lua_setfield(L, -2, "sk_get_draw_offset");
   lua_pushcfunction(L, lthunk_sk_scroll_end); lua_setfield(L, -2, "sk_scroll_end");
   lua_pushcfunction(L, lthunk_sk_http_download); lua_setfield(L, -2, "sk_http_download");
+  lua_pushcfunction(L, lthunk_sk_http_get_async); lua_setfield(L, -2, "sk_http_get_async");
   lua_pushcfunction(L, lthunk_sk_parse_flags); lua_setfield(L, -2, "sk_parse_flags");
   lua_pushcfunction(L, lthunk_sk_is_flag_prefix); lua_setfield(L, -2, "sk_is_flag_prefix");
   lua_pushcfunction(L, lthunk_sk_next_flag); lua_setfield(L, -2, "sk_next_flag");
@@ -4462,6 +4681,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_cc_entry_count); lua_setfield(L, -2, "sk_cc_entry_count");
   lua_pushcfunction(L, lthunk_sk_settings_entry_count); lua_setfield(L, -2, "sk_settings_entry_count");
   lua_pushcfunction(L, lthunk_sk_settings_scroll_to_block); lua_setfield(L, -2, "sk_settings_scroll_to_block");
+  lua_pushcfunction(L, lthunk_ski_add_dep); lua_setfield(L, -2, "ski_add_dep");
   lua_pushcfunction(L, lthunk_sk_unregister_hotkey); lua_setfield(L, -2, "sk_unregister_hotkey");
   lua_pushcfunction(L, lthunk_sk_disable_global_hotkeys); lua_setfield(L, -2, "sk_disable_global_hotkeys");
   lua_pushcfunction(L, lthunk_sk_enable_global_hotkeys); lua_setfield(L, -2, "sk_enable_global_hotkeys");
@@ -4479,6 +4699,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_reload_all_features); lua_setfield(L, -2, "sk_reload_all_features");
   lua_pushcfunction(L, lthunk_sk_get_pid); lua_setfield(L, -2, "sk_get_pid");
   lua_pushcfunction(L, lthunk_sk_cap_register_abi); lua_setfield(L, -2, "sk_cap_register_abi");
+  lua_pushcfunction(L, lthunk_ski_cap_register); lua_setfield(L, -2, "ski_cap_register");
   lua_pushcfunction(L, lthunk_sk_cap_generation); lua_setfield(L, -2, "sk_cap_generation");
   lua_pushcfunction(L, lthunk_sk_cap_bind_declare); lua_setfield(L, -2, "sk_cap_bind_declare");
   lua_pushcfunction(L, lthunk_sk_register_event); lua_setfield(L, -2, "sk_register_event");

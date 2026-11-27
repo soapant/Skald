@@ -355,8 +355,7 @@ static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
         memcpy(buf, s, len);
       track_alloc(f, buf);
       *(char **)dst = buf;
-      if (fd->aux)
-        *(size_t *)((char *)base + fd->aux) = len;
+      *(size_t *)((char *)base + fd->aux) = len;
       break;
     }
     case LSF_PTR:
@@ -549,6 +548,8 @@ static int l_struct_call(lua_State *L) {
     lua_pushboolean(L, r != 0);
   else if (strcmp(ret, "i") == 0)
     lua_pushinteger(L, (lua_Integer)r);
+  else if (strcmp(ret, "s") == 0)
+    lua_pushstring(L, r ? (const char *)r : "");
   else if (strcmp(ret, "f") == 0) {
     double d = 0;
     memcpy(&d, &r, sizeof(d));
@@ -594,6 +595,13 @@ static int l_fmt_call(lua_State *L) {
     luaL_error(L, "unknown skapi function '%s'", name);
   uintptr_t a[6] = {(uintptr_t)text};
   uintptr_t r = 0;
+  if (strcmp(kind, "f") == 0) {
+    double d = ((double (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                            uintptr_t, uintptr_t))fn)(a[0], 0, 0, 0, 0, 0);
+    lua_pushnumber(L, d);
+    lua_remove(L, -2);
+    return 1;
+  }
   if (strcmp(kind, "b") == 0)
     r = ((bool (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
                    uintptr_t))fn)(a[0], 0, 0, 0, 0, 0);
@@ -674,6 +682,26 @@ void slua_push_struct(void *L, const char *name, const void *base) {
       break;
     case LSF_STR:
       lua_pushstring(ls, *(const char *const *)p ? *(const char *const *)p : "");
+      break;
+    case LSF_STR_ARRAY: {
+      lua_newtable(ls);
+      const char *const *arr = *(const char *const *const *)p;
+      size_t n = fd->aux;
+      for (size_t ai = 0; arr && ai < n; ai++) {
+        lua_pushinteger(ls, (lua_Integer)(ai + 1));
+        lua_pushstring(ls, arr[ai] ? arr[ai] : "");
+        lua_settable(ls, -3);
+      }
+      break;
+    }
+    case LSF_BUFFER: {
+      size_t n = *(const size_t *)((const char *)base + fd->aux);
+      lua_pushlstring(ls, *(const char *const *)p ? *(const char *const *)p : "",
+                      n);
+      break;
+    }
+    case LSF_PTR:
+      lua_pushinteger(ls, (lua_Integer)(uintptr_t) * (void *const *)p);
       break;
     default:
       lua_pushnil(ls);

@@ -8,25 +8,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_LINES 4096
-#define LINE_SZ 4096
+#define MAX_LINES 16384
+#define LINE_SZ 8192
 #define NAME_SZ 128
 
 static void clean(char *s);
+static const char *resolve_alias_base(const char *t);
+static bool is_scalar_type(const char *t);
 
 static const char *ret_kind(const char *line) {
-  if (strncmp(line, "bool", 4) == 0)
+  const char *b = resolve_alias_base(line);
+  if (strncmp(b, "bool", 4) == 0)
     return "b";
-  if (strncmp(line, "const char", 10) == 0 ||
-      (strncmp(line, "char", 4) == 0 && strchr(line, '*') != NULL))
+  if (strncmp(b, "const char", 10) == 0 ||
+      (strncmp(b, "char", 4) == 0 && strchr(b, '*') != NULL))
     return "s";
-  if (strncmp(line, "char", 4) == 0)
+  if (strncmp(b, "char", 4) == 0)
     return "i";
-  if (strncmp(line, "float", 5) == 0 || strncmp(line, "double", 6) == 0)
+  if (strncmp(b, "float", 5) == 0 || strncmp(b, "double", 6) == 0)
     return "f";
-  if (strncmp(line, "void *", 6) == 0 || strncmp(line, "void*", 5) == 0)
+  if (strncmp(b, "void *", 6) == 0 || strncmp(b, "void*", 5) == 0)
     return "i";
-  if (strncmp(line, "void", 4) == 0)
+  if (strncmp(b, "void", 4) == 0)
     return "v";
   return "i";
 }
@@ -42,7 +45,9 @@ static char *trim(char *s) {
 
 typedef struct {
   char name[NAME_SZ];
+  char type[256];
   const char *kind;
+  bool found;
 } RetEntry;
 
 typedef struct {
@@ -52,12 +57,12 @@ typedef struct {
   bool varargs;
 } FuncDesc;
 
-static RetEntry rets[512];
+static RetEntry rets[4096];
 static int ret_count;
-static FuncDesc funcs[512];
+static FuncDesc funcs[4096];
 static int func_count;
-static char struct_names[256][NAME_SZ];
-static char struct_sources[256][512];
+static char struct_names[2048][NAME_SZ];
+static char struct_sources[2048][512];
 static int struct_name_count;
 
 static const char *ret_for(const char *name) {
@@ -67,7 +72,7 @@ static const char *ret_for(const char *name) {
   return "v";
 }
 
-static void collect_rets(char lines[MAX_LINES][LINE_SZ], int line_count) {
+static void collect_rets(char lines[][LINE_SZ], int line_count) {
   for (int i = 0; i < line_count; i++) {
     char work[LINE_SZ];
     snprintf(work, sizeof(work), "%s", lines[i]);
@@ -88,7 +93,7 @@ static void collect_rets(char lines[MAX_LINES][LINE_SZ], int line_count) {
     while (start > p && (isalnum((unsigned char)start[-1]) || start[-1] == '_'))
       start--;
     size_t n = (size_t)(end - start);
-    if (n == 0 || n >= NAME_SZ || ret_count >= 512)
+    if (n == 0 || n >= NAME_SZ || ret_count >= 4096)
       continue;
     char name[NAME_SZ];
     memcpy(name, start, n);
@@ -96,10 +101,17 @@ static void collect_rets(char lines[MAX_LINES][LINE_SZ], int line_count) {
     if (name[0] != 's' || name[1] != 'k')
       continue;
     snprintf(rets[ret_count].name, NAME_SZ, "%s", name);
+    size_t tn2 = (size_t)(open - p);
+    if (tn2 >= sizeof(rets[ret_count].type))
+      tn2 = sizeof(rets[ret_count].type) - 1;
+    memcpy(rets[ret_count].type, p, tn2);
+    rets[ret_count].type[tn2] = '\0';
+    clean(rets[ret_count].type);
     rets[ret_count].kind = ret_kind(p);
+    rets[ret_count].found = true;
     ret_count++;
 
-    if (func_count < 512) {
+    if (func_count < 4096) {
       FuncDesc *fd = &funcs[func_count++];
       snprintf(fd->name, NAME_SZ, "%s", name);
       size_t rn = (size_t)(start - p);
@@ -139,7 +151,7 @@ typedef struct {
   char sig[64];
 } CbTypedef;
 
-static CbTypedef cb_types[128];
+static CbTypedef cb_types[1024];
 static int cb_type_count;
 static char *read_all(const char *path) {
   FILE *f = fopen(path, "rb");
@@ -182,15 +194,19 @@ typedef struct {
   char to[NAME_SZ];
 } Alias;
 
-static Alias aliases[128];
+static Alias aliases[1024];
 static int alias_count;
+static char scalar_names[1024][NAME_SZ];
+static int scalar_name_count;
+static char handle_names[256][NAME_SZ];
+static int handle_name_count;
 
 static void parse_aliases(const char *path) {
   char *buf = read_all(path);
   if (!buf)
     return;
   char *line = strtok(buf, "\n");
-  while (line && alias_count < 128) {
+  while (line && alias_count < 1024) {
     char work[512];
     snprintf(work, sizeof(work), "%s", line);
     clean(work);
@@ -216,9 +232,8 @@ static void parse_aliases(const char *path) {
           end++;
         char from[NAME_SZ] = {0};
         n = (size_t)(end - first);
-        if (n > 0 && n < NAME_SZ &&
-            strcmp(first, "struct") != 0 && strcmp(first, "enum") != 0 &&
-            strcmp(first, "union") != 0) {
+        if (n > 0 && n < NAME_SZ && strcmp(from, "struct") != 0 &&
+            strcmp(from, "enum") != 0 && strcmp(from, "union") != 0) {
           memcpy(from, first, n);
           from[n] = '\0';
           if (from[0] && to[0] && strcmp(from, to) != 0) {
@@ -234,19 +249,64 @@ static void parse_aliases(const char *path) {
   free(buf);
 }
 
+static void parse_enum_typedefs(const char *path) {
+  char *buf = read_all(path);
+  if (!buf)
+    return;
+  char *p = buf;
+  while ((p = strstr(p, "typedef enum")) != NULL && scalar_name_count < 1024) {
+    char *q = p + strlen("typedef enum");
+    while (*q && isspace((unsigned char)*q))
+      q++;
+    char name[NAME_SZ] = {0};
+    if (*q == '{') {
+      char *close = strchr(q, '}');
+      if (!close)
+        break;
+      char *semi = strchr(close, ';');
+      if (!semi)
+        break;
+      char *n = close + 1;
+      while (n < semi && isspace((unsigned char)*n))
+        n++;
+      int ni = 0;
+      while (n < semi && ni < NAME_SZ - 1 &&
+             (isalnum((unsigned char)*n) || *n == '_'))
+        name[ni++] = *n++;
+      name[ni] = '\0';
+      p = semi + 1;
+    } else {
+      int ni = 0;
+      while (*q && ni < NAME_SZ - 1 &&
+             (isalnum((unsigned char)*q) || *q == '_'))
+        name[ni++] = *q++;
+      name[ni] = '\0';
+      p = q;
+    }
+    if (name[0]) {
+      bool known = false;
+      for (int i = 0; i < scalar_name_count && !known; i++)
+        known = strcmp(scalar_names[i], name) == 0;
+      if (!known)
+        snprintf(scalar_names[scalar_name_count++], NAME_SZ, "%s", name);
+    }
+  }
+  free(buf);
+}
+
 typedef struct {
   char name[NAME_SZ];
 } BoolGlobal;
 
-static BoolGlobal bool_globals[256];
+static BoolGlobal bool_globals[1024];
 static int bool_global_count;
 
-static void parse_bool_globals(void) {
-  char *buf = read_all("include/config_defs.h");
+static void parse_bool_globals(const char *path) {
+  char *buf = read_all(path);
   if (!buf)
     return;
   char *line = strtok(buf, "\n");
-  while (line && bool_global_count < 256) {
+  while (line && bool_global_count < 1024) {
     char work[512];
     snprintf(work, sizeof(work), "%s", line);
     char *p = strstr(work, "X(bool,");
@@ -270,15 +330,13 @@ static void parse_bool_globals(void) {
 }
 
 static const char *cb_kind_for_sig(const char *sig) {
-  if (strcmp(sig, "void()") == 0)
-    return "LCB_V";
-  if (strcmp(sig, "bool()") == 0)
-    return "LCB_B";
   if (strcmp(sig, "void(p)") == 0)
     return "LCB_PS";
   if (strcmp(sig, "bool(p)") == 0)
     return "LCB_BPS";
-  return NULL;
+  if (strncmp(sig, "bool(", 5) == 0)
+    return "LCB_B";
+  return "LCB_V";
 }
 
 static void normalize_sig(char *out, size_t cap, const char *ret,
@@ -294,14 +352,26 @@ static void normalize_sig(char *out, size_t cap, const char *ret,
   while (*p && (size_t)(dst - a) < sizeof(a) - 2) {
     if (strncmp(p, "void", 4) == 0 && p[4] == ')')
       break;
+    char arg[128] = {0};
+    size_t an = 0;
+    while (p[an] && p[an] != ',' && an < sizeof(arg) - 1) {
+      arg[an] = p[an];
+      an++;
+    }
+    arg[an] = '\0';
     if (strncmp(p, "PromptState", 11) == 0 ||
         strncmp(p, "void *", 6) == 0 || strncmp(p, "void*", 5) == 0) {
       *dst++ = 'p';
-    } else if (strncmp(p, "const char", 10) == 0 ||
-               strncmp(p, "char *", 6) == 0) {
+    } else if (strstr(arg, "char") && strchr(arg, '*')) {
       *dst++ = 's';
-    } else if (strncmp(p, "int", 3) == 0) {
+    } else if (strstr(arg, "bool")) {
+      *dst++ = 'b';
+    } else if (strstr(arg, "float") || strstr(arg, "double")) {
+      *dst++ = 'f';
+    } else if (is_scalar_type(arg)) {
       *dst++ = 'i';
+    } else {
+      *dst++ = 'u';
     }
     while (*p && *p != ',')
       p++;
@@ -333,7 +403,7 @@ static void parse_callback_typedefs(const char *src) {
         name[ni++] = *q++;
       name[ni] = '\0';
       char *args = strstr(q, ")(");
-      if (args && cb_type_count < 128) {
+      if (args && cb_type_count < 1024) {
         args += 2;
         char *close = strchr(args, ')');
         if (close) {
@@ -422,17 +492,24 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
   }
 
   if (strstr(rest, "SK_STORE_NAME")) {
-    fprintf(out,
-            "M.%s = function(...) return native.%s(\"%s\", native.feature(), "
-            "native.feature(), ...) end\n",
-            name, kind, raw);
+    int n = 0;
+    const char *p2 = rest;
+    while ((p2 = strstr(p2, "SK_STORE_NAME")) != NULL) {
+      n++;
+      p2 += strlen("SK_STORE_NAME");
+    }
+    fprintf(out, "M.%s = function(...) return native.%s(\"%s\"", name, kind,
+            raw);
+    for (int i = 0; i < n; i++)
+      fprintf(out, ", native.feature()");
+    fprintf(out, ", ...) end\n");
     return;
   }
   if (strstr(rest, "__FILE__")) {
     fprintf(out,
-            "M.%s = function(...) return native.v(\"%s\", ..., native.owner()) "
-            "end\n",
-            name, raw);
+            "M.%s = function(...) return native.%s(\"%s\", ..., "
+            "native.owner()) end\n",
+            name, kind, raw);
     return;
   }
   if (strstr(rest, "NULL, NULL")) {
@@ -452,17 +529,10 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
             name);
     return;
   }
-  if (strstr(rest, "const SkMessageSpec")) {
-    fprintf(out,
-            "M.%s = function(t, ...) return native.struct_call(\"ski_message\", "
-            "\"SkMessageSpec\", t or {}, \"v\") end\n",
-            name);
-    return;
-  }
   if (strstr(name, "_fmt")) {
     const char *fk = ret_for(name);
     if (strcmp(fk, "v") != 0 && strcmp(fk, "i") != 0 &&
-        strcmp(fk, "b") != 0 && strcmp(fk, "s") != 0)
+        strcmp(fk, "b") != 0 && strcmp(fk, "s") != 0 && strcmp(fk, "f") != 0)
       fk = "v";
     fprintf(out, "M.%s = function(...) return native.fmt_call(\"%s\", \"%s\", "
                  "...) end\n",
@@ -535,7 +605,7 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
           name, target[0] ? target : name, kind, name);
 }
 
-static char header_paths[512][512];
+static char header_paths[2048][512];
 static int header_count;
 
 static void collect_headers(const char *dir) {
@@ -562,7 +632,7 @@ static void collect_headers(const char *dir) {
                strstr(path, "/deps/") == NULL &&
                strstr(path, "skapi_lua_generated.h") == NULL &&
                strstr(path, "lua_struct.h") == NULL &&
-               header_count < 512) {
+               header_count < 2048) {
       snprintf(header_paths[header_count++], 512, "%s", path);
     }
   }
@@ -619,18 +689,58 @@ static FuncDesc *func_for(const char *name) {
   return NULL;
 }
 
+static const char *resolve_alias_base(const char *t) {
+  static char bufs[8][NAME_SZ];
+  static int slot;
+  slot = (slot + 1) % 8;
+  snprintf(bufs[slot], NAME_SZ, "%.127s", t);
+  const char *base = bufs[slot];
+  for (int pass = 0; pass < 8; pass++) {
+    const char *next = base;
+    for (int j = 0; j < alias_count; j++)
+      if (strcmp(next, aliases[j].from) == 0) {
+        next = aliases[j].to;
+        break;
+      }
+    if (strcmp(next, base) == 0)
+      break;
+    snprintf(bufs[slot], NAME_SZ, "%.127s", next);
+    base = bufs[slot];
+  }
+  return base;
+}
+
+static bool is_builtin_scalar(const char *t) {
+  if (strstr(t, "bool") || strstr(t, "char") || strstr(t, "short") ||
+      strstr(t, "int") || strstr(t, "long") || strstr(t, "unsigned") ||
+      strstr(t, "signed") || strstr(t, "size_t") || strstr(t, "float") ||
+      strstr(t, "double"))
+    return true;
+  return false;
+}
+
+static bool is_scalar_type(const char *t) {
+  const char *b = resolve_alias_base(t);
+  if (is_builtin_scalar(b))
+    return true;
+  for (int i = 0; i < scalar_name_count; i++)
+    if (strcmp(b, scalar_names[i]) == 0)
+      return true;
+  return false;
+}
+
 static bool is_simple_type(const char *t) {
   if (strcmp(t, "void") == 0)
     return true;
-  if (strstr(t, "char") || strstr(t, "bool") || strstr(t, "int") ||
-      strstr(t, "long") || strstr(t, "short") || strstr(t, "unsigned") ||
-      strstr(t, "size_t") || strstr(t, "float") || strstr(t, "double") ||
-      strstr(t, "void *") || strstr(t, "void*") || strstr(t, "uint") ||
-      strstr(t, "Slot") || strstr(t, "Kind") || strstr(t, "Status") ||
-      strstr(t, "Direction") || strstr(t, "Preset") || strstr(t, "Event") || strstr(t, "SkKey") ||
-      strstr(t, "WindowHandle"))
+  if (strstr(t, "void *") || strstr(t, "void*") || strstr(t, "char *") ||
+      strstr(t, "char*"))
     return true;
-  return false;
+  char base[256] = {0};
+  snprintf(base, sizeof(base), "%.255s", t);
+  size_t n = strlen(base);
+  while (n && (base[n - 1] == '*' || base[n - 1] == ' '))
+    base[--n] = '\0';
+  return is_scalar_type(base);
 }
 
 static bool is_struct_type(const char *t) {
@@ -697,11 +807,11 @@ static bool is_out_param(const char *t) {
   size_t n = strlen(base);
   while (n && (base[n - 1] == '*' || base[n - 1] == ' '))
     base[--n] = '\0';
-  return is_simple_type(base) && !is_struct_type(base);
+  return is_scalar_type(base) && !is_struct_type(base);
 }
 
 static bool can_thunk(const FuncDesc *fd) {
-  if (!fd || fd->varargs || strncmp(fd->name, "ski_", 4) == 0)
+  if (!fd || fd->varargs)
     return false;
   if (strchr(fd->ret, '*') || strstr(fd->params, "...") != NULL)
     return false;
@@ -797,7 +907,22 @@ static void callback_cast_type(const char *t, char *out, size_t cap) {
 }
 
 static bool is_handle_type(const char *t) {
-  return strstr(t, "WindowHandle") != NULL;
+  const char *b = resolve_alias_base(t);
+  for (int i = 0; i < handle_name_count; i++)
+    if (strcmp(b, handle_names[i]) == 0)
+      return true;
+  return strstr(b, "WindowHandle") != NULL;
+}
+
+static const char *value_kind_for_type(const char *t) {
+  const char *b = resolve_alias_base(t);
+  if (strstr(b, "bool"))
+    return "b";
+  if (strstr(b, "float") || strstr(b, "double"))
+    return "f";
+  if (strstr(b, "char") && strchr(b, '*'))
+    return "s";
+  return "i";
 }
 
 static void gen_thunk(FILE *out, const FuncDesc *fd) {
@@ -828,15 +953,14 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
               "memcpy(&a%d, &v%d, sizeof(a%d) < sizeof(uintptr_t) ? "
               "sizeof(a%d) : sizeof(uintptr_t));\n",
               t, i, i, i, i, idx, idx, i, i, i, i);
-    } else if (strstr(t, "const char") || strstr(t, "char *") ||
-               strstr(t, "char*")) {
+    } else if (strcmp(value_kind_for_type(t), "s") == 0) {
       fprintf(out,
               "  const char *a%d = lua_isnoneornil(L, %d) ? \"\" : "
               "luaL_checkstring(L, %d);\n",
               i, idx, idx);
-    } else if (strstr(t, "bool") == t) {
+    } else if (strcmp(value_kind_for_type(t), "b") == 0 && !strchr(t, '*')) {
       fprintf(out, "  bool a%d = lua_toboolean(L, %d) != 0;\n", i, idx);
-    } else if (strstr(t, "float") == t || strstr(t, "double") == t) {
+    } else if (strcmp(value_kind_for_type(t), "f") == 0 && !strchr(t, '*')) {
       fprintf(out,
               "  double a%d = lua_isnoneornil(L, %d) ? 0 : "
               "lua_tonumber(L, %d);\n",
@@ -903,7 +1027,17 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
   for (int i = 0; i < n; i++) {
     if (!is_out_param(params[i].type))
       continue;
-    fprintf(out, "  lua_pushinteger(L, (lua_Integer)a%d);\n", i);
+    char base[256];
+    base_type(params[i].type, base, sizeof(base));
+    const char *ok = value_kind_for_type(base);
+    if (strcmp(ok, "b") == 0)
+      fprintf(out, "  lua_pushboolean(L, a%d != 0);\n", i);
+    else if (strcmp(ok, "f") == 0)
+      fprintf(out, "  lua_pushnumber(L, (double)a%d);\n", i);
+    else if (strcmp(ok, "s") == 0)
+      fprintf(out, "  lua_pushstring(L, a%d ? a%d : \"\");\n", i, i);
+    else
+      fprintf(out, "  lua_pushinteger(L, (lua_Integer)a%d);\n", i);
   }
   fprintf(out, "  return %d;\n}\n", (strcmp(k, "v") == 0 ? 0 : 1) + out_count);
 }
@@ -919,11 +1053,46 @@ static void gen_thunk_registry(FILE *out) {
   fprintf(out, "}\n");
 }
 
+static void collect_rets_from_file(const char *path) {
+  FILE *f = fopen(path, "r");
+  if (!f)
+    return;
+  static char rows[MAX_LINES][LINE_SZ];
+  int count = 0;
+  char buf[LINE_SZ];
+  while (fgets(buf, sizeof(buf), f) && count < MAX_LINES) {
+    size_t n = strlen(buf);
+    while (n && (buf[n - 1] == '\n' || buf[n - 1] == '\r'))
+      buf[--n] = '\0';
+    snprintf(rows[count++], LINE_SZ, "%s", buf);
+  }
+  fclose(f);
+  for (int i = 0; i < count; i++) {
+    char work[LINE_SZ];
+    snprintf(work, sizeof(work), "%s", rows[i]);
+    char *p = work;
+    while (*p && isspace((unsigned char)*p))
+      p++;
+    char *semi = strrchr(p, ';');
+    if (!semi || !strchr(p, '('))
+      continue;
+    *semi = '\0';
+    char lines[1][LINE_SZ];
+    snprintf(lines[0], LINE_SZ, "%s", p);
+    collect_rets(lines, 1);
+  }
+}
+
 static int gen_struct_header(void) {
   collect_headers("include");
-
   for (int i = 0; i < header_count; i++)
+    collect_rets_from_file(header_paths[i]);
+
+  for (int i = 0; i < header_count; i++) {
     parse_callback_typedefs(header_paths[i]);
+    parse_enum_typedefs(header_paths[i]);
+    parse_bool_globals(header_paths[i]);
+  }
   FILE *out = fopen("include/core/skapi_lua_generated.h", "w");
   if (!out) {
     fprintf(stderr, "gen_skapi_lua: cannot write generated struct header\n");
@@ -943,6 +1112,8 @@ static int gen_struct_header(void) {
 
   for (int h = 0; h < header_count; h++)
     parse_aliases(header_paths[h]);
+  for (int i = 0; i < ret_count; i++)
+    rets[i].kind = ret_kind(rets[i].type);
 
   for (int h = 0; h < header_count; h++) {
     char *buf = read_all(header_paths[h]);
@@ -951,42 +1122,79 @@ static int gen_struct_header(void) {
       continue;
     }
     char *p = buf;
-    while ((p = strstr(p, "typedef struct {")) != NULL) {
-      char *open = strchr(p, '{');
+    while ((p = strstr(p, "struct")) != NULL) {
+      if (p > buf && (isalnum((unsigned char)p[-1]) || p[-1] == '_')) {
+        p += 6;
+        continue;
+      }
+      char *q = p + 6;
+      while (*q && isspace((unsigned char)*q))
+        q++;
+      char tag[NAME_SZ] = {0};
+      int tag_i = 0;
+      while (*q && (isalnum((unsigned char)*q) || *q == '_')) {
+        if (tag_i < NAME_SZ - 1)
+          tag[tag_i++] = *q;
+        q++;
+      }
+      tag[tag_i] = '\0';
+      while (*q && isspace((unsigned char)*q))
+        q++;
+      if (*q != '{') {
+        p = q;
+        continue;
+      }
+      char *open = q;
       char *close = strchr(open, '}');
       if (!close)
         break;
       char *after = strchr(close, ';');
       if (!after)
         break;
+      bool conditional = false;
+      for (char *d = open + 1; d < close; d++) {
+        if (*d == '#')
+          conditional = true;
+      }
+      if (conditional) {
+        if (tag[0] && strstr(tag, "Handle") && handle_name_count < 256)
+          snprintf(handle_names[handle_name_count++], NAME_SZ, "%s", tag);
+        p = after + 1;
+        goto next_struct;
+      }
       char name[NAME_SZ] = {0};
-      char *np = close + 1;
-      while (*np && isspace((unsigned char)*np))
-        np++;
-      int name_i = 0;
-      while (*np && (isalnum((unsigned char)*np) || *np == '_')) {
-        if (name_i < NAME_SZ - 1)
-          name[name_i++] = *np;
-        np++;
-      }
-      name[name_i] = '\0';
-      if (name[0] && struct_name_count < 256) {
-        snprintf(struct_names[struct_name_count], NAME_SZ, "%s", name);
-        snprintf(struct_sources[struct_name_count], 512, "%.511s", header_paths[h]);
-        struct_name_count++;
-      }
-      if (name[0]) {
-        int si = 0;
-        while (si < struct_name_count && strcmp(struct_names[si], name) != 0)
-          si++;
-        if (si < struct_name_count) {
-          const char *rel = struct_sources[si];
-          if (strncmp(rel, "include/", 8) == 0)
-            rel += 8;
-          fprintf(out, "#include \"%s\"\n", rel);
+      if (tag[0]) {
+        snprintf(name, NAME_SZ, "%s", tag);
+      } else {
+        char *np = close + 1;
+        while (*np && isspace((unsigned char)*np))
+          np++;
+        int name_i = 0;
+        while (*np && (isalnum((unsigned char)*np) || *np == '_')) {
+          if (name_i < NAME_SZ - 1)
+            name[name_i++] = *np;
+          np++;
         }
+        name[name_i] = '\0';
+      }
+      int existing = 0;
+      for (int si = 0; si < struct_name_count && !existing; si++)
+        existing = strcmp(struct_names[si], name) == 0;
+      if (!name[0] || existing || struct_name_count >= 2048) {
+        p = after + 1;
+        continue;
+      }
+      snprintf(struct_names[struct_name_count], NAME_SZ, "%s", name);
+      snprintf(struct_sources[struct_name_count], 512, "%.511s", header_paths[h]);
+      struct_name_count++;
+      {
+        const char *rel = struct_sources[struct_name_count - 1];
+        if (strncmp(rel, "include/", 8) == 0)
+          rel += 8;
+        fprintf(out, "#include \"%s\"\n", rel);
         fprintf(out, "static const LuaFieldDesc lf_%s[] = {\n", name);
         char *body = open + 1;
+        char *body_start = body;
         char *end = close;
         while (body < end) {
           char *semi = strchr(body, ';');
@@ -1004,132 +1212,148 @@ static int gen_struct_header(void) {
           char decls[16][512];
           int decl_count = split_decls(raw_decl, decls);
           for (int di = 0; di < decl_count; di++) {
-          char decl[512] = {0};
-          snprintf(decl, sizeof(decl), "%s", decls[di]);
-          char field[NAME_SZ] = {0};
-          LuaFieldKind kind = LSF_SKIP;
-          int cb_kind = 0;
-          char aux[160] = "0";
-          char *fptr = strstr(decl, "(*");
-          if (fptr) {
-            int fi = 0;
-            char *q = fptr + 2;
-            while (*q && fi < NAME_SZ - 1 && *q != ')')
-              field[fi++] = *q++;
-            field[fi] = '\0';
-            char *args = strstr(q, ")(");
-            if (args && (strstr(decl, "void") == decl ||
-                         strncmp(decl, "bool", 4) == 0)) {
-              args += 2;
-              char *cl = strchr(args, ')');
-              if (cl) {
-                *cl = '\0';
-                char ret[64] = {0};
-                size_t rn = (size_t)(fptr - decl);
-                if (rn > sizeof(ret) - 1)
-                  rn = sizeof(ret) - 1;
-                memcpy(ret, decl, rn);
-                ret[rn] = '\0';
-                clean(ret);
-                char sig[64];
-                normalize_sig(sig, sizeof(sig), ret, args);
-                const char *ck = cb_kind_for_sig(sig);
+            char decl[512] = {0};
+            snprintf(decl, sizeof(decl), "%s", decls[di]);
+            char field[NAME_SZ] = {0};
+            LuaFieldKind kind = LSF_SKIP;
+            int cb_kind = 0;
+            char aux[2048] = "0";
+            char *fptr = strstr(decl, "(*");
+            if (fptr) {
+              int fi = 0;
+              char *q2 = fptr + 2;
+              while (*q2 && fi < NAME_SZ - 1 && *q2 != ')')
+                field[fi++] = *q2++;
+              field[fi] = '\0';
+              char *args = strstr(q2, ")(");
+              if (args && (strstr(decl, "void") == decl ||
+                           strncmp(decl, "bool", 4) == 0)) {
+                args += 2;
+                char *cl = strchr(args, ')');
+                if (cl) {
+                  *cl = '\0';
+                  char ret[64] = {0};
+                  size_t rn = (size_t)(fptr - decl);
+                  if (rn > sizeof(ret) - 1)
+                    rn = sizeof(ret) - 1;
+                  memcpy(ret, decl, rn);
+                  ret[rn] = '\0';
+                  clean(ret);
+                  char sig[64];
+                  normalize_sig(sig, sizeof(sig), ret, args);
+                  const char *ck = cb_kind_for_sig(sig);
+                  if (ck) {
+                    kind = LSF_CB;
+                    if (strcmp(ck, "LCB_V") == 0)
+                      cb_kind = 0;
+                    else if (strcmp(ck, "LCB_PS") == 0)
+                      cb_kind = 1;
+                    else if (strcmp(ck, "LCB_BPS") == 0)
+                      cb_kind = 2;
+                    else
+                      cb_kind = 3;
+                  }
+                }
+              }
+            } else {
+              char *last = NULL;
+              for (char *q2 = decl; *q2; q2++)
+                if (isspace((unsigned char)*q2) || *q2 == '*')
+                  last = q2;
+              if (last) {
+                int fi = 0;
+                char *q2 = last + 1;
+                while (*q2 && fi < NAME_SZ - 1 &&
+                       (isalnum((unsigned char)*q2) || *q2 == '_'))
+                  field[fi++] = *q2++;
+                field[fi] = '\0';
+              }
+              bool is_cb_type = false;
+              for (int t = 0; t < cb_type_count && !is_cb_type; t++) {
+                char *found = strstr(decl, cb_types[t].name);
+                if (!found)
+                  continue;
+                char next_char = found[strlen(cb_types[t].name)];
+                if (next_char != '\0' && next_char != ' ' && next_char != '*')
+                  continue;
+                const char *ck = cb_kind_for_sig(cb_types[t].sig);
                 if (ck) {
                   kind = LSF_CB;
-                  if (strcmp(ck, "LCB_V") == 0)
-                    cb_kind = 0;
-                  else if (strcmp(ck, "LCB_PS") == 0)
-                    cb_kind = 1;
-                  else if (strcmp(ck, "LCB_BPS") == 0)
-                    cb_kind = 2;
-                  else
-                    cb_kind = 3;
+                  cb_kind = strcmp(ck, "LCB_V") == 0     ? 0
+                            : strcmp(ck, "LCB_PS") == 0  ? 1
+                            : strcmp(ck, "LCB_BPS") == 0 ? 2
+                                                         : 3;
+                }
+                is_cb_type = true;
+              }
+              if (strchr(decl, '[')) {
+                kind = LSF_STR_ARRAY;
+                char *br = strchr(decl, '[') + 1;
+                char sz[128] = {0};
+                size_t zi = 0;
+                while (*br && *br != ']' && zi < sizeof(sz) - 1)
+                  sz[zi++] = *br++;
+                sz[zi] = '\0';
+                clean(sz);
+                bool digits = sz[0] != '\0';
+                for (char *dd = sz; *dd; dd++)
+                  if (!isdigit((unsigned char)*dd))
+                    digits = false;
+                if (digits)
+                  snprintf(aux, sizeof(aux), "%s", sz);
+                else
+                  snprintf(aux, sizeof(aux),
+                           "sizeof(((%.*s *)0)->%.*s)/sizeof(((%.*s *)0)->%.*s[0])",
+                           120, name, 120, field, 120, name, 120, field);
+              } else if (is_cb_type) {
+                ;
+              } else {
+                char size_name[NAME_SZ + 8];
+                snprintf(size_name, sizeof(size_name), "%.120s_size", field);
+                char *sz = strstr(body_start, size_name);
+                if (sz && sz < close && (strstr(decl, "char *") ||
+                                         strstr(decl, "char*"))) {
+                  kind = LSF_BUFFER;
+                  snprintf(aux, sizeof(aux), "offsetof(%.60s, %.60s)", name,
+                           size_name);
+                }
+              }
+              if (kind == LSF_SKIP) {
+                if (strstr(decl, "char *") || strstr(decl, "char*") ||
+                    strstr(decl, "const char"))
+                  kind = LSF_STR;
+                else if (strchr(decl, '*'))
+                  kind = LSF_PTR;
+                else if (strstr(decl, "bool") == decl)
+                  kind = LSF_BOOL;
+                else if (strstr(decl, "float") == decl)
+                  kind = LSF_FLOAT;
+                else if (strstr(decl, "double") == decl)
+                  kind = LSF_DOUBLE;
+                else {
+                  char ftype[256] = {0};
+                  snprintf(ftype, sizeof(ftype), "%.255s", decl);
+                  char *sp = strrchr(ftype, ' ');
+                  if (sp)
+                    *sp = '\0';
+                  if (is_scalar_type(ftype))
+                    kind = LSF_INT;
                 }
               }
             }
-          } else {
-            char *last = NULL;
-            for (char *q = decl; *q; q++)
-              if (isspace((unsigned char)*q) || *q == '*')
-                last = q;
-            if (last) {
-              int fi = 0;
-              char *q = last + 1;
-              while (*q && fi < NAME_SZ - 1 &&
-                     (isalnum((unsigned char)*q) || *q == '_'))
-                field[fi++] = *q++;
-              field[fi] = '\0';
-            }
-            bool is_cb_type = false;
-            for (int t = 0; t < cb_type_count && !is_cb_type; t++) {
-              char *found = strstr(decl, cb_types[t].name);
-              if (!found)
-                continue;
-              char next_char = found[strlen(cb_types[t].name)];
-              if (next_char != '\0' && next_char != ' ' && next_char != '*')
-                continue;
-              const char *ck = cb_kind_for_sig(cb_types[t].sig);
-              if (ck) {
-                kind = LSF_CB;
-                cb_kind = strcmp(ck, "LCB_V") == 0     ? 0
-                          : strcmp(ck, "LCB_PS") == 0  ? 1
-                          : strcmp(ck, "LCB_BPS") == 0 ? 2
-                                                       : 3;
-              }
-              is_cb_type = true;
-            }
-            if (strchr(decl, '[')) {
-              kind = LSF_STR_ARRAY;
-              snprintf(aux, sizeof(aux), "%d", atoi(strchr(decl, '[') + 1));
-            }
-            else if (is_cb_type)
-              ;
-            else {
-              char size_name[NAME_SZ + 8];
-              snprintf(size_name, sizeof(size_name), "%.120s_size", field);
-              char *sz = strstr(body, size_name);
-              if (sz && sz < close && (strstr(decl, "char *") ||
-                                       strstr(decl, "char*"))) {
-                kind = LSF_BUFFER;
-                snprintf(aux, sizeof(aux), "offsetof(%.60s, %.60s)", name,
-                         size_name);
-              }
-            }
-            if (kind != LSF_SKIP) {
-            } else if (strstr(decl, "char *") || strstr(decl, "char*") ||
-                       strstr(decl, "const char"))
-              kind = LSF_STR;
-            else if (strchr(decl, '*'))
-              kind = LSF_PTR;
-            else if (strstr(decl, "bool") == decl)
-              kind = LSF_BOOL;
-            else if (strstr(decl, "float") == decl)
-              kind = LSF_FLOAT;
-            else if (strstr(decl, "double") == decl)
-              kind = LSF_DOUBLE;
-            else if (strstr(decl, "int") || strstr(decl, "unsigned") ||
-                     strstr(decl, "long") || strstr(decl, "ColorRef") ||
-                     strstr(decl, "MessageSlot") || strstr(decl, "size_t") ||
-                     strstr(decl, "Timer") || strstr(decl, "uint") ||
-                     strstr(decl, "int8") || strstr(decl, "int16") ||
-                     strstr(decl, "int32") || strstr(decl, "int64") ||
-                     strstr(decl, "Slot") || strstr(decl, "Kind"))
-              kind = LSF_INT;
-            else
-              kind = LSF_SKIP;
-          }
-          if (field[0] && kind != LSF_SKIP)
-            fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %s, %d},\n", field,
-                    kind == LSF_INT      ? "LSF_INT"
-                    : kind == LSF_BOOL   ? "LSF_BOOL"
-                    : kind == LSF_FLOAT  ? "LSF_FLOAT"
-                    : kind == LSF_DOUBLE ? "LSF_DOUBLE"
-                    : kind == LSF_STR    ? "LSF_STR"
-                    : kind == LSF_STR_ARRAY ? "LSF_STR_ARRAY"
-                    : kind == LSF_BUFFER ? "LSF_BUFFER"
-                    : kind == LSF_PTR    ? "LSF_PTR"
-                                         : "LSF_CB",
-                    name, field, aux, cb_kind);
+            if (field[0] && kind != LSF_SKIP)
+              fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %s, %d},\n",
+                      field,
+                      kind == LSF_INT          ? "LSF_INT"
+                      : kind == LSF_BOOL       ? "LSF_BOOL"
+                      : kind == LSF_FLOAT      ? "LSF_FLOAT"
+                      : kind == LSF_DOUBLE     ? "LSF_DOUBLE"
+                      : kind == LSF_STR        ? "LSF_STR"
+                      : kind == LSF_STR_ARRAY  ? "LSF_STR_ARRAY"
+                      : kind == LSF_BUFFER     ? "LSF_BUFFER"
+                      : kind == LSF_PTR        ? "LSF_PTR"
+                                               : "LSF_CB",
+                      name, field, aux, cb_kind);
           }
         }
         fprintf(out, "};\n");
@@ -1138,7 +1362,8 @@ static int gen_struct_header(void) {
                 "lf_%s, (int)(sizeof(lf_%s)/sizeof(lf_%s[0]))};\n",
                 name, name, name, name, name, name);
       }
-      p = np;
+      p = after + 1;
+    next_struct:;
     }
     free(buf);
   }
@@ -1233,7 +1458,6 @@ int main(void) {
   }
   fclose(in);
   collect_rets(lines, line_count);
-  parse_bool_globals();
   int gen_rc = gen_struct_header();
 
   fprintf(out,
@@ -1254,7 +1478,8 @@ int main(void) {
              (isalnum((unsigned char)*p) || *p == '_'))
         name[ni++] = *p++;
       name[ni] = '\0';
-      if (!name[0] || name[0] != 's' || name[1] != 'k')
+      if (!name[0] || name[0] != 's' || name[1] != 'k' ||
+          strncmp(name, "ski_", 4) == 0)
         continue;
       char params[NAME_SZ] = {0};
       if (*p == '(') {
@@ -1292,7 +1517,8 @@ int main(void) {
       continue;
     memcpy(fname, start, flen);
     fname[flen] = '\0';
-    if (!fname[0] || fname[0] != 's' || fname[1] != 'k')
+    if (!fname[0] || fname[0] != 's' || fname[1] != 'k' ||
+        strncmp(fname, "ski_", 4) == 0)
       continue;
     if (strstr(p, "typedef"))
       continue;

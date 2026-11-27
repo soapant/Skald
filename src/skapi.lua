@@ -27,7 +27,6 @@ M.sk_net_rx_bytes = function(...) return native.sk_net_rx_bytes(...) end
 M.sk_net_rx_bytes_over = function(...) return native.sk_net_rx_bytes_over(...) end
 function M.sk_search_file_in_dir(...) return native.s("sk_search_file_in_dir", ...) end
 M.sk_dir_scan = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_dir_scan", "SkDirScanSpec", v, "b") end
-function M.ski_dir_scan(...) return native.b("ski_dir_scan", ...) end
 M.sk_load_file_list = function(...) return native.sk_load_file_list(...) end
 function M.sk_array_grow(...) return native.i("sk_array_grow", ...) end
 function M.sk_array_len(...) return native.i("sk_array_len", ...) end
@@ -47,13 +46,6 @@ function M.sk_get_icon_path(...) return native.s("sk_get_icon_path", ...) end
 M.sk_prewarm_image = function(...) return native.sk_prewarm_image(...) end
 M.sk_append_to_file = function(...) return native.sk_append_to_file(...) end
 function M.sk_write_to_file(...) return native.b("sk_write_to_file", ...) end
-function M.ski_store_feature_name(...) return native.s("ski_store_feature_name", ...) end
-function M.ski_store_set(...) return native.b("ski_store_set", ...) end
-function M.ski_store_append(...) return native.b("ski_store_append", ...) end
-function M.ski_store_get_all(...) return native.i("ski_store_get_all", ...) end
-function M.ski_store_get_last(...) return native.s("ski_store_get_last", ...) end
-function M.ski_store_replace_all(...) return native.b("ski_store_replace_all", ...) end
-function M.ski_store_clear(...) return native.b("ski_store_clear", ...) end
 M.sk_store_set = function(...) return native.b("ski_store_set", native.feature(), native.feature(), ...) end
 M.sk_store_append = function(...) return native.b("ski_store_append", native.feature(), native.feature(), ...) end
 M.sk_store_get_all = function(...) return native.i("ski_store_get_all", native.feature(), native.feature(), ...) end
@@ -90,19 +82,18 @@ M.sk_hotkey_down = function(...) return native.sk_hotkey_down(...) end
 M.sk_launch_browser = function(...) return native.sk_launch_browser(...) end
 M.sk_query_browser = function(...) return native.sk_query_browser(...) end
 M.sk_focus_window_by_title = function(...) return native.sk_focus_window_by_title(...) end
-M.sk_find_window_by_title = function(...) return native.sk_find_window_by_title(...) end
-M.sk_find_window_by_root_atom = function(...) return native.sk_find_window_by_root_atom(...) end
-M.sk_find_window_by_id = function(...) return native.sk_find_window_by_id(...) end
-M.sk_get_held_window = function(...) return native.sk_get_held_window(...) end
-M.sk_move_window = function(...) return native.sk_move_window(...) end
-M.sk_set_window_size = function(...) return native.sk_set_window_size(...) end
-M.sk_set_window_opacity = function(...) return native.sk_set_window_opacity(...) end
-M.sk_get_window_geometry = function(...) return native.sk_get_window_geometry(...) end
-function M.ski_set_window_geometry(...) return native.b("ski_set_window_geometry", ...) end
+function M.sk_find_window_by_title(...) return native.i("sk_find_window_by_title", ...) end
+function M.sk_find_window_by_root_atom(...) return native.i("sk_find_window_by_root_atom", ...) end
+function M.sk_find_window_by_id(...) return native.i("sk_find_window_by_id", ...) end
+function M.sk_get_held_window(...) return native.i("sk_get_held_window", ...) end
+function M.sk_move_window(...) return native.b("sk_move_window", ...) end
+function M.sk_set_window_size(...) return native.b("sk_set_window_size", ...) end
+function M.sk_set_window_opacity(...) return native.b("sk_set_window_opacity", ...) end
+function M.sk_get_window_geometry(...) return native.i("sk_get_window_geometry", ...) end
 M.sk_set_window_geometry = function(window,t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_set_window_geometry", "SkRect", v, "b",window) end
-M.sk_window_set_string_property = function(...) return native.sk_window_set_string_property(...) end
-M.sk_window_set_long_property = function(...) return native.sk_window_set_long_property(...) end
-M.sk_window_send_message = function(...) return native.sk_window_send_message(...) end
+function M.sk_window_set_string_property(...) return native.b("sk_window_set_string_property", ...) end
+function M.sk_window_set_long_property(...) return native.b("sk_window_set_long_property", ...) end
+function M.sk_window_send_message(...) return native.b("sk_window_send_message", ...) end
 M.sk_close_active_window = function(...) return native.sk_close_active_window(...) end
 M.sk_dismiss_message = function(...) return native.sk_dismiss_message(...) end
 M.sk_message_active = function(...) return native.sk_message_active(...) end
@@ -156,51 +147,34 @@ M.sk_string_equals_ci = function(...) return native.sk_string_equals_ci(...) end
 function M.sk_string_replace(...) return native.s("sk_string_replace", ...) end
 function M.sk_string_slice(...) return native.s("sk_string_slice", ...) end
 M.sk_string_split = function(...) return native.sk_string_split(...) end
-function M.ski_populate_listbox(...) return native.v("ski_populate_listbox", ...) end
 M.sk_populate_listbox = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_populate_listbox", "SkPopulateListboxSpec", v, "v") end
-function M.sk_is_selected(...) return native.b("sk_is_selected", ...) end
+M.sk_is_selected = function(...) return native.sk_is_selected(...) end
 M.sk_set_edit_text = function(...) return native.sk_set_edit_text(...) end
 M.sk_set_edit_cursor = function(...) return native.sk_set_edit_cursor(...) end
 M.sk_get_edit_cursor = function(...) return native.sk_get_edit_cursor(...) end
 function M.sk_get_edit_text(...) return native.s("sk_get_edit_text", ...) end
 M.sk_edit_text_popup = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_edit_text_popup", "SkEditPopupSpec", v, "s") end
-function M.ski_edit_text_popup(...) return native.s("ski_edit_text_popup", ...) end
 M.sk_replace_line_in_file = function(...) return native.sk_replace_line_in_file(...) end
 M.sk_popup = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_popup", "PopupSpec", v, "s") end
-function M.ski_popup(...) return native.s("ski_popup", ...) end
 M.sk_message = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_message", "SkMessageSpec", v, "v") end
-function M.ski_message(...) return native.v("ski_message", ...) end
-M.sk_message_fmt = function(t, ...) return native.struct_call("ski_message", "SkMessageSpec", t or {}, "v") end
+M.sk_message_fmt = function(...) return native.fmt_call("v", "sk_message_fmt", ...) end
 M.sk_overlay = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.timeout == nil then v.timeout = 10000000.0 end return M.sk_message(v) end
 M.sk_dismiss_overlay = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.sk_dismiss_message(v) end
 M.sk_overlay_active = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.sk_message_active(v) end
 M.sk_subwindow = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.subwindow == nil then v.subwindow = true end return M.sk_window(v) end
 M.sk_window = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_window", "SkPromptSpec", v, "v") end
-function M.ski_window(...) return native.v("ski_window", ...) end
 M.sk_measure_text_wrapped = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_measure_text_wrapped", "SkMeasureSpec", v, "i") end
-function M.ski_measure_text_wrapped(...) return native.i("ski_measure_text_wrapped", ...) end
-function M.ski_text_bounds(...) return native.i("ski_text_bounds", ...) end
 M.sk_text_bounds = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_text_bounds", "SkTextBoundsSpec", v, "i") end
 M.sk_image_from_window_title = function(...) return native.sk_image_from_window_title(...) end
 M.sk_image_from_window_id = function(...) return native.sk_image_from_window_id(...) end
 M.sk_image_free = function(...) return native.sk_image_free(...) end
-function M.ski_draw_text(...) return native.b("ski_draw_text", ...) end
-function M.ski_draw_text_centered(...) return native.b("ski_draw_text_centered", ...) end
-function M.ski_draw_text_segments(...) return native.b("ski_draw_text_segments", ...) end
 M.sk_draw_text_segments = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_text_segments", "SkTextSegmentsSpec", v, "b") end
-function M.ski_draw_text_wrapped(...) return native.i("ski_draw_text_wrapped", ...) end
 M.sk_draw_text_wrapped = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_text_wrapped", "SkTextWrappedSpec", v, "i") end
-function M.ski_draw_image(...) return native.b("ski_draw_image", ...) end
-function M.ski_get_image_size(...) return native.i("ski_get_image_size", ...) end
 M.sk_get_image_size = function(path) return native.image_size(path) end
-function M.ski_place_editbox(...) return native.b("ski_place_editbox", ...) end
 function M.sk_editbox_text(...) return native.s("sk_editbox_text", ...) end
 M.sk_editbox_set_text = function(...) return native.sk_editbox_set_text(...) end
 function M.sk_editbox_active(...) return native.s("sk_editbox_active", ...) end
 M.sk_editbox_set_active = function(...) return native.sk_editbox_set_active(...) end
-function M.ski_place_listbox(...) return native.b("ski_place_listbox", ...) end
-function M.ski_place_checkbox(...) return native.b("ski_place_checkbox", ...) end
-function M.ski_place_slider(...) return native.b("ski_place_slider", ...) end
 M.sk_checkbox_is_checked = function(...) return native.sk_checkbox_is_checked(...) end
 M.sk_checkbox_is_hovered = function(...) return native.sk_checkbox_is_hovered(...) end
 M.sk_checkbox_is_clicked = function(...) return native.sk_checkbox_is_clicked(...) end
@@ -220,7 +194,7 @@ M.sk_focus_has_entries = function(...) return native.sk_focus_has_entries(...) e
 function M.sk_focus_name(...) return native.s("sk_focus_name", ...) end
 M.sk_focus_move_next = function(...) return native.sk_focus_move_next(...) end
 M.sk_focus_move_before = function(...) return native.sk_focus_move_before(...) end
-function M.sk_focus_move_dir(...) return native.b("sk_focus_move_dir", ...) end
+M.sk_focus_move_dir = function(...) return native.sk_focus_move_dir(...) end
 M.sk_activate_focused = function(...) return native.sk_activate_focused(...) end
 M.sk_focus_adjust = function(...) return native.sk_focus_adjust(...) end
 M.sk_set_focus = function(...) return native.sk_set_focus(...) end
@@ -245,7 +219,6 @@ M.sk_place_editbox = function(t) local v = {} for k,x in pairs(t or {}) do v[k] 
 M.sk_place_editbox_wrapped = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.wrapped == nil then v.wrapped = true end return native.struct_call("ski_place_editbox", "SkEditSpec", v, "v") end
 M.sk_place_listbox = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_place_listbox", "SkListSpec", v, "b") end
 M.sk_listbox_begin = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_listbox_begin", "SkListSpec", v, "b") end
-function M.ski_listbox_begin(...) return native.b("ski_listbox_begin", ...) end
 M.sk_listbox_next = function(...) return native.sk_listbox_next(...) end
 M.sk_listbox_end = function(...) return native.sk_listbox_end(...) end
 M.sk_draw_text_auto = function(...) return native.sk_draw_text_auto(...) end
@@ -256,32 +229,28 @@ M.sk_widget = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end
 function M.sk_widget_create(...) return native.i("sk_widget_create", ...) end
 M.sk_monitor_count = function(...) return native.sk_monitor_count(...) end
 M.sk_monitor_at = function(...) return native.sk_monitor_at(...) end
-function M.sk_widget_valid(...) return native.b("sk_widget_valid", ...) end
-function M.sk_widget_poll_key(...) return native.b("sk_widget_poll_key", ...) end
+M.sk_widget_valid = function(...) return native.sk_widget_valid(...) end
+M.sk_widget_poll_key = function(...) return native.sk_widget_poll_key(...) end
 M.sk_get_widget_pos = function(...) return native.sk_get_widget_pos(...) end
-function M.sk_widget_show(...) return native.v("sk_widget_show", ...) end
-function M.sk_widget_hide(...) return native.v("sk_widget_hide", ...) end
-function M.sk_widget_destroy(...) return native.v("sk_widget_destroy", ...) end
-function M.ski_draw_rect(...) return native.b("ski_draw_rect", ...) end
-function M.ski_draw_line(...) return native.b("ski_draw_line", ...) end
-function M.ski_draw_circle(...) return native.b("ski_draw_circle", ...) end
+M.sk_widget_show = function(...) return native.sk_widget_show(...) end
+M.sk_widget_hide = function(...) return native.sk_widget_hide(...) end
+M.sk_widget_destroy = function(...) return native.sk_widget_destroy(...) end
 M.sk_draw_rect = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.border == nil then v.border = native.global_b("EnableBorders") end return native.struct_call("ski_draw_rect", "DrawRect", v, "b") end
 M.sk_draw_line = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_line", "Line", v, "b") end
 M.sk_draw_circle = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_circle", "Circle", v, "b") end
 M.sk_rand_num_between = function(...) return native.sk_rand_num_between(...) end
 M.sk_get_text_width = function(...) return native.sk_get_text_width(...) end
 M.sk_get_text_height = function(...) return native.sk_get_text_height(...) end
-function M.sk_color_lerp(...) return native.i("sk_color_lerp", ...) end
+M.sk_color_lerp = function(...) return native.sk_color_lerp(...) end
 M.sk_set_draw_offset = function(...) return native.sk_set_draw_offset(...) end
 M.sk_get_draw_offset = function(...) return native.sk_get_draw_offset(...) end
 M.sk_scroll_begin = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_scroll_begin", "SkScrollSpec", v, "b") end
-function M.ski_scroll_begin(...) return native.b("ski_scroll_begin", ...) end
 M.sk_scroll_end = function(...) return native.sk_scroll_end(...) end
 function M.sk_http_get(...) return native.s("sk_http_get", ...) end
 function M.sk_http_get_limited(...) return native.s("sk_http_get_limited", ...) end
 M.sk_http_download = function(...) return native.sk_http_download(...) end
 function M.sk_http_post(...) return native.s("sk_http_post", ...) end
-function M.sk_http_get_async(...) return native.v("sk_http_get_async", ...) end
+M.sk_http_get_async = function(...) return native.sk_http_get_async(...) end
 M.sk_parse_flags = function(...) return native.sk_parse_flags(...) end
 M.sk_is_flag_prefix = function(...) return native.sk_is_flag_prefix(...) end
 function M.sk_extract_flag_name(...) return native.s("sk_extract_flag_name", ...) end
@@ -410,21 +379,14 @@ M.sk_config_has_setting = function(...) return native.sk_config_has_setting(...)
 M.sk_config_setting_count = function(...) return native.sk_config_setting_count(...) end
 function M.sk_config_setting_name_at(...) return native.s("sk_config_setting_name_at", ...) end
 function M.sk_config_setting_value_at(...) return native.s("sk_config_setting_value_at", ...) end
-function M.ski_settings_entry_add_checkbox(...) return native.i("ski_settings_entry_add_checkbox", ...) end
-function M.ski_settings_entry_add_button(...) return native.i("ski_settings_entry_add_button", ...) end
-function M.ski_settings_entry_add_slider(...) return native.i("ski_settings_entry_add_slider", ...) end
-function M.ski_settings_entry_add_dropdown(...) return native.i("ski_settings_entry_add_dropdown", ...) end
-function M.ski_settings_entry_add_editbox(...) return native.i("ski_settings_entry_add_editbox", ...) end
 function M.sk_settings_editbox_get(...) return native.s("sk_settings_editbox_get", ...) end
 M.sk_settings_editbox_set = function(...) return native.sk_settings_editbox_set(...) end
 M.sk_settings_editbox_right_offset = function(...) return native.sk_settings_editbox_right_offset(...) end
-function M.ski_add_to_cc(...) return native.b("ski_add_to_cc", ...) end
 M.sk_register_alias = function(...) return native.sk_register_alias(...) end
 M.sk_remove_alias = function(...) return native.sk_remove_alias(...) end
 function M.sk_alias_for(...) return native.s("sk_alias_for", ...) end
 M.sk_config_set_hotkey = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_config_set_hotkey", "SkConfigHotkeySpec", v, "b") end
 M.sk_config_init = function(...) return native.sk_config_init(...) end
-function M.ski_config_set_hotkey(...) return native.b("ski_config_set_hotkey", ...) end
 M.sk_config_set_alias = function(...) return native.sk_config_set_alias(...) end
 function M.sk_config_get_hotkey(...) return native.s("sk_config_get_hotkey", ...) end
 M.sk_config_clear_hotkey = function(...) return native.sk_config_clear_hotkey(...) end
@@ -452,13 +414,10 @@ function M.sk_cc_entry_at(...) return native.i("sk_cc_entry_at", ...) end
 M.sk_settings_entry_count = function(...) return native.sk_settings_entry_count(...) end
 M.sk_settings_scroll_to_block = function(...) return native.sk_settings_scroll_to_block(...) end
 function M.sk_settings_entry_at(...) return native.i("sk_settings_entry_at", ...) end
-function M.ski_add_dep(...) return native.b("ski_add_dep", ...) end
-M.sk_add_dep = function(...) return native.v("ski_add_dep", ..., native.owner()) end
+M.sk_add_dep = function(...) return native.b("ski_add_dep", ..., native.owner()) end
 M.sk_register_hotkey = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_register_hotkey", "SkHotkeySpec", v, "b") end
-function M.ski_register_hotkey(...) return native.b("ski_register_hotkey", ...) end
 M.sk_unregister_hotkey = function(...) return native.sk_unregister_hotkey(...) end
 M.sk_register_config_hotkey = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_register_config_hotkey", "SkConfigHotkeyRegisterSpec", v, "b") end
-function M.ski_register_config_hotkey(...) return native.b("ski_register_config_hotkey", ...) end
 M.sk_disable_global_hotkeys = function(...) return native.sk_disable_global_hotkeys(...) end
 M.sk_enable_global_hotkeys = function(...) return native.sk_enable_global_hotkeys(...) end
 M.sk_hotkey_capture_begin = function(...) return native.sk_hotkey_capture_begin(...) end
@@ -473,19 +432,16 @@ M.sk_hotkey_taken = function(...) return native.sk_hotkey_taken(...) end
 function M.sk_hotkey_for_callback(...) return native.s("sk_hotkey_for_callback", ...) end
 function M.sk_hotkey_for_ud(...) return native.s("sk_hotkey_for_ud", ...) end
 M.sk_register_deferred_init = function(...) return native.sk_register_deferred_init(...) end
-function M.ski_register_remapping(...) return native.b("ski_register_remapping", ...) end
 M.sk_register_remapping = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_register_remapping", "SkRemappingSpec", v, "b") end
 M.sk_replay_hotkey = function(...) return native.sk_replay_hotkey(...) end
 M.sk_execute_hotkey = function(...) return native.sk_execute_hotkey(...) end
 M.sk_register_snippet = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_register_snippet", "SkSnippetSpec", v, "b") end
-function M.ski_register_snippet(...) return native.b("ski_register_snippet", ...) end
 M.sk_unregister_snippet = function(...) return native.sk_unregister_snippet(...) end
 M.sk_reload_feature = function(...) return native.sk_reload_feature(...) end
 M.sk_reload_all_features = function(...) return native.sk_reload_all_features(...) end
 M.sk_get_pid = function(...) return native.sk_get_pid(...) end
 M.sk_cap_register_abi = function(...) return native.sk_cap_register_abi(...) end
 function M.sk_cap_resolve_abi(...) return native.i("sk_cap_resolve_abi", ...) end
-function M.ski_cap_register(...) return native.v("ski_cap_register", ...) end
 function M.sk_cap_resolve(...) return native.i("sk_cap_resolve", ...) end
 M.sk_cap_generation = function(...) return native.sk_cap_generation(...) end
 M.sk_cap_bind_declare = function(...) return native.sk_cap_bind_declare(...) end
@@ -497,9 +453,7 @@ M.sk_register_event = function(...) return native.sk_register_event(...) end
 M.sk_unregister_event = function(...) return native.sk_unregister_event(...) end
 M.sk_register_key_interceptor = function(...) return native.sk_register_key_interceptor(...) end
 M.sk_close_window = function(...) return native.sk_close_window(...) end
-function M.ski_resize_window(...) return native.b("ski_resize_window", ...) end
 M.sk_resize_window = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_resize_window", "SkRect", v, "b") end
-function M.ski_resize_window_animated(...) return native.b("ski_resize_window_animated", ...) end
 M.sk_get_window_bounds = function(...) return native.sk_get_window_bounds(...) end
 M.sk_copy_to_clipboard_fmt = function(...) return native.fmt_call("b", "sk_copy_to_clipboard_fmt", ...) end
 M.sk_copy_file_path_fmt = function(...) return native.fmt_call("b", "sk_copy_file_path_fmt", ...) end
@@ -537,8 +491,8 @@ M.sk_button_is_clicked_fmt = function(...) return native.fmt_call("b", "sk_butto
 M.sk_slider_is_hovered_fmt = function(...) return native.fmt_call("b", "sk_slider_is_hovered_fmt", ...) end
 M.sk_slider_is_clicked_fmt = function(...) return native.fmt_call("b", "sk_slider_is_clicked_fmt", ...) end
 M.sk_slider_is_dragging_fmt = function(...) return native.fmt_call("b", "sk_slider_is_dragging_fmt", ...) end
-M.sk_slider_value_fmt = function(...) return native.fmt_call("v", "sk_slider_value_fmt", ...) end
-M.sk_slider_fraction_fmt = function(...) return native.fmt_call("v", "sk_slider_fraction_fmt", ...) end
+M.sk_slider_value_fmt = function(...) return native.fmt_call("f", "sk_slider_value_fmt", ...) end
+M.sk_slider_fraction_fmt = function(...) return native.fmt_call("f", "sk_slider_fraction_fmt", ...) end
 M.sk_slider_percent_fmt = function(...) return native.fmt_call("i", "sk_slider_percent_fmt", ...) end
 M.sk_slider_set_value_fmt = function(...) return native.fmt_call("b", "sk_slider_set_value_fmt", ...) end
 M.sk_get_widget_pos_fmt = function(...) return native.fmt_call("i", "sk_get_widget_pos_fmt", ...) end
