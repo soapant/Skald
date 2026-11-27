@@ -2,6 +2,7 @@
 local native = require("skapi_native")
 local M = {}
 
+M.struct_from_ptr = function(name, ptr) return native.struct_from_ptr(name, ptr) end
 function M.search_create(...) return native.i("sk_search_create", ...) end
 function M.search_destroy(...) return native.v("sk_search_destroy", ...) end
 function M.search_push_context(...) return native.v("sk_search_push_context", ...) end
@@ -46,12 +47,36 @@ function M.get_icon_path(...) return native.s("sk_get_icon_path", ...) end
 M.prewarm_image = function(...) return native.sk_prewarm_image(...) end
 M.append_to_file = function(...) return native.sk_append_to_file(...) end
 function M.write_to_file(...) return native.b("sk_write_to_file", ...) end
-M.store_set = function(...) return native.ski_store_set(native.feature(), native.feature(), ...) end
-M.store_append = function(...) return native.ski_store_append(native.feature(), native.feature(), ...) end
-M.store_get_all = function(...) return native.ski_store_get_all(native.feature(), native.feature(), ...) end
-M.store_get_last = function(...) return native.s("ski_store_get_last", native.feature(), native.feature(), ...) end
-M.store_replace_all = function(...) return native.ski_store_replace_all(native.feature(), native.feature(), ...) end
-M.store_clear = function(...) return native.ski_store_clear(native.feature(), native.feature(), ...) end
+M.store_set = function(f_value, feature, key)
+  feature = feature or native.feature()
+  key = key or feature
+  return native.ski_store_set(feature, key, f_value)
+end
+M.store_append = function(f_value, feature, key)
+  feature = feature or native.feature()
+  key = key or feature
+  return native.ski_store_append(feature, key, f_value)
+end
+M.store_get_all = function(feature, key)
+  feature = feature or native.feature()
+  key = key or feature
+  return native.ski_store_get_all(feature, key)
+end
+M.store_get_last = function(feature, key)
+  feature = feature or native.feature()
+  key = key or feature
+  return native.s("ski_store_get_last", feature, key)
+end
+M.store_replace_all = function(f_values, f_count, feature, key)
+  feature = feature or native.feature()
+  key = key or feature
+  return native.ski_store_replace_all(feature, key, f_values, f_count)
+end
+M.store_clear = function(feature, key)
+  feature = feature or native.feature()
+  key = key or feature
+  return native.ski_store_clear(feature, key)
+end
 function M.write_temp_file(...) return native.s("sk_write_temp_file", ...) end
 M.get_icon_size = function(...) return native.sk_get_icon_size(...) end
 M.free_string_list = function(...) return native.sk_free_string_list(...) end

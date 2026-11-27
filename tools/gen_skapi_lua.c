@@ -149,6 +149,7 @@ static void collect_rets(char lines[][LINE_SZ], int line_count) {
 typedef struct {
   char name[NAME_SZ];
   char sig[64];
+  char ptr_type[256];
 } CbTypedef;
 
 static CbTypedef cb_types[1024];
@@ -232,11 +233,12 @@ static void parse_aliases(const char *path) {
           end++;
         char from[NAME_SZ] = {0};
         n = (size_t)(end - first);
-        if (n > 0 && n < NAME_SZ && strcmp(from, "struct") != 0 &&
-            strcmp(from, "enum") != 0 && strcmp(from, "union") != 0) {
+        if (n > 0 && n < NAME_SZ) {
           memcpy(from, first, n);
           from[n] = '\0';
-          if (from[0] && to[0] && strcmp(from, to) != 0) {
+          if (strcmp(from, "struct") != 0 && strcmp(from, "enum") != 0 &&
+              strcmp(from, "union") != 0 && from[0] && to[0] &&
+              strcmp(from, to) != 0) {
             snprintf(aliases[alias_count].from, NAME_SZ, "%s", to);
             snprintf(aliases[alias_count].to, NAME_SZ, "%s", from);
             alias_count++;
@@ -418,6 +420,16 @@ static void parse_callback_typedefs(const char *src) {
             memmove(ret, ret + 8, strlen(ret) - 7);
           CbTypedef *t = &cb_types[cb_type_count++];
           snprintf(t->name, sizeof(t->name), "%s", name);
+          char first[256] = {0};
+          size_t fn = 0;
+          while (args[fn] && args[fn] != ',' && fn < sizeof(first) - 1) {
+            first[fn] = args[fn];
+            fn++;
+          }
+          first[fn] = '\0';
+          clean(first);
+          if (strchr(first, '*'))
+            snprintf(t->ptr_type, sizeof(t->ptr_type), "%s", first);
           normalize_sig(t->sig, sizeof(t->sig), ret, args);
         }
       }
@@ -492,24 +504,41 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
   }
 
   if (strstr(rest, "SK_STORE_NAME")) {
-    int n = 0;
-    const char *p2 = rest;
-    while ((p2 = strstr(p2, "SK_STORE_NAME")) != NULL) {
-      n++;
-      p2 += strlen("SK_STORE_NAME");
+    char args[8][NAME_SZ];
+    int arg_count = 0;
+    if (params) {
+      const char *pp = strchr(params, '(');
+      if (pp)
+        pp++;
+      while (pp && *pp && *pp != ')' && arg_count < 8) {
+        while (*pp == ' ' || *pp == ',')
+          pp++;
+        if (!*pp || *pp == ')' || strncmp(pp, "...", 3) == 0)
+          break;
+        int ni = 0;
+        while (*pp && ni < NAME_SZ - 1 &&
+               (isalnum((unsigned char)*pp) || *pp == '_'))
+          args[arg_count][ni++] = *pp++;
+        args[arg_count][ni] = '\0';
+        if (args[arg_count][0])
+          arg_count++;
+        while (*pp && *pp != ',' && *pp != ')')
+          pp++;
+      }
     }
-    fprintf(out, "M.%s = function(...) return native.%s(", name,
-            raw_thunk ? raw : kind);
-    bool first_arg = raw_thunk;
-    if (!raw_thunk) {
-      fprintf(out, "\"%s\"", raw);
-      first_arg = false;
-    }
-    for (int i = 0; i < n; i++) {
-      fprintf(out, "%snative.feature()", first_arg ? "" : ", ");
-      first_arg = false;
-    }
-    fprintf(out, "%s...) end\n", first_arg ? "" : ", ");
+    fprintf(out, "M.%s = function(", name);
+    for (int i = 0; i < arg_count; i++)
+      fprintf(out, "f_%s, ", args[i]);
+    fprintf(out, "feature, key)\n");
+    fprintf(out, "  feature = feature or native.feature()\n");
+    fprintf(out, "  key = key or feature\n");
+    fprintf(out, "  return native.%s(", raw_thunk ? raw : kind);
+    if (!raw_thunk)
+      fprintf(out, "\"%s\", ", raw);
+    fprintf(out, "feature, key");
+    for (int i = 0; i < arg_count; i++)
+      fprintf(out, ", f_%s", args[i]);
+    fprintf(out, ")\nend\n");
     return;
   }
   if (strstr(rest, "__FILE__")) {
@@ -963,6 +992,10 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
               "memcpy(&a%d, &v%d, sizeof(a%d) < sizeof(uintptr_t) ? "
               "sizeof(a%d) : sizeof(uintptr_t));\n",
               t, i, i, i, i, idx, idx, i, i, i, i);
+    } else if (strstr(t, "char **") || strstr(t, "char**") ||
+               strstr(t, "char *const *")) {
+      fprintf(out, "  char **a%d = (char **)slua_string_array(L, %d);\n", i,
+              idx);
     } else if (strcmp(value_kind_for_type(t), "s") == 0) {
       fprintf(out,
               "  const char *a%d = lua_isnoneornil(L, %d) ? \"\" : "
@@ -1061,6 +1094,39 @@ static void gen_thunk_registry(FILE *out) {
               "  lua_pushcfunction(L, lthunk_%s); lua_setfield(L, -2, \"%s\");\n",
               funcs[i].name, funcs[i].name);
   fprintf(out, "}\n");
+}
+
+static char *find_field_decl(const char *body, const char *end,
+                             const char *name) {
+  size_t n = strlen(name);
+  for (const char *p = body; p + n <= end; p++) {
+    if (strncmp(p, name, n) != 0)
+      continue;
+    bool left_ok = p == body || !(isalnum((unsigned char)p[-1]) || p[-1] == '_');
+    bool right_ok = p[n] == '\0' ||
+                    !(isalnum((unsigned char)p[n]) || p[n] == '_');
+    if (left_ok && right_ok)
+      return (char *)p;
+  }
+  return NULL;
+}
+
+static const char *struct_name_for_type(const char *t) {
+  char base[256] = {0};
+  snprintf(base, sizeof(base), "%.255s", t);
+  char *sp = strrchr(base, ' ');
+  if (sp)
+    *sp = '\0';
+  size_t n = strlen(base);
+  while (n && (base[n - 1] == '*' || base[n - 1] == ' '))
+    base[--n] = '\0';
+  if (strncmp(base, "const ", 6) == 0)
+    memmove(base, base + 6, strlen(base) - 5);
+  const char *resolved = resolve_alias_base(base);
+  for (int i = 0; i < struct_name_count; i++)
+    if (strcmp(resolved, struct_names[i]) == 0)
+      return struct_names[i];
+  return NULL;
 }
 
 static void collect_rets_from_file(const char *path) {
@@ -1297,7 +1363,17 @@ static int gen_struct_header(void) {
                 is_cb_type = true;
               }
               if (strchr(decl, '[')) {
-                kind = LSF_STR_ARRAY;
+                char *br0 = strchr(decl, '[');
+                bool ptr_array = false;
+                for (char *q2 = decl; q2 < br0; q2++)
+                  if (*q2 == '*')
+                    ptr_array = true;
+                if (!strstr(decl, "char"))
+                  goto skip_field;
+                if (!ptr_array)
+                  kind = LSF_STR_INLINE;
+                else
+                  kind = LSF_STR_ARRAY;
                 char *br = strchr(decl, '[') + 1;
                 char sz[128] = {0};
                 size_t zi = 0;
@@ -1318,14 +1394,40 @@ static int gen_struct_header(void) {
               } else if (is_cb_type) {
                 ;
               } else {
-                char size_name[NAME_SZ + 8];
-                snprintf(size_name, sizeof(size_name), "%.120s_size", field);
-                char *sz = strstr(body_start, size_name);
-                if (sz && sz < close && (strstr(decl, "char *") ||
-                                         strstr(decl, "char*"))) {
-                  kind = LSF_BUFFER;
-                  snprintf(aux, sizeof(aux), "offsetof(%.60s, %.60s)", name,
-                           size_name);
+                bool is_str_list =
+                    strstr(decl, "char **") != NULL ||
+                    strstr(decl, "char**") != NULL;
+                if (is_str_list) {
+                  const char *cands[3] = {NULL, NULL, NULL};
+                  char c0[NAME_SZ + 8], c1[NAME_SZ + 8];
+                  snprintf(c0, sizeof(c0), "%.120s_count", field);
+                  snprintf(c1, sizeof(c1), "%.120s_size", field);
+                  cands[0] = c0;
+                  cands[1] = c1;
+                  if (strcmp(field, "items") == 0)
+                    cands[2] = "count";
+                  for (int ci = 0; ci < 3 && kind == LSF_SKIP; ci++) {
+                    if (!cands[ci])
+                      continue;
+                    char *found = find_field_decl(body_start, close,
+                                                  cands[ci]);
+                    if (found && found < close) {
+                      kind = LSF_STR_LIST;
+                      snprintf(aux, sizeof(aux), "offsetof(%.60s, %.60s)",
+                               name, cands[ci]);
+                    }
+                  }
+                }
+                if (kind == LSF_SKIP) {
+                  char size_name[NAME_SZ + 8];
+                  snprintf(size_name, sizeof(size_name), "%.120s_size", field);
+                  char *sz = strstr(body_start, size_name);
+                  if (sz && sz < close && (strstr(decl, "char *") ||
+                                           strstr(decl, "char*"))) {
+                    kind = LSF_BUFFER;
+                    snprintf(aux, sizeof(aux), "offsetof(%.60s, %.60s)", name,
+                             size_name);
+                  }
                 }
               }
               if (kind == LSF_SKIP) {
@@ -1351,6 +1453,7 @@ static int gen_struct_header(void) {
                 }
               }
             }
+          skip_field:
             if (field[0] && kind != LSF_SKIP)
               fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %s, %d},\n",
                       field,
@@ -1360,6 +1463,8 @@ static int gen_struct_header(void) {
                       : kind == LSF_DOUBLE     ? "LSF_DOUBLE"
                       : kind == LSF_STR        ? "LSF_STR"
                       : kind == LSF_STR_ARRAY  ? "LSF_STR_ARRAY"
+                      : kind == LSF_STR_LIST   ? "LSF_STR_LIST"
+                      : kind == LSF_STR_INLINE ? "LSF_STR_INLINE"
                       : kind == LSF_BUFFER     ? "LSF_BUFFER"
                       : kind == LSF_PTR        ? "LSF_PTR"
                                                : "LSF_CB",
@@ -1410,6 +1515,45 @@ static int gen_struct_header(void) {
           "      return lua_generated_structs[i];\n"
           "  return NULL;\n"
           "}\n\n");
+  char cb_struct[4][NAME_SZ] = {{0}};
+  for (int pass = 2; pass >= 0; pass--) {
+    for (int i = 0; i < cb_type_count; i++) {
+      const char *k = cb_kind_for_sig(cb_types[i].sig);
+      int ki = -1;
+      if (k && strcmp(k, "LCB_P1") == 0)
+        ki = 1;
+      else if (k && strcmp(k, "LCB_BP1") == 0)
+        ki = 2;
+      if (ki < 0 || !cb_types[i].ptr_type[0])
+        continue;
+      if (pass < 2 && cb_struct[ki][0])
+        continue;
+      const char *sn = struct_name_for_type(cb_types[i].ptr_type);
+      if (!sn)
+        continue;
+      int score = strstr(sn, "Prompt") ? 2 : (strstr(sn, "State") ? 1 : 0);
+      if (score != pass)
+        continue;
+      snprintf(cb_struct[ki], NAME_SZ, "%s", sn);
+    }
+  }
+  char cb_val[4][NAME_SZ + 4];
+  for (int i = 0; i < 4; i++) {
+    if (cb_struct[i][0])
+      snprintf(cb_val[i], sizeof(cb_val[i]), "\"%s\"", cb_struct[i]);
+    else
+      snprintf(cb_val[i], sizeof(cb_val[i]), "NULL");
+  }
+  fprintf(out,
+          "const char *slua_cb_struct_name(int kind) {\n"
+          "  switch (kind) {\n"
+          "  case 1: return %s;\n"
+          "  case 2: return %s;\n"
+          "  default: return NULL;\n"
+          "  }\n"
+          "}\n\n",
+          cb_val[1], cb_val[2]);
+
   for (int i = 0; i < func_count; i++)
     if (can_thunk(&funcs[i]))
       gen_thunk(out, &funcs[i]);
@@ -1473,7 +1617,9 @@ int main(void) {
   fprintf(out,
           "-- Generated by tools/gen_skapi_lua.c. Do not edit.\n"
           "local native = require(\"skapi_native\")\n"
-          "local M = {}\n\n");
+          "local M = {}\n\n"
+          "M.struct_from_ptr = function(name, ptr) return "
+          "native.struct_from_ptr(name, ptr) end\n");
 
   for (int i = 0; i < line_count; i++) {
     char *p = lines[i];

@@ -13,7 +13,9 @@ const char *slua_current_owner(void);
 void slua_owner_set(const char *owner);
 void slua_owner_clear(void);
 void slua_owner_from_state(void *L);
+const char *slua_cb_struct_name(int kind);
 void *slua_callback(void *L, int idx, int kind);
+char **slua_string_array(void *L, int idx);
 void slua_fill_struct(void *L, const char *name, int idx, void *base);
 void slua_push_struct(void *L, const char *name, const void *base);
 

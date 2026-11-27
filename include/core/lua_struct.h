@@ -12,6 +12,8 @@ typedef enum {
   LSF_DOUBLE,
   LSF_STR,
   LSF_STR_ARRAY,
+  LSF_STR_LIST,
+  LSF_STR_INLINE,
   LSF_BUFFER,
   LSF_PTR,
   LSF_CB

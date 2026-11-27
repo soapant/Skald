@@ -118,7 +118,7 @@ static int cb_next_gen = 1;
 static bool cb_in_use[CB_TOTAL];
 
 static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
-                      void *arg) {
+                      void *arg, int kind) {
   LuaFeature *f = cb_owners[slot];
   if (!f || !f->L)
     return;
@@ -127,8 +127,13 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
   char *saved_copy = saved ? strdup(saved) : NULL;
   slua_owner_set(f->owner);
   lua_rawgeti(f->L, LUA_REGISTRYINDEX, cb_refs[slot]);
-  if (nargs == 1)
-    lua_pushlightuserdata(f->L, arg);
+  if (nargs == 1) {
+    const char *sname = arg ? slua_cb_struct_name(kind) : NULL;
+    if (sname)
+      slua_push_struct(f->L, sname, arg);
+    else
+      lua_pushlightuserdata(f->L, arg);
+  }
   if (lua_pcall(f->L, nargs, want_bool ? 1 : 0, 0) != 0) {
     log_error("lua callback error: %s", lua_tostring(f->L, -1));
     lua_pop(f->L, 1);
@@ -147,21 +152,21 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
 }
 
 #define DEF_CB_V(N)                                                            \
-  static void lua_cb_v_##N(void) { cb_invoke(N, 0, false, NULL, NULL); }
+  static void lua_cb_v_##N(void) { cb_invoke(N, 0, false, NULL, NULL, CB_V); }
 #define DEF_CB_P1(N)                                                           \
   static void lua_cb_p1_##N(void *arg) {                                      \
-    cb_invoke(CB_V_COUNT + N, 1, false, NULL, arg);                            \
+    cb_invoke(CB_V_COUNT + N, 1, false, NULL, arg, CB_P1);                            \
   }
 #define DEF_CB_BP1(N)                                                          \
   static bool lua_cb_bp1_##N(void *arg) {                                     \
     bool r = false;                                                            \
-    cb_invoke(CB_V_COUNT + CB_P1_COUNT + N, 1, true, &r, arg);                 \
+    cb_invoke(CB_V_COUNT + CB_P1_COUNT + N, 1, true, &r, arg, CB_BP1);                 \
     return r;                                                                  \
   }
 #define DEF_CB_B(N)                                                            \
   static bool lua_cb_b_##N(void) {                                            \
     bool r = false;                                                            \
-    cb_invoke(CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT + N, 0, true, &r, NULL);       \
+    cb_invoke(CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT + N, 0, true, &r, NULL, CB_B);       \
     return r;                                                                  \
   }
 
@@ -327,6 +332,17 @@ static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
     case LSF_STR:
       *(const char **)dst = lua_tostring(L, -1);
       break;
+    case LSF_STR_INLINE: {
+      size_t cap = fd->aux > 0 ? fd->aux : 1;
+      size_t len = 0;
+      const char *s2 = lua_tolstring(L, -1, &len);
+      if (len >= cap)
+        len = cap - 1;
+      if (s2 && len)
+        memcpy(dst, s2, len);
+      dst[len] = '\0';
+      break;
+    }
     case LSF_STR_ARRAY: {
       size_t n = fd->aux > 0 ? fd->aux : 1;
       const char **arr = (const char **)calloc(n, sizeof(char *));
@@ -342,6 +358,29 @@ static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
       }
       track_alloc(f, arr);
       *(const char ***)dst = arr;
+      break;
+    }
+    case LSF_STR_LIST: {
+      size_t n = lua_istable(L, -1) ? (size_t)lua_rawlen(L, -1) : 0;
+      char **arr = (char **)calloc(n > 0 ? n : 1, sizeof(char *));
+      if (!arr)
+        break;
+      for (size_t ai = 0; ai < n; ai++) {
+        lua_geti(L, -1, (lua_Integer)(ai + 1));
+        size_t len = 0;
+        const char *s2 = lua_tolstring(L, -1, &len);
+        char *copy = (char *)calloc(len + 1, 1);
+        if (copy) {
+          if (s2)
+            memcpy(copy, s2, len);
+          arr[ai] = copy;
+          track_alloc(f, copy);
+        }
+        lua_pop(L, 1);
+      }
+      track_alloc(f, arr);
+      *(char ***)dst = arr;
+      *(size_t *)((char *)base + fd->aux) = n;
       break;
     }
     case LSF_BUFFER: {
@@ -518,6 +557,21 @@ static int l_cap_register(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static int l_struct_from_ptr(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *ptr = NULL;
+  if (lua_islightuserdata(L, 2))
+    ptr = lua_touserdata(L, 2);
+  else if (lua_isnumber(L, 2))
+    ptr = (void *)(uintptr_t)lua_tointeger(L, 2);
+  if (!ptr) {
+    lua_pushnil(L);
+    return 1;
+  }
+  slua_push_struct(L, name, ptr);
+  return 1;
+}
+
 static int l_struct_call(lua_State *L) {
   const char *fn = luaL_checkstring(L, 1);
   const char *sname = luaL_checkstring(L, 2);
@@ -644,8 +698,33 @@ static const luaL_Reg native_funcs[] = {
     {"call_fn", l_call_fn},
     {"fmt_call", l_fmt_call},
     {"struct_call", l_struct_call},
+    {"struct_from_ptr", l_struct_from_ptr},
     {NULL, NULL},
 };
+
+char **slua_string_array(void *L, int idx) {
+  lua_State *ls = (lua_State *)L;
+  size_t n = lua_istable(ls, idx) ? (size_t)lua_rawlen(ls, idx) : 0;
+  char **arr = (char **)calloc(n > 0 ? n : 1, sizeof(char *));
+  if (!arr)
+    return NULL;
+  LuaFeature *f = lua_feature(ls);
+  for (size_t i = 0; i < n; i++) {
+    lua_geti(ls, idx, (lua_Integer)(i + 1));
+    size_t len = 0;
+    const char *s2 = lua_tolstring(ls, -1, &len);
+    char *copy = (char *)calloc(len + 1, 1);
+    if (copy) {
+      if (s2)
+        memcpy(copy, s2, len);
+      arr[i] = copy;
+      track_alloc(f, copy);
+    }
+    lua_pop(ls, 1);
+  }
+  track_alloc(f, arr);
+  return arr;
+}
 
 void *slua_callback(void *L, int idx, int kind) {
   return make_callback((lua_State *)L, idx, kind, lua_feature((lua_State *)L));
@@ -682,10 +761,24 @@ void slua_push_struct(void *L, const char *name, const void *base) {
     case LSF_STR:
       lua_pushstring(ls, *(const char *const *)p ? *(const char *const *)p : "");
       break;
+    case LSF_STR_INLINE:
+      lua_pushstring(ls, (const char *)p);
+      break;
     case LSF_STR_ARRAY: {
       lua_newtable(ls);
       const char *const *arr = *(const char *const *const *)p;
       size_t n = fd->aux;
+      for (size_t ai = 0; arr && ai < n; ai++) {
+        lua_pushinteger(ls, (lua_Integer)(ai + 1));
+        lua_pushstring(ls, arr[ai] ? arr[ai] : "");
+        lua_settable(ls, -3);
+      }
+      break;
+    }
+    case LSF_STR_LIST: {
+      size_t n = *(const size_t *)((const char *)base + fd->aux);
+      lua_newtable(ls);
+      char *const *arr = *(char *const *const *)p;
       for (size_t ai = 0; arr && ai < n; ai++) {
         lua_pushinteger(ls, (lua_Integer)(ai + 1));
         lua_pushstring(ls, arr[ai] ? arr[ai] : "");
