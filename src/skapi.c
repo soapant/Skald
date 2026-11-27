@@ -4187,6 +4187,9 @@ static bool sk_config_parse_path(void) {
   if (!data_dir(dir, sizeof(dir)))
     return false;
   Platform_MkdirIfNotExists(dir);
+  char core_dir[512];
+  snprintf(core_dir, sizeof(core_dir), "%s%ccore", dir, SK_PATH_SEP);
+  Platform_MkdirIfNotExists(core_dir);
   snprintf(sk_config_path, sizeof(sk_config_path), "%s%ccore%cskald.toml", dir,
            SK_PATH_SEP, SK_PATH_SEP);
   return true;
