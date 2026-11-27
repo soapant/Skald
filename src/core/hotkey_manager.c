@@ -72,7 +72,7 @@ static bool hotkey_is_suspended(void) {
 #define HOTKEY_PENDING_MAX 64
 
 typedef struct {
-  HotkeyCallback fn;
+  void (*fn)(void);
   HotkeyCallbackUd fn_ud;
   void *ud;
   OwnerTag tag;
@@ -120,7 +120,7 @@ static void hotkey_queue_init(void) {
   } while (0)
 #define HOTKEY_Q_UNLOCK() Platform_MutexUnlock(q_mutex)
 
-static void hotkey_enqueue(HotkeyCallback fn, HotkeyCallbackUd fn_ud, void *ud,
+static void hotkey_enqueue(void (*fn)(void), HotkeyCallbackUd fn_ud, void *ud,
                            const char *owner) {
   if (!fn && !fn_ud)
     return;
@@ -384,7 +384,7 @@ const HotkeyBinding *hotkey_find_by_ud(const void *ud) {
   return NULL;
 }
 
-const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb) {
+const HotkeyBinding *hotkey_find_by_callback(void (*cb)(void)) {
   if (!cb)
     return NULL;
   for (int i = 0; i < arrlen(hotkeys); i++)
@@ -546,7 +546,7 @@ bool hotkey_process(int vk, int modifiers) {
       continue;
     }
 
-    HotkeyCallback cb = b->hotkey_callback;
+    void (*cb)(void) = b->hotkey_callback;
     bool swallow = true;
     if (b->should_swallow) {
       if (feature_loader_try_lock()) {

@@ -461,10 +461,9 @@ static bool load_single(const char *dir, const char *filename) {
     log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
     return false;
   }
-  typedef void (*InitFn)(void);
-  InitFn init = (InitFn)Platform_GetSymbol(h, "skald_feature_init");
+    void (*init)(void) = (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
   if (!init)
-    init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
+    init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
   if (init) {
     feature_init_count++;
   } else {
@@ -1013,18 +1012,16 @@ static void feature_loader_load_lua_all(void) {
 }
 
 static void call_feature_shutdown(LibHandle handle) {
-  typedef void (*ShutdownFn)(void);
-  ShutdownFn shut =
-      (ShutdownFn)Platform_GetSymbol(handle, "skald_feature_shutdown");
+    void (*shut)(void) =
+      (void (*)(void))Platform_GetSymbol(handle, "skald_feature_shutdown");
   if (shut)
     shut();
 }
 
 static void purge_failed_library(LibHandle h, const char *path) {
-  typedef void (*InitFn)(void);
-  InitFn init = (InitFn)Platform_GetSymbol(h, "skald_feature_init");
+    void (*init)(void) = (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
   if (!init)
-    init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
+    init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
   char *owner = init ? owner_resolve_for_func_alloc((void *)init) : NULL;
   if (!owner || !owner[0]) {
     owner_strfree(&owner);
@@ -1134,10 +1131,9 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
         UNLOCK();
         return false;
       }
-      typedef void (*InitFn)(void);
-      InitFn init = (InitFn)Platform_GetSymbol(h, "skald_feature_init");
+            void (*init)(void) = (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
       if (!init)
-        init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
+        init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
       if (!init) {
         log_error("reload %s: no init symbol, keeping old", name);
         purge_failed_library(h, uniquepath);
@@ -1163,9 +1159,8 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
         UNLOCK();
         return false;
       }
-      typedef void (*ShutdownFn)(void);
-      ShutdownFn shut =
-          (ShutdownFn)Platform_GetSymbol(old, "skald_feature_shutdown");
+            void (*shut)(void) =
+          (void (*)(void))Platform_GetSymbol(old, "skald_feature_shutdown");
       if (shut)
         shut();
       widget_bump_generation();
@@ -1213,10 +1208,9 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       UNLOCK();
       return false;
     }
-    typedef void (*InitFn)(void);
-    InitFn init = (InitFn)Platform_GetSymbol(h, "skald_feature_init");
+        void (*init)(void) = (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
     if (!init)
-      init = (InitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
+      init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
     if (!init) {
       log_error("reload %s: no init symbol, new feature not loaded", name);
       purge_failed_library(h, uniquepath);

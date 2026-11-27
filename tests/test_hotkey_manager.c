@@ -27,7 +27,7 @@ static int fn_calls = 0;
 static void fn_cb(void) { fn_calls++; }
 
 static HotkeyBinding make_binding(int vk, int mods, HotkeyCallbackUd cb_ud,
-                                  void *ud, HotkeyCallback cb) {
+                                  void *ud, void (*cb)(void)) {
   HotkeyBinding b = {0};
   b.vk = vk;
   b.modifiers = mods;

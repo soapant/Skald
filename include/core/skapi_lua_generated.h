@@ -1589,7 +1589,6 @@ static const char *lua_alias_from[] = {
     "SkColor",
     "SkMetrics",
     "SkEvent",
-    "SkEventCallback",
     "SkWidget",
     "SkWidgetSpec",
     "SkWidgetKey",
@@ -1638,7 +1637,6 @@ static const char *lua_alias_to[] = {
     "RgbColor",
     "Metrics",
     "Event",
-    "EventCallback",
     "Widget",
     "WidgetSpec",
     "WidgetKey",
@@ -4437,22 +4435,20 @@ static inline int lthunk_sk_cap_bind_declare(lua_State *L) {
 static inline int lthunk_sk_register_event(lua_State *L) {
   slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
-  void *a1 = slua_callback(L, 2, 0);
   void *sym = Platform_GetMainSymbol("sk_register_event");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_event"); }
-  typedef void (*fn_t)(SkEvent, SkEventCallback);
-  ((fn_t)sym)((SkEvent)a0, (SkEventCallback)a1);
+  typedef void (*fn_t)(SkEvent);
+  ((fn_t)sym)((SkEvent)a0);
   slua_owner_clear();
   return 0;
 }
 static inline int lthunk_sk_unregister_event(lua_State *L) {
   slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
-  void *a1 = slua_callback(L, 2, 0);
   void *sym = Platform_GetMainSymbol("sk_unregister_event");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_unregister_event"); }
-  typedef void (*fn_t)(SkEvent, SkEventCallback);
-  ((fn_t)sym)((SkEvent)a0, (SkEventCallback)a1);
+  typedef void (*fn_t)(SkEvent);
+  ((fn_t)sym)((SkEvent)a0);
   slua_owner_clear();
   return 0;
 }

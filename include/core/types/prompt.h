@@ -123,8 +123,6 @@ typedef void (*EditCallback)(PromptState *state);
 
 typedef void (*FilterCallback)(const char *item, const char *filter);
 
-typedef void (*HelpCallback)(void);
-
 typedef struct PromptCallbacks {
   RefreshCallback refresh;
   EnterCallback enter;
@@ -133,15 +131,13 @@ typedef struct PromptCallbacks {
   CtrlShiftEnterCallback ctrl_shift_enter;
   CtrlAltEnterCallback ctrl_alt_enter;
   ShiftAltEnterCallback shift_alt_enter;
-  HelpCallback help;
+  void (*help)(void);
   RenderCallback render;
   EditCallback edit;
   FilterCallback filter;
 } PromptCallbacks;
 
 typedef void (*KeyCallback)(int vkCode);
-
-typedef void (*CloseCallback)(void);
 
 void listbox_info_free(ListBox *lb);
 bool listbox_info_ensure_rows(ListBox *lb, int rows);
@@ -164,8 +160,8 @@ typedef struct {
   RenderCallback render;
   EditCallback edit;
   FilterCallback filter;
-  HelpCallback help;
-  CloseCallback on_close;
+  void (*help)(void);
+  void (*on_close)(void);
   void *render_data;
   int fps;
   bool auto_scale;

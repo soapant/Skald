@@ -29,7 +29,6 @@ typedef ImageBuffer SkImage;
 typedef RgbColor SkColor;
 typedef Metrics SkMetrics;
 typedef Event SkEvent;
-typedef EventCallback SkEventCallback;
 typedef Widget SkWidget;
 typedef WidgetSpec SkWidgetSpec;
 typedef WidgetKey SkWidgetKey;
@@ -346,12 +345,10 @@ typedef struct {
   const char *blacklist[16];
 } SkRemappingSpec;
 
-typedef void (*SkSnippetFunc)(void);
-
 typedef struct {
   const char *trigger;
   const char *text;
-  SkSnippetFunc fn;
+  void (*fn)(void);
   const char *whitelist[16];
   const char *blacklist[16];
 } SkSnippetSpec;
@@ -1385,9 +1382,9 @@ SkMetrics *sk_get_metrics(void);
 
 void *sk_get_active_prompt(void);
 
-void sk_register_event(SkEvent event, SkEventCallback cb);
+void sk_register_event(SkEvent event, void (*cb)(void));
 
-void sk_unregister_event(SkEvent event, SkEventCallback cb);
+void sk_unregister_event(SkEvent event, void (*cb)(void));
 
 void sk_register_key_interceptor(SkKeyInterceptorFn fn);
 

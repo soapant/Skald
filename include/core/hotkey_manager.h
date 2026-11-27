@@ -20,7 +20,7 @@ bool hotkey_unregister_internal(int vk, int modifiers);
 int hotkey_count(void);
 const HotkeyBinding *hotkey_get(int index);
 bool hotkey_is_taken(int vk, int modifiers);
-const HotkeyBinding *hotkey_find_by_callback(HotkeyCallback cb);
+const HotkeyBinding *hotkey_find_by_callback(void (*cb)(void));
 const HotkeyBinding *hotkey_find_by_ud(const void *ud);
 bool hotkey_process(int vk, int modifiers);
 bool hotkey_execute(int vk, int modifiers);

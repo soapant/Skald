@@ -12,8 +12,6 @@ typedef enum {
   EVENT_PROMPT_CLOSE,
 } Event;
 
-typedef void (*EventCallback)(void);
-
 typedef struct {
   void (*on_show)(Popup *self);
   void (*on_hide)(Popup *self);
@@ -77,13 +75,13 @@ bool prompt_popup_resize_current_animated(int x, int y, int w, int h,
                                           int duration_ms);
 bool prompt_popup_resize_animating(const Popup *p);
 void prompt_popup_tick_resize_animation_popup(Popup *p);
-CloseCallback prompt_popup_take_on_close(Popup *p);
+void (*prompt_popup_take_on_close(Popup *p))(void);
 PromptState *prompt_popup_find_state(const ListBox *lb);
 Popup *prompt_popup_find_popup_by_handle(WindowHandle handle);
 PromptState *prompt_popup_get_top_prompt_state(void);
 
-void event_bus_register(Event event, EventCallback cb);
-void event_bus_unregister(Event event, EventCallback cb);
+void event_bus_register(Event event, void (*cb)(void));
+void event_bus_unregister(Event event, void (*cb)(void));
 void event_bus_purge_owner(const char *path_a, const char *path_b);
 void event_bus_trigger(Event event);
 

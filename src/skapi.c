@@ -608,7 +608,7 @@ char *sk_hotkey_for_ud(void *ud) {
 void sk_register_deferred_init(void (*cb)(void)) { deferred_init_register(cb); }
 
 char *sk_hotkey_for_callback(void (*cb)(void)) {
-  return hotkey_binding_format(hotkey_find_by_callback((HotkeyCallback)cb));
+  return hotkey_binding_format(hotkey_find_by_callback((void (*)(void))cb));
 }
 
 bool sk_hotkey_taken(const char *hotkey) {
@@ -2713,11 +2713,11 @@ void *sk_get_active_prompt(void) {
   return NULL;
 }
 
-void sk_register_event(SkEvent event, SkEventCallback cb) {
+void sk_register_event(SkEvent event, void (*cb)(void)) {
   event_bus_register(event, cb);
 }
 
-void sk_unregister_event(SkEvent event, SkEventCallback cb) {
+void sk_unregister_event(SkEvent event, void (*cb)(void)) {
   event_bus_unregister(event, cb);
 }
 
