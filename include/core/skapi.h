@@ -24,7 +24,6 @@
 typedef StringList SkStringList;
 typedef HotkeyKey SkKey;
 typedef WindowHandle SkWindowHandle;
-
 typedef struct PlatformWidget PlatformWidget;
 typedef ImageBuffer SkImage;
 typedef RgbColor SkColor;
@@ -45,13 +44,7 @@ typedef Line SkLine;
 typedef Circle SkCircle;
 typedef Pos SkPos;
 typedef ListSpec SkListSpec;
-
-#define SK_POS(px, py) ((SkPos){.x = (px), .y = (py)})
-#define SK_RECT(px, py,pw,ph) ((SkRect){.x = (px), .y = (py),.w = (pw), .h = (ph)})
-#define SK_COLOR(cr, cg, cb) ((SkColor){.r = (cr), .g = (cg), .b = (cb)})
-
-ColorRef sk_rgb(unsigned r, unsigned g, unsigned b);
-ColorRef sk_hex(unsigned long h);
+typedef void (*SkHttpCallback)(const char *body, bool ok, void *userdata);
 typedef WindowList SkWindowList;
 typedef struct {
   const char *name;
@@ -67,13 +60,275 @@ typedef SliderSpec SkSliderSpec;
 typedef SettingsEntrySpec SkSettingsEntrySpec;
 typedef PlaceState SkPlaceState;
 typedef ClipboardEntry SkClipboardEntry;
-
 typedef SearchKind SkSearchKind;
 typedef SearchHit SkSearchHit;
 typedef SearchIndex SkSearchIndex;
 typedef SearchRenderFn SkSearchRenderFn;
 typedef SearchActivateFn SkSearchActivateFn;
+typedef ClipboardHistory SkClipboardHistory;
+typedef struct {
+  int index;
+  char name[128];
+  int x, y, w, h;
+  bool is_primary;
+} SkMonitorInfo;
+typedef struct {
+  const char *dir_path;
+  char **allowed_extensions;
+  ListOfFiles *out;
+  char **names_to_ignore;
+  bool strip_extension;
+  int max_depth;
+} SkDirScanSpec;
+typedef struct {
+  ListBox *lb;
+  const char *filter;
+  const char **items;
+  int count;
+  bool (*filter_match)(const char *item, const char *filter);
+  int (*item_rank)(int item_index);
+} SkPopulateListboxSpec;
+typedef struct {
+  const char *initial_text;
+  int x;
+  int y;
+  int w;
+  int h;
+  ListBox *lb;
+  int *out_index;
+} SkEditPopupSpec;
+typedef struct {
+  const char *message;
+  MessageSlot slot;
+  int x;
+  int y;
+  int w;
+  int h;
+  int mw;
+  int mh;
+  double timeout;
+  int prompt_gap;
+  ColorRef color_text;
+  const char *hover_key;
+  void (*render)(void *ud);
+  void *render_data;
+  int fps;
+  bool no_bg;
+  ColorRef color_bg;
+  const char *name;
+  bool close_on_keypress;
+  bool rounded;
+  int radius;
+} SkMessageSpec;
+typedef struct {
+  void (*render)(void *ud);
+  void *render_data;
+  int w;
+  int h;
+  unsigned long frame;
+  SkTimer created_at;
+  int pad;
+} SkHoverPopupCtx;
+typedef PromptSpec SkPromptSpec;
+typedef struct {
+  const char *text;
+  int x;
+  int y;
+  unsigned long color;
+  FontHandle font;
+  int font_size;
+  const char *align;
+  int pad;
+  bool no_hscroll;
+  float angle;
+} SkTextSpec;
+typedef struct {
+  int x;
+  int y;
+  int w;
+  int h;
+  const char *text;
+  unsigned long color;
+  FontHandle font;
+  int font_size;
+} SkTextCenteredSpec;
+typedef int (*SkWrapMeasureFn)(void *ctx, const char *text, int len);
+typedef struct {
+  int x;
+  int y;
+  int max_width;
+  int line_height;
+  const char *text;
+  int font_size;
+  SkPos *out_positions;
+} SkMeasureSpec;
+typedef struct {
+  int x;
+  int y;
+  const char *text;
+  int font_size;
+  const char *align;
+  int pad;
+} SkTextBoundsSpec;
+typedef struct {
+  const char *path;
+  SkImage image;
+  int x;
+  int y;
+  int w;
+  int h;
+} SkImageSpec;
+typedef struct {
+  const char *text;
+  ColorRef color;
+} SkTextSegment;
+typedef struct {
+  const SkTextSegment *segments;
+  int count;
+  int x;
+  int y;
+  unsigned long color;
+  FontHandle font;
+  int font_size;
+  const char *align;
+  int pad;
+  bool no_hscroll;
+  float angle;
+} SkTextSegmentsSpec;
+typedef struct {
+  const char *text;
+  const SkTextSegment *segments;
+  int count;
+  int x;
+  int y;
+  int max_width;
+  int line_height;
+  unsigned long color;
+  FontHandle font;
+  int font_size;
+  const char *align;
+  int pad;
+  bool no_hscroll;
+  float angle;
+  bool measure_only;
+} SkTextWrappedSpec;
+typedef enum {
+  SK_FOCUS_NONE = 0,
+  SK_FOCUS_BUTTON,
+  SK_FOCUS_CHECKBOX,
+  SK_FOCUS_SLIDER,
+  SK_FOCUS_LISTBOX,
+  SK_FOCUS_EDITBOX,
+  SK_FOCUS_CUSTOM
+} SkFocusKind;
+typedef enum {
+  SK_FOCUS_LEFT = 0,
+  SK_FOCUS_RIGHT,
+  SK_FOCUS_UP,
+  SK_FOCUS_DOWN
+} SkFocusDir;
+typedef struct {
+  const char *name;
+  int x, y, w, h;
+  int content_w, content_h;
+  int *off_x;
+  int *off_y;
+  int wheel_px;
+} SkScrollSpec;
+typedef void *SkLibrary;
+typedef void *SkThread;
+typedef void *SkMutex;
+typedef void *(*SkThreadFunc)(void *arg);
+typedef struct {
+  char *key;
+  long value;
+} SkHashMap;
+typedef struct {
+  int vk;
+  int scancode;
+  int mods;
+  bool down;
+  bool repeat;
+  unsigned long long t_us;
+} SkKeyEvent;
+typedef struct {
+  int button;
+  int x;
+  int y;
+  int mods;
+  bool down;
+  bool repeat;
+  unsigned long long t_us;
+} SkMouseEvent;
+typedef struct {
+  int x;
+  int y;
+  int dx;
+  int dy;
+  int mods;
+  unsigned long long t_us;
+} SkScrollEvent;
+typedef CcEntrySpec SkCcEntrySpec;
+typedef SettingsEntry SkSettingsEntry;
+typedef SettingsCheckboxSpec SkSettingsCheckboxSpec;
+typedef SettingsButtonSpec SkSettingsButtonSpec;
+typedef SettingsSliderSpec SkSettingsSliderSpec;
+typedef SettingsDropdownSpec SkSettingsDropdownSpec;
+typedef SettingsEditboxChangeFn SkSettingsEditboxChangeFn;
+typedef SettingsEditboxType SkSettingsEditboxType;
+typedef SettingsEditboxField SkSettingsEditboxField;
+typedef SettingsEditboxSpec SkSettingsEditboxSpec;
+typedef SettingsEditboxGroup SkSettingsEditboxGroup;
+typedef void (*SkConfigFn)(void *ud);
+typedef struct {
+  const char *name;
+  const char *hotkey;
+  SkConfigFn cb;
+  void *ud;
+} SkConfigHotkeySpec;
+typedef struct {
+  const char *hotkey;
+  void (*cb)(void);
+  void (*cb_ud)(void *);
+  bool (*should_swallow)(void);
+  const char *whitelist[16];
+  const char *blacklist[16];
+  bool swallow;
+  void *ud;
+} SkHotkeySpec;
+typedef struct {
+  const char *name;
+  const char *key;
+  const char *default_hotkey;
+  void (*cb)(void);
+  void (*cb_ud)(void *);
+  bool (*should_swallow)(void);
+  const char *whitelist[16];
+  const char *blacklist[16];
+  void *ud;
+} SkConfigHotkeyRegisterSpec;
+typedef struct {
+  const char *src;
+  const char *dst;
+  const char *whitelist[16];
+  const char *blacklist[16];
+} SkRemappingSpec;
+typedef void (*SkSnippetFunc)(void);
+typedef struct {
+  const char *trigger;
+  const char *text;
+  SkSnippetFunc fn;
+  const char *whitelist[16];
+  const char *blacklist[16];
+} SkSnippetSpec;
+typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 
+#define SK_POS(px, py) ((SkPos){.x = (px), .y = (py)})
+#define SK_RECT(px, py,pw,ph) ((SkRect){.x = (px), .y = (py),.w = (pw), .h = (ph)})
+#define SK_COLOR(cr, cg, cb) ((SkColor){.r = (cr), .g = (cg), .b = (cb)})
+
+ColorRef sk_rgb(unsigned r, unsigned g, unsigned b);
+ColorRef sk_hex(unsigned long h);
 #define SK_SEARCH_TEXT SEARCH_KIND_TEXT
 #define SK_SEARCH_BUTTON SEARCH_KIND_BUTTON
 #define SK_SEARCH_CHECKBOX SEARCH_KIND_CHECKBOX
@@ -96,15 +351,6 @@ int sk_search_query(SkSearchIndex *idx, const char *filter);
 int sk_search_hit_count(const SkSearchIndex *idx);
 const SkSearchHit *sk_search_hit_at(const SkSearchIndex *idx, int i);
 void sk_search_activate(SkSearchIndex *idx, int hit_i);
-
-typedef ClipboardHistory SkClipboardHistory;
-
-typedef struct {
-  int index;
-  char name[128];
-  int x, y, w, h;
-  bool is_primary;
-} SkMonitorInfo;
 
 bool sk_copy_to_clipboard(const char *text);
 
@@ -133,15 +379,6 @@ unsigned long long sk_net_rx_bytes_over(double seconds);
 #define SK_DIR_WALK_UNLIMITED 0
 
 char *sk_search_file_in_dir(const char *directory, const char *search_string);
-
-typedef struct {
-  const char *dir_path;
-  char **allowed_extensions;
-  ListOfFiles *out;
-  char **names_to_ignore;
-  bool strip_extension;
-  int max_depth;
-} SkDirScanSpec;
 
 #define sk_dir_scan(...) ski_dir_scan(&(SkDirScanSpec){__VA_ARGS__})
 bool ski_dir_scan(const SkDirScanSpec *spec);
@@ -361,15 +598,6 @@ char *sk_string_slice(const char *str, int start, int end);
 
 SkStringList sk_string_split(const char *str, const char *delimiter);
 
-typedef struct {
-  ListBox *lb;
-  const char *filter;
-  const char **items;
-  int count;
-  bool (*filter_match)(const char *item, const char *filter);
-  int (*item_rank)(int item_index);
-} SkPopulateListboxSpec;
-
 void ski_populate_listbox(const SkPopulateListboxSpec *spec);
 #define sk_populate_listbox(...)                                               \
   ski_populate_listbox(&(SkPopulateListboxSpec){__VA_ARGS__})
@@ -384,16 +612,6 @@ int sk_get_edit_cursor(void);
 
 char *sk_get_edit_text(void);
 
-typedef struct {
-  const char *initial_text;
-  int x;
-  int y;
-  int w;
-  int h;
-  ListBox *lb;
-  int *out_index;
-} SkEditPopupSpec;
-
 #define sk_edit_text_popup(...)                                                \
   ski_edit_text_popup(&(SkEditPopupSpec){__VA_ARGS__})
 
@@ -406,122 +624,31 @@ bool sk_replace_line_in_file(const char *filepath, int line_index,
 
 char *ski_popup(const PopupSpec *spec);
 
-typedef struct {
-  const char *message;
-  MessageSlot slot;
-  int x;
-  int y;
-  int w;
-  int h;
-  int mw;
-  int mh;
-  double timeout;
-  int prompt_gap;
-  ColorRef color_text;
-  const char *hover_key;
-  void (*render)(void *ud);
-  void *render_data;
-  int fps;
-  bool no_bg;
-  ColorRef color_bg;
-  const char *name;
-  bool close_on_keypress;
-  bool rounded;
-  int radius;
-} SkMessageSpec;
-
-typedef struct {
-  void (*render)(void *ud);
-  void *render_data;
-  int w;
-  int h;
-  unsigned long frame;
-  SkTimer created_at;
-  int pad;
-} SkHoverPopupCtx;
-
 #define sk_message(...) ski_message(&(SkMessageSpec){__VA_ARGS__})
 
 void ski_message(const SkMessageSpec *spec);
-
 
 #define sk_overlay(...) sk_message(__VA_ARGS__, .timeout = 10000000.0)
 #define sk_dismiss_overlay(...) sk_dismiss_message(__VA_ARGS__)
 #define sk_overlay_active(...) sk_message_active(__VA_ARGS__)
 #define sk_subwindow(...) sk_window(__VA_ARGS__, .subwindow = true)
 
-typedef PromptSpec SkPromptSpec;
-
 #define sk_window(...) ski_window(&(SkPromptSpec){__VA_ARGS__})
 
 void ski_window(const SkPromptSpec *spec);
 
-typedef struct {
-  const char *text;
-  int x;
-  int y;
-  unsigned long color;
-  FontHandle font;
-  int font_size;
-  const char *align;
-  int pad;
-  bool no_hscroll;
-  float angle;
-} SkTextSpec;
-
-typedef struct {
-  int x;
-  int y;
-  int w;
-  int h;
-  const char *text;
-  unsigned long color;
-  FontHandle font;
-  int font_size;
-} SkTextCenteredSpec;
-
-typedef int (*SkWrapMeasureFn)(void *ctx, const char *text, int len);
-
 int ski_text_wrap_layout(const char *text, SkPos pos, int max_width,
                          int line_height, SkWrapMeasureFn measure, void *ctx,
                          SkPos *out, int maxout);
-
-typedef struct {
-  int x;
-  int y;
-  int max_width;
-  int line_height;
-  const char *text;
-  int font_size;
-  SkPos *out_positions;
-} SkMeasureSpec;
 
 #define sk_measure_text_wrapped(...)                                           \
   ski_measure_text_wrapped(&(SkMeasureSpec){__VA_ARGS__})
 
 int ski_measure_text_wrapped(const SkMeasureSpec *spec);
 
-typedef struct {
-  int x;
-  int y;
-  const char *text;
-  int font_size;
-  const char *align;
-  int pad;
-} SkTextBoundsSpec;
-
 SkRect ski_text_bounds(const SkTextBoundsSpec *spec);
 
 #define sk_text_bounds(...) ski_text_bounds(&(SkTextBoundsSpec){__VA_ARGS__})
-
-typedef struct {
-  const char *path;
-  SkImage image;
-  int x;
-  int y;
-  int w;
-  int h;
-} SkImageSpec;
 
 SkImage sk_image_from_window_title(const char *title);
 SkImage sk_image_from_window_id(const char *id);
@@ -530,46 +657,9 @@ void sk_image_free(SkImage image);
 bool ski_draw_text(const SkTextSpec *spec);
 bool ski_draw_text_centered(const SkTextCenteredSpec *spec);
 
-typedef struct {
-  const char *text;
-  ColorRef color;
-} SkTextSegment;
-
-typedef struct {
-  const SkTextSegment *segments;
-  int count;
-  int x;
-  int y;
-  unsigned long color;
-  FontHandle font;
-  int font_size;
-  const char *align;
-  int pad;
-  bool no_hscroll;
-  float angle;
-} SkTextSegmentsSpec;
-
 bool ski_draw_text_segments(const SkTextSegmentsSpec *spec);
 #define sk_draw_text_segments(...)                                             \
   ski_draw_text_segments(&(SkTextSegmentsSpec){__VA_ARGS__})
-
-typedef struct {
-  const char *text;
-  const SkTextSegment *segments;
-  int count;
-  int x;
-  int y;
-  int max_width;
-  int line_height;
-  unsigned long color;
-  FontHandle font;
-  int font_size;
-  const char *align;
-  int pad;
-  bool no_hscroll;
-  float angle;
-  bool measure_only;
-} SkTextWrappedSpec;
 
 int ski_draw_text_wrapped(const SkTextWrappedSpec *spec);
 #define sk_draw_text_wrapped(...)                                              \
@@ -601,23 +691,6 @@ float sk_slider_value(const char *name);
 float sk_slider_fraction(const char *name);
 int sk_slider_percent(const char *name);
 bool sk_slider_set_value(const char *name, float value);
-
-typedef enum {
-  SK_FOCUS_NONE = 0,
-  SK_FOCUS_BUTTON,
-  SK_FOCUS_CHECKBOX,
-  SK_FOCUS_SLIDER,
-  SK_FOCUS_LISTBOX,
-  SK_FOCUS_EDITBOX,
-  SK_FOCUS_CUSTOM
-} SkFocusKind;
-
-typedef enum {
-  SK_FOCUS_LEFT = 0,
-  SK_FOCUS_RIGHT,
-  SK_FOCUS_UP,
-  SK_FOCUS_DOWN
-} SkFocusDir;
 
 SkFocusKind sk_focus_kind(void);
 bool sk_focus_is(const char *name);
@@ -718,15 +791,6 @@ void sk_set_draw_offset(SkPos pos);
 
 SkPos sk_get_draw_offset(void);
 
-typedef struct {
-  const char *name;
-  int x, y, w, h;
-  int content_w, content_h;
-  int *off_x;
-  int *off_y;
-  int wheel_px;
-} SkScrollSpec;
-
 #define sk_scroll_begin(...) ski_scroll_begin(&(SkScrollSpec){__VA_ARGS__})
 bool ski_scroll_begin(const SkScrollSpec *spec);
 void sk_scroll_end(void);
@@ -738,8 +802,6 @@ char *sk_http_get_limited(const char *url, size_t max_bytes, size_t *out_len);
 bool sk_http_download(const char *url, const char *save_path);
 
 char *sk_http_post(const char *url, const char *content_type, const char *body);
-
-typedef void (*SkHttpCallback)(const char *body, bool ok, void *userdata);
 
 void sk_http_get_async(const char *url, SkHttpCallback cb, void *userdata);
 
@@ -766,8 +828,6 @@ bool sk_is_root(void);
 
 void sk_run_every(double seconds, void (*callback)(void));
 
-typedef void *SkLibrary;
-
 SkLibrary sk_library_open(const char *path);
 
 void sk_library_register(const char *name, SkLibrary handle);
@@ -780,10 +840,6 @@ void sk_library_close(SkLibrary lib);
 
 const char *sk_library_error(void);
 
-typedef void *SkThread;
-typedef void *SkMutex;
-typedef void *(*SkThreadFunc)(void *arg);
-
 SkThread sk_thread_create(SkThreadFunc fn, void *arg);
 
 void sk_thread_join(SkThread thread);
@@ -795,11 +851,6 @@ void sk_mutex_destroy(SkMutex mutex);
 void sk_mutex_lock(SkMutex mutex);
 
 void sk_mutex_unlock(SkMutex mutex);
-
-typedef struct {
-  char *key;
-  long value;
-} SkHashMap;
 
 void sk_hashmap_init(SkHashMap **map);
 
@@ -902,15 +953,6 @@ char *sk_vk_to_name(int vk);
 #define sk_is_alt_pressed sk_alt_pressed
 #define sk_is_super_pressed sk_super_pressed
 
-typedef struct {
-  int vk;
-  int scancode;
-  int mods;
-  bool down;
-  bool repeat;
-  unsigned long long t_us;
-} SkKeyEvent;
-
 #define SK_MOUSE_LEFT 1
 #define SK_MOUSE_RIGHT 2
 #define SK_MOUSE_MIDDLE 3
@@ -920,26 +962,7 @@ typedef struct {
 #define SK_MOUSE_FORWARD 7
 #define SK_MOUSE_WHEEL 8
 
-typedef struct {
-  int button;
-  int x;
-  int y;
-  int mods;
-  bool down;
-  bool repeat;
-  unsigned long long t_us;
-} SkMouseEvent;
-
 bool sk_poll_mouse(SkMouseEvent *out);
-
-typedef struct {
-  int x;
-  int y;
-  int dx;
-  int dy;
-  int mods;
-  unsigned long long t_us;
-} SkScrollEvent;
 
 bool sk_poll_scroll(SkScrollEvent *out);
 int sk_scroll_queue_len(void);
@@ -967,26 +990,12 @@ unsigned long sk_key_queue_dropped(void);
 
 void sk_clear_key_queue(void);
 
-typedef CcEntrySpec SkCcEntrySpec;
-
 #define sk_add_to_cc(...) ski_add_to_cc(&(SkCcEntrySpec){__VA_ARGS__})
 
 #define sk_add_feature(...) sk_add_to_cc(.type = "Feature", __VA_ARGS__)
 
-typedef SettingsEntry SkSettingsEntry;
-
 #define sk_add_settings_entry(...)                                             \
   sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
-
-typedef SettingsCheckboxSpec SkSettingsCheckboxSpec;
-typedef SettingsButtonSpec SkSettingsButtonSpec;
-typedef SettingsSliderSpec SkSettingsSliderSpec;
-typedef SettingsDropdownSpec SkSettingsDropdownSpec;
-typedef SettingsEditboxChangeFn SkSettingsEditboxChangeFn;
-typedef SettingsEditboxType SkSettingsEditboxType;
-typedef SettingsEditboxField SkSettingsEditboxField;
-typedef SettingsEditboxSpec SkSettingsEditboxSpec;
-typedef SettingsEditboxGroup SkSettingsEditboxGroup;
 
 #define SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT SETTINGS_EDITBOX_X_OFFSET_DEFAULT
 #define SK_SETTINGS_EDITBOX_INVALID ((SkSettingsEditboxGroup){-1, -1})
@@ -1049,15 +1058,6 @@ bool sk_remove_alias(const char *alias);
 
 const char *sk_alias_for(const char *target);
 
-typedef void (*SkConfigFn)(void *ud);
-
-typedef struct {
-  const char *name;
-  const char *hotkey;
-  SkConfigFn cb;
-  void *ud;
-} SkConfigHotkeySpec;
-
 #define sk_config_set_hotkey(...)                                              \
   ski_config_set_hotkey(&(SkConfigHotkeySpec){__VA_ARGS__})
 
@@ -1104,34 +1104,11 @@ bool ski_add_dep(const char *dep_name, const char *owner_file);
 
 #define sk_add_dep(...) ski_add_dep(__VA_ARGS__, __FILE__)
 
-typedef struct {
-  const char *hotkey;
-  void (*cb)(void);
-  void (*cb_ud)(void *);
-  bool (*should_swallow)(void);
-  const char *whitelist[16];
-  const char *blacklist[16];
-  bool swallow;
-  void *ud;
-} SkHotkeySpec;
-
 #define sk_register_hotkey(...)                                                \
   ski_register_hotkey(&(SkHotkeySpec){__VA_ARGS__})
 
 bool ski_register_hotkey(const SkHotkeySpec *spec);
 bool sk_unregister_hotkey(const char *hotkey);
-
-typedef struct {
-  const char *name;
-  const char *key;
-  const char *default_hotkey;
-  void (*cb)(void);
-  void (*cb_ud)(void *);
-  bool (*should_swallow)(void);
-  const char *whitelist[16];
-  const char *blacklist[16];
-  void *ud;
-} SkConfigHotkeyRegisterSpec;
 
 #define sk_register_config_hotkey(...)                                         \
   ski_register_config_hotkey(&(SkConfigHotkeyRegisterSpec){__VA_ARGS__})
@@ -1155,13 +1132,6 @@ char *sk_hotkey_for_callback(void (*cb)(void));
 char *sk_hotkey_for_ud(void *ud);
 void sk_register_deferred_init(void (*cb)(void));
 
-typedef struct {
-  const char *src;
-  const char *dst;
-  const char *whitelist[16];
-  const char *blacklist[16];
-} SkRemappingSpec;
-
 bool ski_register_remapping(const SkRemappingSpec *spec);
 
 #define sk_register_remapping(...)                                             \
@@ -1169,16 +1139,6 @@ bool ski_register_remapping(const SkRemappingSpec *spec);
 
 bool sk_replay_hotkey(SkKey key);
 bool sk_execute_hotkey(SkKey key);
-
-typedef void (*SkSnippetFunc)(void);
-
-typedef struct {
-  const char *trigger;
-  const char *text;
-  SkSnippetFunc fn;
-  const char *whitelist[16];
-  const char *blacklist[16];
-} SkSnippetSpec;
 
 #define sk_register_snippet(...)                                               \
   ski_register_snippet(&(SkSnippetSpec){__VA_ARGS__})
@@ -1266,8 +1226,6 @@ void *sk_get_active_prompt(void);
 void sk_register_event(SkEvent event, SkEventCallback cb);
 void sk_unregister_event(SkEvent event, SkEventCallback cb);
 
-typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
-
 void sk_register_key_interceptor(SkKeyInterceptorFn fn);
 
 void sk_close_window(void);
@@ -1276,6 +1234,5 @@ bool ski_resize_window(const SkRect *rect);
 #define sk_resize_window(...) ski_resize_window(&(SkRect){__VA_ARGS__})
 bool ski_resize_window_animated(const SkRect *rect, int duration_ms);
 SkRect sk_get_window_bounds(void);
-
 
 #endif
