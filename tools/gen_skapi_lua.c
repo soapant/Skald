@@ -865,6 +865,21 @@ static bool is_out_param(const char *t) {
   return is_scalar_type(base) && !is_struct_type(base);
 }
 
+static const char *struct_name_for_type(const char *t);
+
+static const char *out_struct_type(const char *t) {
+  if (!t || strchr(t, '*') == NULL)
+    return NULL;
+  const char *b = t;
+  while (*b == ' ')
+    b++;
+  if (strncmp(b, "const ", 6) == 0)
+    return NULL;
+  if (strstr(t, "const ") == t)
+    return NULL;
+  return struct_name_for_type(t);
+}
+
 static bool can_thunk(const FuncDesc *fd) {
   if (!fd || fd->varargs)
     return false;
@@ -892,7 +907,8 @@ static bool can_thunk(const FuncDesc *fd) {
       *last_space = '\0';
     clean(ptype);
     if (!is_simple_type(ptype) && !is_struct_type(ptype) &&
-        callback_kind_for_type(ptype) < 0 && !is_out_param(ptype))
+        callback_kind_for_type(ptype) < 0 && !is_out_param(ptype) &&
+        !out_struct_type(ptype))
       return false;
   }
   return true;
@@ -993,6 +1009,9 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
     int ck = callback_kind_for_type(t);
     if (ck >= 0) {
       fprintf(out, "  void *a%d = slua_callback(L, %d, %d);\n", i, idx, ck);
+    } else if (out_struct_type(t)) {
+      fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d));\n",
+              out_struct_type(t), i, i, i);
     } else if (is_struct_type(t)) {
       fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d));\n", t, i, i, i);
       fprintf(out, "  slua_fill_struct(L, \"%s\", %d, &a%d);\n", t, idx, i);
@@ -1056,7 +1075,9 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
     if (i)
       fprintf(out, ", ");
     const char *t = params[i].type;
-    if (is_struct_type(t) || is_handle_type(t))
+    if (out_struct_type(t))
+      fprintf(out, "&a%d", i);
+    else if (is_struct_type(t) || is_handle_type(t))
       fprintf(out, "a%d", i);
     else if (callback_kind_for_type(t) >= 0) {
       char ct[512];
@@ -1084,6 +1105,11 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
   else if (strcmp(k, "f") == 0)
     fprintf(out, "  lua_pushnumber(L, (double)r);\n");
   for (int i = 0; i < n; i++) {
+    const char *osn = out_struct_type(params[i].type);
+    if (osn) {
+      fprintf(out, "  slua_push_struct(L, \"%s\", &a%d);\n", osn, i);
+      continue;
+    }
     if (!is_out_param(params[i].type))
       continue;
     char base[256];
@@ -1098,7 +1124,11 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
     else
       fprintf(out, "  lua_pushinteger(L, (lua_Integer)a%d);\n", i);
   }
-  fprintf(out, "  return %d;\n}\n", (strcmp(k, "v") == 0 ? 0 : 1) + out_count);
+  int extra = out_count;
+  for (int i = 0; i < n; i++)
+    if (out_struct_type(params[i].type))
+      extra++;
+  fprintf(out, "  return %d;\n}\n", (strcmp(k, "v") == 0 ? 0 : 1) + extra);
 }
 
 static void gen_thunk_registry(FILE *out) {

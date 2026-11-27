@@ -410,6 +410,14 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   return true;
 }
 
+ColorRef sk_rgb(unsigned r, unsigned g, unsigned b) {
+  return RGB(r, g, b);
+}
+
+ColorRef sk_hex(unsigned long h) {
+  return HEX(h);
+}
+
 const char *sk_platform(void) {
 #if defined(_WIN32)
   return "win32";

@@ -49,6 +49,9 @@ typedef ListSpec SkListSpec;
 #define SK_POS(px, py) ((SkPos){.x = (px), .y = (py)})
 #define SK_RECT(px, py,pw,ph) ((SkRect){.x = (px), .y = (py),.w = (pw), .h = (ph)})
 #define SK_COLOR(cr, cg, cb) ((SkColor){.r = (cr), .g = (cg), .b = (cb)})
+
+ColorRef sk_rgb(unsigned r, unsigned g, unsigned b);
+ColorRef sk_hex(unsigned long h);
 typedef WindowList SkWindowList;
 typedef struct {
   const char *name;
