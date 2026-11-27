@@ -644,6 +644,33 @@ static void feature_mark_failed(const char *dir, time_t mtime) {
 }
 
 typedef struct {
+  char name[256];
+  long long mtime;
+} LuaReloadStamp;
+
+static LuaReloadStamp *g_lua_stamps;
+#define g_lua_stamp_count arrlenu(g_lua_stamps)
+
+static long long lua_reload_stamp(const char *name) {
+  for (size_t i = 0; i < g_lua_stamp_count; i++)
+    if (strcmp(g_lua_stamps[i].name, name) == 0)
+      return g_lua_stamps[i].mtime;
+  return 0;
+}
+
+static void lua_reload_mark(const char *name, long long mtime) {
+  for (size_t i = 0; i < g_lua_stamp_count; i++) {
+    if (strcmp(g_lua_stamps[i].name, name) == 0) {
+      g_lua_stamps[i].mtime = mtime;
+      return;
+    }
+  }
+  LuaReloadStamp *stamp = arraddnptr(g_lua_stamps, 1);
+  safe_copy(stamp->name, sizeof(stamp->name), name);
+  stamp->mtime = mtime;
+}
+
+typedef struct {
   char ent_name[256];
   char src[1024];
   char dll[1024];
@@ -816,6 +843,19 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     snprintf(subpath, sizeof(subpath), "%.255s/%.255s", FeaturePath, ent_name);
     if (!Platform_DirExists(subpath))
       continue;
+    char luasrc[1024];
+    snprintf(luasrc, sizeof(luasrc), "%.255s/%.255s.lua", subpath, ent_name);
+    long long lua_mtime = 0;
+    if (Platform_FileInfo(luasrc, &lua_mtime, NULL) &&
+        lua_mtime != lua_reload_stamp(ent_name)) {
+      if (hot_reload)
+        feature_loader_reload_from(ent_name, luasrc);
+      lua_reload_mark(ent_name, lua_mtime);
+      if (hot_reload)
+        done++;
+      continue;
+    }
+
     char src[1024], dll[1024];
     snprintf(src, sizeof(src), "%.255s/%.255s.c", subpath, ent_name);
     snprintf(dll, sizeof(dll), "build/features/%.255s%.8s", ent_name, ext);
