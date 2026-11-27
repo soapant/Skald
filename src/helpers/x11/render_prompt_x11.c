@@ -157,7 +157,9 @@ void x11_draw_prompt_user_listbox(Display *dpy, Window *win,
 static void prompt_render_frame(Display *dpy, Window *win, XftDraw *xd,
                                 Visual *vis, Colormap cmap, PromptState *state,
                                 bool custom_render, bool on_draw,
-                                bool clear_ctx) {
+                                bool clear_ctx, bool suppress_content) {
+  if (suppress_content)
+    return;
   if (custom_render) {
     prompt_state_update_delta(state);
     checkbox_frame_begin();
@@ -200,17 +202,19 @@ static void prompt_render_frame(Display *dpy, Window *win, XftDraw *xd,
 }
 
 static bool prompt_render_fallback(Display *dpy, Window *win,
-                                   PromptState *state, int w, int h) {
+                                   PromptState *state, int w, int h,
+                                   bool suppress_content) {
   x11_draw_background(dpy, *win, w, h);
   x11_set_draw_context(dpy, NULL, NULL, 0);
   prompt_render_frame(dpy, win, NULL, NULL, 0, state,
-                      state->callbacks && state->callbacks->render, false,
-                      true);
+                      state->callbacks && state->callbacks->render, false, true,
+                      suppress_content);
   XFlush(dpy);
   return true;
 }
 
-bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
+bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state,
+                            bool suppress_content) {
   if (!state || !win || *win == None || !dpy) {
     return false;
   }
@@ -219,7 +223,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   if (!prompt_attrs_valid || prompt_attrs_dpy != dpy ||
       prompt_attrs_win != *win) {
     if (!XGetWindowAttributes(dpy, *win, &prompt_attrs))
-      return prompt_render_fallback(dpy, win, state, w, h);
+      return prompt_render_fallback(dpy, win, state, w, h, suppress_content);
     prompt_attrs_dpy = dpy;
     prompt_attrs_win = *win;
     prompt_attrs_valid = true;
@@ -229,7 +233,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   int depth = attrs.depth;
   Colormap cmap = attrs.colormap;
   if (!x11_pbuf_acquire(dpy, *win, w, h, depth, vis, cmap))
-    return prompt_render_fallback(dpy, win, state, w, h);
+    return prompt_render_fallback(dpy, win, state, w, h, suppress_content);
   Pixmap dbl = pbuf_pm;
   XftDraw *xdDbl = pbuf_xd;
   x11_set_dbl_visual(dpy, vis, cmap, depth);
@@ -258,7 +262,8 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
   }
   x11_set_draw_context(dpy, xdDbl, vis, cmap);
   prompt_render_frame(dpy, win, xdDbl, vis, cmap, state,
-                      state->callbacks->render != NULL, true, false);
+                      state->callbacks->render != NULL, true, false,
+                      suppress_content);
   x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();
   x11_draw_window_border(dpy, dbl, vis, w, h, state && state->no_bg);

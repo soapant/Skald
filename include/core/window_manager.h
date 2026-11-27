@@ -75,6 +75,7 @@ int prompt_popup_get_bounds(Popup *p, int *x, int *y, int *w, int *h);
 bool prompt_popup_resize_current(int x, int y, int w, int h);
 bool prompt_popup_resize_current_animated(int x, int y, int w, int h,
                                           int duration_ms);
+bool prompt_popup_resize_animating(const Popup *p);
 void prompt_popup_tick_resize_animation_popup(Popup *p);
 CloseCallback prompt_popup_take_on_close(Popup *p);
 PromptState *prompt_popup_find_state(const ListBox *lb);

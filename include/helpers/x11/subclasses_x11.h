@@ -6,7 +6,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 
-bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state);
+bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state,
+                            bool suppress_content);
 void x11_draw_prompt_user_edit_control(Display *dpy, Window *win,
                                        PromptState *state);
 void x11_draw_prompt_user_listbox(Display *dpy, Window *win,

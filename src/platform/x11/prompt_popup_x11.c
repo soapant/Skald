@@ -115,6 +115,7 @@ void Platform_PromptPopupHideWindow(Popup *self) {
 void Platform_PromptPopupRender(Popup *self) {
   if (!draw_state_begin_render())
     return;
+  bool suppress_content = prompt_popup_resize_animating(self);
   WindowManager *wm = (WindowManager *)self->manager;
   Display *dpy = wm ? wm->display : NULL;
   if (dpy) {
@@ -122,11 +123,11 @@ void Platform_PromptPopupRender(Popup *self) {
     if (psr && psr->no_bg) {
       set_transparent_window(true);
       x11_render_prompt_user(dpy, &self->handle.xid,
-                             (PromptState *)self->user_data);
+                             (PromptState *)self->user_data, suppress_content);
       set_transparent_window(false);
     } else {
       x11_render_prompt_user(dpy, &self->handle.xid,
-                             (PromptState *)self->user_data);
+                             (PromptState *)self->user_data, suppress_content);
     }
   }
   if (draw_state_end_render())

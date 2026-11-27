@@ -717,8 +717,11 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     if (useRenderBuf)
       popup_snapshot_background(rect.right, rect.bottom);
+    Popup *anim_popup =
+        prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
+    bool resize_animating =
+        anim_popup && prompt_popup_resize_animating(anim_popup);
     if (SkaldContext_Get()->window.prompt_callbacks.render) {
-      prompt_band_take_placed();
       PromptState *state = win32_prompt_state_from_hwnd(hwnd);
       if (state && state->callbacks && state->callbacks->render) {
         long long now_ticks = Platform_TimerNowTicks();
@@ -737,28 +740,31 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         win32_set_draw_context(paintDC);
         draw_state_get()->win32_listbox_surface = true;
         s_in_render = true;
-        Popup *anim_popup =
-            prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
         if (anim_popup)
           prompt_popup_tick_resize_animation_popup(anim_popup);
-        bool sep_prev = draw_state_get()->suppress_separators;
-        draw_state_get()->suppress_separators = state->no_separators;
-        editbox_registry_tick(state);
-        editbox_registry_begin_frame(state);
-        state->callbacks->render(state);
-        prompt_band_commit_placed();
-        focus_frame_end();
-        draw_state_get()->suppress_separators = sep_prev;
+        resize_animating =
+            anim_popup && prompt_popup_resize_animating(anim_popup);
+        if (!resize_animating) {
+          prompt_band_take_placed();
+          bool sep_prev = draw_state_get()->suppress_separators;
+          draw_state_get()->suppress_separators = state->no_separators;
+          editbox_registry_tick(state);
+          editbox_registry_begin_frame(state);
+          state->callbacks->render(state);
+          prompt_band_commit_placed();
+          focus_frame_end();
+          draw_state_get()->suppress_separators = sep_prev;
+          if (s_repaint_pending) {
+            s_repaint_pending = false;
+            win32_popup_request_repaint(hwnd);
+          }
+        }
         s_in_render = false;
         draw_state_get()->win32_listbox_surface = false;
-        if (s_repaint_pending) {
-          s_repaint_pending = false;
-          win32_popup_request_repaint(hwnd);
-        }
       }
     } else {
       PromptState *estate = win32_prompt_state_from_hwnd(hwnd);
-      if (estate) {
+      if (estate && !resize_animating) {
         focus_frame_begin(
             estate->lb != NULL, 0, prompt_list_top(), estate->width,
             estate->height - prompt_list_top() - prompt_list_bottom_margin());
@@ -838,7 +844,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         win32_set_draw_context(NULL);
       }
     }
-    if (SkaldContext_Get()->window.title != NULL &&
+    if (!resize_animating && SkaldContext_Get()->window.title != NULL &&
         strlen(SkaldContext_Get()->window.title) > 0 && WindowTitleText) {
       wchar_t wtitle[256];
       if (MultiByteToWideChar(CP_UTF8, 0, SkaldContext_Get()->window.title, -1,

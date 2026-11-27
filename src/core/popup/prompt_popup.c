@@ -303,6 +303,13 @@ bool prompt_popup_resize_current_animated(int x, int y, int w, int h,
   return true;
 }
 
+bool prompt_popup_resize_animating(const Popup *p) {
+  if (!p || p->type != POPUP_PROMPT)
+    return false;
+  const PromptPopupData *data = (const PromptPopupData *)p;
+  return data->resize_anim.active;
+}
+
 void prompt_popup_tick_resize_animation_popup(Popup *p) {
   if (!p || p->type != POPUP_PROMPT)
     return;
