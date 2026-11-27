@@ -3,6 +3,8 @@ local native = require("skapi_native")
 local M = {}
 
 M.struct_from_ptr = function(name, ptr) return native.struct_from_ptr(name, ptr) end
+M.global_i = function(name) return native.global_i(name) end
+M.font_size = function() return native.global_i("FontSize") end
 M.rgb = function(...) return native.sk_rgb(...) end
 M.hex = function(...) return native.sk_hex(...) end
 function M.search_create(...) return native.i("sk_search_create", ...) end

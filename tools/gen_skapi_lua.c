@@ -1834,7 +1834,9 @@ int main(void) {
           "local native = require(\"skapi_native\")\n"
           "local M = {}\n\n"
           "M.struct_from_ptr = function(name, ptr) return "
-          "native.struct_from_ptr(name, ptr) end\n");
+          "native.struct_from_ptr(name, ptr) end\n"
+          "M.global_i = function(name) return native.global_i(name) end\n"
+          "M.font_size = function() return native.global_i(\"FontSize\") end\n");
 
   for (int i = 0; i < line_count; i++) {
     char *p = lines[i];

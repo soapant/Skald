@@ -1,4 +1,5 @@
 #include "core/lua_host.h"
+#include "config_values.h"
 
 #include <ctype.h>
 #include <limits.h>
@@ -665,6 +666,12 @@ static int l_global_b(lua_State *L) {
   lua_pushboolean(L, sym && *(bool *)sym);
   return 1;
 }
+static int l_global_i(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *sym = Platform_GetMainSymbol(name);
+  lua_pushinteger(L, sym ? *(int *)sym : 0);
+  return 1;
+}
 static int l_image_size(lua_State *L) {
   const char *path = luaL_checkstring(L, 1);
   int w = 0, h = 0;
@@ -822,6 +829,7 @@ static const luaL_Reg native_funcs[] = {
     {"owner", l_owner},
     {"source", l_source},
     {"global_b", l_global_b},
+    {"global_i", l_global_i},
     {"image_size", l_image_size},
     {"cap_register", l_cap_register},
     {"call_fn", l_call_fn},
@@ -1017,6 +1025,62 @@ static void feature_shutdown(LuaFeature *f) {
   f->owner = NULL;
 }
 
+enum { CFG_LUA_BOOL, CFG_LUA_INT, CFG_LUA_FLOAT, CFG_LUA_STR, CFG_LUA_COLOR };
+
+static void push_cfg_lua_global(lua_State *L, const char *name,
+                                const void *value, int kind) {
+  switch (kind) {
+  case CFG_LUA_BOOL: {
+    bool v;
+    memcpy(&v, value, sizeof(v));
+    lua_pushboolean(L, v != 0);
+    break;
+  }
+  case CFG_LUA_INT: {
+    int v;
+    memcpy(&v, value, sizeof(v));
+    lua_pushinteger(L, (lua_Integer)v);
+    break;
+  }
+  case CFG_LUA_FLOAT: {
+    float v;
+    memcpy(&v, value, sizeof(v));
+    lua_pushnumber(L, (lua_Number)v);
+    break;
+  }
+  case CFG_LUA_STR: {
+    const char *v;
+    memcpy(&v, value, sizeof(v));
+    lua_pushstring(L, v ? v : "");
+    break;
+  }
+  default: {
+    ColorRef v;
+    memcpy(&v, value, sizeof(v));
+    lua_pushinteger(L, (lua_Integer)v);
+    break;
+  }
+  }
+  lua_setglobal(L, name);
+}
+
+static void install_config_globals(lua_State *L) {
+#define X(type, cname, def)                                                    \
+  do {                                                                         \
+    typeof(atomic_load(&cname)) v = atomic_load(&cname);                        \
+    int kind =                                                                 \
+        __builtin_types_compatible_p(typeof(v), bool)    ? CFG_LUA_BOOL         \
+        : __builtin_types_compatible_p(typeof(v), int)   ? CFG_LUA_INT          \
+        : __builtin_types_compatible_p(typeof(v), float) ? CFG_LUA_FLOAT        \
+        : __builtin_types_compatible_p(typeof(v), const char *)                 \
+            ? CFG_LUA_STR                                                       \
+            : CFG_LUA_COLOR;                                                   \
+    push_cfg_lua_global(L, #cname, &v, kind);                                   \
+  } while (0);
+  CONFIG_VALUES(X)
+#undef X
+}
+
 static bool feature_start(LuaFeature *f, const char *name, const char *path) {
   f->name = strdup(name);
   f->owner = strdup(path);
@@ -1024,6 +1088,7 @@ static bool feature_start(LuaFeature *f, const char *name, const char *path) {
   if (!f->L)
     return false;
   luaL_openlibs(f->L);
+  install_config_globals(f->L);
   const char *pkg = "package.path";
   lua_getglobal(f->L, "package");
   lua_getfield(f->L, -1, "path");
