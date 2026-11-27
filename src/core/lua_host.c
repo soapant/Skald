@@ -303,14 +303,39 @@ static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
   return cb_fn_for(slot, kind);
 }
 
-static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
-                        LuaFeature *f) {
+static void *lua_raw_ptr(lua_State *L, int idx) {
+  if (lua_islightuserdata(L, idx))
+    return lua_touserdata(L, idx);
+  if (lua_isnumber(L, idx))
+    return (void *)(uintptr_t)lua_tointeger(L, idx);
+  if (lua_istable(L, idx)) {
+    lua_getfield(L, idx, "__ptr");
+    void *p = NULL;
+    if (lua_islightuserdata(L, -1))
+      p = lua_touserdata(L, -1);
+    else if (lua_isnumber(L, -1))
+      p = (void *)(uintptr_t)lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    return p;
+  }
+  return NULL;
+}
+
+static void fill_struct_depth(lua_State *L, const char *sname, int idx,
+                              void *base, LuaFeature *f, int depth) {
+  if (depth > 4)
+    return;
   const LuaStructDesc *desc = slua_struct_find(sname);
   if (!desc)
     luaL_error(L, "unsupported lua struct '%s'", sname);
+  int base_idx = idx;
+  if (idx < 0) {
+    lua_pushvalue(L, idx);
+    base_idx = lua_gettop(L);
+  }
   for (int i = 0; i < desc->count; i++) {
     const LuaFieldDesc *fd = &desc->fields[i];
-    lua_getfield(L, idx, fd->name);
+    lua_getfield(L, base_idx, fd->name);
     if (lua_isnil(L, -1)) {
       lua_pop(L, 1);
       continue;
@@ -396,13 +421,33 @@ static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
       *(size_t *)((char *)base + fd->aux) = len;
       break;
     }
-    case LSF_PTR:
-      if (lua_islightuserdata(L, -1))
+    case LSF_STRUCT_PTR: {
+      void *raw = lua_raw_ptr(L, -1);
+      if (raw) {
+        *(void **)dst = raw;
+        break;
+      }
+      if (lua_istable(L, -1)) {
+        const LuaStructDesc *sd = fd->target ? slua_struct_find(fd->target) : NULL;
+        if (sd) {
+          void *child = calloc(1, sd->size);
+          if (child) {
+            track_alloc(f, child);
+            fill_struct_depth(L, fd->target, -1, child, f, depth + 1);
+            *(void **)dst = child;
+          }
+        }
+      } else if (lua_islightuserdata(L, -1)) {
         *(void **)dst = lua_touserdata(L, -1);
-      else if (lua_isnumber(L, -1))
+      } else if (lua_isnumber(L, -1)) {
         *(void **)dst = (void *)(uintptr_t)lua_tointeger(L, -1);
-      else
+      } else {
         *(void **)dst = NULL;
+      }
+      break;
+    }
+    case LSF_PTR:
+      *(void **)dst = lua_raw_ptr(L, -1);
       break;
     case LSF_CB:
       *(void **)dst = make_callback(L, -1, fd->cb_kind, f);
@@ -412,6 +457,11 @@ static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
     }
     lua_pop(L, 1);
   }
+}
+
+static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
+                        LuaFeature *f) {
+  fill_struct_depth(L, sname, idx, base, f, 0);
 }
 
 static uintptr_t arg_value(lua_State *L, int idx) {
@@ -734,14 +784,21 @@ void slua_fill_struct(void *L, const char *name, int idx, void *base) {
   fill_struct((lua_State *)L, name, idx, base, lua_feature((lua_State *)L));
 }
 
-void slua_push_struct(void *L, const char *name, const void *base) {
-  lua_State *ls = (lua_State *)L;
+static void push_struct_depth(lua_State *ls, const char *name,
+                              const void *base, int depth) {
+  if (depth > 4) {
+    lua_pushnil(ls);
+    return;
+  }
   const LuaStructDesc *desc = slua_struct_find(name);
   if (!desc) {
     lua_pushnil(ls);
     return;
   }
   lua_newtable(ls);
+  lua_pushliteral(ls, "__ptr");
+  lua_pushlightuserdata(ls, (void *)base);
+  lua_rawset(ls, -3);
   for (int i = 0; i < desc->count; i++) {
     const LuaFieldDesc *fd = &desc->fields[i];
     const char *p = (const char *)base + fd->off;
@@ -792,6 +849,14 @@ void slua_push_struct(void *L, const char *name, const void *base) {
                       n);
       break;
     }
+    case LSF_STRUCT_PTR: {
+      void *child = *(void *const *)p;
+      if (child && fd->target)
+        push_struct_depth(ls, fd->target, child, depth + 1);
+      else
+        lua_pushnil(ls);
+      break;
+    }
     case LSF_PTR:
       lua_pushinteger(ls, (lua_Integer)(uintptr_t) * (void *const *)p);
       break;
@@ -801,6 +866,10 @@ void slua_push_struct(void *L, const char *name, const void *base) {
     }
     lua_setfield(ls, -2, fd->name);
   }
+}
+
+void slua_push_struct(void *L, const char *name, const void *base) {
+  push_struct_depth((lua_State *)L, name, base, 0);
 }
 
 void slua_owner_from_state(void *L) {

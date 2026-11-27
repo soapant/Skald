@@ -1310,6 +1310,7 @@ static int gen_struct_header(void) {
             LuaFieldKind kind = LSF_SKIP;
             int cb_kind = 0;
             char aux[2048] = "0";
+            char target_name[NAME_SZ] = {0};
             char *fptr = strstr(decl, "(*");
             if (fptr) {
               int fi = 0;
@@ -1447,10 +1448,25 @@ static int gen_struct_header(void) {
                 }
               }
               if (kind == LSF_SKIP) {
-                if (strstr(decl, "char *") || strstr(decl, "char*") ||
-                    strstr(decl, "const char"))
+                if (strchr(decl, '*')) {
+                  char ftype[256] = {0};
+                  char *fp = strstr(decl, field);
+                  size_t tn = fp ? (size_t)(fp - decl) : strlen(decl);
+                  if (tn >= sizeof(ftype))
+                    tn = sizeof(ftype) - 1;
+                  memcpy(ftype, decl, tn);
+                  ftype[tn] = '\0';
+                  clean(ftype);
+                  const char *sn = struct_name_for_type(ftype);
+                  if (sn) {
+                    kind = LSF_STRUCT_PTR;
+                    snprintf(target_name, NAME_SZ, "%s", sn);
+                  }
+                }
+                if (kind == LSF_SKIP && (strstr(decl, "char *") ||
+                    strstr(decl, "char*") || strstr(decl, "const char")))
                   kind = LSF_STR;
-                else if (strchr(decl, '*'))
+                else if (kind == LSF_SKIP && strchr(decl, '*'))
                   kind = LSF_PTR;
                 else if (strstr(decl, "bool") == decl)
                   kind = LSF_BOOL;
@@ -1470,8 +1486,15 @@ static int gen_struct_header(void) {
               }
             }
           skip_field:
+            char target_quoted[NAME_SZ + 4];
+            if (target_name[0])
+              snprintf(target_quoted, sizeof(target_quoted), "\"%s\"",
+                       target_name);
+            else
+              snprintf(target_quoted, sizeof(target_quoted), "NULL");
             if (field[0] && kind != LSF_SKIP)
-              fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %s, %d},\n",
+              fprintf(out,
+                      "    {\"%s\", %s, offsetof(%s, %s), %s, %d, %s},\n",
                       field,
                       kind == LSF_INT          ? "LSF_INT"
                       : kind == LSF_BOOL       ? "LSF_BOOL"
@@ -1483,8 +1506,10 @@ static int gen_struct_header(void) {
                       : kind == LSF_STR_INLINE ? "LSF_STR_INLINE"
                       : kind == LSF_BUFFER     ? "LSF_BUFFER"
                       : kind == LSF_PTR        ? "LSF_PTR"
+                      : kind == LSF_STRUCT_PTR ? "LSF_STRUCT_PTR"
                                                : "LSF_CB",
-                      name, field, aux, cb_kind);
+                      name, field, aux, cb_kind,
+                      target_quoted);
           }
         }
         fprintf(out, "};\n");

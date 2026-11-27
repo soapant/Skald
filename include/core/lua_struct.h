@@ -14,6 +14,7 @@ typedef enum {
   LSF_STR_ARRAY,
   LSF_STR_LIST,
   LSF_STR_INLINE,
+  LSF_STRUCT_PTR,
   LSF_BUFFER,
   LSF_PTR,
   LSF_CB
@@ -27,6 +28,7 @@ typedef struct {
   size_t off;
   size_t aux;
   int cb_kind;
+  const char *target;
 } LuaFieldDesc;
 
 typedef struct {
