@@ -2,6 +2,7 @@
 local native = require("skapi_native")
 local M = {}
 
+M.struct_from_ptr = function(name, ptr) return native.struct_from_ptr(name, ptr) end
 function M.sk_search_create(...) return native.i("sk_search_create", ...) end
 function M.sk_search_destroy(...) return native.v("sk_search_destroy", ...) end
 function M.sk_search_push_context(...) return native.v("sk_search_push_context", ...) end

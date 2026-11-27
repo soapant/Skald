@@ -137,12 +137,12 @@ static const LuaFieldDesc lf_MonitorInfo[] = {
 static const LuaStructDesc lsd_MonitorInfo = {"MonitorInfo", sizeof(MonitorInfo), lf_MonitorInfo, (int)(sizeof(lf_MonitorInfo)/sizeof(lf_MonitorInfo[0]))};
 #include "core/window_manager.h"
 static const LuaFieldDesc lf_PopupVTable[] = {
-    {"on_show", LSF_CB, offsetof(PopupVTable, on_show), 0, 0},
-    {"on_hide", LSF_CB, offsetof(PopupVTable, on_hide), 0, 0},
-    {"on_render", LSF_CB, offsetof(PopupVTable, on_render), 0, 0},
+    {"on_show", LSF_CB, offsetof(PopupVTable, on_show), 0, 1},
+    {"on_hide", LSF_CB, offsetof(PopupVTable, on_hide), 0, 1},
+    {"on_render", LSF_CB, offsetof(PopupVTable, on_render), 0, 1},
     {"on_key", LSF_CB, offsetof(PopupVTable, on_key), 0, 3},
-    {"on_focus_lost", LSF_CB, offsetof(PopupVTable, on_focus_lost), 0, 0},
-    {"destroy", LSF_CB, offsetof(PopupVTable, destroy), 0, 0},
+    {"on_focus_lost", LSF_CB, offsetof(PopupVTable, on_focus_lost), 0, 1},
+    {"destroy", LSF_CB, offsetof(PopupVTable, destroy), 0, 1},
 };
 static const LuaStructDesc lsd_PopupVTable = {"PopupVTable", sizeof(PopupVTable), lf_PopupVTable, (int)(sizeof(lf_PopupVTable)/sizeof(lf_PopupVTable[0]))};
 #include "core/window_manager.h"
@@ -1305,7 +1305,7 @@ static const LuaFieldDesc lf_WidgetSpec[] = {
     {"capture_keys", LSF_BOOL, offsetof(WidgetSpec, capture_keys), 0, 0},
     {"on_click", LSF_CB, offsetof(WidgetSpec, on_click), 0, 0},
     {"on_hover", LSF_CB, offsetof(WidgetSpec, on_hover), 0, 0},
-    {"render", LSF_CB, offsetof(WidgetSpec, render), 0, 0},
+    {"render", LSF_CB, offsetof(WidgetSpec, render), 0, 1},
     {"x", LSF_INT, offsetof(WidgetSpec, x), 0, 0},
     {"y", LSF_INT, offsetof(WidgetSpec, y), 0, 0},
     {"monitor", LSF_INT, offsetof(WidgetSpec, monitor), 0, 0},
@@ -1350,7 +1350,7 @@ static const LuaFieldDesc lf_Widget[] = {
     {"hover_thread", LSF_PTR, offsetof(Widget, hover_thread), 0, 0},
     {"hover_epoch", LSF_INT, offsetof(Widget, hover_epoch), 0, 0},
     {"win", LSF_PTR, offsetof(Widget, win), 0, 0},
-    {"render", LSF_CB, offsetof(Widget, render), 0, 0},
+    {"render", LSF_CB, offsetof(Widget, render), 0, 1},
     {"frame", LSF_INT, offsetof(Widget, frame), 0, 0},
     {"monitor", LSF_INT, offsetof(Widget, monitor), 0, 0},
     {"on_click", LSF_CB, offsetof(Widget, on_click), 0, 0},
@@ -4420,7 +4420,7 @@ static inline int lthunk_sk_unregister_event(lua_State *L) {
 }
 static inline int lthunk_sk_register_key_interceptor(lua_State *L) {
   slua_owner_from_state(L);
-  void *a0 = slua_callback(L, 1, 3);
+  void *a0 = slua_callback(L, 1, 2);
   void *sym = Platform_GetMainSymbol("sk_register_key_interceptor");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_register_key_interceptor"); }
   typedef void (*fn_t)(SkKeyInterceptorFn);

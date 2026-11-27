@@ -104,12 +104,12 @@ static void untrack_refs(LuaFeature *f) {
   f->ref_cap = 0;
 }
 
-enum { CB_V, CB_PS, CB_BPS, CB_B };
+enum { CB_V, CB_P1, CB_BP1, CB_B };
 #define CB_V_COUNT 32
-#define CB_PS_COUNT 12
-#define CB_BPS_COUNT 12
+#define CB_P1_COUNT 12
+#define CB_BP1_COUNT 12
 #define CB_B_COUNT 12
-#define CB_TOTAL (CB_V_COUNT + CB_PS_COUNT + CB_BPS_COUNT + CB_B_COUNT)
+#define CB_TOTAL (CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT + CB_B_COUNT)
 
 static int cb_refs[CB_TOTAL];
 static LuaFeature *cb_owners[CB_TOTAL];
@@ -117,7 +117,8 @@ static int cb_gen[CB_TOTAL];
 static int cb_next_gen = 1;
 static bool cb_in_use[CB_TOTAL];
 
-static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool) {
+static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
+                      void *arg) {
   LuaFeature *f = cb_owners[slot];
   if (!f || !f->L)
     return;
@@ -127,7 +128,7 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool) {
   slua_owner_set(f->owner);
   lua_rawgeti(f->L, LUA_REGISTRYINDEX, cb_refs[slot]);
   if (nargs == 1)
-    lua_pushlightuserdata(f->L, (void *)1);
+    lua_pushlightuserdata(f->L, arg);
   if (lua_pcall(f->L, nargs, want_bool ? 1 : 0, 0) != 0) {
     log_error("lua callback error: %s", lua_tostring(f->L, -1));
     lua_pop(f->L, 1);
@@ -146,23 +147,21 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool) {
 }
 
 #define DEF_CB_V(N)                                                            \
-  static void lua_cb_v_##N(void) { cb_invoke(N, 0, false, NULL); }
-#define DEF_CB_PS(N)                                                           \
-  static void lua_cb_ps_##N(PromptState *s) {                                 \
-    (void)s;                                                                   \
-    cb_invoke(CB_V_COUNT + N, 1, false, NULL);                                 \
+  static void lua_cb_v_##N(void) { cb_invoke(N, 0, false, NULL, NULL); }
+#define DEF_CB_P1(N)                                                           \
+  static void lua_cb_p1_##N(void *arg) {                                      \
+    cb_invoke(CB_V_COUNT + N, 1, false, NULL, arg);                            \
   }
-#define DEF_CB_BPS(N)                                                          \
-  static bool lua_cb_bps_##N(PromptState *s) {                                \
+#define DEF_CB_BP1(N)                                                          \
+  static bool lua_cb_bp1_##N(void *arg) {                                     \
     bool r = false;                                                            \
-    (void)s;                                                                   \
-    cb_invoke(CB_V_COUNT + CB_PS_COUNT + N, 1, true, &r);                      \
+    cb_invoke(CB_V_COUNT + CB_P1_COUNT + N, 1, true, &r, arg);                 \
     return r;                                                                  \
   }
 #define DEF_CB_B(N)                                                            \
   static bool lua_cb_b_##N(void) {                                            \
     bool r = false;                                                            \
-    cb_invoke(CB_V_COUNT + CB_PS_COUNT + CB_BPS_COUNT + N, 0, true, &r);       \
+    cb_invoke(CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT + N, 0, true, &r, NULL);       \
     return r;                                                                  \
   }
 
@@ -173,12 +172,12 @@ DEF_CB_V(18) DEF_CB_V(19) DEF_CB_V(20) DEF_CB_V(21) DEF_CB_V(22) DEF_CB_V(23)
 DEF_CB_V(24) DEF_CB_V(25) DEF_CB_V(26) DEF_CB_V(27) DEF_CB_V(28) DEF_CB_V(29)
 DEF_CB_V(30) DEF_CB_V(31)
 
-DEF_CB_PS(0) DEF_CB_PS(1) DEF_CB_PS(2) DEF_CB_PS(3) DEF_CB_PS(4) DEF_CB_PS(5)
-DEF_CB_PS(6) DEF_CB_PS(7) DEF_CB_PS(8) DEF_CB_PS(9) DEF_CB_PS(10) DEF_CB_PS(11)
+DEF_CB_P1(0) DEF_CB_P1(1) DEF_CB_P1(2) DEF_CB_P1(3) DEF_CB_P1(4) DEF_CB_P1(5)
+DEF_CB_P1(6) DEF_CB_P1(7) DEF_CB_P1(8) DEF_CB_P1(9) DEF_CB_P1(10) DEF_CB_P1(11)
 
-DEF_CB_BPS(0) DEF_CB_BPS(1) DEF_CB_BPS(2) DEF_CB_BPS(3) DEF_CB_BPS(4)
-DEF_CB_BPS(5) DEF_CB_BPS(6) DEF_CB_BPS(7) DEF_CB_BPS(8) DEF_CB_BPS(9)
-DEF_CB_BPS(10) DEF_CB_BPS(11)
+DEF_CB_BP1(0) DEF_CB_BP1(1) DEF_CB_BP1(2) DEF_CB_BP1(3) DEF_CB_BP1(4)
+DEF_CB_BP1(5) DEF_CB_BP1(6) DEF_CB_BP1(7) DEF_CB_BP1(8) DEF_CB_BP1(9)
+DEF_CB_BP1(10) DEF_CB_BP1(11)
 
 DEF_CB_B(0) DEF_CB_B(1) DEF_CB_B(2) DEF_CB_B(3) DEF_CB_B(4) DEF_CB_B(5)
 DEF_CB_B(6) DEF_CB_B(7) DEF_CB_B(8) DEF_CB_B(9) DEF_CB_B(10) DEF_CB_B(11)
@@ -191,14 +190,14 @@ static void *cb_v_table[CB_V_COUNT] = {
     lua_cb_v_20, lua_cb_v_21, lua_cb_v_22, lua_cb_v_23, lua_cb_v_24,
     lua_cb_v_25, lua_cb_v_26, lua_cb_v_27, lua_cb_v_28, lua_cb_v_29,
     lua_cb_v_30, lua_cb_v_31};
-static void *cb_ps_table[CB_PS_COUNT] = {
-    lua_cb_ps_0, lua_cb_ps_1, lua_cb_ps_2,  lua_cb_ps_3,
-    lua_cb_ps_4, lua_cb_ps_5, lua_cb_ps_6,  lua_cb_ps_7,
-    lua_cb_ps_8, lua_cb_ps_9, lua_cb_ps_10, lua_cb_ps_11};
-static void *cb_bps_table[CB_BPS_COUNT] = {
-    lua_cb_bps_0, lua_cb_bps_1, lua_cb_bps_2,  lua_cb_bps_3,
-    lua_cb_bps_4, lua_cb_bps_5, lua_cb_bps_6,  lua_cb_bps_7,
-    lua_cb_bps_8, lua_cb_bps_9, lua_cb_bps_10, lua_cb_bps_11};
+static void *cb_p1_table[CB_P1_COUNT] = {
+    lua_cb_p1_0, lua_cb_p1_1, lua_cb_p1_2,  lua_cb_p1_3,
+    lua_cb_p1_4, lua_cb_p1_5, lua_cb_p1_6,  lua_cb_p1_7,
+    lua_cb_p1_8, lua_cb_p1_9, lua_cb_p1_10, lua_cb_p1_11};
+static void *cb_bp1_table[CB_BP1_COUNT] = {
+    lua_cb_bp1_0, lua_cb_bp1_1, lua_cb_bp1_2,  lua_cb_bp1_3,
+    lua_cb_bp1_4, lua_cb_bp1_5, lua_cb_bp1_6,  lua_cb_bp1_7,
+    lua_cb_bp1_8, lua_cb_bp1_9, lua_cb_bp1_10, lua_cb_bp1_11};
 static void *cb_b_table[CB_B_COUNT] = {
     lua_cb_b_0, lua_cb_b_1, lua_cb_b_2,  lua_cb_b_3,
     lua_cb_b_4, lua_cb_b_5, lua_cb_b_6,  lua_cb_b_7,
@@ -217,11 +216,11 @@ static int cb_cache_count;
 static void *cb_fn_for(int slot, int kind) {
   if (kind == CB_V)
     return cb_v_table[slot];
-  if (kind == CB_PS)
-    return cb_ps_table[slot - CB_V_COUNT];
-  if (kind == CB_BPS)
-    return cb_bps_table[slot - CB_V_COUNT - CB_PS_COUNT];
-  return cb_b_table[slot - CB_V_COUNT - CB_PS_COUNT - CB_BPS_COUNT];
+  if (kind == CB_P1)
+    return cb_p1_table[slot - CB_V_COUNT];
+  if (kind == CB_BP1)
+    return cb_bp1_table[slot - CB_V_COUNT - CB_P1_COUNT];
+  return cb_b_table[slot - CB_V_COUNT - CB_P1_COUNT - CB_BP1_COUNT];
 }
 
 static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
@@ -242,14 +241,14 @@ static void *make_callback(lua_State *L, int idx, int kind, LuaFeature *f) {
   if (kind == CB_V) {
     base = 0;
     count = CB_V_COUNT;
-  } else if (kind == CB_PS) {
+  } else if (kind == CB_P1) {
     base = CB_V_COUNT;
-    count = CB_PS_COUNT;
-  } else if (kind == CB_BPS) {
-    base = CB_V_COUNT + CB_PS_COUNT;
-    count = CB_BPS_COUNT;
+    count = CB_P1_COUNT;
+  } else if (kind == CB_BP1) {
+    base = CB_V_COUNT + CB_P1_COUNT;
+    count = CB_BP1_COUNT;
   } else {
-    base = CB_V_COUNT + CB_PS_COUNT + CB_BPS_COUNT;
+    base = CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT;
     count = CB_B_COUNT;
   }
   int slot = -1;
@@ -519,6 +518,13 @@ static int l_cap_register(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static int l_struct_from_ptr(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *ptr = lua_touserdata(L, 2);
+  slua_push_struct(L, name, ptr);
+  return 1;
+}
+
 static int l_struct_call(lua_State *L) {
   const char *fn = luaL_checkstring(L, 1);
   const char *sname = luaL_checkstring(L, 2);
@@ -645,6 +651,7 @@ static const luaL_Reg native_funcs[] = {
     {"call_fn", l_call_fn},
     {"fmt_call", l_fmt_call},
     {"struct_call", l_struct_call},
+    {"struct_from_ptr", l_struct_from_ptr},
     {NULL, NULL},
 };
 
