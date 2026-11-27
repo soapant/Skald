@@ -1882,12 +1882,10 @@ bool Platform_MutexTryLock(void *mutex) {
 }
 
 void Platform_InvalidatePrompt(void) {
-  Display *dpy = x11_get_display();
   Window win = (Window)SkaldContext_Get()->window.hPopupWnd.xid;
-  if (dpy && win) {
-    XClearArea(dpy, win, 0, 0, 0, 0, True);
-    XFlush(dpy);
-  }
+  log_debug("x11 invalidate prompt win=%lu: skip erase, request repaint",
+            (unsigned long)win);
+  UI_RequestPopupRepaint();
 }
 
 bool Platform_InjectKey(int vk, int down) { return wm_inject_key(vk, down); }

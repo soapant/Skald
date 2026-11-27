@@ -67,6 +67,8 @@ static void x11_prompt_render_unlock(void) {
 }
 
 static void x11_pbuf_drop(void) {
+  log_debug("prompt buffer drop dpy=%p win=%lu pixmap=%lu", (void *)pbuf_dpy,
+            (unsigned long)pbuf_win, (unsigned long)pbuf_pm);
 
   if (pbuf_xd) {
     XftDrawDestroy(pbuf_xd);
@@ -227,6 +229,8 @@ static void prompt_render_frame(Display *dpy, Window *win, XftDraw *xd,
 static bool prompt_render_fallback(Display *dpy, Window *win,
                                    PromptState *state, int w, int h,
                                    bool suppress_content) {
+  log_debug("prompt render fallback win=%lu %dx%d suppress=%d",
+            (unsigned long)*win, w, h, suppress_content ? 1 : 0);
   x11_draw_background(dpy, *win, w, h);
   x11_set_draw_context(dpy, NULL, NULL, 0);
   prompt_render_frame(dpy, win, NULL, NULL, 0, state,
@@ -294,6 +298,9 @@ static bool x11_render_prompt_user_locked(Display *dpy, Window *win,
   GC gc = XCreateGC(dpy, *win, 0, NULL);
   XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
   XFreeGC(dpy, gc);
+  log_debug("prompt blit win=%lu pm=%lu %dx%d suppress=%d",
+            (unsigned long)*win, (unsigned long)dbl, w, h,
+            suppress_content ? 1 : 0);
   XFlush(dpy);
   return true;
 }
