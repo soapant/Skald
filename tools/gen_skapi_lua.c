@@ -87,21 +87,6 @@ typedef struct {
 
 static CbTypedef cb_types[128];
 static int cb_type_count;
-static bool skip_field_name(const char *name) {
-  static const char *skip[] = {
-      "hovered",   "was_down",  "clicked",   "focused",    "render_data",
-      "ud",        "cb_ud",     "buffer",    "buffer_size", "items",
-      "lb",        "font",      "mw",        "mh",
-      "prompt_gap", "caret_x",  "caret_y",   "caret_pos",  "text_y",
-      "fps",       "anchor_y_to_prompt_h", "auto_focus", "hide_caret",
-      "whitelist", "blacklist", "frame",     "pad",        "created_at",
-      "ticks",     "out_index", "out"};
-  for (size_t i = 0; i < sizeof(skip) / sizeof(skip[0]); i++)
-    if (strcmp(name, skip[i]) == 0)
-      return true;
-  return false;
-}
-
 static char *read_all(const char *path) {
   FILE *f = fopen(path, "rb");
   if (!f)
@@ -550,6 +535,7 @@ static int gen_struct_header(void) {
           char field[NAME_SZ] = {0};
           LuaFieldKind kind = LSF_SKIP;
           int cb_kind = 0;
+          char aux[160] = "0";
           char *fptr = strstr(decl, "(*");
           if (fptr) {
             int fi = 0;
@@ -574,7 +560,7 @@ static int gen_struct_header(void) {
                 char sig[64];
                 normalize_sig(sig, sizeof(sig), ret, args);
                 const char *ck = cb_kind_for_sig(sig);
-                if (ck && !skip_field_name(field)) {
+                if (ck) {
                   kind = LSF_CB;
                   if (strcmp(ck, "LCB_V") == 0)
                     cb_kind = 0;
@@ -609,7 +595,7 @@ static int gen_struct_header(void) {
               if (next_char != '\0' && next_char != ' ' && next_char != '*')
                 continue;
               const char *ck = cb_kind_for_sig(cb_types[t].sig);
-              if (ck && !skip_field_name(field)) {
+              if (ck) {
                 kind = LSF_CB;
                 cb_kind = strcmp(ck, "LCB_V") == 0     ? 0
                           : strcmp(ck, "LCB_PS") == 0  ? 1
@@ -618,37 +604,47 @@ static int gen_struct_header(void) {
               }
               is_cb_type = true;
             }
-            if (strstr(decl, "[") || skip_field_name(field))
-              kind = LSF_SKIP;
+            if (strchr(decl, '[')) {
+              kind = LSF_STR_ARRAY;
+              snprintf(aux, sizeof(aux), "%d", atoi(strchr(decl, '[') + 1));
+            }
             else if (is_cb_type)
               ;
+            else if (strcmp(field, "buffer") == 0 &&
+                     (strstr(decl, "char *") || strstr(decl, "char*"))) {
+              kind = LSF_BUFFER;
+              snprintf(aux, sizeof(aux), "offsetof(%s, buffer_size)", name);
+            } else if (strstr(decl, "char *") || strstr(decl, "char*") ||
+                       strstr(decl, "const char"))
+              kind = LSF_STR;
+            else if (strchr(decl, '*'))
+              kind = LSF_PTR;
             else if (strstr(decl, "bool") == decl)
               kind = LSF_BOOL;
             else if (strstr(decl, "float") == decl)
               kind = LSF_FLOAT;
             else if (strstr(decl, "double") == decl)
               kind = LSF_DOUBLE;
-            else if (strstr(decl, "char *") || strstr(decl, "char*") ||
-                     strstr(decl, "const char"))
-              kind = LSF_STR;
-            else if (strstr(decl, "void") == decl && strstr(decl, "*"))
-              kind = LSF_SKIP;
             else if (strstr(decl, "int") || strstr(decl, "unsigned") ||
                      strstr(decl, "long") || strstr(decl, "ColorRef") ||
-                     strstr(decl, "MessageSlot") || strstr(decl, "size_t"))
+                     strstr(decl, "MessageSlot") || strstr(decl, "size_t") ||
+                     strstr(decl, "Timer"))
               kind = LSF_INT;
             else
               kind = LSF_SKIP;
           }
           if (field[0] && kind != LSF_SKIP)
-            fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %d},\n", field,
+            fprintf(out, "    {\"%s\", %s, offsetof(%s, %s), %s, %d},\n", field,
                     kind == LSF_INT      ? "LSF_INT"
                     : kind == LSF_BOOL   ? "LSF_BOOL"
                     : kind == LSF_FLOAT  ? "LSF_FLOAT"
                     : kind == LSF_DOUBLE ? "LSF_DOUBLE"
                     : kind == LSF_STR    ? "LSF_STR"
+                    : kind == LSF_STR_ARRAY ? "LSF_STR_ARRAY"
+                    : kind == LSF_BUFFER ? "LSF_BUFFER"
+                    : kind == LSF_PTR    ? "LSF_PTR"
                                          : "LSF_CB",
-                    name, field, cb_kind);
+                    name, field, aux, cb_kind);
         }
         fprintf(out, "};\n");
         fprintf(out,

@@ -11,6 +11,9 @@ typedef enum {
   LSF_FLOAT,
   LSF_DOUBLE,
   LSF_STR,
+  LSF_STR_ARRAY,
+  LSF_BUFFER,
+  LSF_PTR,
   LSF_CB
 } LuaFieldKind;
 
@@ -20,6 +23,7 @@ typedef struct {
   const char *name;
   LuaFieldKind kind;
   size_t off;
+  size_t aux;
   int cb_kind;
 } LuaFieldDesc;
 

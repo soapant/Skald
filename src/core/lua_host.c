@@ -23,6 +23,9 @@ typedef struct {
   int *refs;
   int ref_count;
   int ref_cap;
+  void **allocs;
+  int alloc_count;
+  int alloc_cap;
 } LuaFeature;
 
 static LuaFeature *g_features;
@@ -62,6 +65,20 @@ static void track_ref(LuaFeature *f, int ref) {
     f->ref_cap = cap;
   }
   f->refs[f->ref_count++] = ref;
+}
+
+static void track_alloc(LuaFeature *f, void *p) {
+  if (!f || !p)
+    return;
+  if (f->alloc_count >= f->alloc_cap) {
+    int cap = f->alloc_cap > 0 ? f->alloc_cap * 2 : 8;
+    void **grown = (void **)realloc(f->allocs, (size_t)cap * sizeof(void *));
+    if (!grown)
+      return;
+    f->allocs = grown;
+    f->alloc_cap = cap;
+  }
+  f->allocs[f->alloc_count++] = p;
 }
 
 static void untrack_ref(LuaFeature *f, int ref) {
@@ -310,6 +327,45 @@ static void fill_struct(lua_State *L, const char *sname, int idx, void *base,
       break;
     case LSF_STR:
       *(const char **)dst = lua_tostring(L, -1);
+      break;
+    case LSF_STR_ARRAY: {
+      size_t n = fd->aux > 0 ? fd->aux : 1;
+      const char **arr = (const char **)calloc(n, sizeof(char *));
+      if (!arr)
+        break;
+      if (lua_istable(L, -1)) {
+        for (size_t i = 0; i < n; i++) {
+          lua_geti(L, -1, (lua_Integer)i + 1);
+          if (lua_isstring(L, -1))
+            arr[i] = lua_tostring(L, -1);
+          lua_pop(L, 1);
+        }
+      }
+      track_alloc(f, arr);
+      *(const char ***)dst = arr;
+      break;
+    }
+    case LSF_BUFFER: {
+      size_t len = 0;
+      const char *s = lua_tolstring(L, -1, &len);
+      char *buf = (char *)calloc(len + 1, 1);
+      if (!buf)
+        break;
+      if (s)
+        memcpy(buf, s, len);
+      track_alloc(f, buf);
+      *(char **)dst = buf;
+      if (fd->aux)
+        *(size_t *)((char *)base + fd->aux) = len;
+      break;
+    }
+    case LSF_PTR:
+      if (lua_islightuserdata(L, -1))
+        *(void **)dst = lua_touserdata(L, -1);
+      else if (lua_isnumber(L, -1))
+        *(void **)dst = (void *)(uintptr_t)lua_tointeger(L, -1);
+      else
+        *(void **)dst = NULL;
       break;
     case LSF_CB:
       *(void **)dst = make_callback(L, -1, fd->cb_kind, f);
@@ -578,6 +634,12 @@ static void feature_shutdown(LuaFeature *f) {
     i++;
   }
   untrack_refs(f);
+  for (int i = 0; i < f->alloc_count; i++)
+    free(f->allocs[i]);
+  free(f->allocs);
+  f->allocs = NULL;
+  f->alloc_count = 0;
+  f->alloc_cap = 0;
   purge_owner_set(f->owner, NULL, widget_bump_generation());
   lua_close(f->L);
   f->L = NULL;
