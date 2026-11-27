@@ -33,8 +33,8 @@ static void *key_capture_mutex = NULL;
 static void key_capture_lock_init(void) { lazy_mutex_get(&key_capture_mutex); }
 #define KC_LOCK()                                                              \
   do {                                                                         \
-    key_capture_lock_init();                                                    \
-    Platform_MutexLock(key_capture_mutex);                                      \
+    key_capture_lock_init();                                                   \
+    Platform_MutexLock(key_capture_mutex);                                     \
   } while (0)
 #define KC_UNLOCK() Platform_MutexUnlock(key_capture_mutex)
 
@@ -60,10 +60,7 @@ bool widget_key_capture_push(int vk, int mods, bool down, bool repeat) {
     KC_UNLOCK();
     return true;
   }
-  WidgetKey key = {.vk = vk,
-                   .mods = mods,
-                   .down = down,
-                   .repeat = repeat};
+  WidgetKey key = {.vk = vk, .mods = mods, .down = down, .repeat = repeat};
   int next = (widget->key_tail + 1) % WIDGET_KEY_QUEUE_MAX;
   if (next == widget->key_head) {
     widget->key_dropped++;

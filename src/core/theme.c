@@ -147,7 +147,8 @@ void theme_apply(void) {
     if (pin_lookup(theme_slots[i].name, &pinned) &&
         !matches_any_theme(theme_slots[i].off, pinned))
       user_override = true;
-    atomic_store_explicit(theme_targets[i], user_override ? pinned : theme_color,
+    atomic_store_explicit(theme_targets[i],
+                          user_override ? pinned : theme_color,
                           memory_order_release);
   }
 }

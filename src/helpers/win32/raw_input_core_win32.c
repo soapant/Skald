@@ -13,8 +13,7 @@ static int win32_key_mods(void) {
     mods |= HOTKEY_MOD_ALT;
   if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
     mods |= HOTKEY_MOD_SHIFT;
-  if (GetAsyncKeyState(VK_LWIN) & 0x8000 ||
-      GetAsyncKeyState(VK_RWIN) & 0x8000)
+  if (GetAsyncKeyState(VK_LWIN) & 0x8000 || GetAsyncKeyState(VK_RWIN) & 0x8000)
     mods |= HOTKEY_MOD_SUPER;
   return mods;
 }

@@ -165,7 +165,6 @@ char *sk_search_file_in_dir_platform(const char *directory,
   return NULL;
 }
 
-
 static VOID CALLBACK win32_timer_trampoline(PVOID lpParam,
                                             BOOLEAN TimerOrWaitFired) {
 

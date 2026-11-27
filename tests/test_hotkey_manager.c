@@ -154,8 +154,7 @@ TEST(sk_execute_hotkey_dispatches_callback) {
   int marker = 0x9ABC;
   HotkeyBinding b = make_binding(0xF7, HOTKEY_MOD_ALT, ud_cb, &marker, NULL);
   ASSERT_TRUE(hotkey_register_internal(b));
-  ASSERT_TRUE(
-      sk_execute_hotkey((SkKey){.vk = 0xF7, .mods = HOTKEY_MOD_ALT}));
+  ASSERT_TRUE(sk_execute_hotkey((SkKey){.vk = 0xF7, .mods = HOTKEY_MOD_ALT}));
   hotkey_drain_pending();
   ASSERT_EQ_INT(ud_calls, 1);
   ASSERT_EQ_INT(ud_seen == &marker, 1);

@@ -673,12 +673,11 @@ void *win32_load_scaled_bitmap(const char *path, int w, int h, HBITMAP *out_dib,
 
   PixelFormat src_format = PixelFormatUndefined;
   GdipGetImagePixelFormat(src, &src_format);
-  bool source_opaque =
-      src_format != PixelFormat32bppARGB &&
-      src_format != PixelFormat32bppPARGB &&
-      src_format != PixelFormat64bppARGB &&
-      src_format != PixelFormat64bppPARGB &&
-      src_format != PixelFormat16bppARGB1555;
+  bool source_opaque = src_format != PixelFormat32bppARGB &&
+                       src_format != PixelFormat32bppPARGB &&
+                       src_format != PixelFormat64bppARGB &&
+                       src_format != PixelFormat64bppPARGB &&
+                       src_format != PixelFormat16bppARGB1555;
 
   HBITMAP dib = NULL;
   HDC dc = NULL;

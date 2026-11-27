@@ -63,12 +63,12 @@ static void settings_list(PromptState *state) {
 
     int text_x = ctx.x + 10;
     if (EnableIcons && entry && entry->icon && entry->icon[0]) {
-      sk_draw_image(.path = entry->icon, .x = ctx.x + 10,
-                    .y = ctx.y + 6, .w = 18, .h = 18);
+      sk_draw_image(.path = entry->icon, .x = ctx.x + 10, .y = ctx.y + 6,
+                    .w = 18, .h = 18);
       text_x = ctx.x + 36;
     }
-    sk_draw_text(.text = ctx.text, .x = text_x, .y = row_y + 3,
-                 .align = "LEFT", .color = COLOR_TEXT, .font_size = 15);
+    sk_draw_text(.text = ctx.text, .x = text_x, .y = row_y + 3, .align = "LEFT",
+                 .color = COLOR_TEXT, .font_size = 15);
   }
   sk_listbox_end();
 }
@@ -79,8 +79,8 @@ static void settings_render(PromptState *state) {
                .filled = true, .rounded = false);
 
   sk_place_editbox(.x = SETTINGS_EB_X, .y = SETTINGS_EB_Y,
-                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H,
-                   .font_size = 16, .placeholder = "Search settings");
+                   .w = SETTINGS_SIDEBAR_W, .h = SETTINGS_EB_H, .font_size = 16,
+                   .placeholder = "Search settings");
 
   sk_draw_line(.x1 = SETTINGS_EB_X, .y1 = SETTINGS_SEP_Y,
                .x2 = SETTINGS_EB_X + SETTINGS_SIDEBAR_W - 2,
@@ -105,9 +105,10 @@ static void settings_render(PromptState *state) {
 }
 
 static void trigger_settings(void) {
-  sk_window(.title = "Settings", .refresh = settings_refresh, .enter = settings_enter,
-            .ctrl_enter = settings_ctrl_enter, .render = settings_render,
-            .no_separators = true,.w=900,.h=640);
+  sk_window(.title = "Settings", .refresh = settings_refresh,
+            .enter = settings_enter, .ctrl_enter = settings_ctrl_enter,
+            .render = settings_render, .no_separators = true, .w = 900,
+            .h = 640);
 }
 
 static void cfg_commit(void) { sk_commit_config(); }
@@ -194,8 +195,7 @@ DEFINE_CFG_INT(TimeOutForMessages,
 DEFINE_CFG_INT(HotkeyRepeatDelayMs,
                "Delay before held hotkeys repeat, in milliseconds.")
 DEFINE_CFG_BOOL(DebugMode, "Enable verbose debug output.")
-DEFINE_CFG_BOOL(CompactMode,
-                "Start the command center compact until you type.")
+DEFINE_CFG_BOOL(CompactMode, "Start the command center compact until you type.")
 DEFINE_CFG_BOOL(RoundedCorners, "Use rounded window corners.")
 DEFINE_CFG_INT(CornerRadius, "Radius used for rounded corners.")
 DEFINE_CFG_INT(MessageScreenGap, "Gap between messages and the screen edge.")

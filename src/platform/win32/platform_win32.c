@@ -1693,14 +1693,14 @@ bool Platform_EmitKey(int vk, int down) {
   inp.type = INPUT_KEYBOARD;
   inp.ki.wVk = (WORD)vk;
   inp.ki.dwFlags = down ? 0 : KEYEVENTF_KEYUP;
-  if (vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT ||
-      vk == VK_RIGHT || vk == VK_RCONTROL || vk == VK_RMENU) {
+  if (vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT || vk == VK_RIGHT ||
+      vk == VK_RCONTROL || vk == VK_RMENU) {
     inp.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
   }
   UINT sent = SendInput(1, &inp, sizeof(INPUT));
   if (sent != 1) {
-    log_error("Platform_EmitKey FAILED vk=%d down=%d sent=%u err=%lu", vk,
-              down, (unsigned)sent, GetLastError());
+    log_error("Platform_EmitKey FAILED vk=%d down=%d sent=%u err=%lu", vk, down,
+              (unsigned)sent, GetLastError());
     return false;
   }
   return true;
@@ -2243,10 +2243,10 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
   editbox_resolve_place(&(EditboxPlaceSpec){.buffer = spec->buffer,
                                             .x = spec->x,
                                             .y = spec->y,
-                                             .w = spec->w,
-                                             .h = spec->h,
-                                             .font_size = spec->font_size,
-                                             .wrapped = spec->wrapped},
+                                            .w = spec->w,
+                                            .h = spec->h,
+                                            .font_size = spec->font_size,
+                                            .wrapped = spec->wrapped},
                         state, &place);
   int fs = place.font_size;
   const char *buf = place.buf;

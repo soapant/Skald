@@ -37,8 +37,8 @@ bool alias_register(const char *alias, const char *target);
 bool alias_remove(const char *alias);
 const char *alias_for(const char *target);
 
-bool config_hotkey_set(const char *name, const char *hotkey,
-                       void (*cb)(void *), void *ud);
+bool config_hotkey_set(const char *name, const char *hotkey, void (*cb)(void *),
+                       void *ud);
 char *config_hotkey_get(const char *name);
 bool config_hotkey_clear(const char *name);
 bool config_hotkey_bind(const char *name, void (*cb)(void *), void *ud);

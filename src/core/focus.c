@@ -281,9 +281,7 @@ void focus_set_pseudo_named(FocusKind kind, const char *name) {
            s_saved_name[0] ? s_saved_name : "-", idx);
 }
 
-void focus_set_pseudo(FocusKind kind) {
-  focus_set_pseudo_named(kind, NULL);
-}
+void focus_set_pseudo(FocusKind kind) { focus_set_pseudo_named(kind, NULL); }
 
 void focus_set_pseudo_passive(FocusKind kind) {
   if (kind == FOCUS_KIND_LISTBOX && focus_find(FOCUS_LISTBOX_NAME) >= 0) {

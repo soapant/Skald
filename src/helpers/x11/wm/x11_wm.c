@@ -329,8 +329,7 @@ char *x11_paste(const char *content) {
   return strdup("");
 }
 
-static unsigned long x11_find_window_by_field(const char *needle,
-                                               bool use_id) {
+static unsigned long x11_find_window_by_field(const char *needle, bool use_id) {
   if (!needle || !needle[0])
     return 0;
   Display *display = x11_get_display();

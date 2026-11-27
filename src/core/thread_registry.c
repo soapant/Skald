@@ -121,8 +121,8 @@ void *thread_create_ex(ThreadFn fn, void *arg, void *owner_src) {
   ctx->fn = fn;
   ctx->arg = arg;
   memset(&ctx->tag, 0, sizeof(ctx->tag));
-  owner_tag_set_for_func(
-      &ctx->tag, owner_src ? owner_src : (void *)(uintptr_t)fn, 0);
+  owner_tag_set_for_func(&ctx->tag,
+                         owner_src ? owner_src : (void *)(uintptr_t)fn, 0);
   thread_registry_add(ctx, ctx->tag.owner ? ctx->tag.owner : "");
   void *thread = Platform_ThreadCreate(thread_trampoline, ctx);
   if (!thread) {

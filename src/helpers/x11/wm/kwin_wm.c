@@ -150,8 +150,7 @@ static bool kwin_run_script(const char *body) {
 static char *kwin_records = NULL;
 static char *kwin_active_title = NULL;
 static char *kwin_active_class = NULL;
-static int kwin_geom_x = 0, kwin_geom_y = 0, kwin_geom_w = 0,
-           kwin_geom_h = 0;
+static int kwin_geom_x = 0, kwin_geom_y = 0, kwin_geom_w = 0, kwin_geom_h = 0;
 static bool kwin_geom_valid = false;
 static long long kwin_snap_at = 0;
 static bool kwin_q_loaded = false;

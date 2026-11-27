@@ -113,9 +113,8 @@ static void settings_config_init(void) {
   snprintf(settings_config_path, sizeof(settings_config_path),
            "%s%ccore%cskald.toml", dir, sep, sep);
   ConfigTomlError err;
-  ConfigTomlStatus st =
-      config_toml_parse_ex(settings_config_path, settings_config_apply, NULL,
-                           &err);
+  ConfigTomlStatus st = config_toml_parse_ex(settings_config_path,
+                                             settings_config_apply, NULL, &err);
   if (st == CONFIG_TOML_ERR_PARSE || st == CONFIG_TOML_ERR_REJECTED)
     log_warn("settings: config %s failed at line %d (%s): %s",
              settings_config_path, err.line, config_toml_status_name(st),
@@ -1071,7 +1070,8 @@ static void settings_editbox_persist(const SettingsEditboxFieldBlock *f) {
   settings_config_set(f->meta->config_key, f->buffer);
 }
 
-SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
+SettingsEditboxGroup
+settings_entry_add_editbox(SettingsEntry *entry,
                            const SettingsEditboxSpec *spec) {
   SettingsEditboxGroup invalid = SETTINGS_EDITBOX_INVALID;
   if (!spec || !spec->fields || spec->field_count < 1)
@@ -1088,10 +1088,10 @@ SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
     if (!src->buffer || src->buffer_size < 2)
       return invalid;
   }
-  int idx = settings_entry_add_block_typed(
-      entry, SETTINGS_BLOCK_EDITBOX, NULL,
-      spec->title ? spec->title : "Editbox", spec->sub,
-      __builtin_return_address(0));
+  int idx =
+      settings_entry_add_block_typed(entry, SETTINGS_BLOCK_EDITBOX, NULL,
+                                     spec->title ? spec->title : "Editbox",
+                                     spec->sub, __builtin_return_address(0));
   if (idx < 0)
     return invalid;
   SettingsEntry *e = settings_entry_resolve(entry);

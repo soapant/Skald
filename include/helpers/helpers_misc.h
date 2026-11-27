@@ -31,13 +31,13 @@ bool feature_shortcut_parse(const char *target, char *feature,
                             size_t feature_cap, char *filter,
                             size_t filter_cap);
 void feature_shortcut_select(ListBox *lb, const char *filter);
-PromptCallbacks feature_shortcut_make_callbacks(
-    const PromptSpec *spec, const PromptCallbacks *saved);
+PromptCallbacks feature_shortcut_make_callbacks(const PromptSpec *spec,
+                                                const PromptCallbacks *saved);
 
 PromptState *current_prompt_state(void);
 unsigned long draw_color(unsigned long color);
 bool resolve_caller_path_silent(void *caller_ret, const char *name, char *full,
-                               size_t cap);
+                                size_t cap);
 bool resolve_caller_path(void *caller_ret, const char *name, char *full,
                          size_t cap, const char *func);
 bool resolve_icon_path(void *caller, const char *icon, char *out, size_t cap);

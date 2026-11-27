@@ -254,7 +254,7 @@ bool Platform_EmitKey(int vk, int down) {
     return false;
   static const int order[] = {
       EMIT_BACKEND_UINPUT, EMIT_BACKEND_COMPOSITOR, EMIT_BACKEND_YDOTOOL,
-      EMIT_BACKEND_WTYPE,  EMIT_BACKEND_XDOTOOL,   EMIT_BACKEND_XTEST,
+      EMIT_BACKEND_WTYPE,  EMIT_BACKEND_XDOTOOL,    EMIT_BACKEND_XTEST,
   };
   if (!down) {
     int cached = emit_backend[vk];

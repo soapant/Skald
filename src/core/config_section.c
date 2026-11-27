@@ -64,8 +64,8 @@ static int section_parse_entry_line(const char *line, size_t line_len,
   *value_out = NULL;
   char key[384];
   char raw[1024];
-  TomlKeyValueStatus st = toml_parse_key_value(line, line_len, key,
-                                               sizeof(key), raw, sizeof(raw));
+  TomlKeyValueStatus st =
+      toml_parse_key_value(line, line_len, key, sizeof(key), raw, sizeof(raw));
   if (st == TOML_KV_EMPTY)
     return 0;
   if (st != TOML_KV_OK)
@@ -349,12 +349,13 @@ ConfigTomlStatus config_section_set_ex(const char *path, const char *section,
   config_toml_error_clear(err);
   if (!path || !path[0] || !section || !section[0] || !name || !name[0] ||
       !value || !value[0])
-    return section_fail(err, CONFIG_TOML_ERR_ARG, "missing path/section/name/value");
-  if (!toml_is_bare_key(section) ||
-      strlen(section) >= CONFIG_SECTION_NAME_MAX)
+    return section_fail(err, CONFIG_TOML_ERR_ARG,
+                        "missing path/section/name/value");
+  if (!toml_is_bare_key(section) || strlen(section) >= CONFIG_SECTION_NAME_MAX)
     return section_fail(err, CONFIG_TOML_ERR_PARSE, "invalid section name");
   if (!section_apply(path, section, name, value, false))
-    return section_fail(err, CONFIG_TOML_ERR_IO, "could not update config section");
+    return section_fail(err, CONFIG_TOML_ERR_IO,
+                        "could not update config section");
   return CONFIG_TOML_OK;
 }
 
@@ -364,11 +365,11 @@ ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
   config_toml_error_clear(err);
   if (!path || !path[0] || !section || !section[0] || !name || !name[0])
     return section_fail(err, CONFIG_TOML_ERR_ARG, "missing path/section/name");
-  if (!toml_is_bare_key(section) ||
-      strlen(section) >= CONFIG_SECTION_NAME_MAX)
+  if (!toml_is_bare_key(section) || strlen(section) >= CONFIG_SECTION_NAME_MAX)
     return section_fail(err, CONFIG_TOML_ERR_PARSE, "invalid section name");
   if (!section_apply(path, section, name, NULL, true))
-    return section_fail(err, CONFIG_TOML_ERR_IO, "could not clear config section");
+    return section_fail(err, CONFIG_TOML_ERR_IO,
+                        "could not clear config section");
   return CONFIG_TOML_OK;
 }
 
@@ -710,13 +711,12 @@ static int quicklink_index_of(const char *name) {
 }
 
 static int feature_shortcut_index_of(const char *name) {
-  return CONFIG_INDEX_OF(feature_shortcut_entries,
-                         feature_shortcut_entry_count,
+  return CONFIG_INDEX_OF(feature_shortcut_entries, feature_shortcut_entry_count,
                          ConfigFeatureShortcutEntry, name, name);
 }
 
 #define CONFIG_ENTRIES_SET(entries, count, type, find, key_field, val_field,   \
-                           key, val)                                          \
+                           key, val)                                           \
   do {                                                                         \
     int _i = (find)(key);                                                      \
     if (_i >= 0) {                                                             \
@@ -747,8 +747,7 @@ static void quicklink_entries_set(const char *name, const char *target) {
                      name, target);
 }
 
-static void feature_shortcut_entries_set(const char *name,
-                                         const char *target) {
+static void feature_shortcut_entries_set(const char *name, const char *target) {
   CONFIG_ENTRIES_SET(feature_shortcut_entries, feature_shortcut_entry_count,
                      ConfigFeatureShortcutEntry, feature_shortcut_index_of,
                      name, target, name, target);
@@ -822,10 +821,11 @@ void config_init_locked(void) {
     return;
   }
   ConfigTomlError err;
-  ConfigTomlStatus st = config_toml_parse_ex(config_path, config_apply_entry,
-                                             NULL, &err);
+  ConfigTomlStatus st =
+      config_toml_parse_ex(config_path, config_apply_entry, NULL, &err);
   if (st == CONFIG_TOML_ERR_IO)
-    log_info("sk_config: %s not found, starting with empty tables", config_path);
+    log_info("sk_config: %s not found, starting with empty tables",
+             config_path);
   else if (st != CONFIG_TOML_OK)
     log_error("sk_config: %s failed at line %d (%s): %s, keeping defaults",
               config_path, err.line, config_toml_status_name(st),
@@ -838,8 +838,8 @@ void config_init_locked(void) {
 static void unregister_hotkey_string(const char *hotkey) {
   if (!hotkey)
     return;
-  HotkeyBinding binding = hotkey_convert_into_binding(
-      (char *)hotkey, NULL, NULL, NULL, false, NULL);
+  HotkeyBinding binding = hotkey_convert_into_binding((char *)hotkey, NULL,
+                                                      NULL, NULL, false, NULL);
   if (binding.valid)
     hotkey_unregister_internal(binding.vk, binding.modifiers);
 }
@@ -849,8 +849,8 @@ static void hotkey_bind_live(const char *name, const char *hotkey,
   if (!name || !hotkey || !cb)
     return;
   unregister_hotkey_string(hotkey);
-  HotkeyBinding binding = hotkey_convert_into_binding(
-      (char *)hotkey, NULL, NULL, NULL, false, ud);
+  HotkeyBinding binding =
+      hotkey_convert_into_binding((char *)hotkey, NULL, NULL, NULL, false, ud);
   if (binding.valid) {
     binding.hotkey_callback_ud = (HotkeyCallbackUd)cb;
     binding.hold = false;
@@ -860,8 +860,8 @@ static void hotkey_bind_live(const char *name, const char *hotkey,
   config_hotkey_register_bound(name, hotkey, cb, ud);
 }
 
-bool config_hotkey_set(const char *name, const char *hotkey,
-                       void (*cb)(void *), void *ud) {
+bool config_hotkey_set(const char *name, const char *hotkey, void (*cb)(void *),
+                       void *ud) {
   if (!name || !name[0])
     return false;
   if (strlen(name) >= CONFIG_NAME_MAX)
@@ -1046,9 +1046,8 @@ static bool config_hotkey_binding_bind(ConfigHotkeyBinding *b) {
   const char *const *windows = NULL;
   bool whitelist = false;
   resolve_window_list(wl, bl, &windows, &whitelist);
-  HotkeyBinding binding =
-      hotkey_convert_into_binding(hotkey, b->cb, NULL, windows, whitelist,
-                                   b->ud);
+  HotkeyBinding binding = hotkey_convert_into_binding(
+      hotkey, b->cb, NULL, windows, whitelist, b->ud);
   if (!binding.valid) {
     arrfree(wl);
     arrfree(bl);
@@ -1118,8 +1117,8 @@ void config_hotkey_bind_all(void) {
 
 void config_hotkey_registry_purge_owner(const char *path_a,
                                         const char *path_b) {
-  OWNER_PURGE_STRUCT(config_hotkey_bindings, ConfigHotkeyBinding, path_a, path_b,
-                     0, config_hotkey_binding_free);
+  OWNER_PURGE_STRUCT(config_hotkey_bindings, ConfigHotkeyBinding, path_a,
+                     path_b, 0, config_hotkey_binding_free);
 }
 
 bool config_alias_set(const char *target, const char *alias) {

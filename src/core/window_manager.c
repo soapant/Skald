@@ -279,4 +279,3 @@ void event_bus_trigger(Event event) {
     }
   }
 }
-

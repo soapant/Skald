@@ -33,7 +33,8 @@ bool Platform_PrewarmImage(char *path) {
     HBITMAP dib = NULL;
     HDC dc = NULL;
     bool opaque = false;
-    bmp = win32_load_scaled_bitmap(path, FontSize, FontSize, &dib, &dc, &opaque);
+    bmp =
+        win32_load_scaled_bitmap(path, FontSize, FontSize, &dib, &dc, &opaque);
     win32_img_cache_put(path, screen, FontSize, FontSize, bmp, dib, dc, opaque);
   }
   return bmp != NULL;
@@ -525,9 +526,8 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     GdipSetCompositingQuality(s_cached_g, CompositingQualityHighSpeed);
     GdipSetSmoothingMode(s_cached_g, SmoothingModeHighSpeed);
   }
-  GdipSetCompositingMode(
-      s_cached_g,
-      opaque ? CompositingModeSourceCopy : CompositingModeSourceOver);
+  GdipSetCompositingMode(s_cached_g, opaque ? CompositingModeSourceCopy
+                                            : CompositingModeSourceOver);
 
   GpStatus status = GdipDrawImageRectI(s_cached_g, (GpBitmap *)bmp, x, y, w, h);
   if (status != Ok) {
@@ -581,8 +581,7 @@ bool Platform_GetImageSize(const char *path, int *w, int *h) {
   if (!g_gdip_token)
     return false;
   wchar_t wpath[MAX_PATH * 2];
-  win32_utf8_to_wide(path, wpath,
-                     (int)(sizeof(wpath) / sizeof(wpath[0])));
+  win32_utf8_to_wide(path, wpath, (int)(sizeof(wpath) / sizeof(wpath[0])));
   GpBitmap *bmp = NULL;
   if (GdipCreateBitmapFromFile(wpath, &bmp) != Ok || !bmp)
     return false;

@@ -36,25 +36,11 @@ typedef WidgetKey SkWidgetKey;
 typedef WidgetState SkWidgetState;
 typedef WidgetRenderFn SkWidgetRenderFn;
 typedef DrawRect SkRect;
-typedef struct {
-  int w;
-  int h;
-} SkSize;
 typedef Line SkLine;
 typedef Circle SkCircle;
 typedef Pos SkPos;
 typedef ListSpec SkListSpec;
-typedef void (*SkHttpCallback)(const char *body, bool ok, void *userdata);
 typedef WindowList SkWindowList;
-typedef struct {
-  const char *name;
-  void (*callback)(void);
-  const char *icon;
-} SkFeature;
-typedef struct {
-  SkFeature *items;
-  size_t count;
-} SkFeatureList;
 typedef CheckboxSpec SkCheckboxSpec;
 typedef SliderSpec SkSliderSpec;
 typedef SettingsEntrySpec SkSettingsEntrySpec;
@@ -66,6 +52,36 @@ typedef SearchIndex SkSearchIndex;
 typedef SearchRenderFn SkSearchRenderFn;
 typedef SearchActivateFn SkSearchActivateFn;
 typedef ClipboardHistory SkClipboardHistory;
+typedef PromptSpec SkPromptSpec;
+typedef void *SkLibrary;
+typedef void *SkThread;
+typedef void *SkMutex;
+typedef CcEntrySpec SkCcEntrySpec;
+typedef SettingsEntry SkSettingsEntry;
+typedef SettingsCheckboxSpec SkSettingsCheckboxSpec;
+typedef SettingsButtonSpec SkSettingsButtonSpec;
+typedef SettingsSliderSpec SkSettingsSliderSpec;
+typedef SettingsDropdownSpec SkSettingsDropdownSpec;
+typedef SettingsEditboxChangeFn SkSettingsEditboxChangeFn;
+typedef SettingsEditboxType SkSettingsEditboxType;
+typedef SettingsEditboxField SkSettingsEditboxField;
+typedef SettingsEditboxSpec SkSettingsEditboxSpec;
+typedef SettingsEditboxGroup SkSettingsEditboxGroup;
+
+typedef struct {
+  int w;
+  int h;
+} SkSize;
+typedef void (*SkHttpCallback)(const char *body, bool ok, void *userdata);
+typedef struct {
+  const char *name;
+  void (*callback)(void);
+  const char *icon;
+} SkFeature;
+typedef struct {
+  SkFeature *items;
+  size_t count;
+} SkFeatureList;
 typedef struct {
   int index;
   char name[128];
@@ -129,7 +145,6 @@ typedef struct {
   SkTimer created_at;
   int pad;
 } SkHoverPopupCtx;
-typedef PromptSpec SkPromptSpec;
 typedef struct {
   const char *text;
   int x;
@@ -235,9 +250,6 @@ typedef struct {
   int *off_y;
   int wheel_px;
 } SkScrollSpec;
-typedef void *SkLibrary;
-typedef void *SkThread;
-typedef void *SkMutex;
 typedef void *(*SkThreadFunc)(void *arg);
 typedef struct {
   char *key;
@@ -268,17 +280,6 @@ typedef struct {
   int mods;
   unsigned long long t_us;
 } SkScrollEvent;
-typedef CcEntrySpec SkCcEntrySpec;
-typedef SettingsEntry SkSettingsEntry;
-typedef SettingsCheckboxSpec SkSettingsCheckboxSpec;
-typedef SettingsButtonSpec SkSettingsButtonSpec;
-typedef SettingsSliderSpec SkSettingsSliderSpec;
-typedef SettingsDropdownSpec SkSettingsDropdownSpec;
-typedef SettingsEditboxChangeFn SkSettingsEditboxChangeFn;
-typedef SettingsEditboxType SkSettingsEditboxType;
-typedef SettingsEditboxField SkSettingsEditboxField;
-typedef SettingsEditboxSpec SkSettingsEditboxSpec;
-typedef SettingsEditboxGroup SkSettingsEditboxGroup;
 typedef void (*SkConfigFn)(void *ud);
 typedef struct {
   const char *name;
@@ -324,11 +325,9 @@ typedef struct {
 typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 
 #define SK_POS(px, py) ((SkPos){.x = (px), .y = (py)})
-#define SK_RECT(px, py,pw,ph) ((SkRect){.x = (px), .y = (py),.w = (pw), .h = (ph)})
+#define SK_RECT(px, py, pw, ph)                                                \
+  ((SkRect){.x = (px), .y = (py), .w = (pw), .h = (ph)})
 #define SK_COLOR(cr, cg, cb) ((SkColor){.r = (cr), .g = (cg), .b = (cb)})
-
-ColorRef sk_rgb(unsigned r, unsigned g, unsigned b);
-ColorRef sk_hex(unsigned long h);
 #define SK_SEARCH_TEXT SEARCH_KIND_TEXT
 #define SK_SEARCH_BUTTON SEARCH_KIND_BUTTON
 #define SK_SEARCH_CHECKBOX SEARCH_KIND_CHECKBOX
@@ -336,6 +335,191 @@ ColorRef sk_hex(unsigned long h);
 #define SK_SEARCH_EDITBOX SEARCH_KIND_EDITBOX
 #define SK_SEARCH_DROPDOWN SEARCH_KIND_DROPDOWN
 #define SK_SEARCH_CUSTOM SEARCH_KIND_CUSTOM
+#define SK_DIR_WALK_UNLIMITED 0
+#define sk_dir_scan(...) ski_dir_scan(&(SkDirScanSpec){__VA_ARGS__})
+#define SK_STORE_NAME() ski_store_feature_name(__FILE__)
+#define sk_store_set(value)                                                    \
+  ski_store_set(SK_STORE_NAME(), SK_STORE_NAME(), (value))
+#define sk_store_append(value)                                                 \
+  ski_store_append(SK_STORE_NAME(), SK_STORE_NAME(), (value))
+#define sk_store_get_all() ski_store_get_all(SK_STORE_NAME(), SK_STORE_NAME())
+#define sk_store_get_last() ski_store_get_last(SK_STORE_NAME(), SK_STORE_NAME())
+#define sk_store_replace_all(values, count)                                    \
+  ski_store_replace_all(SK_STORE_NAME(), SK_STORE_NAME(), (values), (count))
+#define sk_store_clear() ski_store_clear(SK_STORE_NAME(), SK_STORE_NAME())
+#define sk_send_key sk_send_hotkey
+#define sk_set_window_geometry(window, ...)                                    \
+  ski_set_window_geometry(window, &(SkRect){__VA_ARGS__})
+#define sk_populate_listbox(...)                                               \
+  ski_populate_listbox(&(SkPopulateListboxSpec){__VA_ARGS__})
+#define sk_edit_text_popup(...)                                                \
+  ski_edit_text_popup(&(SkEditPopupSpec){__VA_ARGS__})
+#define sk_popup(...) ski_popup(&(PopupSpec){__VA_ARGS__})
+#define sk_message(...) ski_message(&(SkMessageSpec){__VA_ARGS__})
+#define sk_overlay(...) sk_message(__VA_ARGS__, .timeout = 10000000.0)
+#define sk_dismiss_overlay(...) sk_dismiss_message(__VA_ARGS__)
+#define sk_overlay_active(...) sk_message_active(__VA_ARGS__)
+#define sk_subwindow(...) sk_window(__VA_ARGS__, .subwindow = true)
+#define sk_window(...) ski_window(&(SkPromptSpec){__VA_ARGS__})
+#define sk_measure_text_wrapped(...)                                           \
+  ski_measure_text_wrapped(&(SkMeasureSpec){__VA_ARGS__})
+#define sk_text_bounds(...) ski_text_bounds(&(SkTextBoundsSpec){__VA_ARGS__})
+#define sk_draw_text_segments(...)                                             \
+  ski_draw_text_segments(&(SkTextSegmentsSpec){__VA_ARGS__})
+#define sk_draw_text_wrapped(...)                                              \
+  ski_draw_text_wrapped(&(SkTextWrappedSpec){__VA_ARGS__})
+#define sk_get_image_size(path) ski_get_image_size((path), NULL, NULL)
+#define sk_checkbox_hovered sk_checkbox_is_hovered
+#define sk_checkbox_clicked sk_checkbox_is_clicked
+#define sk_slider_hovered sk_slider_is_hovered
+#define sk_slider_clicked sk_slider_is_clicked
+#define sk_slider_dragging sk_slider_is_dragging
+#define sk_place_button(...)                                                   \
+  ski_place_checkbox(                                                          \
+      &(SkCheckboxSpec){.border = true, __VA_ARGS__, .button = true})
+#define sk_place_checkbox(...)                                                 \
+  ski_place_checkbox(                                                          \
+      &(SkCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
+#define sk_place_slider(...)                                                   \
+  ski_place_slider(&(SkSliderSpec){                                            \
+      .border = true, __VA_ARGS__, .orientation = SLIDER_HORIZONTAL})
+#define sk_place_vslider(...)                                                  \
+  ski_place_slider(&(SkSliderSpec){                                            \
+      .border = true, __VA_ARGS__, .orientation = SLIDER_VERTICAL})
+#define sk_checkbox_checked sk_checkbox_is_checked
+#define sk_button_hovered sk_button_is_hovered
+#define sk_button_clicked sk_button_is_clicked
+#define sk_button_checked sk_button_is_checked
+#define sk_draw_text(...) ski_draw_text(&(SkTextSpec){__VA_ARGS__})
+#define sk_draw_text_centered(...)                                             \
+  ski_draw_text_centered(&(SkTextCenteredSpec){__VA_ARGS__})
+#define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
+#define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
+#define sk_place_editbox_wrapped(...)                                          \
+  ski_place_editbox(&(SkEditSpec){.wrapped = true, __VA_ARGS__})
+#define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
+#define sk_listbox_begin(...) ski_listbox_begin(&(SkListSpec){__VA_ARGS__})
+#define sk_widget(...) sk_widget_create(&(SkWidgetSpec){__VA_ARGS__})
+#define SK_DRAW_ALPHA_OPAQUE 255
+#define SK_DRAW_ALPHA_TRANSPARENT 128
+#define sk_draw_rect(...)                                                      \
+  ski_draw_rect(&(DrawRect){.border = EnableBorders, __VA_ARGS__})
+#define sk_draw_line(...) ski_draw_line(&(Line){__VA_ARGS__})
+#define sk_draw_circle(...) ski_draw_circle(&(Circle){__VA_ARGS__})
+#define sk_scroll_begin(...) ski_scroll_begin(&(SkScrollSpec){__VA_ARGS__})
+#define sk_window_open sk_is_window_open
+#define sk_move_mouse sk_move_to_pos
+#define sk_click() sk_left_click()
+#define sk_key_pressed sk_is_key_pressed
+#define sk_key_released sk_is_key_released
+#define sk_ctrl_down sk_ctrl_pressed
+#define sk_shift_down sk_shift_pressed
+#define sk_alt_down sk_alt_pressed
+#define sk_super_down sk_super_pressed
+#define sk_is_ctrl_pressed sk_ctrl_pressed
+#define sk_is_shift_pressed sk_shift_pressed
+#define sk_is_alt_pressed sk_alt_pressed
+#define sk_is_super_pressed sk_super_pressed
+#define SK_MOUSE_LEFT 1
+#define SK_MOUSE_RIGHT 2
+#define SK_MOUSE_MIDDLE 3
+#define SK_MOUSE_SIDE1 4
+#define SK_MOUSE_SIDE2 5
+#define SK_MOUSE_BACK 6
+#define SK_MOUSE_FORWARD 7
+#define SK_MOUSE_WHEEL 8
+#define sk_get_mouse_pos() sk_get_cursor_pos()
+#define sk_add_to_cc(...) ski_add_to_cc(&(SkCcEntrySpec){__VA_ARGS__})
+#define sk_add_feature(...) sk_add_to_cc(.type = "Feature", __VA_ARGS__)
+#define sk_add_settings_entry(...)                                             \
+  sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
+#define SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT SETTINGS_EDITBOX_X_OFFSET_DEFAULT
+#define SK_SETTINGS_EDITBOX_INVALID ((SkSettingsEditboxGroup){-1, -1})
+#define SK_SETTINGS_EDITBOX_STRING SETTINGS_EDITBOX_STRING
+#define SK_SETTINGS_EDITBOX_INT SETTINGS_EDITBOX_INT
+#define SK_SETTINGS_EDITBOX_FLOAT SETTINGS_EDITBOX_FLOAT
+#define sk_settings_entry_add_checkbox(entry, ...)                             \
+  ski_settings_entry_add_checkbox(entry, &(SkSettingsCheckboxSpec){__VA_ARGS__})
+#define sk_settings_entry_add_button(entry, ...)                               \
+  ski_settings_entry_add_button(entry, &(SkSettingsButtonSpec){__VA_ARGS__})
+#define sk_settings_entry_add_slider(entry, ...)                               \
+  ski_settings_entry_add_slider(entry, &(SkSettingsSliderSpec){__VA_ARGS__})
+#define sk_settings_entry_add_dropdown(entry, ...)                             \
+  ski_settings_entry_add_dropdown(entry, &(SkSettingsDropdownSpec){__VA_ARGS__})
+#define sk_settings_entry_add_editbox(entry, ...)                              \
+  ski_settings_entry_add_editbox(                                              \
+      entry,                                                                   \
+      &(SkSettingsEditboxSpec){                                                \
+          .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
+#define sk_config_set_hotkey(...)                                              \
+  ski_config_set_hotkey(&(SkConfigHotkeySpec){__VA_ARGS__})
+#define sk_add_dep(...) ski_add_dep(__VA_ARGS__, __FILE__)
+#define sk_register_hotkey(...)                                                \
+  ski_register_hotkey(&(SkHotkeySpec){__VA_ARGS__})
+#define sk_register_config_hotkey(...)                                         \
+  ski_register_config_hotkey(&(SkConfigHotkeyRegisterSpec){__VA_ARGS__})
+#define sk_register_remapping(...)                                             \
+  ski_register_remapping(&(SkRemappingSpec){__VA_ARGS__})
+#define sk_register_snippet(...)                                               \
+  ski_register_snippet(&(SkSnippetSpec){__VA_ARGS__})
+#if defined(_WIN32)
+#define SKALD_FEATURE_EXPORT __declspec(dllexport)
+#else
+#define SKALD_FEATURE_EXPORT __attribute__((visibility("default")))
+#endif
+#define SKALD_FEATURE_INIT                                                     \
+  SKALD_FEATURE_EXPORT __attribute__((constructor)) void skald_feature_init(   \
+      void)
+#define SKALD_FEATURE_SHUTDOWN                                                 \
+  SKALD_FEATURE_EXPORT void skald_feature_shutdown(void)
+#define sk_cap_register(key, fn) ski_cap_register((key), (void *)(fn))
+#define sk_cap_bind(var, key, type)                                            \
+  static type var##_fn;                                                        \
+  static unsigned var##_gen;                                                   \
+  type var = NULL;                                                             \
+  if (var##_gen != sk_cap_generation()) {                                      \
+    sk_cap_bind_declare(key, (void *)&var##_fn);                               \
+    var##_fn = (type)sk_cap_resolve(key);                                      \
+    var##_gen = sk_cap_generation();                                           \
+  }                                                                            \
+  var = var##_fn
+#define SK_WHITE RGB(255, 255, 255)
+#define SK_BLACK RGB(0, 0, 0)
+#define SK_RED RGB(255, 0, 0)
+#define SK_DARK_RED RGB(128, 0, 0)
+#define SK_GREEN RGB(0, 255, 0)
+#define SK_DARK_GREEN RGB(0, 128, 0)
+#define SK_BLUE RGB(0, 0, 255)
+#define SK_YELLOW RGB(255, 255, 0)
+#define SK_CYAN RGB(0, 255, 255)
+#define SK_MAGENTA RGB(255, 0, 255)
+#define SK_ORANGE RGB(255, 165, 0)
+#define SK_PURPLE RGB(128, 0, 128)
+#define SK_PINK RGB(255, 192, 203)
+#define SK_BROWN RGB(139, 69, 19)
+#define SK_LIME RGB(50, 205, 50)
+#define SK_TEAL RGB(0, 128, 128)
+#define SK_NAVY RGB(0, 0, 128)
+#define SK_MAROON RGB(128, 0, 0)
+#define SK_OLIVE RGB(128, 128, 0)
+#define SK_SILVER RGB(192, 192, 192)
+#define SK_GOLD RGB(255, 215, 0)
+#define SK_INDIGO RGB(75, 0, 130)
+#define SK_VIOLET RGB(238, 130, 238)
+#define SK_TURQUOISE RGB(64, 224, 208)
+#define SK_SALMON RGB(250, 128, 114)
+#define SK_CORAL RGB(255, 127, 80)
+#define SK_CRIMSON RGB(220, 20, 60)
+#define SK_CHOCOLATE RGB(210, 105, 30)
+#define SK_GRAY RGB(50, 50, 50)
+#define SK_LIGHT_GRAY RGB(211, 211, 211)
+#define SK_DARK_GRAY RGB(14, 14, 14)
+#define SK_EVENT_PROMPT_OPEN EVENT_PROMPT_OPEN
+#define SK_EVENT_PROMPT_CLOSE EVENT_PROMPT_CLOSE
+#define sk_resize_window(...) ski_resize_window(&(SkRect){__VA_ARGS__})
+
+ColorRef sk_rgb(unsigned r, unsigned g, unsigned b);
+ColorRef sk_hex(unsigned long h);
 
 SkSearchIndex *sk_search_create(void);
 void sk_search_destroy(SkSearchIndex *idx);
@@ -376,11 +560,8 @@ unsigned long long sk_net_rx_bytes(void);
 
 unsigned long long sk_net_rx_bytes_over(double seconds);
 
-#define SK_DIR_WALK_UNLIMITED 0
-
 char *sk_search_file_in_dir(const char *directory, const char *search_string);
 
-#define sk_dir_scan(...) ski_dir_scan(&(SkDirScanSpec){__VA_ARGS__})
 bool ski_dir_scan(const SkDirScanSpec *spec);
 
 SkStringList sk_load_file_list(const char *filepath);
@@ -427,16 +608,6 @@ bool ski_store_replace_all(const char *feature, const char *key,
                            const char *const *values, int count);
 bool ski_store_clear(const char *feature, const char *key);
 
-#define SK_STORE_NAME() ski_store_feature_name(__FILE__)
-#define sk_store_set(value) ski_store_set(SK_STORE_NAME(), SK_STORE_NAME(), (value))
-#define sk_store_append(value)                                                \
-  ski_store_append(SK_STORE_NAME(), SK_STORE_NAME(), (value))
-#define sk_store_get_all() ski_store_get_all(SK_STORE_NAME(), SK_STORE_NAME())
-#define sk_store_get_last() ski_store_get_last(SK_STORE_NAME(), SK_STORE_NAME())
-#define sk_store_replace_all(values, count)                                   \
-  ski_store_replace_all(SK_STORE_NAME(), SK_STORE_NAME(), (values), (count))
-#define sk_store_clear() ski_store_clear(SK_STORE_NAME(), SK_STORE_NAME())
-
 char *sk_write_temp_file(const char *name, const void *data, size_t len);
 
 int sk_get_icon_size(const char *icon_path);
@@ -481,8 +652,6 @@ void sk_init_all_hotkeys(void);
 
 void sk_send_hotkey(const char *hotkey_string);
 
-#define sk_send_key sk_send_hotkey
-
 char *sk_hotkey_to_string(SkKey key);
 
 SkKey sk_hotkey_from_string(const char *str);
@@ -506,9 +675,6 @@ bool sk_set_window_size(SkWindowHandle window, int w, int h);
 bool sk_set_window_opacity(SkWindowHandle window, int percent);
 SkRect sk_get_window_geometry(SkWindowHandle window);
 bool ski_set_window_geometry(SkWindowHandle window, const SkRect *rect);
-
-#define sk_set_window_geometry(window, ...)                                    \
-  ski_set_window_geometry(window, &(SkRect){__VA_ARGS__})
 
 bool sk_window_set_string_property(SkWindowHandle window, const char *atom,
                                    const char *value);
@@ -599,8 +765,6 @@ char *sk_string_slice(const char *str, int start, int end);
 SkStringList sk_string_split(const char *str, const char *delimiter);
 
 void ski_populate_listbox(const SkPopulateListboxSpec *spec);
-#define sk_populate_listbox(...)                                               \
-  ski_populate_listbox(&(SkPopulateListboxSpec){__VA_ARGS__})
 
 bool sk_is_selected(ListBox *lb);
 
@@ -612,28 +776,14 @@ int sk_get_edit_cursor(void);
 
 char *sk_get_edit_text(void);
 
-#define sk_edit_text_popup(...)                                                \
-  ski_edit_text_popup(&(SkEditPopupSpec){__VA_ARGS__})
-
 char *ski_edit_text_popup(const SkEditPopupSpec *spec);
 
 bool sk_replace_line_in_file(const char *filepath, int line_index,
                              const char *new_text);
 
-#define sk_popup(...) ski_popup(&(PopupSpec){__VA_ARGS__})
-
 char *ski_popup(const PopupSpec *spec);
 
-#define sk_message(...) ski_message(&(SkMessageSpec){__VA_ARGS__})
-
 void ski_message(const SkMessageSpec *spec);
-
-#define sk_overlay(...) sk_message(__VA_ARGS__, .timeout = 10000000.0)
-#define sk_dismiss_overlay(...) sk_dismiss_message(__VA_ARGS__)
-#define sk_overlay_active(...) sk_message_active(__VA_ARGS__)
-#define sk_subwindow(...) sk_window(__VA_ARGS__, .subwindow = true)
-
-#define sk_window(...) ski_window(&(SkPromptSpec){__VA_ARGS__})
 
 void ski_window(const SkPromptSpec *spec);
 
@@ -641,14 +791,9 @@ int ski_text_wrap_layout(const char *text, SkPos pos, int max_width,
                          int line_height, SkWrapMeasureFn measure, void *ctx,
                          SkPos *out, int maxout);
 
-#define sk_measure_text_wrapped(...)                                           \
-  ski_measure_text_wrapped(&(SkMeasureSpec){__VA_ARGS__})
-
 int ski_measure_text_wrapped(const SkMeasureSpec *spec);
 
 SkRect ski_text_bounds(const SkTextBoundsSpec *spec);
-
-#define sk_text_bounds(...) ski_text_bounds(&(SkTextBoundsSpec){__VA_ARGS__})
 
 SkImage sk_image_from_window_title(const char *title);
 SkImage sk_image_from_window_id(const char *id);
@@ -658,16 +803,11 @@ bool ski_draw_text(const SkTextSpec *spec);
 bool ski_draw_text_centered(const SkTextCenteredSpec *spec);
 
 bool ski_draw_text_segments(const SkTextSegmentsSpec *spec);
-#define sk_draw_text_segments(...)                                             \
-  ski_draw_text_segments(&(SkTextSegmentsSpec){__VA_ARGS__})
 
 int ski_draw_text_wrapped(const SkTextWrappedSpec *spec);
-#define sk_draw_text_wrapped(...)                                              \
-  ski_draw_text_wrapped(&(SkTextWrappedSpec){__VA_ARGS__})
 
 bool ski_draw_image(const SkImageSpec *spec);
 SkSize ski_get_image_size(const char *path, int *w, int *h);
-#define sk_get_image_size(path) ski_get_image_size((path), NULL, NULL)
 
 bool ski_place_editbox(const SkEditSpec *spec);
 const char *sk_editbox_text(const char *name);
@@ -704,40 +844,6 @@ bool sk_focus_adjust(int dir);
 bool sk_set_focus(SkFocusKind kind);
 void sk_focus_clear(void);
 
-#define sk_checkbox_hovered sk_checkbox_is_hovered
-#define sk_checkbox_clicked sk_checkbox_is_clicked
-#define sk_slider_hovered sk_slider_is_hovered
-#define sk_slider_clicked sk_slider_is_clicked
-#define sk_slider_dragging sk_slider_is_dragging
-
-#define sk_place_button(...)                                                   \
-  ski_place_checkbox(                                                          \
-      &(SkCheckboxSpec){.border = true, __VA_ARGS__, .button = true})
-#define sk_place_checkbox(...)                                                 \
-  ski_place_checkbox(                                                          \
-      &(SkCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
-#define sk_place_slider(...)                                                   \
-  ski_place_slider(&(SkSliderSpec){                                            \
-      .border = true, __VA_ARGS__, .orientation = SLIDER_HORIZONTAL})
-#define sk_place_vslider(...)                                                  \
-  ski_place_slider(&(SkSliderSpec){                                            \
-      .border = true, __VA_ARGS__, .orientation = SLIDER_VERTICAL})
-
-#define sk_checkbox_checked sk_checkbox_is_checked
-#define sk_button_hovered sk_button_is_hovered
-#define sk_button_clicked sk_button_is_clicked
-#define sk_button_checked sk_button_is_checked
-
-#define sk_draw_text(...) ski_draw_text(&(SkTextSpec){__VA_ARGS__})
-#define sk_draw_text_centered(...)                                             \
-  ski_draw_text_centered(&(SkTextCenteredSpec){__VA_ARGS__})
-#define sk_draw_image(...) ski_draw_image(&(SkImageSpec){__VA_ARGS__})
-#define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
-#define sk_place_editbox_wrapped(...)                                          \
-  ski_place_editbox(&(SkEditSpec){.wrapped = true, __VA_ARGS__})
-#define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
-#define sk_listbox_begin(...) ski_listbox_begin(&(SkListSpec){__VA_ARGS__})
-
 bool ski_listbox_begin(const SkListSpec *spec);
 
 bool sk_listbox_next(SkListItemCtx *out);
@@ -747,8 +853,6 @@ bool sk_draw_text_auto(const char *text);
 bool sk_place_editbox_auto(int w, int h, const char *buffer);
 bool sk_place_listbox_auto(int w, int h, const char **items, int count);
 bool sk_draw_image_auto(int w, int h, const char *path);
-
-#define sk_widget(...) sk_widget_create(&(SkWidgetSpec){__VA_ARGS__})
 
 SkWidget *sk_widget_create(const SkWidgetSpec *spec);
 int sk_monitor_count(void);
@@ -764,20 +868,11 @@ void sk_widget_show(SkWidget *widget);
 void sk_widget_hide(SkWidget *widget);
 void sk_widget_destroy(SkWidget *widget);
 
-#define SK_DRAW_ALPHA_OPAQUE 255
-#define SK_DRAW_ALPHA_TRANSPARENT 128
-
 bool ski_draw_rect(const SkRect *spec);
 
 bool ski_draw_line(const SkLine *spec);
 
 bool ski_draw_circle(const SkCircle *spec);
-
-#define sk_draw_rect(...) ski_draw_rect(&(DrawRect){.border = EnableBorders, __VA_ARGS__})
-
-#define sk_draw_line(...) ski_draw_line(&(Line){__VA_ARGS__})
-
-#define sk_draw_circle(...) ski_draw_circle(&(Circle){__VA_ARGS__})
 
 int sk_rand_num_between(int min, int max);
 
@@ -791,7 +886,6 @@ void sk_set_draw_offset(SkPos pos);
 
 SkPos sk_get_draw_offset(void);
 
-#define sk_scroll_begin(...) ski_scroll_begin(&(SkScrollSpec){__VA_ARGS__})
 bool ski_scroll_begin(const SkScrollSpec *spec);
 void sk_scroll_end(void);
 
@@ -879,7 +973,6 @@ char *sk_get_active_window_title(void);
 char *sk_get_active_window_id(void);
 
 bool sk_is_window_open(const char *title);
-#define sk_window_open sk_is_window_open
 
 SkColor sk_get_pixel_color(SkPos pos);
 
@@ -904,9 +997,6 @@ bool sk_click_button_at(SkPos pos, int button);
 bool sk_mouse_scroll(int notches);
 
 void sk_emit_key(int vk, bool down);
-
-#define sk_move_mouse sk_move_to_pos
-#define sk_click() sk_left_click()
 
 bool sk_move_to_pos_rel(SkPos pos);
 
@@ -942,26 +1032,6 @@ char sk_get_char_pressed(void);
 
 char *sk_vk_to_name(int vk);
 
-#define sk_key_pressed sk_is_key_pressed
-#define sk_key_released sk_is_key_released
-#define sk_ctrl_down sk_ctrl_pressed
-#define sk_shift_down sk_shift_pressed
-#define sk_alt_down sk_alt_pressed
-#define sk_super_down sk_super_pressed
-#define sk_is_ctrl_pressed sk_ctrl_pressed
-#define sk_is_shift_pressed sk_shift_pressed
-#define sk_is_alt_pressed sk_alt_pressed
-#define sk_is_super_pressed sk_super_pressed
-
-#define SK_MOUSE_LEFT 1
-#define SK_MOUSE_RIGHT 2
-#define SK_MOUSE_MIDDLE 3
-#define SK_MOUSE_SIDE1 4
-#define SK_MOUSE_SIDE2 5
-#define SK_MOUSE_BACK 6
-#define SK_MOUSE_FORWARD 7
-#define SK_MOUSE_WHEEL 8
-
 bool sk_poll_mouse(SkMouseEvent *out);
 
 bool sk_poll_scroll(SkScrollEvent *out);
@@ -978,8 +1048,6 @@ SkPos sk_get_cursor_pos(void);
 
 SkPos sk_get_cursor_pos_rel(void);
 
-#define sk_get_mouse_pos() sk_get_cursor_pos()
-
 bool sk_mouse_pressed(int button);
 
 bool sk_poll_key(SkKeyEvent *out);
@@ -990,33 +1058,7 @@ unsigned long sk_key_queue_dropped(void);
 
 void sk_clear_key_queue(void);
 
-#define sk_add_to_cc(...) ski_add_to_cc(&(SkCcEntrySpec){__VA_ARGS__})
-
-#define sk_add_feature(...) sk_add_to_cc(.type = "Feature", __VA_ARGS__)
-
-#define sk_add_settings_entry(...)                                             \
-  sk_settings_entry_add(&(SkSettingsEntrySpec){__VA_ARGS__})
-
-#define SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT SETTINGS_EDITBOX_X_OFFSET_DEFAULT
-#define SK_SETTINGS_EDITBOX_INVALID ((SkSettingsEditboxGroup){-1, -1})
-#define SK_SETTINGS_EDITBOX_STRING SETTINGS_EDITBOX_STRING
-#define SK_SETTINGS_EDITBOX_INT SETTINGS_EDITBOX_INT
-#define SK_SETTINGS_EDITBOX_FLOAT SETTINGS_EDITBOX_FLOAT
-
 SkSettingsEntry *sk_settings_entry_add(const SkSettingsEntrySpec *spec);
-#define sk_settings_entry_add_checkbox(entry, ...)                             \
-  ski_settings_entry_add_checkbox(entry, &(SkSettingsCheckboxSpec){__VA_ARGS__})
-#define sk_settings_entry_add_button(entry, ...)                               \
-  ski_settings_entry_add_button(entry, &(SkSettingsButtonSpec){__VA_ARGS__})
-#define sk_settings_entry_add_slider(entry, ...)                               \
-  ski_settings_entry_add_slider(entry, &(SkSettingsSliderSpec){__VA_ARGS__})
-#define sk_settings_entry_add_dropdown(entry, ...)                             \
-  ski_settings_entry_add_dropdown(entry, &(SkSettingsDropdownSpec){__VA_ARGS__})
-#define sk_settings_entry_add_editbox(entry, ...)                              \
-  ski_settings_entry_add_editbox(                                              \
-      entry,                                                                   \
-      &(SkSettingsEditboxSpec){                                                \
-          .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
 bool sk_config_set_setting(const char *key, const char *value);
 bool sk_config_set_setting_int(const char *key, int value);
 bool sk_config_set_setting_float(const char *key, float value);
@@ -1057,9 +1099,6 @@ bool sk_register_alias(const char *alias, const char *target);
 bool sk_remove_alias(const char *alias);
 
 const char *sk_alias_for(const char *target);
-
-#define sk_config_set_hotkey(...)                                              \
-  ski_config_set_hotkey(&(SkConfigHotkeySpec){__VA_ARGS__})
 
 void sk_config_init(void);
 
@@ -1102,16 +1141,8 @@ const SettingsEntrySpec *sk_settings_entry_at(int index);
 
 bool ski_add_dep(const char *dep_name, const char *owner_file);
 
-#define sk_add_dep(...) ski_add_dep(__VA_ARGS__, __FILE__)
-
-#define sk_register_hotkey(...)                                                \
-  ski_register_hotkey(&(SkHotkeySpec){__VA_ARGS__})
-
 bool ski_register_hotkey(const SkHotkeySpec *spec);
 bool sk_unregister_hotkey(const char *hotkey);
-
-#define sk_register_config_hotkey(...)                                         \
-  ski_register_config_hotkey(&(SkConfigHotkeyRegisterSpec){__VA_ARGS__})
 
 bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec);
 
@@ -1134,14 +1165,8 @@ void sk_register_deferred_init(void (*cb)(void));
 
 bool ski_register_remapping(const SkRemappingSpec *spec);
 
-#define sk_register_remapping(...)                                             \
-  ski_register_remapping(&(SkRemappingSpec){__VA_ARGS__})
-
 bool sk_replay_hotkey(SkKey key);
 bool sk_execute_hotkey(SkKey key);
-
-#define sk_register_snippet(...)                                               \
-  ski_register_snippet(&(SkSnippetSpec){__VA_ARGS__})
 
 bool ski_register_snippet(const SkSnippetSpec *spec);
 bool sk_unregister_snippet(const char *trigger);
@@ -1149,19 +1174,6 @@ bool sk_unregister_snippet(const char *trigger);
 void sk_reload_feature(const char *name);
 int sk_reload_all_features(void);
 int sk_get_pid(void);
-
-#if defined(_WIN32)
-#define SKALD_FEATURE_EXPORT __declspec(dllexport)
-#else
-#define SKALD_FEATURE_EXPORT __attribute__((visibility("default")))
-#endif
-
-#define SKALD_FEATURE_INIT                                                     \
-  SKALD_FEATURE_EXPORT __attribute__((constructor)) void skald_feature_init(   \
-      void)
-
-#define SKALD_FEATURE_SHUTDOWN                                                 \
-  SKALD_FEATURE_EXPORT void skald_feature_shutdown(void)
 
 void sk_cap_register_abi(const char *key, unsigned abi, void *fn);
 void *sk_cap_resolve_abi(const char *key, unsigned abi);
@@ -1171,57 +1183,9 @@ void *sk_cap_resolve(const char *key);
 unsigned sk_cap_generation(void);
 void sk_cap_bind_declare(const char *key, void *consumer);
 
-#define sk_cap_register(key, fn) ski_cap_register((key), (void *)(fn))
-
-#define sk_cap_bind(var, key, type)                                            \
-  static type var##_fn;                                                        \
-  static unsigned var##_gen;                                                   \
-  type var = NULL;                                                             \
-  if (var##_gen != sk_cap_generation()) {                                      \
-    sk_cap_bind_declare(key, (void *)&var##_fn);                               \
-    var##_fn = (type)sk_cap_resolve(key);                                      \
-    var##_gen = sk_cap_generation();                                           \
-  }                                                                            \
-  var = var##_fn
-
-#define SK_WHITE RGB(255, 255, 255)
-#define SK_BLACK RGB(0, 0, 0)
-#define SK_RED RGB(255, 0, 0)
-#define SK_DARK_RED RGB(128, 0, 0)
-#define SK_GREEN RGB(0, 255, 0)
-#define SK_DARK_GREEN RGB(0, 128, 0)
-#define SK_BLUE RGB(0, 0, 255)
-#define SK_YELLOW RGB(255, 255, 0)
-#define SK_CYAN RGB(0, 255, 255)
-#define SK_MAGENTA RGB(255, 0, 255)
-#define SK_ORANGE RGB(255, 165, 0)
-#define SK_PURPLE RGB(128, 0, 128)
-#define SK_PINK RGB(255, 192, 203)
-#define SK_BROWN RGB(139, 69, 19)
-#define SK_LIME RGB(50, 205, 50)
-#define SK_TEAL RGB(0, 128, 128)
-#define SK_NAVY RGB(0, 0, 128)
-#define SK_MAROON RGB(128, 0, 0)
-#define SK_OLIVE RGB(128, 128, 0)
-#define SK_SILVER RGB(192, 192, 192)
-#define SK_GOLD RGB(255, 215, 0)
-#define SK_INDIGO RGB(75, 0, 130)
-#define SK_VIOLET RGB(238, 130, 238)
-#define SK_TURQUOISE RGB(64, 224, 208)
-#define SK_SALMON RGB(250, 128, 114)
-#define SK_CORAL RGB(255, 127, 80)
-#define SK_CRIMSON RGB(220, 20, 60)
-#define SK_CHOCOLATE RGB(210, 105, 30)
-#define SK_GRAY RGB(50, 50, 50)
-#define SK_LIGHT_GRAY RGB(211, 211, 211)
-#define SK_DARK_GRAY RGB(14, 14, 14)
-
 SkMetrics *sk_get_metrics(void);
 
 void *sk_get_active_prompt(void);
-
-#define SK_EVENT_PROMPT_OPEN EVENT_PROMPT_OPEN
-#define SK_EVENT_PROMPT_CLOSE EVENT_PROMPT_CLOSE
 
 void sk_register_event(SkEvent event, SkEventCallback cb);
 void sk_unregister_event(SkEvent event, SkEventCallback cb);
@@ -1231,7 +1195,6 @@ void sk_register_key_interceptor(SkKeyInterceptorFn fn);
 void sk_close_window(void);
 
 bool ski_resize_window(const SkRect *rect);
-#define sk_resize_window(...) ski_resize_window(&(SkRect){__VA_ARGS__})
 bool ski_resize_window_animated(const SkRect *rect, int duration_ms);
 SkRect sk_get_window_bounds(void);
 

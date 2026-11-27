@@ -272,8 +272,8 @@ static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by,
   return result;
 }
 
-static bool blit_argb_buf_scaled(const unsigned char *buf, int w, int h,
-                                 int bx, int by, int dw, int dh) {
+static bool blit_argb_buf_scaled(const unsigned char *buf, int w, int h, int bx,
+                                 int by, int dw, int dh) {
   if (!buf || w <= 0 || h <= 0 || dw <= 0 || dh <= 0 || !g_draw_dpy ||
       !g_draw_xd)
     return false;
@@ -282,10 +282,10 @@ static bool blit_argb_buf_scaled(const unsigned char *buf, int w, int h,
   if (!x11_upload_argb(g_draw_dpy, 0, (unsigned char *)buf, w, h, &pm, &pic))
     return false;
   XRenderPictFormat *dfmt = XRenderFindVisualFormat(g_draw_dpy, g_draw_vis);
-  Picture dst = dfmt ? XRenderCreatePicture(g_draw_dpy,
-                                            XftDrawDrawable(g_draw_xd), dfmt,
-                                            0, NULL)
-                     : 0;
+  Picture dst =
+      dfmt ? XRenderCreatePicture(g_draw_dpy, XftDrawDrawable(g_draw_xd), dfmt,
+                                  0, NULL)
+           : 0;
   bool result = false;
   if (dst) {
     if (w != dw || h != dh) {

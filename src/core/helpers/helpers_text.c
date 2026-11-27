@@ -912,8 +912,7 @@ void url_build_search_url(const char *engine, const char *query, char *out,
   snprintf(out, cap, "%s", templ);
 }
 
-static void text_wrap_record(Pos *out, int maxout, int *count, int x,
-                             int y) {
+static void text_wrap_record(Pos *out, int maxout, int *count, int x, int y) {
   int i = (*count)++;
   if (out && i < maxout) {
     out[i].x = x;
@@ -923,8 +922,7 @@ static void text_wrap_record(Pos *out, int maxout, int *count, int x,
 
 static int text_wrap_place_word(TextWrapMeasureFn measure, void *ctx,
                                 const char *text, int ws, int we, int wx,
-                                int rowtop, Pos *out, int maxout,
-                                int *count) {
+                                int rowtop, Pos *out, int maxout, int *count) {
   int i = ws;
   while (i < we) {
     int j = i + utf8_lead_len((unsigned char)text[i]);
@@ -1105,13 +1103,15 @@ int text_segment_width(const void *seg_ptr, int font_size) {
   const TextSegment *seg = (const TextSegment *)seg_ptr;
   if (!seg || !seg->text)
     return 0;
-  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
-      .text = seg->text, .len = (int)strlen(seg->text), .font_size = font_size});
+  return Platform_MeasureTextWidth(
+      (MeasureTextWidthSpec){.text = seg->text,
+                             .len = (int)strlen(seg->text),
+                             .font_size = font_size});
 }
 
-void wrapped_word_push(WrappedWord **words, int *count, int *cap,
-                       const char *s, size_t len, unsigned long color,
-                       int lead, int breaks, int font_size) {
+void wrapped_word_push(WrappedWord **words, int *count, int *cap, const char *s,
+                       size_t len, unsigned long color, int lead, int breaks,
+                       int font_size) {
   if (!len)
     return;
   if (*count >= *cap) {

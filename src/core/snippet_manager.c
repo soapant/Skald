@@ -66,10 +66,9 @@ static void snippet_free_binding(SnippetBinding *b) {
   owner_tag_clear(&b->tag);
 }
 
-static void snippet_owner_set(OwnerTag *tag, void (*func)(void),
-                              void *caller) {
-  char *owner = func ? owner_resolve_for_func_alloc((void *)(uintptr_t)func)
-                     : NULL;
+static void snippet_owner_set(OwnerTag *tag, void (*func)(void), void *caller) {
+  char *owner =
+      func ? owner_resolve_for_func_alloc((void *)(uintptr_t)func) : NULL;
   if ((!owner || !owner[0]) && caller)
     owner = owner_resolve_for_func_alloc(caller);
   owner_tag_set(tag, owner, 0);
@@ -202,8 +201,7 @@ void snippet_purge_owner(const char *path_a, const char *path_b) {
   size_t dropped = OWNER_PURGE_STRUCT(snippets, SnippetBinding, path_a, path_b,
                                       0, snippet_destroy_cb);
   if (dropped > 0) {
-    log_info("snippet purged %zu binding%s", dropped,
-             dropped == 1 ? "" : "s");
+    log_info("snippet purged %zu binding%s", dropped, dropped == 1 ? "" : "s");
   }
 }
 

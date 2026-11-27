@@ -525,11 +525,9 @@ char *file_read_all_alloc(const char *path) {
 }
 
 void resolve_window_list(const char *const *wl, const char *const *bl,
-                         const char *const **out_windows,
-                         bool *out_whitelist) {
+                         const char *const **out_windows, bool *out_whitelist) {
   bool whitelist = (wl && wl[0] && (!bl || !bl[0]));
-  const char *const *windows =
-      (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
+  const char *const *windows = (bl && bl[0]) ? bl : ((wl && wl[0]) ? wl : NULL);
   if (out_windows)
     *out_windows = windows;
   if (out_whitelist)
@@ -692,8 +690,8 @@ void feature_shortcut_select(ListBox *lb, const char *filter) {
     UI_SetSelection(lb, fallback);
 }
 
-PromptCallbacks feature_shortcut_make_callbacks(
-    const PromptSpec *spec, const PromptCallbacks *saved) {
+PromptCallbacks feature_shortcut_make_callbacks(const PromptSpec *spec,
+                                                const PromptCallbacks *saved) {
   PromptCallbacks cb = *saved;
   if (spec->refresh)
     cb.refresh = spec->refresh;
@@ -854,18 +852,18 @@ ImageBuffer image_take(ImageBuffer *img) {
 
 bool draw_rect_raw(const DrawRect *spec, unsigned long color, float thickness,
                    bool filled, bool transparent) {
-  return Platform_DrawRectRaw(
-      (DrawRectRawSpec){.x = spec->x,
-                        .y = spec->y,
-                        .w = spec->w,
-                        .h = spec->h,
-                        .color = color,
-                        .radius = spec->radius ? spec->radius : 0,
-                        .rounded = spec->rounded ? spec->rounded : RoundedCorners,
-                        .opaque = !transparent,
-                        .thickness = thickness,
-                        .filled = filled,
-                        .angle = spec->angle});
+  return Platform_DrawRectRaw((DrawRectRawSpec){
+      .x = spec->x,
+      .y = spec->y,
+      .w = spec->w,
+      .h = spec->h,
+      .color = color,
+      .radius = spec->radius ? spec->radius : 0,
+      .rounded = spec->rounded ? spec->rounded : RoundedCorners,
+      .opaque = !transparent,
+      .thickness = thickness,
+      .filled = filled,
+      .angle = spec->angle});
 }
 
 bool place_editbox(const EditSpec *spec) {
@@ -877,7 +875,8 @@ bool place_editbox(const EditSpec *spec) {
                            ? spec->name
                            : PROMPT_PRIMARY_EDITBOX_NAME;
     if (strncmp(name, "settings-search:", 16) != 0)
-      search_index_add_text(NULL, spec->buffer, SEARCH_KIND_EDITBOX, name, NULL);
+      search_index_add_text(NULL, spec->buffer, SEARCH_KIND_EDITBOX, name,
+                            NULL);
     return true;
   }
   SkaldContext_Get()->window.editbox_placed = true;
@@ -927,8 +926,8 @@ bool place_editbox(const EditSpec *spec) {
       }
       copy.placeholder = entry->eb.placeholder;
       if (fresh && copy.initial_text && copy.initial_text[0]) {
-        size_t cap = buffer && buffer_size ? buffer_size
-                                           : sizeof(entry->eb.filter);
+        size_t cap =
+            buffer && buffer_size ? buffer_size : sizeof(entry->eb.filter);
         size_t n = strnlen(copy.initial_text, cap - 1);
         if (n >= sizeof(entry->eb.filter))
           n = sizeof(entry->eb.filter) - 1;
@@ -962,4 +961,3 @@ bool place_editbox(const EditSpec *spec) {
   }
   return Platform_PlaceEditbox(&copy);
 }
-

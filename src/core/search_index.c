@@ -239,8 +239,7 @@ int search_index_query(SearchIndex *idx, const char *filter) {
     if (target >= 0 && score >= idx->hits[target].score)
       continue;
 
-    SearchHit *h =
-        target >= 0 ? &idx->hits[target] : arraddnptr(idx->hits, 1);
+    SearchHit *h = target >= 0 ? &idx->hits[target] : arraddnptr(idx->hits, 1);
     h->source_id = e->source_id;
     h->kind = e->kind;
     h->score = score;

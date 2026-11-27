@@ -320,7 +320,8 @@ bool hotkey_has_keyboard_binding(void) {
   return false;
 }
 
-static bool hotkey_window_list_match(const HotkeyBinding *b, const char *title) {
+static bool hotkey_window_list_match(const HotkeyBinding *b,
+                                     const char *title) {
   if (!b->window_list || b->window_count == 0)
     return false;
   for (int j = 0; j < b->window_count; j++) {
@@ -395,8 +396,8 @@ bool hotkey_register_internal(HotkeyBinding binding) {
   owner_tag_set_for_func(&binding.tag,
                          (void *)(uintptr_t)binding.hotkey_callback, 0);
   if (!binding.tag.owner)
-    owner_tag_set_for_func(
-        &binding.tag, (void *)(uintptr_t)binding.hotkey_callback_ud, 0);
+    owner_tag_set_for_func(&binding.tag,
+                           (void *)(uintptr_t)binding.hotkey_callback_ud, 0);
   if (!binding.tag.owner)
     owner_tag_set_for_func(&binding.tag,
                            (void *)(uintptr_t)binding.hotkey_condition, 0);
@@ -435,8 +436,8 @@ void hotkey_purge_owner(const char *path_a, const char *path_b) {
     return;
   char *a = owner_strdup(path_a);
   char *b = owner_strdup(path_b);
-  int dropped =
-      (int)OWNER_PURGE_STRUCT(hotkeys, HotkeyBinding, a, b, 0, hotkey_destroy_cb);
+  int dropped = (int)OWNER_PURGE_STRUCT(hotkeys, HotkeyBinding, a, b, 0,
+                                        hotkey_destroy_cb);
   if (dropped > 0)
     log_info("hotkey purged %d binding%s", dropped, dropped == 1 ? "" : "s");
   HOTKEY_Q_LOCK();
@@ -472,8 +473,7 @@ static int hotkey_strip_self_mod(int vk, int mods) {
   int eff = mods;
   if (vk == VK_LSHIFT || vk == VK_RSHIFT || vk == VK_SHIFT)
     eff &= ~HOTKEY_MOD_SHIFT;
-  else if (vk == VK_LCONTROL || vk == VK_RCONTROL ||
-           vk == VK_CONTROL)
+  else if (vk == VK_LCONTROL || vk == VK_RCONTROL || vk == VK_CONTROL)
     eff &= ~HOTKEY_MOD_CTRL;
   else if (vk == VK_LMENU || vk == VK_RMENU || vk == VK_MENU)
     eff &= ~HOTKEY_MOD_ALT;

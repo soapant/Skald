@@ -613,8 +613,8 @@ static ImageBuffer *x11_capture_window(Display *dpy, Window win) {
       uint32_t g = (uint32_t)((px & xi->green_mask) >> gs);
       uint32_t b = (uint32_t)((px & xi->blue_mask) >> bs);
       uint32_t argb = (255u << 24) | (r << 16) | (g << 8) | b;
-      memcpy(out->pixels + ((size_t)y * (size_t)out->w + (size_t)x) * 4,
-             &argb, 4);
+      memcpy(out->pixels + ((size_t)y * (size_t)out->w + (size_t)x) * 4, &argb,
+             4);
     }
   }
   XDestroyImage(xi);
@@ -2212,10 +2212,10 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
   editbox_resolve_place(&(EditboxPlaceSpec){.buffer = spec->buffer,
                                             .x = spec->x,
                                             .y = spec->y,
-                                             .w = spec->w,
-                                             .h = spec->h,
-                                             .font_size = spec->font_size,
-                                             .wrapped = spec->wrapped},
+                                            .w = spec->w,
+                                            .h = spec->h,
+                                            .font_size = spec->font_size,
+                                            .wrapped = spec->wrapped},
                         state, &place);
   int fs = place.font_size;
   const char *buf = place.buf;

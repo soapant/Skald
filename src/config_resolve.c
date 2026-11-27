@@ -40,8 +40,7 @@ static void config_resolve_one(AutoApp *app) {
   if (!app || !app->var)
     return;
   app->auto_resolved = false;
-  const char *current =
-      atomic_load_explicit(app->var, memory_order_acquire);
+  const char *current = atomic_load_explicit(app->var, memory_order_acquire);
   if (current && current[0])
     return;
   const char *id = Platform_GetDefaultApp(app->kind);

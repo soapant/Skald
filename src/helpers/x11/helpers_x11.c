@@ -2258,8 +2258,7 @@ static Picture border_slot_get_or_create(Display *dpy, int w, int h) {
       bool edge = (x < t) || (x >= w - t) || (y < t) || (y >= h - t);
       if (!edge)
         continue;
-      if (r > t && ((x < r) || (x >= w - r)) &&
-          ((y < r) || (y >= h - r)))
+      if (r > t && ((x < r) || (x >= w - r)) && ((y < r) || (y >= h - r)))
         continue;
       uint32_t px = (uint32_t)((a << 24) | (pr << 16) | (pg << 8) | pb);
       memcpy(row + (size_t)x * 4, &px, 4);

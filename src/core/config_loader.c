@@ -49,16 +49,14 @@ typedef struct {
       float: CONFIG_FLOAT,                                                     \
       const char *: CONFIG_STRING,                                             \
       ColorRef: CONFIG_COLORREF)
-#define CONFIG_MAKE_ENTRY(type, name, def)                                     \
-  {#name, CONFIG_KIND_OF(type), &name},
-static const ConfigEntry config_entries[] = {
-    CONFIG_VALUES(CONFIG_MAKE_ENTRY)};
+#define CONFIG_MAKE_ENTRY(type, name, def) {#name, CONFIG_KIND_OF(type), &name},
+static const ConfigEntry config_entries[] = {CONFIG_VALUES(CONFIG_MAKE_ENTRY)};
 #undef CONFIG_MAKE_ENTRY
 #undef CONFIG_KIND_OF
 #define CONFIG_ENTRY_COUNT                                                     \
   ((int)(sizeof(config_entries) / sizeof(config_entries[0])))
 #define CONFIG_COUNT_ONE(type, name, def) +1
-_Static_assert(0 CONFIG_VALUES(CONFIG_COUNT_ONE) == CONFIG_ENTRY_COUNT,        \
+_Static_assert(0 CONFIG_VALUES(CONFIG_COUNT_ONE) == CONFIG_ENTRY_COUNT,
                "config_entries is out of sync with config_defs.h");
 #undef CONFIG_COUNT_ONE
 
@@ -444,16 +442,14 @@ static ConfigBuf config_emit_region(void) {
     const char *name = e->name;
     switch (e->kind) {
     case CONFIG_BOOL:
-      config_emit_bool_line(
-          &b, name,
-          atomic_load_explicit((const _Atomic(bool) *)e->slot,
-                               memory_order_acquire));
+      config_emit_bool_line(&b, name,
+                            atomic_load_explicit((const _Atomic(bool) *)e->slot,
+                                                 memory_order_acquire));
       break;
     case CONFIG_INT:
-      config_emit_int_line(
-          &b, name,
-          atomic_load_explicit((const _Atomic(int) *)e->slot,
-                               memory_order_acquire));
+      config_emit_int_line(&b, name,
+                           atomic_load_explicit((const _Atomic(int) *)e->slot,
+                                                memory_order_acquire));
       break;
     case CONFIG_FLOAT:
       config_emit_float_line(

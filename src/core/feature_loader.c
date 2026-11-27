@@ -134,8 +134,7 @@ static bool retire_old_lib(LibHandle handle, const char *uniq,
   memset(&r, 0, sizeof(r));
   r.handle = handle;
   r.uniq = (uniq && uniq[0]) ? owner_strdup(uniq) : NULL;
-  owner_tag_set_owned(&r.tag,
-                      (owner && owner[0]) ? owner_strdup(owner) : NULL,
+  owner_tag_set_owned(&r.tag, (owner && owner[0]) ? owner_strdup(owner) : NULL,
                       widget_current_generation());
   r.npins = 0;
   if (wm && wm->popup_count > MAX_PINS) {
@@ -285,9 +284,9 @@ static bool manifest_write_full(const char *name, const FeatureManifest *m) {
     return false;
   char tmp[600];
   char suffix[32];
-  snprintf(suffix, sizeof(suffix), ".tmp.%d.%u", (int)getpid(),
-           atomic_fetch_add_explicit(&manifest_tmp_seq, 1,
-                                     memory_order_relaxed));
+  snprintf(
+      suffix, sizeof(suffix), ".tmp.%d.%u", (int)getpid(),
+      atomic_fetch_add_explicit(&manifest_tmp_seq, 1, memory_order_relaxed));
   if (!safe_copy(tmp, sizeof(tmp), path) || !safe_cat(tmp, sizeof(tmp), suffix))
     return false;
   FILE *f = fopen(tmp, "wb");
@@ -554,8 +553,8 @@ bool feature_loader_load_all_from_dir(const char *dir) {
     if (!manifest_path(names[i], mpath, sizeof(mpath)))
       continue;
     ConfigTomlError merr;
-    ConfigTomlStatus mst = manifest_parse_file_ex(mpath, names[i], &mans[i],
-                                                  &merr);
+    ConfigTomlStatus mst =
+        manifest_parse_file_ex(mpath, names[i], &mans[i], &merr);
     if (mst != CONFIG_TOML_OK || !mans[i].valid) {
       log_error("feature '%s': manifest %s %s (line %d): %s, skipping",
                 names[i], mpath, config_toml_status_name(mst), merr.line,
@@ -1112,8 +1111,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       const char *base = path_copy ? path_copy : "";
       const char *src = (src_path && src_path[0]) ? src_path : base;
       LibHandle old = features[i].handle;
-      char *uniquepath =
-          reload_lib_unique_copy(src, base, ++reload_seq, NULL);
+      char *uniquepath = reload_lib_unique_copy(src, base, ++reload_seq, NULL);
       if (!uniquepath) {
         log_error("reload %s: copy failed (keeping old)", name);
         owner_strfree(&path_copy);
@@ -1270,9 +1268,9 @@ void feature_loader_reload_all(void) {
     }
     if (features[i].handle) {
       call_feature_shutdown(features[i].handle);
-      char *loaded = owner_strdup(
-          (features[i].uniq && features[i].uniq[0]) ? features[i].uniq
-                                                    : features[i].path);
+      char *loaded = owner_strdup((features[i].uniq && features[i].uniq[0])
+                                      ? features[i].uniq
+                                      : features[i].path);
       retire_old_lib(features[i].handle, features[i].uniq, loaded);
       owner_strfree(&loaded);
       features[i].handle = 0;

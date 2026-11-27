@@ -105,8 +105,8 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
     s->ud = ud;
     s->release = release;
     s->release_ud = release_ud;
-    char *owner = owner_resolve_for_func_alloc(
-        owner_src ? owner_src : (void *)render);
+    char *owner =
+        owner_resolve_for_func_alloc(owner_src ? owner_src : (void *)render);
     owner_tag_set(&s->tag, owner, 0);
     owner_strfree(&owner);
     bool geom_changed =

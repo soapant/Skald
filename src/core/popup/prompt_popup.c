@@ -120,12 +120,12 @@ static void prompt_popup_on_show(Popup *self) {
       data->spec.refresh ? data->spec.refresh : data->saved_callbacks.refresh;
   data->state_callbacks.enter =
       data->spec.enter ? data->spec.enter : data->saved_callbacks.enter;
-  data->state_callbacks.ctrl_enter =
-      data->spec.ctrl_enter ? data->spec.ctrl_enter
-                            : data->saved_callbacks.ctrl_enter;
-  data->state_callbacks.shift_enter =
-      data->spec.shift_enter ? data->spec.shift_enter
-                             : data->saved_callbacks.shift_enter;
+  data->state_callbacks.ctrl_enter = data->spec.ctrl_enter
+                                         ? data->spec.ctrl_enter
+                                         : data->saved_callbacks.ctrl_enter;
+  data->state_callbacks.shift_enter = data->spec.shift_enter
+                                          ? data->spec.shift_enter
+                                          : data->saved_callbacks.shift_enter;
   data->state_callbacks.ctrl_shift_enter =
       data->spec.ctrl_shift_enter ? data->spec.ctrl_shift_enter
                                   : data->saved_callbacks.ctrl_shift_enter;
@@ -321,8 +321,8 @@ void prompt_popup_tick_resize_animation_popup(Popup *p) {
   long long elapsed = Platform_GetWallClockMs() - anim->start_ms;
   if (elapsed >= anim->duration_ms) {
     anim->active = false;
-    prompt_popup_apply_bounds(p, anim->to_x, anim->to_y, anim->to_w,
-                              anim->to_h, true);
+    prompt_popup_apply_bounds(p, anim->to_x, anim->to_y, anim->to_w, anim->to_h,
+                              true);
   } else {
     float t = (float)elapsed / (float)anim->duration_ms;
     float inv = 1.0f - t;

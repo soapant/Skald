@@ -940,8 +940,8 @@ bool set_active_window_size_sway(int w, int h) {
   if (w <= 0 || h <= 0)
     return false;
   char cmd[160];
-  snprintf(cmd, sizeof(cmd),
-           "swaymsg resize set width %d px height %d px", w, h);
+  snprintf(cmd, sizeof(cmd), "swaymsg resize set width %d px height %d px", w,
+           h);
   return sway_exec(cmd);
 }
 
@@ -955,7 +955,8 @@ bool get_active_window_geometry_sway(DrawRect *out) {
     return false;
   }
   const char *focus = sway_focused_pos(json);
-  const char *rect = focus ? sway_nearest_before(json, focus, "\"rect\":") : NULL;
+  const char *rect =
+      focus ? sway_nearest_before(json, focus, "\"rect\":") : NULL;
   bool ok = false;
   if (rect) {
     int x = 0, y = 0, w = 0, h = 0;

@@ -232,9 +232,9 @@ bool toml_color_ref(const char *body, ColorRef *out) {
   return true;
 }
 
-TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len,
-                                        char *key, size_t key_cap,
-                                        char *value, size_t value_cap) {
+TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len, char *key,
+                                        size_t key_cap, char *value,
+                                        size_t value_cap) {
   if (!line || !key || !value || !key_cap || !value_cap)
     return TOML_KV_INVALID_VALUE;
 

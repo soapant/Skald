@@ -118,8 +118,9 @@ TEST(key_capture_is_opt_in_and_queue_starts_empty) {
   ASSERT_FALSE(widget_poll_key(opt_in, &key));
 
   char owner[OWNER_PATH_MAX];
-  owner_resolve_for_func((void *)test_key_capture_is_opt_in_and_queue_starts_empty,
-                         owner, sizeof(owner));
+  owner_resolve_for_func(
+      (void *)test_key_capture_is_opt_in_and_queue_starts_empty, owner,
+      sizeof(owner));
   if (owner[0])
     widget_purge_owner(owner, NULL, widget_current_generation());
 }

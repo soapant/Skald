@@ -227,7 +227,7 @@ char *sk_load_file(const char *filepath) {
     return NULL;
   char full[MAX_PATH];
   if (!resolve_caller_path(__builtin_return_address(0), filepath, full,
-                              sizeof(full), "sk_load_file"))
+                           sizeof(full), "sk_load_file"))
     return NULL;
   return file_read_all_alloc(full);
 }
@@ -279,8 +279,8 @@ bool sk_append_to_file(const char *filepath, const char *line) {
   if (!filepath || !line)
     return false;
   char full[MAX_PATH];
-  if (!resolve_caller_path_silent(__builtin_return_address(0), filepath,
-                                     full, sizeof(full)))
+  if (!resolve_caller_path_silent(__builtin_return_address(0), filepath, full,
+                                  sizeof(full)))
     return false;
   filepath = full;
   FILE *f = fopen(filepath, "a");
@@ -321,13 +321,9 @@ bool sk_write_to_file(const char *filepath, const char *lines[], int count) {
   return write_lines_from(__builtin_return_address(0), filepath, lines, count);
 }
 
-ColorRef sk_rgb(unsigned r, unsigned g, unsigned b) {
-  return RGB(r, g, b);
-}
+ColorRef sk_rgb(unsigned r, unsigned g, unsigned b) { return RGB(r, g, b); }
 
-ColorRef sk_hex(unsigned long h) {
-  return HEX(h);
-}
+ColorRef sk_hex(unsigned long h) { return HEX(h); }
 
 const char *sk_platform(void) {
 #if defined(_WIN32)
@@ -536,8 +532,7 @@ SkFeatureList sk_get_feature_list(void) {
   int count = feature_list_count();
   if (count <= 0)
     return list;
-  SkFeature *items =
-      (SkFeature *)malloc((size_t)count * sizeof(*items));
+  SkFeature *items = (SkFeature *)malloc((size_t)count * sizeof(*items));
   if (!items)
     return list;
   for (int i = 0; i < count; i++) {
@@ -570,7 +565,7 @@ bool sk_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
   HotkeyBinding binding = hotkey_convert_into_binding((char *)hotkey, NULL,
-                                                       NULL, NULL, false, NULL);
+                                                      NULL, NULL, false, NULL);
   if (!binding.valid)
     return false;
   return hotkey_unregister_internal(binding.vk, binding.modifiers);
@@ -850,8 +845,6 @@ char *sk_get_edit_text(void) {
   return state && state->eb ? strdup(state->eb->filter) : strdup("");
 }
 
-
-
 void ski_message(const SkMessageSpec *spec) {
   SkaldContext *ctx = SkaldContext_Get();
   if ((ctx && ctx->window.headless.active) || !MessagesEnabled)
@@ -869,11 +862,11 @@ void ski_message(const SkMessageSpec *spec) {
   ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
   if (spec->hover_key && spec->hover_key[0]) {
     if (spec->render) {
-      HoverPopupCtx *popup = hover_popup_ctx_new(&(HoverPopupCreateSpec){
-          .render = spec->render,
-          .render_data = spec->render_data,
-          .w = spec->w,
-          .h = spec->h});
+      HoverPopupCtx *popup = hover_popup_ctx_new(
+          &(HoverPopupCreateSpec){.render = spec->render,
+                                  .render_data = spec->render_data,
+                                  .w = spec->w,
+                                  .h = spec->h});
       if (popup) {
         hover_widget_show((HoverWidgetShowSpec){
             .key = spec->hover_key,
@@ -1013,8 +1006,8 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
   if (!wm)
     return NULL;
   TextPromptRenderData render_data = {0};
-  PromptSpec pspec = text_prompt_spec(&render_data, NULL, initial_text, x, y,
-                                        w, h);
+  PromptSpec pspec =
+      text_prompt_spec(&render_data, NULL, initial_text, x, y, w, h);
   {
     SkaldContext *ctx = SkaldContext_Get();
     if (ctx) {
@@ -1260,10 +1253,9 @@ char *ski_popup(const PopupSpec *spec) {
   if (spec->password_mode && (!placeholder || !placeholder[0]))
     placeholder = "Enter Password:";
   TextPromptRenderData render_data = {0};
-  PromptSpec pspec = text_prompt_spec(&render_data, placeholder, NULL,
-                                        spec->x, spec->y,
-                                        spec->w ? spec->w : 600,
-                                        spec->h ? spec->h : 70);
+  PromptSpec pspec =
+      text_prompt_spec(&render_data, placeholder, NULL, spec->x, spec->y,
+                       spec->w ? spec->w : 600, spec->h ? spec->h : 70);
   pspec.password_mode = spec->password_mode;
   char *r = WindowManager_ShowPrompt(wm, &pspec);
   return r ? strdup(r) : NULL;
@@ -1294,7 +1286,7 @@ bool ski_draw_text(const SkTextSpec *spec) {
                                                 .align = (char *)align,
                                                 .pad = spec->pad,
                                                 .font_size = spec->font_size,
-                                                 .angle = spec->angle});
+                                                .angle = spec->angle});
 }
 
 bool ski_draw_text_segments(const SkTextSegmentsSpec *spec) {
@@ -1626,12 +1618,12 @@ bool ski_draw_rect(const DrawRect *spec) {
     return true;
   bool transparent = spec->transparent;
   bool ok = draw_rect_raw(spec, draw_color(spec->color), spec->thickness,
-                             spec->filled, transparent);
+                          spec->filled, transparent);
   if (!spec->border)
     return ok;
   draw_rect_raw(spec, rgb_to_hex(COLOR_BORDER),
-                   spec->thickness > 0.0f ? spec->thickness : 1.0f, false,
-                   transparent);
+                spec->thickness > 0.0f ? spec->thickness : 1.0f, false,
+                transparent);
   return ok;
 }
 
@@ -1653,8 +1645,8 @@ int sk_rand_num_between(int min, int max) {
 }
 
 SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
-  SkRect r = {.x = 0, .y = 0, .w = 0, .h = 0, .color = 0,
-              .border = EnableBorders};
+  SkRect r = {
+      .x = 0, .y = 0, .w = 0, .h = 0, .color = 0, .border = EnableBorders};
   if (!spec || !spec->text || !spec->text[0])
     return r;
   int fs = spec->font_size > 0 ? spec->font_size : FontSize;
@@ -1751,12 +1743,13 @@ bool ski_draw_line(const Line *spec) {
   }
   if (search_index_current())
     return true;
-  return Platform_DrawLineRaw((DrawLineRawSpec){.x1 = spec->x1,
-                                                 .y1 = spec->y1,
-                                                 .x2 = spec->x2,
-                                                 .y2 = spec->y2,
-                                                 .color = draw_color(spec->color),
-                                                .thickness = spec->thickness});
+  return Platform_DrawLineRaw(
+      (DrawLineRawSpec){.x1 = spec->x1,
+                        .y1 = spec->y1,
+                        .x2 = spec->x2,
+                        .y2 = spec->y2,
+                        .color = draw_color(spec->color),
+                        .thickness = spec->thickness});
 }
 
 bool ski_draw_circle(const Circle *spec) {
@@ -1984,8 +1977,8 @@ bool sk_execute_hotkey(SkKey key) {
   if (prompt_handle_key(state, &ev))
     return true;
 
-  if (!ev.ctrl && !ev.alt && !(key.mods & HOTKEY_MOD_SUPER) &&
-      key.vk >= 32 && key.vk < 127) {
+  if (!ev.ctrl && !ev.alt && !(key.mods & HOTKEY_MOD_SUPER) && key.vk >= 32 &&
+      key.vk < 127) {
     ev.text[0] = (char)key.vk;
     ev.text_len = 1;
     prompt_insert_text(state, ev.text, ev.text_len);
@@ -2218,7 +2211,6 @@ unsigned long sk_key_queue_dropped(void) { return global_key_dropped(); }
 
 void sk_clear_key_queue(void) { global_key_clear(); }
 
-
 void sk_run_after_time(double seconds, void (*callback)(void)) {
   if (!callback || seconds < 0)
     return;
@@ -2269,7 +2261,7 @@ char *sk_resolve_data_path(const char *name) {
     return NULL;
   char full[MAX_PATH];
   if (!resolve_caller_path_silent(__builtin_return_address(0), name, full,
-                                     sizeof(full)))
+                                  sizeof(full)))
     return NULL;
   return strdup(full);
 }
@@ -2526,7 +2518,7 @@ SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
   copy.owner = owner;
   char icon[MAX_PATH];
   if (resolve_icon_path(__builtin_return_address(0), spec->icon, icon,
-                           sizeof(icon)))
+                        sizeof(icon)))
     copy.icon = icon;
   SkSettingsEntry *result = settings_entry_add(&copy);
   owner_strfree(&owner);
@@ -2584,9 +2576,7 @@ const SettingsEntrySpec *sk_settings_entry_at(int index) {
 }
 
 int sk_cc_entry_count(void) { return cc_registry_count(); }
-const SkCcEntrySpec *sk_cc_entry_at(int index) {
-  return cc_registry_at(index);
-}
+const SkCcEntrySpec *sk_cc_entry_at(int index) { return cc_registry_at(index); }
 bool sk_register_alias(const char *alias, const char *target) {
   return alias_register(alias, target);
 }
@@ -2604,8 +2594,7 @@ void ski_window(const SkPromptSpec *spec) {
   }
   WindowManager *wm = WindowManager_Get();
   if (AllowWindowOverride && wm && wm->popup_count > 0 && spec &&
-      !spec->subwindow &&
-      (!ctx || !ctx->window.window_override_in_progress)) {
+      !spec->subwindow && (!ctx || !ctx->window.window_override_in_progress)) {
     if (ctx)
       ctx->window.window_override_in_progress = true;
     while (wm->popup_count > 0)
@@ -2708,12 +2697,10 @@ bool sk_run_feature_shortcut(const char *name) {
 bool ski_config_set_hotkey(const SkConfigHotkeySpec *spec) {
   if (!spec)
     return false;
-  return config_hotkey_set(spec->name, spec->hotkey,
-                           (void (*)(void *))spec->cb, spec->ud);
+  return config_hotkey_set(spec->name, spec->hotkey, (void (*)(void *))spec->cb,
+                           spec->ud);
 }
-char *sk_config_get_hotkey(const char *name) {
-  return config_hotkey_get(name);
-}
+char *sk_config_get_hotkey(const char *name) { return config_hotkey_get(name); }
 bool sk_config_clear_hotkey(const char *name) {
   return config_hotkey_clear(name);
 }
@@ -2787,9 +2774,7 @@ bool sk_config_set_setting_float(const char *key, float value) {
   return sk_config_set_setting(key, buf);
 }
 
-char *sk_config_get_setting(const char *key) {
-  return config_setting_get(key);
-}
+char *sk_config_get_setting(const char *key) { return config_setting_get(key); }
 bool sk_config_get_setting_string(const char *key, char *out, size_t out_len,
                                   const char *fallback) {
   if (!out || out_len == 0)
@@ -2819,9 +2804,7 @@ float sk_config_get_setting_float_or(const char *key, float fallback) {
   config_setting_get_value(key, config_parse_float_value, &value);
   return value;
 }
-bool sk_config_has_setting(const char *key) {
-  return config_setting_has(key);
-}
+bool sk_config_has_setting(const char *key) { return config_setting_has(key); }
 int sk_config_setting_count(void) {
   return config_entry_count(CONFIG_ENTRY_SETTING);
 }

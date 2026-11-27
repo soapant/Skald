@@ -46,15 +46,15 @@ static inline WindowHandle WH_FROM_ID(const char *s) {
 #define WH_FROM_HWND(h) ((WindowHandle){.hwnd = (void *)(h)})
 #define WH_TO_HWND(h) ((h).hwnd)
 #define WH_EQUALS(a, b)                                                        \
-  (WH_HAS_ID(a) || WH_HAS_ID(b)                                               \
-       ? (WH_HAS_ID(a) && WH_HAS_ID(b) && !strcmp((a).id, (b).id))            \
+  (WH_HAS_ID(a) || WH_HAS_ID(b)                                                \
+       ? (WH_HAS_ID(a) && WH_HAS_ID(b) && !strcmp((a).id, (b).id))             \
        : (a).hwnd == (b).hwnd)
 #elif defined(__linux__)
 #define WH_FROM_XID(x) ((WindowHandle){.xid = (unsigned long)(x)})
 #define WH_TO_XID(h) ((h).xid)
 #define WH_EQUALS(a, b)                                                        \
-  (WH_HAS_ID(a) || WH_HAS_ID(b)                                               \
-       ? (WH_HAS_ID(a) && WH_HAS_ID(b) && !strcmp((a).id, (b).id))            \
+  (WH_HAS_ID(a) || WH_HAS_ID(b)                                                \
+       ? (WH_HAS_ID(a) && WH_HAS_ID(b) && !strcmp((a).id, (b).id))             \
        : (a).xid == (b).xid)
 #endif
 

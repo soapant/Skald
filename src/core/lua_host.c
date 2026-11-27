@@ -115,21 +115,31 @@ enum { CB_V, CB_P1, CB_BP1, CB_B };
 #define CB_TOTAL (CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT + CB_B_COUNT)
 
 #define CB_V_SLOTS                                                             \
-  X(0) X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13)   \
-  X(14) X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25)     \
-  X(26) X(27) X(28) X(29) X(30) X(31) X(32) X(33) X(34) X(35) X(36) X(37)     \
-  X(38) X(39) X(40) X(41) X(42) X(43) X(44) X(45) X(46) X(47) X(48) X(49)     \
-  X(50) X(51) X(52) X(53) X(54) X(55) X(56) X(57) X(58) X(59) X(60) X(61)     \
-  X(62) X(63) X(64) X(65) X(66) X(67) X(68) X(69) X(70) X(71) X(72) X(73)     \
-  X(74) X(75) X(76) X(77) X(78) X(79) X(80) X(81) X(82) X(83) X(84) X(85)     \
-  X(86) X(87) X(88) X(89) X(90) X(91) X(92) X(93) X(94) X(95) X(96) X(97)     \
-  X(98) X(99) X(100) X(101) X(102) X(103) X(104) X(105) X(106) X(107)         \
-  X(108) X(109) X(110) X(111) X(112) X(113) X(114) X(115) X(116) X(117)       \
-  X(118) X(119) X(120) X(121) X(122) X(123) X(124) X(125) X(126) X(127)
+  X(0)                                                                         \
+  X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13) X(14)   \
+      X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25) X(26)  \
+          X(27) X(28) X(29) X(30) X(31) X(32) X(33) X(34) X(35) X(36) X(37)    \
+              X(38) X(39) X(40) X(41) X(42) X(43) X(44) X(45) X(46) X(47)      \
+                  X(48) X(49) X(50) X(51) X(52) X(53) X(54) X(55) X(56) X(57)  \
+                      X(58) X(59) X(60) X(61) X(62) X(63) X(64) X(65) X(66)    \
+                          X(67) X(68) X(69) X(70) X(71) X(72) X(73) X(74)      \
+                              X(75) X(76) X(77) X(78) X(79) X(80) X(81) X(82)  \
+                                  X(83) X(84) X(85) X(86) X(87) X(88) X(89)    \
+                                      X(90) X(91) X(92) X(93) X(94) X(95) X(   \
+                                          96) X(97) X(98) X(99) X(100) X(101)  \
+                                          X(102) X(103) X(104) X(105) X(106)   \
+                                              X(107) X(108) X(109) X(110) X(   \
+                                                  111) X(112) X(113) X(114)    \
+                                                  X(115) X(116) X(117) X(118)  \
+                                                      X(119) X(120) X(121)     \
+                                                          X(122) X(123) X(124) \
+                                                              X(125) X(126)    \
+                                                                  X(127)
 #define CB_P1_SLOTS                                                            \
-  X(0) X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13)   \
-  X(14) X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25)     \
-  X(26) X(27) X(28) X(29) X(30) X(31)
+  X(0)                                                                         \
+  X(1) X(2) X(3) X(4) X(5) X(6) X(7) X(8) X(9) X(10) X(11) X(12) X(13) X(14)   \
+      X(15) X(16) X(17) X(18) X(19) X(20) X(21) X(22) X(23) X(24) X(25) X(26)  \
+          X(27) X(28) X(29) X(30) X(31)
 #define CB_BP1_SLOTS CB_P1_SLOTS
 #define CB_B_SLOTS CB_P1_SLOTS
 
@@ -181,19 +191,20 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
 #define DEF_CB_V(N)                                                            \
   static void lua_cb_v_##N(void) { cb_invoke(N, 0, false, NULL, NULL, CB_V); }
 #define DEF_CB_P1(N)                                                           \
-  static void lua_cb_p1_##N(void *arg) {                                      \
-    cb_invoke(CB_V_COUNT + N, 1, false, NULL, arg, CB_P1);                            \
+  static void lua_cb_p1_##N(void *arg) {                                       \
+    cb_invoke(CB_V_COUNT + N, 1, false, NULL, arg, CB_P1);                     \
   }
 #define DEF_CB_BP1(N)                                                          \
-  static bool lua_cb_bp1_##N(void *arg) {                                     \
+  static bool lua_cb_bp1_##N(void *arg) {                                      \
     bool r = false;                                                            \
-    cb_invoke(CB_V_COUNT + CB_P1_COUNT + N, 1, true, &r, arg, CB_BP1);                 \
+    cb_invoke(CB_V_COUNT + CB_P1_COUNT + N, 1, true, &r, arg, CB_BP1);         \
     return r;                                                                  \
   }
 #define DEF_CB_B(N)                                                            \
-  static bool lua_cb_b_##N(void) {                                            \
+  static bool lua_cb_b_##N(void) {                                             \
     bool r = false;                                                            \
-    cb_invoke(CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT + N, 0, true, &r, NULL, CB_B);       \
+    cb_invoke(CB_V_COUNT + CB_P1_COUNT + CB_BP1_COUNT + N, 0, true, &r, NULL,  \
+              CB_B);                                                           \
     return r;                                                                  \
   }
 
@@ -499,7 +510,8 @@ static void fill_struct_depth(lua_State *L, const char *sname, int idx,
         break;
       }
       if (lua_istable(L, -1)) {
-        const LuaStructDesc *sd = fd->target ? slua_struct_find(fd->target) : NULL;
+        const LuaStructDesc *sd =
+            fd->target ? slua_struct_find(fd->target) : NULL;
         if (sd) {
           void *child = calloc(1, sd->size);
           if (child) {
@@ -777,9 +789,9 @@ static int l_call_fn(lua_State *L) {
   uintptr_t a[6] = {0};
   for (int i = 0; i < 6; i++)
     a[i] = arg_value(L, 3 + i);
-  uintptr_t r = ((uintptr_t (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t,
-                                uintptr_t, uintptr_t))target)(
-      a[0], a[1], a[2], a[3], a[4], a[5]);
+  uintptr_t r =
+      ((uintptr_t (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                      uintptr_t))target)(a[0], a[1], a[2], a[3], a[4], a[5]);
   lua_pushboolean(L, r != 0);
   return 1;
 }
@@ -888,8 +900,8 @@ void slua_fill_struct(void *L, const char *name, int idx, void *base) {
   fill_struct((lua_State *)L, name, idx, base, lua_feature((lua_State *)L));
 }
 
-static void push_struct_depth(lua_State *ls, const char *name,
-                              const void *base, int depth) {
+static void push_struct_depth(lua_State *ls, const char *name, const void *base,
+                              int depth) {
   if (depth > 4) {
     lua_pushnil(ls);
     return;
@@ -920,7 +932,8 @@ static void push_struct_depth(lua_State *ls, const char *name,
       lua_pushnumber(ls, *(double *)p);
       break;
     case LSF_STR:
-      lua_pushstring(ls, *(const char *const *)p ? *(const char *const *)p : "");
+      lua_pushstring(ls,
+                     *(const char *const *)p ? *(const char *const *)p : "");
       break;
     case LSF_STR_INLINE:
       lua_pushstring(ls, (const char *)p);
@@ -949,8 +962,8 @@ static void push_struct_depth(lua_State *ls, const char *name,
     }
     case LSF_BUFFER: {
       size_t n = aux_count_get(base, fd);
-      lua_pushlstring(ls, *(const char *const *)p ? *(const char *const *)p : "",
-                      n);
+      lua_pushlstring(
+          ls, *(const char *const *)p ? *(const char *const *)p : "", n);
       break;
     }
     case LSF_STRUCT_PTR: {
@@ -962,7 +975,7 @@ static void push_struct_depth(lua_State *ls, const char *name,
       break;
     }
     case LSF_PTR:
-      lua_pushinteger(ls, (lua_Integer)(uintptr_t) * (void *const *)p);
+      lua_pushinteger(ls, (lua_Integer)(uintptr_t)*(void *const *)p);
       break;
     default:
       lua_pushnil(ls);
@@ -1084,15 +1097,15 @@ static void push_cfg_lua_global(lua_State *L, const char *name,
 static void install_config_globals(lua_State *L) {
 #define X(type, cname, def)                                                    \
   do {                                                                         \
-    typeof(atomic_load(&cname)) v = atomic_load(&cname);                        \
-    int kind =                                                                 \
-        __builtin_types_compatible_p(typeof(v), bool)    ? CFG_LUA_BOOL         \
-        : __builtin_types_compatible_p(typeof(v), int)   ? CFG_LUA_INT          \
-        : __builtin_types_compatible_p(typeof(v), float) ? CFG_LUA_FLOAT        \
-        : __builtin_types_compatible_p(typeof(v), const char *)                 \
-            ? CFG_LUA_STR                                                       \
-            : CFG_LUA_COLOR;                                                   \
-    push_cfg_lua_global(L, #cname, &v, kind);                                   \
+    typeof(atomic_load(&cname)) v = atomic_load(&cname);                       \
+    int kind = __builtin_types_compatible_p(typeof(v), bool)  ? CFG_LUA_BOOL   \
+               : __builtin_types_compatible_p(typeof(v), int) ? CFG_LUA_INT    \
+               : __builtin_types_compatible_p(typeof(v), float)                \
+                   ? CFG_LUA_FLOAT                                             \
+               : __builtin_types_compatible_p(typeof(v), const char *)         \
+                   ? CFG_LUA_STR                                               \
+                   : CFG_LUA_COLOR;                                            \
+    push_cfg_lua_global(L, #cname, &v, kind);                                  \
   } while (0);
   CONFIG_VALUES(X)
 #undef X

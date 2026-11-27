@@ -30,9 +30,9 @@ void prompt_refresh(PromptState *state) {
     return;
   }
   SkaldContext *ctx = SkaldContext_Get();
-  PromptCallbacks *cb =
-      state->callbacks ? state->callbacks
-                       : (ctx ? &ctx->window.prompt_callbacks : NULL);
+  PromptCallbacks *cb = state->callbacks
+                            ? state->callbacks
+                            : (ctx ? &ctx->window.prompt_callbacks : NULL);
   if (cb && cb->refresh) {
     cb->refresh(state);
   }

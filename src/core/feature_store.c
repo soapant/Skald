@@ -22,8 +22,7 @@ static void *g_store_mutex;
 
 static void *store_lock(void) { return lazy_mutex_get(&g_store_mutex); }
 
-static bool store_sanitize(const char *src, size_t len, char *out,
-                           size_t cap) {
+static bool store_sanitize(const char *src, size_t len, char *out, size_t cap) {
   if (!src || len == 0 || !out || cap <= 1)
     return false;
   size_t o = 0;

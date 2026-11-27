@@ -121,8 +121,7 @@ static void x11_handle_key_press(Display *dpy, XKeyEvent *ev,
   int len = XLookupString(ev, buf, sizeof(buf), &ks, NULL);
   if ((ks == XK_Return || ks == XK_KP_Enter) && x11_env_is_wayland() &&
       x11_uinput_fd_get() >= 0) {
-    long long since_phys = Platform_GetWallClockMs() -
-                           x11_enter_phys_down_ms();
+    long long since_phys = Platform_GetWallClockMs() - x11_enter_phys_down_ms();
     if (since_phys < 0 || since_phys > 200)
       return;
   }

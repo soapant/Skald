@@ -24,21 +24,21 @@ size_t owner_purge_array(void *arr, size_t elem_size, size_t tag_offset,
                          const char *path_a, const char *path_b,
                          unsigned max_gen, void (*destroy)(void *element));
 
-size_t owner_purge_pointers(void **arr, size_t tag_offset,
-                            const char *path_a, const char *path_b,
-                            unsigned max_gen, void (*destroy)(void *element));
+size_t owner_purge_pointers(void **arr, size_t tag_offset, const char *path_a,
+                            const char *path_b, unsigned max_gen,
+                            void (*destroy)(void *element));
 
 bool owner_array_has_active(const void *arr, size_t elem_size, size_t count,
                             size_t tag_offset, const char *path);
 
 bool owner_pointers_have_active(void *const *arr, size_t count,
-                                 size_t tag_offset, const char *path);
+                                size_t tag_offset, const char *path);
 
 #define OWNER_ASSERT_STRUCT(arr, type)                                         \
-  ((void)sizeof(char[_Generic((arr), type * : 1, default : -1)]))
+  ((void)sizeof(char[_Generic((arr), type *: 1, default: -1)]))
 
 #define OWNER_ASSERT_PTRS(arr, type)                                           \
-  ((void)sizeof(char[_Generic((arr), type ** : 1, default : -1)]))
+  ((void)sizeof(char[_Generic((arr), type * *: 1, default: -1)]))
 
 #define OWNER_PURGE_STRUCT(arr, type, path_a, path_b, max_gen, destroy)        \
   (OWNER_ASSERT_STRUCT((arr), type),                                           \

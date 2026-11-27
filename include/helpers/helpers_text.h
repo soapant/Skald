@@ -26,9 +26,9 @@ typedef struct {
 const char *text_resolve(const char *text, char tmp[2]);
 bool capture_text(const char *text);
 int text_segment_width(const void *seg, int font_size);
-void wrapped_word_push(WrappedWord **words, int *count, int *cap,
-                       const char *s, size_t len, unsigned long color,
-                       int lead, int breaks, int font_size);
+void wrapped_word_push(WrappedWord **words, int *count, int *cap, const char *s,
+                       size_t len, unsigned long color, int lead, int breaks,
+                       int font_size);
 typedef struct {
   unsigned long color;
   int font_size;

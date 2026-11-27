@@ -645,9 +645,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           }
         }
       }
-      if (lb && lb->selected_index != -1 &&
-          (int)pdis->itemID >= 0 && (int)pdis->itemID < lb->item_count &&
-          lb->items[pdis->itemID]) {
+      if (lb && lb->selected_index != -1 && (int)pdis->itemID >= 0 &&
+          (int)pdis->itemID < lb->item_count && lb->items[pdis->itemID]) {
         char measureBuffer[512];
         safe_copy(measureBuffer, sizeof(measureBuffer),
                   lb->items[pdis->itemID]);
@@ -701,8 +700,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_PAINT: {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
-    Popup *anim_popup =
-        prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
+    Popup *anim_popup = prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
     if (anim_popup)
       prompt_popup_tick_resize_animation_popup(anim_popup);
     bool resize_animating =
@@ -753,9 +751,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         long long now_ticks = Platform_TimerNowTicks();
         long long freq = Platform_TimerTickFrequency();
         if (state->last_frame_ticks && freq > 0)
-          state->delta_time =
-              (double)(now_ticks - state->last_frame_ticks) * 1000.0 /
-              (double)freq;
+          state->delta_time = (double)(now_ticks - state->last_frame_ticks) *
+                              1000.0 / (double)freq;
         state->last_frame_ticks = now_ticks;
         checkbox_frame_begin();
         slider_frame_begin();

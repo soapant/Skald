@@ -76,9 +76,9 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD ex_style = WS_EX_TOOLWINDOW | WS_EX_LAYERED;
-  SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
-      ex_style, SKALD_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN, x, y, w, h, NULL,
-      NULL, hInstance, NULL));
+  SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(
+      CreateWindowExA(ex_style, SKALD_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN,
+                      x, y, w, h, NULL, NULL, hInstance, NULL));
   if (WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) == NULL) {
     return false;
   }
@@ -157,8 +157,7 @@ void Platform_PromptPopupRender(Popup *self) {
     long long freq = Platform_TimerTickFrequency();
     if (state->last_frame_ticks && freq > 0)
       state->delta_time =
-          (double)(now_ticks - state->last_frame_ticks) * 1000.0 /
-          (double)freq;
+          (double)(now_ticks - state->last_frame_ticks) * 1000.0 / (double)freq;
     state->last_frame_ticks = now_ticks;
     prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;

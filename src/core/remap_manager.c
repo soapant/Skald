@@ -145,8 +145,8 @@ static bool remap_register_internal_locked(const char *src, const char *dst,
         e->dst_vk == b.dst_vk && e->src_vk_count == b.src_vk_count &&
         e->whitelist == b.whitelist && e->window_count == b.window_count &&
         (e->tag.owner == b.tag.owner ||
-          (e->tag.owner && b.tag.owner &&
-           strcmp(e->tag.owner, b.tag.owner) == 0))) {
+         (e->tag.owner && b.tag.owner &&
+          strcmp(e->tag.owner, b.tag.owner) == 0))) {
       bool same = true;
       for (int k = 0; k < b.src_vk_count; k++)
         if (e->src_vks[k] != b.src_vks[k]) {
@@ -173,7 +173,8 @@ static bool remap_register_internal_locked(const char *src, const char *dst,
 bool remap_register_internal(const char *src, const char *dst, bool whitelist,
                              const char *const *windows, void *caller) {
   remap_lock();
-  bool ok = remap_register_internal_locked(src, dst, whitelist, windows, caller);
+  bool ok =
+      remap_register_internal_locked(src, dst, whitelist, windows, caller);
   remap_unlock();
   return ok;
 }
@@ -509,8 +510,7 @@ static bool remap_handle_vk_locked(int vk, int value) {
           swallow = true;
       }
     if (b->src_mods & HOTKEY_MOD_CTRL &&
-        (vk == VK_LCONTROL || vk == VK_RCONTROL ||
-         vk == VK_CONTROL)) {
+        (vk == VK_LCONTROL || vk == VK_RCONTROL || vk == VK_CONTROL)) {
       if (before || after)
         swallow = true;
     }
@@ -524,8 +524,7 @@ static bool remap_handle_vk_locked(int vk, int value) {
       if (before || after)
         swallow = true;
     }
-    if (b->src_mods & HOTKEY_MOD_SUPER &&
-        (vk == VK_LWIN || vk == VK_RWIN)) {
+    if (b->src_mods & HOTKEY_MOD_SUPER && (vk == VK_LWIN || vk == VK_RWIN)) {
       if (before || after)
         swallow = true;
     }

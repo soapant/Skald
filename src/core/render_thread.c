@@ -77,10 +77,9 @@ void render_thread_main(void) {
 
 bool render_thread_ensure_started(int fps) {
   int rate = atomic_load_explicit(&g_frame_rate, memory_order_relaxed);
-  while (fps > rate &&
-         !atomic_compare_exchange_weak_explicit(&g_frame_rate, &rate, fps,
-                                                memory_order_relaxed,
-                                                memory_order_relaxed)) {
+  while (fps > rate && !atomic_compare_exchange_weak_explicit(
+                           &g_frame_rate, &rate, fps, memory_order_relaxed,
+                           memory_order_relaxed)) {
   }
   if (atomic_load_explicit(&g_running, memory_order_acquire))
     return true;
@@ -188,9 +187,9 @@ static void rt_sync_mark(void *ud) {
   if (!s)
     return;
   int expected = RT_SYNC_PENDING;
-  if (atomic_compare_exchange_strong_explicit(&s->state, &expected, RT_SYNC_DONE,
-                                              memory_order_acq_rel,
-                                              memory_order_acquire))
+  if (atomic_compare_exchange_strong_explicit(
+          &s->state, &expected, RT_SYNC_DONE, memory_order_acq_rel,
+          memory_order_acquire))
     return;
   if (expected == RT_SYNC_ABANDONED)
     free(s);

@@ -723,6 +723,4 @@ void Platform_SleepSeconds(double seconds) {
   nanosleep(&req, NULL);
 }
 
-bool Platform_PlaceEditbox(const EditSpec *spec) {
-  return false;
-}
+bool Platform_PlaceEditbox(const EditSpec *spec) { return false; }

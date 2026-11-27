@@ -86,9 +86,9 @@ size_t owner_purge_array(void *arr, size_t elem_size, size_t tag_offset,
   return removed;
 }
 
-size_t owner_purge_pointers(void **arr, size_t tag_offset,
-                            const char *path_a, const char *path_b,
-                            unsigned max_gen, void (*destroy)(void *element)) {
+size_t owner_purge_pointers(void **arr, size_t tag_offset, const char *path_a,
+                            const char *path_b, unsigned max_gen,
+                            void (*destroy)(void *element)) {
   if (!arr || owner_purge_inactive(path_a, path_b))
     return 0;
   char *a = owner_strdup(path_a);
@@ -121,8 +121,7 @@ bool owner_array_has_active(const void *arr, size_t elem_size, size_t count,
     return false;
   const char *base = (const char *)arr;
   for (size_t i = 0; i < count; i++) {
-    const OwnerTag *tag =
-        (const OwnerTag *)(base + i * elem_size + tag_offset);
+    const OwnerTag *tag = (const OwnerTag *)(base + i * elem_size + tag_offset);
     if (owner_tag_active(tag, path))
       return true;
   }
