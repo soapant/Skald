@@ -35,7 +35,7 @@ void Platform_PromptFlushDisplay(WindowManager *wm) {
   }
 }
 
-void Platform_OnPopEmpty() {
+void Platform_OnPopEmpty(void) {
   x11_clear_suppress();
   remap_reset();
   input_state_clear();

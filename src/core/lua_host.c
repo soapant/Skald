@@ -956,7 +956,7 @@ static int l_cap_resolve(lua_State *L) {
   return 1;
 }
 
-void slua_cap_purge_owner(const char *path_a, const char *path_b) {
+static void slua_cap_purge_owner(const char *path_a, const char *path_b) {
   for (size_t i = 0; i < lua_cap_count;) {
     LuaCap *cap = &g_lua_caps[i];
     if (cap->owner && owner_module_matches(cap->owner->owner, path_a, path_b)) {

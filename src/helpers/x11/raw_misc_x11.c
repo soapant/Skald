@@ -4,7 +4,6 @@
 #include "deps/log.h"
 #include "wm/wm.h"
 #include "helpers/x11/clipboard_x11.h"
-#include "helpers/x11/clipboard_x11.h"
 #include "helpers/helpers_text.h"
 #include "config_values.h"
 #include "core/types.h"

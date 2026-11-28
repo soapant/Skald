@@ -143,5 +143,5 @@ Skald is in active, early development. The following bugs are known and will be 
 
 ## License
 
-Skald is released under the MIT License (see [LICENSE](LICENSE)). Third-party
+Skald is released under the MIT License (see [LICENSE](LICENSE.md)). Third-party
 software it includes is listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

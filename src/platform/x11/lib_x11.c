@@ -56,13 +56,6 @@ void Platform_UnloadLibrary(LibHandle lib) {
     dlclose(lib);
 }
 
-const char *Platform_LibExtension(void) {
-
-#ifdef __APPLE__
-  return ".dylib";
-#else
-  return ".so";
-#endif
-}
+const char *Platform_LibExtension(void) { return ".so"; }
 
 const char *Platform_GetLoadError(void) { return dlerror(); }

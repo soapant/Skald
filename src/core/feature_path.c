@@ -29,10 +29,6 @@ static int fp_lower_cmp(const char *a, const char *b, size_t n) {
   return 0;
 }
 
-static int fp_strnicmp(const char *a, const char *b, size_t n) {
-  return fp_lower_cmp(a, b, n);
-}
-
 static int fp_strcasecmp(const char *a, const char *b) {
   return fp_lower_cmp(a, b, SIZE_MAX);
 }
@@ -82,7 +78,7 @@ bool feature_path_lib_basename_stem(const char *base, char *out,
     }
     if (dot_at == 0)
       break;
-    if (fp_strnicmp(work + dot_at + 1, "hot", 3) != 0)
+    if (fp_lower_cmp(work + dot_at + 1, "hot", 3) != 0)
       break;
     bool digits = false;
     for (size_t i = dot_at + 4; i < len; i++) {

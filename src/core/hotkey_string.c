@@ -36,8 +36,7 @@ static int hotkey_mouse_token_to_button(const char *token) {
       return named[i].btn;
   }
 
-  if (string_contains_ci(token, "Mouse") ||
-      string_contains_ci(token, "MouseButton")) {
+  if (string_contains_ci(token, "Mouse")) {
     int n = 0;
     for (const char *p = token; *p; p++) {
       if (*p >= '0' && *p <= '9') {
@@ -163,8 +162,6 @@ static int hotkey_named_key_to_vk(const char *token) {
       string_contains_ci(token, "OemPlus"))
     return VK_OEM_PLUS;
 
-  if (strcasecmp(token, "F1") == 0)
-    return VK_F1;
   if (toupper((unsigned char)token[0]) == 'F' &&
       isdigit((unsigned char)token[1])) {
     int n = atoi(token + 1);

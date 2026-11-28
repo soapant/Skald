@@ -45,7 +45,6 @@
 #include "helpers/x11/env_helpers_x11.h"
 #include "wm/wm.h"
 #include "helpers/x11/clipboard_x11.h"
-#include "helpers/x11/clipboard_x11.h"
 
 extern pthread_mutex_t g_font_cache_mtx;
 

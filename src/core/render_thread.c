@@ -48,9 +48,8 @@ void render_thread_main(void) {
   is_thread = true;
   while (!atomic_load_explicit(&g_quit, memory_order_acquire)) {
     rt_run_pending();
-    size_t n = 0;
     Platform_RenderThreadLock();
-    n = count;
+    size_t n = count;
     arrsetlen(snap, n);
     if (n > 0)
       memcpy(snap, callbacks, sizeof(*snap) * n);

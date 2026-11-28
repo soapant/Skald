@@ -185,21 +185,11 @@ StringList feature_store_get_all(const char *feature, const char *key) {
   return lines;
 }
 
-static char *store_strdup(const char *s) {
-  if (!s)
-    return NULL;
-  size_t n = strlen(s) + 1;
-  char *copy = (char *)malloc(n);
-  if (copy)
-    memcpy(copy, s, n);
-  return copy;
-}
-
 char *feature_store_get_last(const char *feature, const char *key) {
   StringList lines = feature_store_get_all(feature, key);
   char *last = NULL;
   if (lines.count > 0)
-    last = store_strdup(lines.items[lines.count - 1]);
+    last = strdup(lines.items[lines.count - 1]);
   string_list_free(&lines);
   return last;
 }

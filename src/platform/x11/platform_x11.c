@@ -961,7 +961,6 @@ static char *x11_icon_try_sizes(const char *bare, const char *dir,
 char *Platform_GetActiveWindowId(void) { return wm_get_active_window_id(); }
 
 bool Platform_PrewarmImage(char *path) {
-  extern bool x11_prewarm_image(Display * dpy, const char *path);
   Display *dpy = x11_get_display();
   if (!dpy || !path || !path[0])
     return false;
@@ -1391,18 +1390,9 @@ void Platform_CleanupPlatformResources(void) {
     extern void x11_default_apps_free_cache(void);
     x11_default_apps_free_cache();
   }
-  {
-    extern void x11_img_cache_free_all(void);
-    x11_img_cache_free_all();
-  }
-  {
-    extern void x11_border_cache_free_all(void);
-    x11_border_cache_free_all();
-  }
-  {
-    extern void x11_wm_cleanup_cursor_display(void);
-    x11_wm_cleanup_cursor_display();
-  }
+  x11_img_cache_free_all();
+  x11_border_cache_free_all();
+  x11_wm_cleanup_cursor_display();
 }
 
 int Platform_InitializeTrayIcon(void) { return 0; }

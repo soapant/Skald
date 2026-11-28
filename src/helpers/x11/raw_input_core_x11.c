@@ -357,7 +357,6 @@ static void x11_force_cleanup(void) {
   }
   x11_mouse_grab_end();
   for (int i = 0; i < 256; i++) {
-    extern bool remap_is_virt_held(int vk);
     if (remap_is_virt_held(i))
       Platform_EmitKey(i, 0);
   }

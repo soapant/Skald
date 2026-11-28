@@ -625,11 +625,11 @@ static bool write_compile_commands(void) {
 
   if (nob_file_exists("tools/gen_skapi_lua.c")) {
     const char *src = "tools/gen_skapi_lua.c";
+    const char *gen_bin = BUILD_FOLDER "/gen_skapi_lua";
     Nob_Cmd cmd = {0};
     append_cc(&cmd);
-    nob_cmd_append(&cmd, CC_FLAGS, "-c", src);
-    write_compile_commands_entry(f, cwd, src, BUILD_FOLDER "/gen_skapi_lua.o",
-                                 &cmd, first);
+    nob_cmd_append(&cmd, CC_FLAGS, src);
+    write_compile_commands_entry(f, cwd, src, gen_bin, &cmd, first);
     first = false;
     nob_cmd_free(cmd);
   }
@@ -2158,10 +2158,10 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
       printf("Usage: %s [-a|--all] [-w|--win32] [-r|--run] [-R|--release] "
-             "[-t|--test] [-A|--asan] [-c|--check] [-W|--werror] "
-             "[-D|--dynamic] [--wayland]\n",
+             "[-t|--test] [-A|--asan] [-c|--check] [-g|--check-generated] "
+             "[-W|--werror] [-D|--dynamic] [--wayland]\n",
              argv[0]);
-      printf("  -a, --all      Run nob, nob -t, nob -w and nob -c\n");
+      printf("  -a, --all      Run nob, nob -t, nob -w, nob -c and nob -g\n");
       printf("  -w, --win32    Cross compile for Windows using MinGW\n");
       printf("  -D, --dynamic  Link external dependencies dynamically "
              "(static by default)\n");
@@ -2257,15 +2257,15 @@ int main(int argc, char **argv) {
       return 1;
     if (!nob_mkdir_if_not_exists("release/features"))
       return 1;
-    if (!nob_copy_directory_recursively("features/control_center",
-                                        "release/features/control_center") ||
-        !nob_copy_directory_recursively("features/settings",
-                                        "release/features/settings") ||
-        !nob_copy_directory_recursively("features/clipboard_history",
-                                        "release/features/clipboard_history") ||
-        !nob_copy_directory_recursively("features/window_management",
-                                        "release/features/window_management") ||
-        !nob_copy_directory_recursively("resources", "release/resources"))
+    for (size_t i = 0;
+         i < sizeof(release_features) / sizeof(release_features[0]); i++) {
+      const char *src = nob_temp_sprintf("features/%s", release_features[i]);
+      const char *dst =
+          nob_temp_sprintf("release/features/%s", release_features[i]);
+      if (!nob_copy_directory_recursively(src, dst))
+        return 1;
+    }
+    if (!nob_copy_directory_recursively("resources", "release/resources"))
       return 1;
     if (!emit_release_config("release/config/config.toml")) {
       nob_log(NOB_ERROR,
@@ -2375,8 +2375,7 @@ int main(int argc, char **argv) {
   discover_dep_flags();
 #endif
 
-  if (!target_win32)
-    write_compile_commands();
+  write_compile_commands();
 
   for (size_t i = 0; i < sources.count; ++i) {
     const char *src = sources.items[i];

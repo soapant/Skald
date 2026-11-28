@@ -49,10 +49,6 @@ unsigned cap_generation(void) {
   return atomic_load_explicit(&cap_gen, memory_order_acquire);
 }
 
-static void cap_add_provides(const char *owner, const char *key) {
-  feature_loader_manifest_add_provides(owner, key);
-}
-
 void cap_register_abi(const char *key, unsigned abi, void *fn) {
   if (!key || !key[0] || !fn)
     return;
@@ -80,7 +76,7 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
     atomic_fetch_add_explicit(&cap_gen, 1, memory_order_acq_rel);
     cap_unlock();
     if (owner && owner[0])
-      cap_add_provides(owner, key);
+      feature_loader_manifest_add_provides(owner, key);
     owner_strfree(&owner);
     return;
   }
@@ -96,7 +92,7 @@ void cap_register_abi(const char *key, unsigned abi, void *fn) {
            c->tag.owner ? c->tag.owner : "?");
   cap_unlock();
   if (owner && owner[0])
-    cap_add_provides(owner, key);
+    feature_loader_manifest_add_provides(owner, key);
   owner_strfree(&owner);
 }
 

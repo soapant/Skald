@@ -177,7 +177,7 @@ static unsigned long long hotkey_now_ms(void) {
   return (unsigned long long)Platform_GetWallClockMs();
 }
 
-static int hotkey_repeat_interval_ms(void) { return 50; }
+#define HOTKEY_REPEAT_INTERVAL_MS 50
 
 static int hotkey_hold_delay_ms(void) {
   int ms = HotkeyRepeatDelayMs;
@@ -276,7 +276,7 @@ static void hotkey_tick_holds(void) {
     due[due_count].mods = hold_slots[i].modifiers;
     due_count++;
     hold_slots[i].next_fire_ms =
-        now + (unsigned long long)hotkey_repeat_interval_ms();
+        now + (unsigned long long)HOTKEY_REPEAT_INTERVAL_MS;
   }
   HOTKEY_Q_UNLOCK();
 

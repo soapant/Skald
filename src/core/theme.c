@@ -103,7 +103,7 @@ static bool theme_pin_visit(const ConfigTomlEntry *e, void *user) {
   const int key_cap = (int)sizeof(name) - prefix_len - 1;
   int written =
       snprintf(name, sizeof(name), CONFIG_COLOR_PREFIX "%.*s", key_cap, e->key);
-  if (written < 0 || written >= (int)sizeof(name))
+  if (written < 0)
     return true;
   pin_add(name, v);
   return true;

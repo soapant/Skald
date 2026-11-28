@@ -31,7 +31,6 @@
 #include "core/focus.h"
 #include "core/slider.h"
 #include "core/draw_state.h"
-#include "core/draw_state.h"
 
 #define IDC_LIST_BOX 102
 
@@ -831,7 +830,6 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         win32_set_draw_context(paintDC);
         if (estate->lb)
           SkaldContext_Get()->window.listbox_placed = true;
-        extern void Platform_DrawPromptEditbox(PromptState * state);
         Platform_DrawPromptEditbox(estate);
 
         if (estate->lb) {

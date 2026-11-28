@@ -67,7 +67,6 @@ TEST(pin_scan_detects_color_overrides) {
   ASSERT_FALSE(theme_color_pinned("COLOR_TEXT"));
 
   theme_reset_pinned();
-  theme_reset_pinned();
   ASSERT_TRUE(theme_pin_scan_file(PIN_FILE));
   ASSERT_TRUE(theme_color_pinned("COLOR_BG"));
   ASSERT_TRUE(theme_color_pinned("COLOR_BORDER"));

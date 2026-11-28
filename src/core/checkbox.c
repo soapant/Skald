@@ -38,7 +38,7 @@ static void checkbox_note_click(Checkbox *cb) {
   long long now_ms = Platform_GetWallClockMs();
   long long dt = now_ms - last_click_ms;
   if (dt < 200) {
-    log_info("button click ignored debounce name=%s dt=%lld",
+    log_info("checkbox click ignored debounce name=%s dt=%lld",
              cb->name ? cb->name : "?", dt);
     return;
   }
@@ -48,7 +48,7 @@ static void checkbox_note_click(Checkbox *cb) {
       continue;
     pending_clicks[i].frame = cb_frame;
     pending_clicks[i].ms = now_ms;
-    log_info("button click noted name=%s frame=%u", cb->name ? cb->name : "?",
+    log_info("checkbox click noted name=%s frame=%u", cb->name ? cb->name : "?",
              cb_frame);
     return;
   }
@@ -56,14 +56,14 @@ static void checkbox_note_click(Checkbox *cb) {
   e->cb = cb;
   e->frame = cb_frame;
   e->ms = now_ms;
-  log_info("button click noted name=%s frame=%u", cb->name ? cb->name : "?",
+  log_info("checkbox click noted name=%s frame=%u", cb->name ? cb->name : "?",
            cb_frame);
 }
 
 static bool checkbox_take_click(Checkbox *cb) {
   for (size_t i = 0; i < arrlenu(pending_clicks);) {
     if (pending_clicks[i].cb == cb) {
-      log_info("button click taken name=%s frame=%u age=%u",
+      log_info("checkbox click taken name=%s frame=%u age=%u",
                cb->name ? cb->name : "?", pending_clicks[i].frame,
                cb_frame - pending_clicks[i].frame);
       arrdelswap(pending_clicks, (int)i);
@@ -83,7 +83,7 @@ void checkbox_frame_begin(void) {
     checkboxes[i]->clicked = false;
   for (size_t i = 0; i < arrlenu(pending_clicks);) {
     if (pending_clicks[i].frame + 1 < cb_frame) {
-      log_info("button click expired name=%s frame=%u",
+      log_info("checkbox click expired name=%s frame=%u",
                pending_clicks[i].cb->name ? pending_clicks[i].cb->name : "?",
                pending_clicks[i].frame);
       arrdelswap(pending_clicks, (int)i);

@@ -136,11 +136,10 @@ void search_index_set_activate(SearchIndex *idx, SearchActivateFn activate,
 void search_index_reindex(SearchIndex *idx, SearchRenderFn render, void *ud) {
   if (!idx || !render || g_capture_index)
     return;
-  SearchIndex *saved = g_capture_index;
   g_capture_index = idx;
   search_index_clear(idx);
   render(ud);
-  g_capture_index = saved;
+  g_capture_index = NULL;
 }
 
 static void normalize_query(const char *filter, char *out, size_t cap) {

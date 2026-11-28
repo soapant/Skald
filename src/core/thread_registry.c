@@ -208,7 +208,6 @@ void run_every_start(double seconds, void (*callback)(void)) {
   entry->args = args;
   memset(&entry->tag, 0, sizeof(entry->tag));
   owner_tag_set_for_func(&entry->tag, (void *)(uintptr_t)callback, 0);
-  entry->next = NULL;
   entry->thread =
       thread_create_ex(run_every_thread, args, (void *)(uintptr_t)callback);
   if (!entry->thread) {

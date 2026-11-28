@@ -24,7 +24,6 @@ void UI_RequestPopupRepaint(void) {
   if (!hPopup || !IsWindow(hPopup)) {
     return;
   }
-  extern void win32_popup_request_repaint(HWND hPopup);
   win32_popup_request_repaint(hPopup);
 }
 
@@ -35,8 +34,6 @@ void UI_LegacySyncRepaint(void) {
                  RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
   }
 }
-
-void UI_Edit_GetSel(uint32_t *start, uint32_t *end);
 
 typedef struct {
   char *text;

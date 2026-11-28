@@ -954,7 +954,6 @@ char *Platform_GetIconPath(char *app_path) {
     }
   }
   log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");
-  ;
   char ph[MAX_PATH];
   if (win32_placeholder_icon(ph, sizeof(ph)))
     return _strdup(ph);
@@ -970,7 +969,6 @@ int Platform_GetIconSize(char *icon_path) {
   if (s > 32)
     s = 32;
   log_info("Platform_GetIconSize icon_path='%s'", icon_path ? icon_path : "");
-  ;
   return s;
 }
 
