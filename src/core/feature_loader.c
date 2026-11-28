@@ -1340,8 +1340,6 @@ void feature_loader_reload_all(void) {
   log_info("feature_loader_reload_all completed");
 }
 
-void feature_loader_lock(void) { LOCK(); }
-
 void feature_loader_sweep_retired(void) {
   feature_mutex_init();
   if (!Platform_MutexTryLock(feature_mutex))

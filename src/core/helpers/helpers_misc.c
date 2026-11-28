@@ -281,20 +281,6 @@ char *owner_module_basename_alloc(const char *p) {
   return out;
 }
 
-void owner_module_basename(const char *p, char *out, size_t n) {
-  if (!out || n == 0)
-    return;
-  if (!p || !p[0]) {
-    out[0] = '\0';
-    return;
-  }
-  const char *s = p;
-  for (const char *q = p; *q; q++)
-    if (*q == '/' || *q == '\\')
-      s = q + 1;
-  snprintf(out, n, "%s", s);
-}
-
 bool owner_module_matches(const char *owner, const char *a, const char *b) {
   if (!owner || !owner[0])
     return false;

@@ -1468,8 +1468,3 @@ void slua_shutdown(const char *name) {
   if (f)
     feature_shutdown(f);
 }
-
-bool slua_is_loaded(const char *name) {
-  LuaFeature *f = find_feature(name);
-  return f && f->L != NULL;
-}

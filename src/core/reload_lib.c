@@ -218,35 +218,6 @@ void library_track_add(void *lib, const char *canon) {
   library_track_unlock();
 }
 
-void library_track_remove(size_t idx) {
-  library_track_lock();
-  if (idx < arrlenu(library_track))
-    arrdelswap(library_track, idx);
-  library_track_unlock();
-}
-
-size_t library_track_count(void) {
-  library_track_lock();
-  size_t n = arrlenu(library_track);
-  library_track_unlock();
-  return n;
-}
-
-void *library_track_lib(size_t idx) {
-  library_track_lock();
-  void *lib = idx < arrlenu(library_track) ? library_track[idx].lib : NULL;
-  library_track_unlock();
-  return lib;
-}
-
-const char *library_track_canon(size_t idx) {
-  library_track_lock();
-  const char *canon =
-      idx < arrlenu(library_track) ? library_track[idx].canon : NULL;
-  library_track_unlock();
-  return canon;
-}
-
 LibraryTrackRemoveResult
 library_track_remove_checked(void *lib, const char *caller_canon) {
   library_track_lock();

@@ -6,7 +6,6 @@
 bool slua_load(const char *name, const char *path);
 bool slua_reload(const char *name);
 void slua_shutdown(const char *name);
-bool slua_is_loaded(const char *name);
 
 const char *slua_current_owner(void);
 void slua_owner_set(const char *owner);

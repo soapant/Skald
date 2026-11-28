@@ -17,7 +17,6 @@ bool feature_loader_reload_from(const char *name, const char *src_path);
 void feature_loader_reload_all(void);
 bool feature_loader_load_all_from_dir(const char *dir);
 
-void feature_loader_lock(void);
 bool feature_loader_try_lock(void);
 void feature_loader_unlock(void);
 void feature_loader_sweep_retired(void);
