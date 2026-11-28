@@ -146,6 +146,21 @@ TEST(format_mod_order) {
   ASSERT_EQ_STR(out, "Ctrl+Alt+Super+V");
 }
 
+TEST(format_modifier_key_does_not_duplicate) {
+  HotkeyKey k;
+  memset(&k, 0, sizeof(k));
+  k.vk = VK_LCONTROL;
+  k.mods = HOTKEY_MOD_CTRL;
+  char out[64];
+  ASSERT_TRUE(hotkey_string_format(k, out, sizeof(out)));
+  ASSERT_EQ_STR(out, "Ctrl");
+
+  k.vk = VK_RSHIFT;
+  k.mods = HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT;
+  ASSERT_TRUE(hotkey_string_format(k, out, sizeof(out)));
+  ASSERT_EQ_STR(out, "Ctrl+Shift");
+}
+
 int main(void) {
   RUN(parse_simple_key);
   RUN(parse_modifiers);
@@ -163,5 +178,6 @@ int main(void) {
   RUN(format_zero_key_fails);
   RUN(format_roundtrip);
   RUN(format_mod_order);
+  RUN(format_modifier_key_does_not_duplicate);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }

@@ -4,14 +4,14 @@
   MessageAfterEachHotkey = false
   TimeOutForMessages = 1
   HotkeyRepeatDelayMs = 300
-  DebugMode = false
+  DebugMode = true
   CompactMode = false
   RoundedCorners = true
   CornerRadius = 14
   MessageScreenGap = 20
   WindowOpacity = 235.0
   UsedFont = "0xProto Nerd Font"
-  FontSize = 19
+  FontSize = 20
   IconSize = 32
   EnableIcons = true
   WidgetGap = 10

@@ -278,7 +278,7 @@ bool hotkey_string_parse(const char *str, HotkeyKey *out) {
   return out_key != 0;
 }
 
-static int hotkey_vk_to_name(int vk, char *out, int out_size) {
+int hotkey_vk_to_name(int vk, char *out, int out_size) {
   if (out_size <= 0)
     return 0;
 
@@ -423,20 +423,53 @@ bool hotkey_string_format(HotkeyKey key, char *out, int out_size) {
   if (key.vk == 0)
     return false;
 
+  int mods = key.mods;
+  const char *modifier_name = NULL;
+  switch (key.vk) {
+  case VK_LCONTROL:
+  case VK_RCONTROL:
+  case VK_CONTROL:
+    mods &= ~HOTKEY_MOD_CTRL;
+    modifier_name = "Ctrl";
+    break;
+  case VK_LSHIFT:
+  case VK_RSHIFT:
+  case VK_SHIFT:
+    mods &= ~HOTKEY_MOD_SHIFT;
+    modifier_name = "Shift";
+    break;
+  case VK_LMENU:
+  case VK_RMENU:
+  case VK_MENU:
+    mods &= ~HOTKEY_MOD_ALT;
+    modifier_name = "Alt";
+    break;
+  case VK_LWIN:
+  case VK_RWIN:
+    mods &= ~HOTKEY_MOD_SUPER;
+    modifier_name = "Super";
+    break;
+  default:
+    break;
+  }
+
   char key_name[32];
   if (hotkey_vk_to_name(key.vk, key_name, (int)sizeof(key_name)) == 0) {
     return false;
   }
 
+  if (modifier_name)
+    snprintf(key_name, sizeof(key_name), "%s", modifier_name);
+
   char mods_part[64];
   mods_part[0] = '\0';
-  if (key.mods & HOTKEY_MOD_CTRL)
+  if (mods & HOTKEY_MOD_CTRL)
     strcat(mods_part, "Ctrl+");
-  if (key.mods & HOTKEY_MOD_SHIFT)
+  if (mods & HOTKEY_MOD_SHIFT)
     strcat(mods_part, "Shift+");
-  if (key.mods & HOTKEY_MOD_ALT)
+  if (mods & HOTKEY_MOD_ALT)
     strcat(mods_part, "Alt+");
-  if (key.mods & HOTKEY_MOD_SUPER)
+  if (mods & HOTKEY_MOD_SUPER)
     strcat(mods_part, "Super+");
 
   int written = snprintf(out, (size_t)out_size, "%s%s", mods_part, key_name);
