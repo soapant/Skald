@@ -663,11 +663,11 @@ void x11_draw_wrapped_text(Display *dpy, XftDraw *xd, XftColor *color,
       max_width = box_width > 0 ? box_width : PROMPT_WRAP_BOX_RIGHT;
     } else {
       alignment = 0;
-      max_width = FontSize * text_len;
+      max_width = 1 << 20;
     }
   } else {
     alignment = 0;
-    max_width = FontSize * text_len;
+    max_width = 1 << 20;
   }
 
   const char *p = text;
