@@ -273,7 +273,7 @@ void hover_widget_hide(const char *key) {
   }
 }
 
-void hover_widget_show(HoverWidgetShowSpec spec) {
+void hover_widget_show(HoverWidgetShow spec) {
   const char *key = spec.key;
   void (*render)(void *ud) = spec.render;
   void *ud = spec.ud;
@@ -300,7 +300,7 @@ void hover_widget_show(HoverWidgetShowSpec spec) {
   }
 }
 
-HoverPopupCtx *hover_popup_ctx_new(const HoverPopupCreateSpec *spec) {
+HoverPopupCtx *hover_popup_ctx_new(const HoverPopupCreate *spec) {
   HoverPopupCtx *p = (HoverPopupCtx *)calloc(1, sizeof(*p));
   if (!p)
     return NULL;
@@ -348,7 +348,7 @@ static void text_prompt_render(PromptState *state) {
                             .y = state->height / 2 - 17});
 }
 
-PromptSpec text_prompt_spec(TextPromptSpec *argspec) {
+PromptSpec text_prompt_spec(TextPrompt *argspec) {
   argspec->f_render_data->placeholder = argspec->f_placeholder;
   argspec->f_render_data->initial_text = argspec->f_initial_text;
   PromptSpec spec = {0};
@@ -361,4 +361,5 @@ PromptSpec text_prompt_spec(TextPromptSpec *argspec) {
   spec.h = argspec->f_h;
   return spec;
 }
+
 

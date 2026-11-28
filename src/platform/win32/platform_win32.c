@@ -1353,7 +1353,7 @@ static int win32_http_perform(const char *url, const char *method,
                               HttpBuf *resp_buf, FILE *file_out,
                               long max_redirects);
 
-char *Platform_HttpCollect(PlatformHttpCollectSpec *argspec) {
+char *Platform_HttpCollect(PlatformHttpCollect *argspec) {
   const char *url = argspec->f_url;
   const char *method = argspec->f_method;
   const char *content_type = argspec->f_content_type;
@@ -2290,7 +2290,7 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     RECT textRc = {x + PROMPT_EDIT_INSET, y, x + w, y + h};
     DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
   }
-  EditboxUiSpec ui = {.color_text = spec->color_text,
+  EditboxUi ui = {.color_text = spec->color_text,
                       .color_bg = spec->color_bg,
                       .placeholder = spec->placeholder,
                       .caret_h = spec->caret_h,
@@ -2324,5 +2324,6 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     DeleteObject(hfont_created);
   return true;
 }
+
 
 

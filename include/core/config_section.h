@@ -63,9 +63,9 @@ typedef struct {
   const char *whitelist[16];
   const char *blacklist[16];
   void *ud;
-} ConfigHotkeyRegisterSpec;
+} ConfigHotkeyRegister;
 
-bool config_hotkey_register(const ConfigHotkeyRegisterSpec *spec);
+bool config_hotkey_register(const ConfigHotkeyRegister *spec);
 void config_hotkey_bind_all(void);
 
 bool config_section_set(const char *path, const char *section, const char *name,
@@ -87,4 +87,5 @@ ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
                                          ConfigTomlError *err);
 
 #endif
+
 

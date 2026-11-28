@@ -63,7 +63,7 @@ Metrics *metrics_get(void) {
   return &m;
 }
 
-void draw_prompt_separator(DrawPromptSeparatorSpec spec) {
+void draw_prompt_separator(DrawPromptSeparator spec) {
   if (!EnableBorders || spec.width <= 0)
     return;
   if (draw_state_get()->suppress_separators)
@@ -392,7 +392,7 @@ static void populate_update_ui(ListBox *lb, int total_matches,
   }
 }
 
-void populate_listbox(PopulateListboxSpec *argspec) {
+void populate_listbox(PopulateListbox *argspec) {
   populate_listbox_ranked(&(PopulateListboxRanked){
       .f_lb = argspec->f_lb, .f_filter = argspec->f_filter,
       .f_items = argspec->f_items, .f_item_count = argspec->f_item_count,
@@ -490,7 +490,7 @@ void display_message_slot(const MessageSlotSpec *spec) {
     return;
   SlotRect r = message_slot_to_rect(spec->slot, spec->prompt_gap);
   Platform_DisplayMessageAnchored(
-      (AnchoredMessageSpec){.message = message,
+      (AnchoredMessage){.message = message,
                             .x = r.x,
                             .y = r.y,
                             .w = r.w,
@@ -772,15 +772,15 @@ int bg_tile_lru_pick(BgTileLruPick *argspec) {
   return oldest;
 }
 
-void draw_text_centered_impl(const DrawTextCenteredSpec *spec,
+void draw_text_centered_impl(const DrawTextCentered *spec,
                              int line_height) {
   int tw = Platform_MeasureTextWidth(
-      (MeasureTextWidthSpec){.text = spec->text,
+      (MeasureTextWidth){.text = spec->text,
                              .len = (int)strlen(spec->text),
                              .font_size = spec->font_size});
   int tx = spec->x + (spec->w - tw) / 2;
   int ty = spec->y + (spec->h - line_height) / 2;
-  Platform_DrawTextRaw((DrawTextRawSpec){.x = tx,
+  Platform_DrawTextRaw((DrawTextRaw){.x = tx,
                                          .y = ty,
                                          .text = spec->text,
                                          .color = spec->color,
@@ -819,5 +819,6 @@ int prompt_list_bottom_margin(void) { return 40; }
 int64_t timer_now_ticks(void) { return Platform_TimerNowTicks(); }
 
 int64_t timer_tick_frequency(void) { return Platform_TimerTickFrequency(); }
+
 
 

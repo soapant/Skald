@@ -64,7 +64,7 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   return true;
 }
 
-static bool win32_draw_text_raw_inner(DrawTextRawSpec spec) {
+static bool win32_draw_text_raw_inner(DrawTextRaw spec) {
   if (!spec.text || !g_draw_hdc)
     return false;
   int x = 0, y = 0;
@@ -165,7 +165,7 @@ static bool win32_draw_text_raw_inner(DrawTextRawSpec spec) {
   return true;
 }
 
-bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
+bool Platform_DrawTextRaw(DrawTextRaw spec) {
   const DrawCanvas *ds = draw_state_get();
   if (ds->clip_y1 <= ds->clip_y0 || !g_draw_hdc)
     return win32_draw_text_raw_inner(spec);
@@ -176,7 +176,7 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   return ok;
 }
 
-void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
+void Platform_DrawTextCentered(DrawTextCentered spec) {
   if (!spec.text || !g_draw_hdc) {
     return;
   }
@@ -193,7 +193,7 @@ void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
     SelectObject(g_draw_hdc, old);
 }
 
-int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
+int Platform_MeasureTextWidth(MeasureTextWidth spec) {
   if (!spec.text || spec.len <= 0)
     return 0;
   if (!g_draw_hdc)
@@ -215,7 +215,7 @@ int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
   return sz.cx;
 }
 
-bool Platform_DrawTextLine(DrawTextLineSpec spec) {
+bool Platform_DrawTextLine(DrawTextLine spec) {
   if (!spec.text || spec.len <= 0 || !g_draw_hdc)
     return false;
   int x = 0, y = 0;
@@ -377,7 +377,7 @@ int Platform_GetTextLineHeight(int font_size) {
   return tm.tmHeight > 0 ? (int)tm.tmHeight : font_size;
 }
 
-bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
+bool Platform_DrawLineRaw(DrawLineRaw spec) {
   int x1, y1, x2, y2;
   int t = draw_line_prep(&(DrawLinePrep){.f_spec = &spec, .f_off_x = draw_state_get()->off_x, .f_off_y = draw_state_get()->off_y, .f_x1 = &x1, .f_y1 = &y1, .f_x2 = &x2, .f_y2 = &y2});
   HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(spec.color));
@@ -389,7 +389,7 @@ bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   return true;
 }
 
-bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
+bool Platform_DrawCircleRaw(DrawCircleRaw spec) {
   if (spec.radius <= 0)
     return false;
   int cx, cy;
@@ -627,4 +627,5 @@ bool Platform_GetImageSize(const char *path, int *w, int *h) {
   *h = (int)gh;
   return true;
 }
+
 

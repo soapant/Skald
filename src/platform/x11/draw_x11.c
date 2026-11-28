@@ -64,7 +64,7 @@ bool Platform_GetImageSize(const char *path, int *w, int *h) {
   return x11_get_image_size(path, w, h);
 }
 
-static bool x11_draw_text_raw_inner(DrawTextRawSpec spec) {
+static bool x11_draw_text_raw_inner(DrawTextRaw spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return false;
   if (spec.angle != 0.0f)
@@ -126,7 +126,7 @@ static bool x11_draw_text_raw_inner(DrawTextRawSpec spec) {
   return true;
 }
 
-bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
+bool Platform_DrawTextRaw(DrawTextRaw spec) {
   const DrawCanvas *ds = draw_state_get();
   if (ds->clip_y1 <= ds->clip_y0 || !g_draw_xd)
     return x11_draw_text_raw_inner(spec);
@@ -139,7 +139,7 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   return ok;
 }
 
-void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
+void Platform_DrawTextCentered(DrawTextCentered spec) {
   if (!spec.text || !g_draw_dpy || !g_draw_xd)
     return;
   FontHandle fh = spec.font;
@@ -161,7 +161,7 @@ void Platform_DrawTextCentered(DrawTextCenteredSpec spec) {
     Platform_DestroyFont(fh);
 }
 
-int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
+int Platform_MeasureTextWidth(MeasureTextWidth spec) {
   if (!spec.text || spec.len <= 0)
     return 0;
   if (!g_draw_dpy)
@@ -173,7 +173,7 @@ int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
                                                       : FontSize});
 }
 
-bool Platform_DrawTextLine(DrawTextLineSpec spec) {
+bool Platform_DrawTextLine(DrawTextLine spec) {
   if (!spec.text || spec.len <= 0 || !g_draw_dpy || !g_draw_xd)
     return false;
   int x = spec.x + draw_state_get()->off_x;
@@ -199,7 +199,7 @@ void x11_draw_edit_background(X11DrawEditBackground *argspec) {
   x11_set_draw_context(argspec->f_dpy, argspec->f_xd, argspec->f_vis, argspec->f_cmap);
   if (WindowTitleText)
     Platform_DrawTextRaw(
-        (DrawTextRawSpec){.x = PROMPT_FOOTER_X,
+        (DrawTextRaw){.x = PROMPT_FOOTER_X,
                           .y = argspec->f_state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
                           .text = argspec->f_state->window_title,
                           .color = rgb_to_hex(COLOR_TEXT),
@@ -611,7 +611,7 @@ static unsigned char *line_argb_buffer(const int x1, const int y1, const int x2,
   return buf;
 }
 
-bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
+bool Platform_DrawLineRaw(DrawLineRaw spec) {
   if (!x11_raw_can_draw())
     return false;
   int x1, y1, x2, y2;
@@ -628,7 +628,7 @@ bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   return blit_argb_buf(buf, w, h, bx, by, true);
 }
 
-bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
+bool Platform_DrawCircleRaw(DrawCircleRaw spec) {
   if (!x11_raw_can_draw() || spec.radius <= 0)
     return false;
   int cx, cy;
@@ -661,4 +661,5 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
   if (list_top)
     *list_top = lt;
 }
+
 

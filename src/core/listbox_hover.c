@@ -401,13 +401,13 @@ void listbox_info_init(ListBox *lb) {
 }
 
 static __thread ListBox *common_lb;
-static __thread ListSpec common_spec;
+static __thread List common_spec;
 static __thread int common_y0, common_item_h, common_visible, common_cur,
     common_h;
 static __thread int common_bx, common_bw, common_fw, common_fh;
 static __thread bool common_separators;
 
-bool listbox_begin_common(const ListSpec *spec) {
+bool listbox_begin_common(const List *spec) {
   if (!spec)
     return false;
   ListBox *lb = spec->lb;
@@ -461,7 +461,7 @@ bool listbox_next_common(ListItemCtx *out) {
     return false;
   if (common_separators && common_cur == 0)
     draw_prompt_separator(
-        (DrawPromptSeparatorSpec){.y = common_y0, .width = common_fw});
+        (DrawPromptSeparator){.y = common_y0, .width = common_fw});
   bool sel = (idx == common_lb->selected_index);
   Platform_ListboxBackendDrawSelection(&(ListboxBackendDrawSelection){.f_bx = common_bx, .f_bw = common_bw, .f_y = y, .f_item_h = row_h, .f_fw = common_fw, .f_frame_h = common_fh, .f_sel = sel});
   listbox_set_row_h_scroll(sel ? common_lb->text_hscroll : 0);
@@ -479,7 +479,7 @@ bool listbox_next_common(ListItemCtx *out) {
 void listbox_common_end(void) {
   listbox_set_row_h_scroll(0);
   if (common_separators && prompt_list_bottom_margin() > 0 && common_y0 >= 0) {
-    draw_prompt_separator((DrawPromptSeparatorSpec){.y = common_y0 + common_h,
+    draw_prompt_separator((DrawPromptSeparator){.y = common_y0 + common_h,
                                                     .width = common_fw});
   }
   Platform_ListboxBackendEnd();
@@ -492,4 +492,5 @@ void listbox_common_end(void) {
 }
 
 int listbox_common_item_height(void) { return common_item_h; }
+
 

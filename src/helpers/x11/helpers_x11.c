@@ -1548,7 +1548,7 @@ void x11_draw_listbox_item_text(X11DrawListboxItemText *argspec) {
   if (!pcol)
     pcol = rgb_to_hex(COLOR_TEXT);
   x11_set_draw_context(argspec->f_dpy, argspec->f_xd, argspec->f_vis, argspec->f_cmap);
-  Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
+  Platform_DrawTextRaw((DrawTextRaw){.x = draw_x,
                                          .y = text_y,
                                          .text = draw_text,
                                          .color = pcol,
@@ -2615,4 +2615,5 @@ int x11_run_status(char *const argv[], const X11SessionEnv *env,
     return -1;
   return WEXITSTATUS(st);
 }
+
 

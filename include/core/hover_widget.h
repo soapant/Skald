@@ -14,9 +14,9 @@ typedef struct {
   unsigned long bg_hex;
   void (*release)(void *ud);
   void *release_ud;
-} HoverWidgetShowSpec;
+} HoverWidgetShow;
 
-void hover_widget_show(HoverWidgetShowSpec spec);
+void hover_widget_show(HoverWidgetShow spec);
 void hover_widget_hide(const char *key);
 void hover_widget_purge_owner(const char *path_a, const char *path_b);
 
@@ -25,7 +25,7 @@ typedef struct {
   void *render_data;
   int w;
   int h;
-} HoverPopupCreateSpec;
+} HoverPopupCreate;
 
 typedef struct {
   void (*render)(void *ud);
@@ -37,7 +37,7 @@ typedef struct {
   int pad;
 } HoverPopupCtx;
 
-HoverPopupCtx *hover_popup_ctx_new(const HoverPopupCreateSpec *spec);
+HoverPopupCtx *hover_popup_ctx_new(const HoverPopupCreate *spec);
 void hover_popup_frame(void *ud);
 void hover_popup_ctx_free(void *ud);
 
@@ -54,9 +54,10 @@ typedef struct {
   int f_y;
   int f_w;
   int f_h;
-} TextPromptSpec;
+} TextPrompt;
 
-PromptSpec text_prompt_spec(TextPromptSpec *argspec);
+PromptSpec text_prompt_spec(TextPrompt *argspec);
 
 #endif
+
 

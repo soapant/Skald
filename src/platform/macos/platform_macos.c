@@ -13,7 +13,7 @@
 
 #define UNUSED(x) (void)(x)
 
-char *Platform_HttpCollect(PlatformHttpCollectSpec *argspec) {
+char *Platform_HttpCollect(PlatformHttpCollect *argspec) {
   if (argspec->f_out_len)
     *argspec->f_out_len = 0;
   return NULL;
@@ -168,15 +168,15 @@ bool Platform_MessageActive(const char *name) {
 
 void Platform_DismissIndefiniteMessage(void) {}
 
-void Platform_DisplayMessage(DisplayMessageSpec spec) { UNUSED(spec); }
+void Platform_DisplayMessage(DisplayMessage spec) { UNUSED(spec); }
 
-void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) { UNUSED(spec); }
+void Platform_DisplayMessageAnchored(AnchoredMessage spec) { UNUSED(spec); }
 
-void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec) {
+void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindow spec) {
   UNUSED(spec);
 }
 
-void Platform_HoverMessage(HoverMessageSpec spec) { UNUSED(spec); }
+void Platform_HoverMessage(HoverMessage spec) { UNUSED(spec); }
 
 void Platform_HoverMessageRelease(const char *key) { UNUSED(key); }
 
@@ -716,5 +716,6 @@ void Platform_SleepSeconds(double seconds) {
 }
 
 bool Platform_PlaceEditbox(const EditSpec *spec) { return false; }
+
 
 

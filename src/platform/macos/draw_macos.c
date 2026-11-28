@@ -49,30 +49,30 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
   return true;
 }
 
-bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
+bool Platform_DrawLineRaw(DrawLineRaw spec) {
   (void)spec;
   return true;
 }
 
-bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
+bool Platform_DrawCircleRaw(DrawCircleRaw spec) {
   (void)spec;
   return true;
 }
 
-bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
+bool Platform_DrawTextRaw(DrawTextRaw spec) {
   (void)spec;
   return true;
 }
 
-void Platform_DrawTextCentered(DrawTextCenteredSpec spec) { (void)spec; }
+void Platform_DrawTextCentered(DrawTextCentered spec) { (void)spec; }
 
-int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
+int Platform_MeasureTextWidth(MeasureTextWidth spec) {
   if (spec.text && spec.len > 0)
     return spec.len * 8;
   return 0;
 }
 
-bool Platform_DrawTextLine(DrawTextLineSpec spec) {
+bool Platform_DrawTextLine(DrawTextLine spec) {
   (void)spec;
   return true;
 }
@@ -89,4 +89,5 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
 int Platform_GetTextLineHeight(int font_size) {
   return font_size > 0 ? font_size : 16;
 }
+
 

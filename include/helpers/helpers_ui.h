@@ -28,7 +28,7 @@ bool cover_scale(CoverScale *argspec);
 int draw_thickness_px(float thickness);
 void draw_measure_track(int x, int y, int w, int h);
 typedef struct {
-  const DrawLineRawSpec *f_spec;
+  const DrawLineRaw *f_spec;
   int f_off_x;
   int f_off_y;
   int *f_x1;
@@ -39,7 +39,7 @@ typedef struct {
 
 int draw_line_prep(DrawLinePrep *argspec);
 typedef struct {
-  const DrawCircleRawSpec *f_spec;
+  const DrawCircleRaw *f_spec;
   int f_off_x;
   int f_off_y;
   int *f_cx;
@@ -53,9 +53,9 @@ typedef struct {
   const char **f_items;
   int f_item_count;
   bool (*f_filter_match)(const char *item, const char *filter);
-} PopulateListboxSpec;
+} PopulateListbox;
 
-void populate_listbox(PopulateListboxSpec *argspec);
+void populate_listbox(PopulateListbox *argspec);
 typedef struct {
   ListBox *f_lb;
   const char *f_filter;
@@ -114,11 +114,11 @@ char *prompt_user_run(WindowManager *wm, const PromptSpec *spec);
 void prompt_process_pending_subwindow(void);
 bool terminal_guard(const char *working_dir, const char *extra_args);
 Metrics *metrics_get(void);
-void draw_prompt_separator(DrawPromptSeparatorSpec spec);
+void draw_prompt_separator(DrawPromptSeparator spec);
 bool prompt_band_take_placed(void);
 void prompt_band_commit_placed(void);
 typedef struct {
-  const ListSpec *f_spec;
+  const List *f_spec;
   int f_default_y0;
   int f_item_h;
   int f_popup_w;
@@ -221,7 +221,7 @@ typedef struct {
 
 int bg_tile_lru_pick(BgTileLruPick *argspec);
 
-void draw_text_centered_impl(const DrawTextCenteredSpec *spec, int line_height);
+void draw_text_centered_impl(const DrawTextCentered *spec, int line_height);
 typedef struct {
   int f_rect;
   int f_rect_size;
@@ -235,5 +235,6 @@ int msg_anchor_center(MsgAnchorCenter *argspec);
 int msg_stack_dir(int v_slot, bool outward);
 
 #endif
+
 
 

@@ -43,7 +43,7 @@ typedef struct {
   int field_count;
   int x_offset;
   SettingsEditboxChangeFn on_change;
-} SettingsEditboxSpec;
+} SettingsEditbox;
 
 typedef struct {
   int entry;
@@ -65,7 +65,7 @@ typedef struct {
   int initial;
   SettingsDropdownSelectFn on_select;
   void (*on_hover)(void);
-} SettingsDropdownSpec;
+} SettingsDropdown;
 
 typedef struct {
   const char *key;
@@ -74,7 +74,7 @@ typedef struct {
   bool initial;
   void (*on_click)(void);
   void (*on_hover)(void);
-} SettingsCheckboxSpec;
+} SettingsCheckbox;
 
 typedef struct {
   const char *key;
@@ -83,7 +83,7 @@ typedef struct {
   const char *label;
   void (*on_click)(void);
   void (*on_hover)(void);
-} SettingsButtonSpec;
+} SettingsButton;
 
 typedef struct {
   const char *key;
@@ -94,20 +94,20 @@ typedef struct {
   float initial;
   void (*on_change)(void);
   void (*on_hover)(void);
-} SettingsSliderSpec;
+} SettingsSlider;
 
 SettingsEntry *settings_entry_add(const SettingsEntrySpec *spec);
 int settings_entry_add_checkbox(SettingsEntry *entry,
-                                const SettingsCheckboxSpec *spec);
+                                const SettingsCheckbox *spec);
 int settings_entry_add_button(SettingsEntry *entry,
-                              const SettingsButtonSpec *spec);
+                              const SettingsButton *spec);
 int settings_entry_add_slider(SettingsEntry *entry,
-                              const SettingsSliderSpec *spec);
+                              const SettingsSlider *spec);
 int settings_entry_add_dropdown(SettingsEntry *entry,
-                                const SettingsDropdownSpec *spec);
+                                const SettingsDropdown *spec);
 SettingsEditboxGroup
 settings_entry_add_editbox(SettingsEntry *entry,
-                           const SettingsEditboxSpec *spec);
+                           const SettingsEditbox *spec);
 const char *settings_editbox_get(SettingsEditboxGroup group, const char *name);
 bool settings_editbox_set(SettingsEditboxGroup group, const char *name,
                           const char *value);
@@ -127,3 +127,4 @@ void settings_dispatch_focus_click(void);
 void settings_dispatch_focus_change(float value);
 
 #endif
+

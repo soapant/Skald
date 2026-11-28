@@ -35,7 +35,7 @@ extern int g_msg_slot_count;
 
 void win32_msg_created_clear(void);
 void win32_msg_hover_release(const char *key);
-void win32_msg_hover_present(HoverMessageSpec spec);
+void win32_msg_hover_present(HoverMessage spec);
 
 enum { MSG_DESTROY_ALL, MSG_DESTROY_INDEFINITE, MSG_DESTROY_NAMED };
 
@@ -52,3 +52,4 @@ extern FadeWindowData *s_msg_show_data;
 extern bool s_msg_show_no_bg;
 
 #endif
+

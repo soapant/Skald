@@ -13,11 +13,12 @@ typedef struct {
   int *off_y;
   int wheel_px;
   const char *owner;
-} ScrollAreaSpec;
+} ScrollArea;
 
-bool scroll_area_begin(const ScrollAreaSpec *spec);
+bool scroll_area_begin(const ScrollArea *spec);
 void scroll_area_end(void);
 bool scroll_area_dispatch_wheel(int root_x, int root_y, int dx, int dy);
 void scroll_area_purge_owner(const char *path_a, const char *path_b);
 
 #endif
+

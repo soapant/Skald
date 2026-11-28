@@ -23,7 +23,7 @@ typedef struct {
   bool rounded;
   int radius;
   int fps;
-} AnchoredMessageSpec;
+} AnchoredMessage;
 
 typedef struct {
   const char *message;
@@ -38,7 +38,7 @@ typedef struct {
   bool rounded;
   int radius;
   int fps;
-} CreateDisplayMessageWindowSpec;
+} CreateDisplayMessageWindow;
 
 typedef struct {
   const char *key;
@@ -47,7 +47,7 @@ typedef struct {
   int max_width, max_height;
   ColorRef color;
   bool no_bg;
-} HoverMessageSpec;
+} HoverMessage;
 
 typedef struct {
   const char *message;
@@ -63,7 +63,7 @@ typedef struct {
   bool rounded;
   int radius;
   int fps;
-} DisplayMessageSpec;
+} DisplayMessage;
 
 #define HOVER_MSG_UNPACK(spec)                                                 \
   const char *key = (spec).key;                                                \
@@ -131,9 +131,9 @@ typedef struct {
   const char *f_body;
   size_t f_max_bytes;
   size_t *f_out_len;
-} PlatformHttpCollectSpec;
+} PlatformHttpCollect;
 
-char *Platform_HttpCollect(PlatformHttpCollectSpec *argspec);
+char *Platform_HttpCollect(PlatformHttpCollect *argspec);
 bool Platform_HttpSaveToFile(const char *url, const char *path);
 bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud);
 
@@ -204,10 +204,10 @@ bool Platform_MessageActive(const char *name);
 bool Platform_MessageSetText(const char *name, const char *text);
 void Platform_DismissIndefiniteMessage(void);
 
-void Platform_DisplayMessage(DisplayMessageSpec spec);
-void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec);
-void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec);
-void Platform_HoverMessage(HoverMessageSpec spec);
+void Platform_DisplayMessage(DisplayMessage spec);
+void Platform_DisplayMessageAnchored(AnchoredMessage spec);
+void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindow spec);
+void Platform_HoverMessage(HoverMessage spec);
 void Platform_HoverMessageRelease(const char *key);
 void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 
@@ -366,5 +366,6 @@ bool Platform_AtomicRename(const char *old_path, const char *new_path);
 
 void Platform_InvalidatePrompt(void);
 #endif
+
 
 

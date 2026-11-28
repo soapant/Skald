@@ -49,7 +49,7 @@ typedef struct {
   void (*on_change)(float value);
   void (*on_hover)(void);
   void (*render)(SliderState state);
-} SliderSpec;
+} Slider;
 
 void slider_frame_begin(void);
 bool slider_is_hovered(const char *name);
@@ -59,7 +59,8 @@ float slider_value(const char *name);
 float slider_fraction(const char *name);
 int slider_percent(const char *name);
 bool slider_set_value(const char *name, float value);
-void slider_draw(const SliderSpec *spec);
-bool slider_place(const SliderSpec *spec);
+void slider_draw(const Slider *spec);
+bool slider_place(const Slider *spec);
 
 #endif
+

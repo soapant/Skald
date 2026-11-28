@@ -139,7 +139,7 @@ typedef struct {
   int caret_x;
   int caret_y;
   int caret_pos;
-} EditboxUiSpec;
+} EditboxUi;
 
 typedef struct {
   const char *buffer;
@@ -180,16 +180,16 @@ typedef struct {
   int caret_y;
   int caret_pos;
   bool wrapped;
-} EditboxInitFromSpec;
+} EditboxInitFrom;
 
-void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args);
+void editbox_init_from_spec(EditboxInit *out, const EditboxInitFrom *args);
 
 void editbox_build_spec(EditboxSpec *out, const EditboxInit *in);
 typedef struct {
   EditboxSpec *f_out;
   const EditboxPlace *f_place;
   PromptState *f_state;
-  const EditboxUiSpec *f_ui;
+  const EditboxUi *f_ui;
   const EditboxMetrics *f_metrics;
 } EditboxSpecFromPlace;
 
@@ -247,4 +247,5 @@ const char *editbox_registry_active_name(const PromptState *state);
 bool editbox_wrap_move_vertical(PromptState *state, int dir);
 
 #endif
+
 

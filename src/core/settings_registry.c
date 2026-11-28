@@ -113,7 +113,7 @@ static ColorRef settings_color_lerp(ColorRef a, ColorRef b, float t) {
 static int settings_text_width(const char *text, int font_size) {
   if (!text)
     return 0;
-  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
+  return Platform_MeasureTextWidth((MeasureTextWidth){
       .text = text, .len = (int)strlen(text), .font_size = font_size});
 }
 
@@ -142,28 +142,28 @@ typedef struct {
   ColorRef color;
   const char *align;
   int font_size;
-} SettingsDrawTextSpec;
+} SettingsDrawText;
 
 typedef struct {
   const char *text;
   int x, y, w, h;
   ColorRef color;
   int font_size;
-} SettingsDrawTextCenteredSpec;
+} SettingsDrawTextCentered;
 
 typedef struct {
   const char *path;
   int x, y, w, h;
-} SettingsDrawImageSpec;
+} SettingsDrawImage;
 
-static bool settings_draw_text_local(const SettingsDrawTextSpec *spec) {
+static bool settings_draw_text_local(const SettingsDrawText *spec) {
   if (!spec || !spec->text)
     return false;
   if (settings_capture_text(spec->text))
     return true;
   const char *align = spec->align ? spec->align : "LEFT";
   return Platform_DrawTextRaw(
-      (DrawTextRawSpec){.x = spec->x,
+      (DrawTextRaw){.x = spec->x,
                         .y = spec->y,
                         .text = spec->text,
                         .color = settings_color(spec->color),
@@ -172,13 +172,13 @@ static bool settings_draw_text_local(const SettingsDrawTextSpec *spec) {
 }
 
 static bool
-settings_draw_text_centered_local(const SettingsDrawTextCenteredSpec *spec) {
+settings_draw_text_centered_local(const SettingsDrawTextCentered *spec) {
   if (!spec || !spec->text)
     return false;
   if (settings_capture_text(spec->text))
     return true;
   Platform_DrawTextCentered(
-      (DrawTextCenteredSpec){.x = spec->x,
+      (DrawTextCentered){.x = spec->x,
                              .y = spec->y,
                              .w = spec->w,
                              .h = spec->h,
@@ -188,7 +188,7 @@ settings_draw_text_centered_local(const SettingsDrawTextCenteredSpec *spec) {
   return true;
 }
 
-static bool settings_draw_image_local(const SettingsDrawImageSpec *spec) {
+static bool settings_draw_image_local(const SettingsDrawImage *spec) {
   if (!spec || !spec->path || !spec->path[0])
     return false;
   if (settings_capturing())
@@ -205,7 +205,7 @@ static bool settings_draw_line_local(const Line *spec) {
   if (settings_capturing())
     return true;
   return Platform_DrawLineRaw(
-      (DrawLineRawSpec){.x1 = spec->x1,
+      (DrawLineRaw){.x1 = spec->x1,
                         .y1 = spec->y1,
                         .x2 = spec->x2,
                         .y2 = spec->y2,
@@ -243,7 +243,7 @@ typedef struct {
   bool button;
   void (*on_click)(void);
   void (*on_hover)(void);
-} SettingsPlaceCheckboxSpec;
+} SettingsPlaceCheckbox;
 
 typedef struct {
   const char *name;
@@ -251,7 +251,7 @@ typedef struct {
   float min_value, max_value, step, value;
   void (*on_change)(float value);
   void (*on_hover)(void);
-} SettingsPlaceSliderSpec;
+} SettingsPlaceSlider;
 
 typedef struct {
   const char *name;
@@ -262,9 +262,9 @@ typedef struct {
   int caret_h;
   const char *placeholder;
   bool no_tab;
-} SettingsPlaceEditboxSpec;
+} SettingsPlaceEditbox;
 
-static bool settings_place_checkbox_impl(const SettingsPlaceCheckboxSpec *spec,
+static bool settings_place_checkbox_impl(const SettingsPlaceCheckbox *spec,
                                          bool button) {
   if (!spec)
     return false;
@@ -273,7 +273,7 @@ static bool settings_place_checkbox_impl(const SettingsPlaceCheckboxSpec *spec,
     search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = text, .f_kind = button ? SEARCH_KIND_BUTTON : SEARCH_KIND_CHECKBOX, .f_widget_name = spec->name, .f_value = NULL});
     return true;
   }
-  CheckboxSpec cb = {0};
+  Checkbox cb = {0};
   cb.name = spec->name;
   cb.text = (char *)spec->text;
   cb.x = spec->x;
@@ -293,7 +293,7 @@ static bool settings_place_checkbox_impl(const SettingsPlaceCheckboxSpec *spec,
   return checkbox_place(&cb);
 }
 
-static bool settings_place_slider_impl(const SettingsPlaceSliderSpec *spec) {
+static bool settings_place_slider_impl(const SettingsPlaceSlider *spec) {
   if (!spec)
     return false;
   if (settings_capturing()) {
@@ -302,7 +302,7 @@ static bool settings_place_slider_impl(const SettingsPlaceSliderSpec *spec) {
     search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = spec->name, .f_kind = SEARCH_KIND_SLIDER, .f_widget_name = spec->name, .f_value = value});
     return true;
   }
-  SliderSpec sl = {0};
+  Slider sl = {0};
   sl.name = spec->name;
   sl.x = spec->x;
   sl.y = spec->y;
@@ -324,7 +324,7 @@ static bool settings_place_slider_impl(const SettingsPlaceSliderSpec *spec) {
   return slider_place(&sl);
 }
 
-static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
+static bool settings_place_editbox_impl(const SettingsPlaceEditbox *spec) {
   if (!spec)
     return false;
   const char *name = spec->name;
@@ -365,12 +365,12 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
                                             .font_size = spec->font_size},
                         state, &place);
   int fs = place.font_size;
-  int cursor_x = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+  int cursor_x = Platform_MeasureTextWidth((MeasureTextWidth){
       .text = place.buf, .len = place.cursor, .font_size = fs});
-  int text_w = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+  int text_w = Platform_MeasureTextWidth((MeasureTextWidth){
       .text = place.buf, .len = place.text_len, .font_size = fs});
   int line_h = Platform_GetTextLineHeight(fs);
-  EditboxUiSpec ui = {.color_text = COLOR_TEXT,
+  EditboxUi ui = {.color_text = COLOR_TEXT,
                       .placeholder = spec->placeholder,
                       .caret_h = spec->caret_h};
   EditboxSpec eb;
@@ -394,24 +394,24 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditboxSpec *spec) {
 }
 
 #define settings_place_checkbox(...)                                           \
-  settings_place_checkbox_impl(&(SettingsPlaceCheckboxSpec){__VA_ARGS__}, false)
+  settings_place_checkbox_impl(&(SettingsPlaceCheckbox){__VA_ARGS__}, false)
 #define settings_place_button(...)                                             \
   settings_place_checkbox_impl(                                                \
-      &(SettingsPlaceCheckboxSpec){.button = true, __VA_ARGS__}, true)
+      &(SettingsPlaceCheckbox){.button = true, __VA_ARGS__}, true)
 #define settings_place_slider(...)                                             \
-  settings_place_slider_impl(&(SettingsPlaceSliderSpec){__VA_ARGS__})
+  settings_place_slider_impl(&(SettingsPlaceSlider){__VA_ARGS__})
 #define settings_place_editbox(...)                                            \
   settings_place_editbox_impl(                                                 \
-      &(SettingsPlaceEditboxSpec){.no_tab = true, __VA_ARGS__})
+      &(SettingsPlaceEditbox){.no_tab = true, __VA_ARGS__})
 #define settings_draw_rect(...)                                                \
   settings_draw_rect_local(&(DrawRect){__VA_ARGS__})
 #define settings_draw_text(...)                                                \
-  settings_draw_text_local(&(SettingsDrawTextSpec){__VA_ARGS__})
+  settings_draw_text_local(&(SettingsDrawText){__VA_ARGS__})
 #define settings_draw_text_centered(...)                                       \
   settings_draw_text_centered_local(                                           \
-      &(SettingsDrawTextCenteredSpec){__VA_ARGS__})
+      &(SettingsDrawTextCentered){__VA_ARGS__})
 #define settings_draw_image(...)                                               \
-  settings_draw_image_local(&(SettingsDrawImageSpec){__VA_ARGS__})
+  settings_draw_image_local(&(SettingsDrawImage){__VA_ARGS__})
 #define settings_draw_line(...) settings_draw_line_local(&(Line){__VA_ARGS__})
 
 typedef struct {
@@ -695,7 +695,7 @@ static int settings_entry_add_block_typed(SettingsEntry *entry, int type,
 }
 
 int settings_entry_add_checkbox(SettingsEntry *entry,
-                                const SettingsCheckboxSpec *spec) {
+                                const SettingsCheckbox *spec) {
   if (!spec)
     return -1;
   int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_CHECKBOX,
@@ -713,7 +713,7 @@ int settings_entry_add_checkbox(SettingsEntry *entry,
 }
 
 int settings_entry_add_button(SettingsEntry *entry,
-                              const SettingsButtonSpec *spec) {
+                              const SettingsButton *spec) {
   if (!spec)
     return -1;
   int idx = settings_entry_add_block_typed(entry, SETTINGS_BLOCK_BUTTON,
@@ -729,7 +729,7 @@ int settings_entry_add_button(SettingsEntry *entry,
 }
 
 int settings_entry_add_slider(SettingsEntry *entry,
-                              const SettingsSliderSpec *spec) {
+                              const SettingsSlider *spec) {
   if (!spec)
     return -1;
   float min_value = spec->min_value;
@@ -776,7 +776,7 @@ int settings_entry_add_slider(SettingsEntry *entry,
 }
 
 int settings_entry_add_dropdown(SettingsEntry *entry,
-                                const SettingsDropdownSpec *spec) {
+                                const SettingsDropdown *spec) {
   if (!spec)
     return -1;
   const char **options = NULL;
@@ -950,7 +950,7 @@ static void settings_editbox_persist(const SettingsEditboxFieldBlock *f) {
 
 SettingsEditboxGroup
 settings_entry_add_editbox(SettingsEntry *entry,
-                           const SettingsEditboxSpec *spec) {
+                           const SettingsEditbox *spec) {
   SettingsEditboxGroup invalid = SETTINGS_EDITBOX_INVALID;
   if (!spec || !spec->fields || spec->field_count < 1)
     return invalid;
@@ -1345,7 +1345,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
     int view_h = settings_view_height(base_off_y);
     char scroll_name[300];
     snprintf(scroll_name, sizeof(scroll_name), "settings:%s", entry->name);
-    ScrollAreaSpec scroll_spec = {
+    ScrollArea scroll_spec = {
         .name = scroll_name,
         .x = 0,
         .y = SETTINGS_VIEW_TOP,
@@ -1541,7 +1541,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
       char dropdown_scroll_name[512];
       snprintf(dropdown_scroll_name, sizeof(dropdown_scroll_name),
                "settings:dropdown:%s:%s", open_entry->name, open_block->title);
-      ScrollAreaSpec dropdown_scroll = {
+      ScrollArea dropdown_scroll = {
           .name = dropdown_scroll_name,
           .x = panel_x + 2,
           .y = panel_y + 2,
@@ -1600,4 +1600,5 @@ void settings_config_sync(const char *key, const char *value) {
   config_setting_entries_set(key, value);
   config_unlock();
 }
+
 

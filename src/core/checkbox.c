@@ -20,11 +20,11 @@
 
 #define CHECKBOX_DARK_GRAY RGB(14, 14, 14)
 
-static CheckboxSpec **checkboxes;
+static Checkbox **checkboxes;
 #define checkbox_count arrlenu(checkboxes)
 
 typedef struct {
-  CheckboxSpec *cb;
+  Checkbox *cb;
   unsigned frame;
   long long ms;
 } PendingClick;
@@ -34,7 +34,7 @@ static PendingClick *pending_clicks;
 static unsigned cb_frame;
 static long long last_click_ms;
 
-static void checkbox_note_click(CheckboxSpec *cb) {
+static void checkbox_note_click(Checkbox *cb) {
   long long now_ms = Platform_GetWallClockMs();
   long long dt = now_ms - last_click_ms;
   if (dt < 200) {
@@ -60,7 +60,7 @@ static void checkbox_note_click(CheckboxSpec *cb) {
            cb_frame);
 }
 
-static bool checkbox_take_click(CheckboxSpec *cb) {
+static bool checkbox_take_click(Checkbox *cb) {
   for (size_t i = 0; i < arrlenu(pending_clicks);) {
     if (pending_clicks[i].cb == cb) {
       log_info("button click taken name=%s frame=%u age=%u",
@@ -94,7 +94,7 @@ void checkbox_frame_begin(void) {
 }
 
 static void checkbox_focus_activate(void *owner) {
-  CheckboxSpec *cb = (CheckboxSpec *)owner;
+  Checkbox *cb = (Checkbox *)owner;
   if (!cb)
     return;
   cb->clicked = true;
@@ -107,7 +107,7 @@ static void checkbox_focus_activate(void *owner) {
   }
 }
 
-static CheckboxSpec *checkbox_find(const char *name, int kind) {
+static Checkbox *checkbox_find(const char *name, int kind) {
 
   if (!name)
     return NULL;
@@ -119,12 +119,12 @@ static CheckboxSpec *checkbox_find(const char *name, int kind) {
   return NULL;
 }
 
-static CheckboxSpec *checkbox_intern(const char *name, int kind, bool seed) {
+static Checkbox *checkbox_intern(const char *name, int kind, bool seed) {
 
-  CheckboxSpec *cb = checkbox_find(name, kind);
+  Checkbox *cb = checkbox_find(name, kind);
   if (cb)
     return cb;
-  cb = (CheckboxSpec *)calloc(1, sizeof(*cb));
+  cb = (Checkbox *)calloc(1, sizeof(*cb));
   if (!cb)
     return NULL;
   cb->button = (kind == PLACE_BUTTON);
@@ -142,22 +142,22 @@ static CheckboxSpec *checkbox_intern(const char *name, int kind, bool seed) {
 }
 
 bool checkbox_is_checked(const char *name, int kind) {
-  const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  const Checkbox *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->checked : false;
 }
 
 bool checkbox_is_hovered(const char *name, int kind) {
-  const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  const Checkbox *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->hovered : false;
 }
 
 bool checkbox_is_clicked(const char *name, int kind) {
-  const CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  const Checkbox *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? cb->clicked : false;
 }
 
 bool checkbox_take_clicked(const char *name, int kind) {
-  CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
+  Checkbox *cb = name ? checkbox_find(name, kind) : NULL;
   return cb ? checkbox_take_click(cb) : false;
 }
 
@@ -191,7 +191,7 @@ static void checkbox_fill_border(int x, int y, int w, int h, int thick,
                                          .filled = false});
 }
 
-static void checkbox_focus_outline(const CheckboxSpec *spec) {
+static void checkbox_focus_outline(const Checkbox *spec) {
   if (!spec || !spec->focused)
     return;
   int w = spec->w > 0 ? spec->w : (spec->button ? 100 : 16);
@@ -208,7 +208,7 @@ static void checkbox_focus_outline(const CheckboxSpec *spec) {
                                          .filled = false});
 }
 
-void checkbox_draw(const CheckboxSpec *spec) {
+void checkbox_draw(const Checkbox *spec) {
   bool active = spec->hovered || spec->focused;
   if (spec->render) {
     PlaceState st;
@@ -273,7 +273,7 @@ void checkbox_draw(const CheckboxSpec *spec) {
     }
     if (spec->text) {
       int font_size = spec->font_size > 0 ? spec->font_size : FontSize;
-      Platform_DrawTextCentered((DrawTextCenteredSpec){
+      Platform_DrawTextCentered((DrawTextCentered){
           .x = spec->x,
           .y = spec->y,
           .w = w,
@@ -287,7 +287,7 @@ void checkbox_draw(const CheckboxSpec *spec) {
   checkbox_focus_outline(spec);
 }
 
-bool checkbox_place(const CheckboxSpec *spec) {
+bool checkbox_place(const Checkbox *spec) {
   if (!spec || !spec->name || !spec->name[0]) {
     return false;
   }
@@ -303,7 +303,7 @@ bool checkbox_place(const CheckboxSpec *spec) {
     h = spec->h > 0 ? spec->h : CHECKBOX_BASE;
   }
 
-  CheckboxSpec *cb = checkbox_intern(
+  Checkbox *cb = checkbox_intern(
       spec->name, spec->button ? PLACE_BUTTON : PLACE_CHECKBOX, spec->checked);
   if (!cb)
     return false;
@@ -359,4 +359,5 @@ bool checkbox_place(const CheckboxSpec *spec) {
     cb->on_hover();
   return true;
 }
+
 

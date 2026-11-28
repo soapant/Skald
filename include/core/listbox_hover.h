@@ -14,7 +14,7 @@ typedef struct {
   const char *text;
 } ListItemCtx;
 
-bool listbox_begin_common(const ListSpec *spec);
+bool listbox_begin_common(const List *spec);
 bool listbox_next_common(ListItemCtx *out);
 void listbox_common_end(void);
 int listbox_common_item_height(void);
@@ -64,4 +64,5 @@ void listbox_navigate_up(ListBox *lb);
 void listbox_navigate_down(ListBox *lb);
 
 #endif
+
 

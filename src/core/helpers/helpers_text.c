@@ -1094,7 +1094,7 @@ int text_segment_width(const void *seg_ptr, int font_size) {
   if (!seg || !seg->text)
     return 0;
   return Platform_MeasureTextWidth(
-      (MeasureTextWidthSpec){.text = seg->text,
+      (MeasureTextWidth){.text = seg->text,
                              .len = (int)strlen(seg->text),
                              .font_size = font_size});
 }
@@ -1116,7 +1116,7 @@ void wrapped_word_push(WrappedWordPush *argspec) {
   memcpy(w->text, argspec->f_s, argspec->f_len);
   w->text[argspec->f_len] = '\0';
   w->color = argspec->f_color;
-  w->width = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+  w->width = Platform_MeasureTextWidth((MeasureTextWidth){
       .text = w->text, .len = (int)argspec->f_len, .font_size = argspec->f_font_size});
   w->lead = argspec->f_lead;
   w->breaks = argspec->f_breaks;
@@ -1127,6 +1127,7 @@ void wrapped_word_push(WrappedWordPush *argspec) {
 int wrap_measure_thunk(void *ctx, const char *s, int n) {
   WrapCtx *c = (WrapCtx *)ctx;
   return Platform_MeasureTextWidth(
-      (MeasureTextWidthSpec){.text = s, .len = n, .font_size = c->font_size});
+      (MeasureTextWidth){.text = s, .len = n, .font_size = c->font_size});
 }
+
 

@@ -64,14 +64,14 @@ typedef struct {
   int x1, y1, x2, y2;
   unsigned long color;
   float thickness;
-} DrawLineRawSpec;
+} DrawLineRaw;
 
 typedef struct {
   int cx, cy;
   int radius;
   unsigned long color;
   float thickness;
-} DrawCircleRawSpec;
+} DrawCircleRaw;
 
 typedef struct {
   int x, y;
@@ -82,7 +82,7 @@ typedef struct {
   int pad;
   int font_size;
   float angle;
-} DrawTextRawSpec;
+} DrawTextRaw;
 
 typedef struct {
   int x, y, w, h;
@@ -90,7 +90,7 @@ typedef struct {
   unsigned long color;
   FontHandle font;
   int font_size;
-} DrawTextCenteredSpec;
+} DrawTextCentered;
 
 typedef struct {
   int x, y;
@@ -98,29 +98,30 @@ typedef struct {
   int len;
   unsigned long color;
   int font_size;
-} DrawTextLineSpec;
+} DrawTextLine;
 
 typedef struct {
   int y, width;
-} DrawPromptSeparatorSpec;
+} DrawPromptSeparator;
 
 typedef struct {
   const char *text;
   int len;
   int font_size;
-} MeasureTextWidthSpec;
+} MeasureTextWidth;
 
 bool Platform_DrawRectRaw(DrawRectRawSpec spec);
-bool Platform_DrawLineRaw(DrawLineRawSpec spec);
-bool Platform_DrawCircleRaw(DrawCircleRawSpec spec);
-bool Platform_DrawTextRaw(DrawTextRawSpec spec);
-void Platform_DrawTextCentered(DrawTextCenteredSpec spec);
+bool Platform_DrawLineRaw(DrawLineRaw spec);
+bool Platform_DrawCircleRaw(DrawCircleRaw spec);
+bool Platform_DrawTextRaw(DrawTextRaw spec);
+void Platform_DrawTextCentered(DrawTextCentered spec);
 
-int Platform_MeasureTextWidth(MeasureTextWidthSpec spec);
-bool Platform_DrawTextLine(DrawTextLineSpec spec);
+int Platform_MeasureTextWidth(MeasureTextWidth spec);
+bool Platform_DrawTextLine(DrawTextLine spec);
 
 void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetTextLineHeight(int font_size);
 
 #endif
+
 

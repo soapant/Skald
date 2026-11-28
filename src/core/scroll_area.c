@@ -78,7 +78,7 @@ static void scroll_purge_stale(void) {
   }
 }
 
-static int scroll_slot_find(const ScrollAreaSpec *spec) {
+static int scroll_slot_find(const ScrollArea *spec) {
   for (size_t i = 0; i < g_slot_count; i++) {
     ScrollSlot *slot = g_slots[i];
     if (!slot->used)
@@ -130,7 +130,7 @@ static void scroll_area_window_origin(int *out_x, int *out_y) {
   *out_y = 0;
 }
 
-bool scroll_area_begin(const ScrollAreaSpec *spec) {
+bool scroll_area_begin(const ScrollArea *spec) {
   if (!spec || spec->w <= 0 || spec->h <= 0)
     return false;
   int base_off_x = 0, base_off_y = 0;
@@ -252,3 +252,4 @@ void scroll_area_purge_owner(const char *path_a, const char *path_b) {
   OWNER_PURGE_PTRS(g_slots, ScrollSlot, path_a, path_b, 0, scroll_slot_destroy);
   SCROLL_UNLOCK();
 }
+

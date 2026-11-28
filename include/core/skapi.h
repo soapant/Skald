@@ -38,10 +38,10 @@ typedef DrawRect SkRect;
 typedef Line SkLine;
 typedef Circle SkCircle;
 typedef Pos SkPos;
-typedef ListSpec SkListSpec;
+typedef List SkList;
 typedef WindowList SkWindowList;
-typedef CheckboxSpec SkCheckboxSpec;
-typedef SliderSpec SkSliderSpec;
+typedef Checkbox SkCheckbox;
+typedef Slider SkSlider;
 typedef SettingsEntrySpec SkSettingsEntrySpec;
 typedef PlaceState SkPlaceState;
 typedef ClipboardEntry SkClipboardEntry;
@@ -57,14 +57,14 @@ typedef void *SkThread;
 typedef void *SkMutex;
 typedef CcEntrySpec SkCcEntrySpec;
 typedef SettingsEntry SkSettingsEntry;
-typedef SettingsCheckboxSpec SkSettingsCheckboxSpec;
-typedef SettingsButtonSpec SkSettingsButtonSpec;
-typedef SettingsSliderSpec SkSettingsSliderSpec;
-typedef SettingsDropdownSpec SkSettingsDropdownSpec;
+typedef SettingsCheckbox SkSettingsCheckbox;
+typedef SettingsButton SkSettingsButton;
+typedef SettingsSlider SkSettingsSlider;
+typedef SettingsDropdown SkSettingsDropdown;
 typedef SettingsEditboxChangeFn SkSettingsEditboxChangeFn;
 typedef SettingsEditboxType SkSettingsEditboxType;
 typedef SettingsEditboxField SkSettingsEditboxField;
-typedef SettingsEditboxSpec SkSettingsEditboxSpec;
+typedef SettingsEditbox SkSettingsEditbox;
 typedef SettingsEditboxGroup SkSettingsEditboxGroup;
 
 typedef struct {
@@ -108,7 +108,7 @@ typedef struct {
   int count;
   bool (*filter_match)(const char *item, const char *filter);
   int (*item_rank)(int item_index);
-} SkPopulateListboxSpec;
+} SkPopulateListbox;
 
 typedef struct {
   const char *initial_text;
@@ -336,7 +336,7 @@ typedef struct {
   const char *whitelist[16];
   const char *blacklist[16];
   void *ud;
-} SkConfigHotkeyRegisterSpec;
+} SkConfigHotkeyRegister;
 
 typedef struct {
   const char *src;
@@ -382,7 +382,7 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 #define sk_set_window_geometry(window, ...)                                    \
   ski_set_window_geometry(window, &(SkRect){__VA_ARGS__})
 #define sk_populate_listbox(...)                                               \
-  ski_populate_listbox(&(SkPopulateListboxSpec){__VA_ARGS__})
+  ski_populate_listbox(&(SkPopulateListbox){__VA_ARGS__})
 #define sk_edit_text_popup(...)                                                \
   ski_edit_text_popup(&(SkEditPopupSpec){__VA_ARGS__})
 #define sk_popup(...) ski_popup(&(PopupSpec){__VA_ARGS__})
@@ -407,15 +407,15 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 #define sk_slider_dragging sk_slider_is_dragging
 #define sk_place_button(...)                                                   \
   ski_place_checkbox(                                                          \
-      &(SkCheckboxSpec){.border = true, __VA_ARGS__, .button = true})
+      &(SkCheckbox){.border = true, __VA_ARGS__, .button = true})
 #define sk_place_checkbox(...)                                                 \
   ski_place_checkbox(                                                          \
-      &(SkCheckboxSpec){.border = true, __VA_ARGS__, .checkbox = true})
+      &(SkCheckbox){.border = true, __VA_ARGS__, .checkbox = true})
 #define sk_place_slider(...)                                                   \
-  ski_place_slider(&(SkSliderSpec){                                            \
+  ski_place_slider(&(SkSlider){                                            \
       .border = true, __VA_ARGS__, .orientation = SLIDER_HORIZONTAL})
 #define sk_place_vslider(...)                                                  \
-  ski_place_slider(&(SkSliderSpec){                                            \
+  ski_place_slider(&(SkSlider){                                            \
       .border = true, __VA_ARGS__, .orientation = SLIDER_VERTICAL})
 #define sk_checkbox_checked sk_checkbox_is_checked
 #define sk_button_hovered sk_button_is_hovered
@@ -428,8 +428,8 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 #define sk_place_editbox(...) ski_place_editbox(&(SkEditSpec){__VA_ARGS__})
 #define sk_place_editbox_wrapped(...)                                          \
   ski_place_editbox(&(SkEditSpec){.wrapped = true, __VA_ARGS__})
-#define sk_place_listbox(...) ski_place_listbox(&(SkListSpec){__VA_ARGS__})
-#define sk_listbox_begin(...) ski_listbox_begin(&(SkListSpec){__VA_ARGS__})
+#define sk_place_listbox(...) ski_place_listbox(&(SkList){__VA_ARGS__})
+#define sk_listbox_begin(...) ski_listbox_begin(&(SkList){__VA_ARGS__})
 #define sk_widget(...) sk_widget_create(&(SkWidgetSpec){__VA_ARGS__})
 #define SK_DRAW_ALPHA_OPAQUE 255
 #define SK_DRAW_ALPHA_TRANSPARENT 128
@@ -470,17 +470,17 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 #define SK_SETTINGS_EDITBOX_INT SETTINGS_EDITBOX_INT
 #define SK_SETTINGS_EDITBOX_FLOAT SETTINGS_EDITBOX_FLOAT
 #define sk_settings_entry_add_checkbox(entry, ...)                             \
-  ski_settings_entry_add_checkbox(entry, &(SkSettingsCheckboxSpec){__VA_ARGS__})
+  ski_settings_entry_add_checkbox(entry, &(SkSettingsCheckbox){__VA_ARGS__})
 #define sk_settings_entry_add_button(entry, ...)                               \
-  ski_settings_entry_add_button(entry, &(SkSettingsButtonSpec){__VA_ARGS__})
+  ski_settings_entry_add_button(entry, &(SkSettingsButton){__VA_ARGS__})
 #define sk_settings_entry_add_slider(entry, ...)                               \
-  ski_settings_entry_add_slider(entry, &(SkSettingsSliderSpec){__VA_ARGS__})
+  ski_settings_entry_add_slider(entry, &(SkSettingsSlider){__VA_ARGS__})
 #define sk_settings_entry_add_dropdown(entry, ...)                             \
-  ski_settings_entry_add_dropdown(entry, &(SkSettingsDropdownSpec){__VA_ARGS__})
+  ski_settings_entry_add_dropdown(entry, &(SkSettingsDropdown){__VA_ARGS__})
 #define sk_settings_entry_add_editbox(entry, ...)                              \
   ski_settings_entry_add_editbox(                                              \
       entry,                                                                   \
-      &(SkSettingsEditboxSpec){                                                \
+      &(SkSettingsEditbox){                                                \
           .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
 #define sk_config_set_hotkey(...)                                              \
   ski_config_set_hotkey(&(SkConfigHotkeySpec){__VA_ARGS__})
@@ -488,7 +488,7 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 #define sk_register_hotkey(...)                                                \
   ski_register_hotkey(&(SkHotkeySpec){__VA_ARGS__})
 #define sk_register_config_hotkey(...)                                         \
-  ski_register_config_hotkey(&(SkConfigHotkeyRegisterSpec){__VA_ARGS__})
+  ski_register_config_hotkey(&(SkConfigHotkeyRegister){__VA_ARGS__})
 #define sk_register_remapping(...)                                             \
   ski_register_remapping(&(SkRemappingSpec){__VA_ARGS__})
 #define sk_register_snippet(...)                                               \
@@ -862,7 +862,7 @@ char *sk_string_slice(const char *str, int start, int end);
 
 SkStringList sk_string_split(const char *str, const char *delimiter);
 
-void ski_populate_listbox(const SkPopulateListboxSpec *spec);
+void ski_populate_listbox(const SkPopulateListbox *spec);
 
 bool sk_is_selected(ListBox *lb);
 
@@ -930,11 +930,11 @@ const char *sk_editbox_active(void);
 
 void sk_editbox_set_active(const char *name);
 
-bool ski_place_listbox(const SkListSpec *spec);
+bool ski_place_listbox(const SkList *spec);
 
-bool ski_place_checkbox(const SkCheckboxSpec *spec);
+bool ski_place_checkbox(const SkCheckbox *spec);
 
-bool ski_place_slider(const SkSliderSpec *spec);
+bool ski_place_slider(const SkSlider *spec);
 
 bool sk_checkbox_is_checked(const char *name);
 
@@ -984,7 +984,7 @@ bool sk_set_focus(SkFocusKind kind);
 
 void sk_focus_clear(void);
 
-bool ski_listbox_begin(const SkListSpec *spec);
+bool ski_listbox_begin(const SkList *spec);
 
 bool sk_listbox_next(SkListItemCtx *out);
 
@@ -1244,20 +1244,20 @@ const char *sk_config_setting_name_at(int index);
 const char *sk_config_setting_value_at(int index);
 
 int ski_settings_entry_add_checkbox(SkSettingsEntry *entry,
-                                    const SkSettingsCheckboxSpec *spec);
+                                    const SkSettingsCheckbox *spec);
 
 int ski_settings_entry_add_button(SkSettingsEntry *entry,
-                                  const SkSettingsButtonSpec *spec);
+                                  const SkSettingsButton *spec);
 
 int ski_settings_entry_add_slider(SkSettingsEntry *entry,
-                                  const SkSettingsSliderSpec *spec);
+                                  const SkSettingsSlider *spec);
 
 int ski_settings_entry_add_dropdown(SkSettingsEntry *entry,
-                                    const SkSettingsDropdownSpec *spec);
+                                    const SkSettingsDropdown *spec);
 
 SkSettingsEditboxGroup
 ski_settings_entry_add_editbox(SkSettingsEntry *entry,
-                               const SkSettingsEditboxSpec *spec);
+                               const SkSettingsEditbox *spec);
 
 const char *sk_settings_editbox_get(SkSettingsEditboxGroup group,
                                     const char *name);
@@ -1339,7 +1339,7 @@ bool ski_register_hotkey(const SkHotkeySpec *spec);
 
 bool sk_unregister_hotkey(const char *hotkey);
 
-bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec);
+bool ski_register_config_hotkey(const SkConfigHotkeyRegister *spec);
 
 void sk_disable_global_hotkeys(void);
 
@@ -1416,4 +1416,5 @@ bool ski_resize_window_animated(const SkRect *rect, int duration_ms);
 SkRect sk_get_window_bounds(void);
 
 #endif
+
 

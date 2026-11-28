@@ -13,7 +13,7 @@ void Platform_HoverMessageRelease(const char *key) {
   XFlush(dpy);
 }
 
-void Platform_DisplayMessage(DisplayMessageSpec spec) {
+void Platform_DisplayMessage(DisplayMessage spec) {
   MSG_UNPACK(spec);
   if (!message)
     message = "";
@@ -42,7 +42,7 @@ void Platform_DisplayMessage(DisplayMessageSpec spec) {
   x11_msg_present(&(X11MsgPresent){.f_dpy = dpy, .f_message = message, .f_x = x, .f_y = y, .f_win_w = win_w, .f_win_h = win_h, .f_timeout = timeout, .f_color = color, .f_no_bg = no_bg, .f_render = render, .f_render_data = render_data, .f_name = name, .f_rounded = rounded, .f_radius = radius, .f_fps = fps});
 }
 
-void Platform_HoverMessage(HoverMessageSpec spec) {
+void Platform_HoverMessage(HoverMessage spec) {
   HOVER_MSG_UNPACK(spec);
 
   Display *dpy = x11_get_display();
@@ -64,7 +64,7 @@ void Platform_HoverMessage(HoverMessageSpec spec) {
   x11_msg_hover_present(&(X11MsgHoverPresent){.f_dpy = dpy, .f_key = key, .f_message = message, .f_center_x = center_x, .f_center_y = center_y, .f_win_w = win_w, .f_win_h = win_h, .f_color = color, .f_no_bg = no_bg});
 }
 
-void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
+void Platform_DisplayMessageAnchored(AnchoredMessage spec) {
   ANCHORED_MSG_UNPACK(spec);
 
   if (!message && !render) {
@@ -169,4 +169,5 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
   (void)path_a;
   (void)path_b;
 }
+
 

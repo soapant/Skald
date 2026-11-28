@@ -125,7 +125,7 @@ typedef struct {
   int w;
   int h;
   int item_height;
-} ListSpec;
+} List;
 
 typedef enum {
   SNAP_LEFT,
@@ -139,3 +139,4 @@ typedef enum {
 } SnapPreset;
 
 #endif
+

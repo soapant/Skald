@@ -770,7 +770,7 @@ StringList sk_string_split(const char *str, const char *delimiter) {
 
 void sk_string_list_free(StringList *list) { string_list_free(list); }
 
-void ski_populate_listbox(const SkPopulateListboxSpec *spec) {
+void ski_populate_listbox(const SkPopulateListbox *spec) {
   if (!spec)
     return;
   if (search_index_current())
@@ -876,12 +876,12 @@ void ski_message(const SkMessageSpec *spec) {
   if (spec->hover_key && spec->hover_key[0]) {
     if (spec->render) {
       HoverPopupCtx *popup = hover_popup_ctx_new(
-          &(HoverPopupCreateSpec){.render = spec->render,
+          &(HoverPopupCreate){.render = spec->render,
                                   .render_data = spec->render_data,
                                   .w = spec->w,
                                   .h = spec->h});
       if (popup) {
-        hover_widget_show((HoverWidgetShowSpec){
+        hover_widget_show((HoverWidgetShow){
             .key = spec->hover_key,
             .render = hover_popup_frame,
             .ud = popup,
@@ -900,7 +900,7 @@ void ski_message(const SkMessageSpec *spec) {
       }
       return;
     }
-    Platform_HoverMessage((HoverMessageSpec){.key = spec->hover_key,
+    Platform_HoverMessage((HoverMessage){.key = spec->hover_key,
                                              .message = spec->message,
                                              .x = spec->x,
                                              .y = spec->y,
@@ -917,7 +917,7 @@ void ski_message(const SkMessageSpec *spec) {
     slot = is_popup_active(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER;
   } else if (slot == FREE) {
     Platform_DisplayMessage(
-        (DisplayMessageSpec){.message = spec->message,
+        (DisplayMessage){.message = spec->message,
                              .x = spec->x,
                              .y = spec->y,
                              .no_bg = spec->no_bg,
@@ -1021,7 +1021,7 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
     return NULL;
   TextPromptRenderData render_data = {0};
   PromptSpec pspec =
-      text_prompt_spec(&(TextPromptSpec){.f_render_data = &render_data, .f_placeholder = NULL, .f_initial_text = initial_text, .f_x = x, .f_y = y, .f_w = w, .f_h = h});
+      text_prompt_spec(&(TextPrompt){.f_render_data = &render_data, .f_placeholder = NULL, .f_initial_text = initial_text, .f_x = x, .f_y = y, .f_w = w, .f_h = h});
   {
     SkaldContext *ctx = SkaldContext_Get();
     if (ctx) {
@@ -1268,7 +1268,7 @@ char *ski_popup(const PopupSpec *spec) {
     placeholder = "Enter Password:";
   TextPromptRenderData render_data = {0};
   PromptSpec pspec =
-      text_prompt_spec(&(TextPromptSpec){.f_render_data = &render_data, .f_placeholder = placeholder, .f_initial_text = NULL, .f_x = spec->x, .f_y = spec->y, .f_w = spec->w ? spec->w : 600, .f_h = spec->h ? spec->h : 70});
+      text_prompt_spec(&(TextPrompt){.f_render_data = &render_data, .f_placeholder = placeholder, .f_initial_text = NULL, .f_x = spec->x, .f_y = spec->y, .f_w = spec->w ? spec->w : 600, .f_h = spec->h ? spec->h : 70});
   pspec.password_mode = spec->password_mode;
   char *r = WindowManager_ShowPrompt(wm, &pspec);
   return r ? strdup(r) : NULL;
@@ -1291,7 +1291,7 @@ bool ski_draw_text(const SkTextSpec *spec) {
     draw_y += 3;
   const char *align = spec->align ? spec->align : "LEFT";
   FontHandle fh = spec->font;
-  return Platform_DrawTextRaw((DrawTextRawSpec){.x = draw_x,
+  return Platform_DrawTextRaw((DrawTextRaw){.x = draw_x,
                                                 .y = draw_y,
                                                 .text = real_text,
                                                 .color = col,
@@ -1468,7 +1468,7 @@ bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
     return true;
   unsigned long col = draw_color(spec->color);
   Platform_DrawTextCentered(
-      (DrawTextCenteredSpec){.x = spec->x,
+      (DrawTextCentered){.x = spec->x,
                              .y = spec->y,
                              .w = spec->w,
                              .h = spec->h,
@@ -1653,7 +1653,7 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
     return r;
   int fs = spec->font_size > 0 ? spec->font_size : FontSize;
   const char *a = spec->align ? spec->align : "CENTER";
-  int w = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+  int w = Platform_MeasureTextWidth((MeasureTextWidth){
       .text = spec->text, .len = (int)strlen(spec->text), .font_size = fs});
   int h = Platform_GetTextLineHeight(fs);
   int base = spec->pad > 0 ? spec->pad : spec->x;
@@ -1674,7 +1674,7 @@ SkRect ski_text_bounds(const SkTextBoundsSpec *spec) {
 int sk_get_text_width(const char *text, int font_size) {
   if (!text)
     return 0;
-  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
+  return Platform_MeasureTextWidth((MeasureTextWidth){
       .text = text, .len = (int)strlen(text), .font_size = font_size});
 }
 
@@ -1699,7 +1699,7 @@ bool ski_scroll_begin(const SkScrollSpec *spec) {
     return false;
   char *owner =
       owner_resolve_for_func_alloc((void *)__builtin_return_address(0));
-  ScrollAreaSpec inner = {
+  ScrollArea inner = {
       .name = spec->name,
       .x = spec->x,
       .y = spec->y,
@@ -1746,7 +1746,7 @@ bool ski_draw_line(const Line *spec) {
   if (search_index_current())
     return true;
   return Platform_DrawLineRaw(
-      (DrawLineRawSpec){.x1 = spec->x1,
+      (DrawLineRaw){.x1 = spec->x1,
                         .y1 = spec->y1,
                         .x2 = spec->x2,
                         .y2 = spec->y2,
@@ -1761,7 +1761,7 @@ bool ski_draw_circle(const Circle *spec) {
   if (search_index_current())
     return true;
   return Platform_DrawCircleRaw(
-      (DrawCircleRawSpec){.cx = spec->x,
+      (DrawCircleRaw){.cx = spec->x,
                           .cy = spec->y,
                           .radius = spec->radius,
                           .color = draw_color(spec->color),
@@ -1770,7 +1770,7 @@ bool ski_draw_circle(const Circle *spec) {
 
 void sk_listbox_end(void) { listbox_common_end(); }
 
-bool ski_listbox_begin(const SkListSpec *spec) {
+bool ski_listbox_begin(const SkList *spec) {
   if (!spec)
     return false;
   if (search_index_current()) {
@@ -1787,7 +1787,7 @@ bool sk_listbox_next(SkListItemCtx *out) {
   return listbox_next_common((ListItemCtx *)out);
 }
 
-bool ski_place_listbox(const SkListSpec *spec) {
+bool ski_place_listbox(const SkList *spec) {
   if (!spec) {
     return false;
   }
@@ -1831,7 +1831,7 @@ bool sk_button_is_clicked(const char *name) {
   return checkbox_take_clicked(name, PLACE_BUTTON);
 }
 
-bool ski_place_checkbox(const SkCheckboxSpec *spec) {
+bool ski_place_checkbox(const SkCheckbox *spec) {
   if (!spec)
     return false;
   if (search_index_current()) {
@@ -1842,14 +1842,14 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec) {
   }
   if (spec->name && settings_focus_ctx_has(spec->name) &&
       spec->on_click == settings_dispatch_widget_click) {
-    SkCheckboxSpec copy = *spec;
+    SkCheckbox copy = *spec;
     copy.on_click = settings_dispatch_focus_click;
     return checkbox_place(&copy);
   }
   return checkbox_place(spec);
 }
 
-bool ski_place_slider(const SkSliderSpec *spec) {
+bool ski_place_slider(const SkSlider *spec) {
   if (!spec)
     return false;
   if (search_index_current()) {
@@ -1860,7 +1860,7 @@ bool ski_place_slider(const SkSliderSpec *spec) {
   }
   if (spec->name && settings_focus_ctx_has(spec->name) &&
       spec->on_change == settings_dispatch_slider_change) {
-    SkSliderSpec copy = *spec;
+    SkSlider copy = *spec;
     copy.on_change = settings_dispatch_focus_change;
     return slider_place(&copy);
   }
@@ -2558,28 +2558,28 @@ SkSettingsEntry *sk_settings_entry_add(const SettingsEntrySpec *spec) {
 }
 
 int ski_settings_entry_add_checkbox(SettingsEntry *entry,
-                                    const SettingsCheckboxSpec *spec) {
+                                    const SettingsCheckbox *spec) {
   return settings_entry_add_checkbox(entry, spec);
 }
 
 int ski_settings_entry_add_button(SettingsEntry *entry,
-                                  const SettingsButtonSpec *spec) {
+                                  const SettingsButton *spec) {
   return settings_entry_add_button(entry, spec);
 }
 
 int ski_settings_entry_add_slider(SettingsEntry *entry,
-                                  const SettingsSliderSpec *spec) {
+                                  const SettingsSlider *spec) {
   return settings_entry_add_slider(entry, spec);
 }
 
 int ski_settings_entry_add_dropdown(SettingsEntry *entry,
-                                    const SettingsDropdownSpec *spec) {
+                                    const SettingsDropdown *spec) {
   return settings_entry_add_dropdown(entry, spec);
 }
 
 SettingsEditboxGroup
 ski_settings_entry_add_editbox(SettingsEntry *entry,
-                               const SettingsEditboxSpec *spec) {
+                               const SettingsEditbox *spec) {
   return settings_entry_add_editbox(entry, spec);
 }
 
@@ -2765,8 +2765,8 @@ char *sk_config_hotkey_display_name_at(int index) {
   return config_hotkey_display_name_at(index);
 }
 
-bool ski_register_config_hotkey(const SkConfigHotkeyRegisterSpec *spec) {
-  return config_hotkey_register((const ConfigHotkeyRegisterSpec *)spec);
+bool ski_register_config_hotkey(const SkConfigHotkeyRegister *spec) {
+  return config_hotkey_register((const ConfigHotkeyRegister *)spec);
 }
 
 void sk_init_all_hotkeys(void) { config_hotkey_bind_all(); }
@@ -2891,5 +2891,6 @@ bool sk_config_set_quicklink(const char *name, const char *target) {
 bool sk_config_set_feature_shortcut(const char *name, const char *target) {
   return config_feature_shortcut_set(name, target);
 }
+
 
 

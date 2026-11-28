@@ -1098,7 +1098,7 @@ static bool config_hotkey_binding_bind(ConfigHotkeyBinding *b) {
   return true;
 }
 
-bool config_hotkey_register(const ConfigHotkeyRegisterSpec *spec) {
+bool config_hotkey_register(const ConfigHotkeyRegister *spec) {
   if (!spec || !spec->name || !spec->name[0] || !spec->key || !spec->key[0] ||
       !spec->default_hotkey || !spec->default_hotkey[0] ||
       (!spec->cb && !spec->cb_ud))
@@ -1396,4 +1396,5 @@ done:
   }
   return should_close;
 }
+
 

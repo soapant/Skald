@@ -18,13 +18,13 @@
 
 #define SLIDER_MIN_SPAN 1e-6f
 
-static float slider_snap(const SliderSpec *sl, float v);
+static float slider_snap(const Slider *sl, float v);
 
 static ColorRef widget_thumb(void) {
   return color_lerp(COLOR_BG, RGB(255, 255, 255), 0.92f);
 }
 
-static SliderSpec **sliders;
+static Slider **sliders;
 #define slider_count arrlenu(sliders)
 
 static WidgetMouseState sl_mouse;
@@ -32,7 +32,7 @@ static WidgetMouseState sl_mouse;
 void slider_frame_begin(void) { sl_mouse.valid = false; }
 
 static void slider_focus_step(void *owner, int dir) {
-  SliderSpec *sl = (SliderSpec *)owner;
+  Slider *sl = (Slider *)owner;
   if (!sl)
     return;
   float step =
@@ -56,7 +56,7 @@ static void slider_focus_step(void *owner, int dir) {
 
 static void slider_focus_activate(void *owner) { slider_focus_step(owner, 1); }
 
-static SliderSpec *slider_find(const char *name) {
+static Slider *slider_find(const char *name) {
 
   if (!name)
     return NULL;
@@ -67,15 +67,15 @@ static SliderSpec *slider_find(const char *name) {
   return NULL;
 }
 
-static SliderSpec *slider_intern(const char *name, float seed,
+static Slider *slider_intern(const char *name, float seed,
                                  bool *out_fresh) {
 
   if (out_fresh)
     *out_fresh = false;
-  SliderSpec *sl = slider_find(name);
+  Slider *sl = slider_find(name);
   if (sl)
     return sl;
-  sl = (SliderSpec *)calloc(1, sizeof(*sl));
+  sl = (Slider *)calloc(1, sizeof(*sl));
   if (!sl)
     return NULL;
   sl->orientation = SLIDER_HORIZONTAL;
@@ -99,7 +99,7 @@ static float slider_clamp01(float v) {
   return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
 }
 
-static float slider_snap(const SliderSpec *sl, float v) {
+static float slider_snap(const Slider *sl, float v) {
   float range = sl->max_value - sl->min_value;
   if (range < SLIDER_MIN_SPAN)
     return sl->min_value;
@@ -118,14 +118,14 @@ static float slider_snap(const SliderSpec *sl, float v) {
   return v;
 }
 
-static float slider_fraction_of(const SliderSpec *sl) {
+static float slider_fraction_of(const Slider *sl) {
   float range = sl->max_value - sl->min_value;
   if (range < SLIDER_MIN_SPAN)
     return 0.0f;
   return slider_clamp01((sl->value - sl->min_value) / range);
 }
 
-static float slider_value_of_axis(const SliderSpec *sl, int axis, int span) {
+static float slider_value_of_axis(const Slider *sl, int axis, int span) {
   if (span <= 1)
     return sl->min_value;
   float frac = (float)axis / (float)(span - 1);
@@ -139,27 +139,27 @@ static float slider_value_of_axis(const SliderSpec *sl, int axis, int span) {
 }
 
 bool slider_is_hovered(const char *name) {
-  const SliderSpec *sl = name ? slider_find(name) : NULL;
+  const Slider *sl = name ? slider_find(name) : NULL;
   return sl ? sl->hovered : false;
 }
 
 bool slider_is_clicked(const char *name) {
-  const SliderSpec *sl = name ? slider_find(name) : NULL;
+  const Slider *sl = name ? slider_find(name) : NULL;
   return sl ? sl->clicked : false;
 }
 
 bool slider_is_dragging(const char *name) {
-  const SliderSpec *sl = name ? slider_find(name) : NULL;
+  const Slider *sl = name ? slider_find(name) : NULL;
   return sl ? sl->dragging : false;
 }
 
 float slider_value(const char *name) {
-  const SliderSpec *sl = name ? slider_find(name) : NULL;
+  const Slider *sl = name ? slider_find(name) : NULL;
   return sl ? sl->value : 0.0f;
 }
 
 float slider_fraction(const char *name) {
-  const SliderSpec *sl = name ? slider_find(name) : NULL;
+  const Slider *sl = name ? slider_find(name) : NULL;
   return sl ? slider_fraction_of(sl) : 0.0f;
 }
 
@@ -168,14 +168,14 @@ int slider_percent(const char *name) {
 }
 
 bool slider_set_value(const char *name, float value) {
-  SliderSpec *sl = name ? slider_find(name) : NULL;
+  Slider *sl = name ? slider_find(name) : NULL;
   if (!sl)
     return false;
   sl->value = slider_snap(sl, value);
   return true;
 }
 
-static void slider_track_geometry(const SliderSpec *sl, int *tx, int *ty,
+static void slider_track_geometry(const Slider *sl, int *tx, int *ty,
                                   int *tw, int *th, int *rx, int *ry,
                                   int *rsize) {
   int t = sl->thickness > 0 ? sl->thickness : 4;
@@ -207,7 +207,7 @@ static void slider_track_geometry(const SliderSpec *sl, int *tx, int *ty,
   *rsize = ts;
 }
 
-static void slider_focus_outline(const SliderSpec *spec, int x, int y, int w,
+static void slider_focus_outline(const Slider *spec, int x, int y, int w,
                                  int h) {
   if (!spec || !spec->focused)
     return;
@@ -223,7 +223,7 @@ static void slider_focus_outline(const SliderSpec *spec, int x, int y, int w,
                                          .filled = false});
 }
 
-void slider_draw(const SliderSpec *spec) {
+void slider_draw(const Slider *spec) {
   if (!spec)
     return;
   bool active = spec->hovered || spec->focused;
@@ -340,7 +340,7 @@ void slider_draw(const SliderSpec *spec) {
   slider_focus_outline(spec, tx, ty, twk, thk);
 }
 
-bool slider_place(const SliderSpec *spec) {
+bool slider_place(const Slider *spec) {
   if (!spec || !spec->name || !spec->name[0])
     return false;
 
@@ -360,7 +360,7 @@ bool slider_place(const SliderSpec *spec) {
 
   float seed = spec->value;
   bool fresh = false;
-  SliderSpec *sl = slider_intern(spec->name, seed, &fresh);
+  Slider *sl = slider_intern(spec->name, seed, &fresh);
   if (!sl)
     return false;
 
@@ -449,4 +449,5 @@ bool slider_place(const SliderSpec *spec) {
     sl->on_hover();
   return true;
 }
+
 

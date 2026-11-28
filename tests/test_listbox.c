@@ -11,7 +11,7 @@
 #include "platform/platform.h"
 
 #define POPULATE(lb, filter, items, count, match)                              \
-  populate_listbox(&(PopulateListboxSpec){                                   \
+  populate_listbox(&(PopulateListbox){                                   \
       .f_lb = (lb), .f_filter = (filter), .f_items = (items),                  \
       .f_item_count = (count), .f_filter_match = (match)})
 
@@ -125,7 +125,7 @@ TEST(ui_navigate_to_new_index_resets_hscroll) {
 
 TEST(listbox_layout_includes_partial_last_row) {
   ListBox lb = {0};
-  ListSpec spec = {0};
+  List spec = {0};
   spec.y = 0;
   spec.h = 25;
   ListboxLayout lay = {0};
@@ -203,4 +203,5 @@ int main(void) {
   RUN(populate_grows_beyond_fixed_limits);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
+
 

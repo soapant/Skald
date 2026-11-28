@@ -18,7 +18,7 @@ static size_t LAST_LIMIT;
 static int COLLECT_CALLS;
 static bool SAVE_FAILS;
 
-static char *fake_collect(PlatformHttpCollectSpec *argspec) {
+static char *fake_collect(PlatformHttpCollect *argspec) {
   COLLECT_CALLS++;
   snprintf(LAST_URL, sizeof(LAST_URL), "%s",
            argspec->f_url ? argspec->f_url : "");
@@ -189,4 +189,5 @@ int main(void) {
   RUN(async_get_delivers_transport_result);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
+
 

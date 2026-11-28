@@ -793,7 +793,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         Platform_DrawPromptEditbox(estate);
 
         if (estate->lb) {
-          draw_prompt_separator((DrawPromptSeparatorSpec){
+          draw_prompt_separator((DrawPromptSeparator){
               .y = prompt_list_top() - 2, .width = rect.right - rect.left});
 
           int list_top = prompt_list_top();
@@ -843,7 +843,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             if (row_h_scroll > 0)
               draw_x -= row_h_scroll;
             Platform_DrawTextRaw(
-                (DrawTextRawSpec){.x = draw_x,
+                (DrawTextRaw){.x = draw_x,
                                   .y = y + pad_top,
                                   .text = draw_text,
                                   .color = rgb_to_hex(COLOR_TEXT),
@@ -855,7 +855,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           draw_state_get()->win32_listbox_surface = false;
           draw_state_clear_clip();
 
-          draw_prompt_separator((DrawPromptSeparatorSpec){
+          draw_prompt_separator((DrawPromptSeparator){
               .y = rect.bottom - prompt_list_bottom_margin(),
               .width = rect.right - rect.left});
         }
@@ -938,4 +938,5 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   return 0;
 }
+
 

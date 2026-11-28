@@ -467,7 +467,7 @@ void x11_draw_listbox(X11DrawListbox *argspec) {
   int item_h = prompt_row_height();
   int y0 = prompt_list_top();
   draw_prompt_separator(
-      (DrawPromptSeparatorSpec){.y = y0, .width = argspec->f_state->width});
+      (DrawPromptSeparator){.y = y0, .width = argspec->f_state->width});
   int y_offset = PROMPT_LIST_BOTTOM_TITLE;
   int visible = (argspec->f_state->height - y0 - y_offset + item_h - 1) /
                 item_h;
@@ -510,7 +510,7 @@ void x11_draw_listbox(X11DrawListbox *argspec) {
 
   draw_state_clear_clip();
   if (prompt_list_bottom_margin() > 0) {
-    draw_prompt_separator((DrawPromptSeparatorSpec){
+    draw_prompt_separator((DrawPromptSeparator){
         .y = argspec->f_state->height - PROMPT_LIST_BOTTOM_TITLE, .width = argspec->f_state->width});
   }
 
@@ -674,7 +674,7 @@ bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec) {
   return ok;
 }
 
-bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
+bool x11_raw_draw_text_rotated(const DrawTextRaw *spec) {
   if (!x11_raw_can_draw() || !spec || !spec->text || !spec->text[0])
     return false;
   Display *dpy = g_draw_dpy;
@@ -786,4 +786,5 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
   XFlush(dpy);
   return ok;
 }
+
 

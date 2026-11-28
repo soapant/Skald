@@ -17,7 +17,7 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
   }
 }
 
-void Platform_DisplayMessage(DisplayMessageSpec spec) {
+void Platform_DisplayMessage(DisplayMessage spec) {
   MSG_UNPACK(spec);
 
   int useMaxW = max_width;
@@ -49,7 +49,7 @@ void Platform_DisplayMessage(DisplayMessageSpec spec) {
     return;
   }
   Platform_CreateDisplayMessageWindow(
-      (CreateDisplayMessageWindowSpec){.message = message,
+      (CreateDisplayMessageWindow){.message = message,
                                        .x = center_x,
                                        .y = center_y,
                                        .max_width = useMaxW,
@@ -161,7 +161,7 @@ void Platform_HoverMessageRelease(const char *key) {
   win32_msg_hover_release(key);
 }
 
-void Platform_HoverMessage(HoverMessageSpec spec) {
+void Platform_HoverMessage(HoverMessage spec) {
   win32_msg_hover_present(spec);
 }
 
@@ -188,7 +188,7 @@ static int win32_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
   }
 }
 
-void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
+void Platform_DisplayMessageAnchored(AnchoredMessage spec) {
   ANCHORED_MSG_UNPACK(spec);
 
   if (!message && !render) {
@@ -242,7 +242,7 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
            message, rect_x, rect_y, rect_w, rect_h, h_slot, v_slot, gap,
            outward, center_x, center_y, winWidth, winHeight);
 
-  Platform_DisplayMessage((DisplayMessageSpec){.message = message,
+  Platform_DisplayMessage((DisplayMessage){.message = message,
                                                .x = center_x,
                                                .y = center_y,
                                                .no_bg = no_bg,
@@ -260,7 +260,7 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
                                                .fps = fps});
 }
 
-void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec) {
+void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindow spec) {
   const char *message = spec.message;
   int center_x = spec.x;
   int center_y = spec.y;
@@ -361,4 +361,5 @@ void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec) {
            textHeight, winWidth, winHeight, topLeftX, topLeftY);
   return;
 }
+
 

@@ -23,7 +23,7 @@
 int editbox_auto_width(const char *text, int font_size) {
   int w = 0;
   if (text && text[0]) {
-    w = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+    w = Platform_MeasureTextWidth((MeasureTextWidth){
         .text = text, .len = (int)strlen(text), .font_size = font_size});
   }
   w += EDITBOX_TIGHT_INSET + EDITBOX_TIGHT_RIGHT_PAD;
@@ -46,7 +46,7 @@ static int editbox_measure(const EditboxSpec *spec, const char *text, int len) {
     return 0;
   if (spec->measure)
     return spec->measure(text, len, spec->measure_user);
-  return Platform_MeasureTextWidth((MeasureTextWidthSpec){
+  return Platform_MeasureTextWidth((MeasureTextWidth){
       .text = text,
       .len = len,
       .font_size = spec->font_size > 0 ? spec->font_size : FontSize});
@@ -95,7 +95,7 @@ void editbox_spec_from_place(EditboxSpecFromPlace *argspec) {
   int text_w = argspec->f_metrics->text_w, cursor_x = argspec->f_metrics->cursor_x;
   int ascent = argspec->f_metrics->ascent, descent = argspec->f_metrics->descent;
   FontHandle font = argspec->f_metrics->font;
-  EditboxInitFromSpec init_args = {0};
+  EditboxInitFrom init_args = {0};
   init_args.state = argspec->f_state;
   init_args.buf = argspec->f_place->buf;
   init_args.text_len = argspec->f_place->text_len;
@@ -126,7 +126,7 @@ void editbox_spec_from_place(EditboxSpecFromPlace *argspec) {
   argspec->f_out->wrap_cache = editbox_prompt_wrap_cache(argspec->f_state);
 }
 
-void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args) {
+void editbox_init_from_spec(EditboxInit *out, const EditboxInitFrom *args) {
   if (!out || !args)
     return;
   memset(out, 0, sizeof(*out));
@@ -486,7 +486,7 @@ static void editbox_wrap_draw_text(const EditboxSpec *spec, int draw_y,
       memcpy(line, text + start, (size_t)n);
       line[n] = '\0';
       Platform_DrawTextRaw(
-          (DrawTextRawSpec){.x = x0 + positions[start].x,
+          (DrawTextRaw){.x = x0 + positions[start].x,
                             .y = y0 + positions[start].y - draw_y,
                             .text = line,
                             .color = color,
@@ -682,7 +682,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
           char ch[8];
           memcpy(ch, src + spec->cursor, (size_t)cl);
           ch[cl] = '\0';
-          Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->caret_x,
+          Platform_DrawTextRaw((DrawTextRaw){.x = layout->caret_x,
                                                  .y = layout->caret_text_y,
                                                  .text = ch,
                                                  .color = bg,
@@ -715,7 +715,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
 
   if (parts & EDITBOX_PART_TEXT) {
     if (spec->text_len > 0 && !spec->password_mode) {
-      Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->draw_x,
+      Platform_DrawTextRaw((DrawTextRaw){.x = layout->draw_x,
                                              .y = spec->text_y,
                                              .text = spec->text,
                                              .color = spec->text_color,
@@ -727,7 +727,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
       unsigned long ph =
           color_lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(RGB(0, 0, 0)), 0.45f);
       Platform_DrawTextRaw(
-          (DrawTextRawSpec){.x = layout->draw_x,
+          (DrawTextRaw){.x = layout->draw_x,
                             .y = spec->text_y + spec->placeholder_dy,
                             .text = spec->placeholder,
                             .color = ph,
@@ -771,7 +771,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
         ch[cl] = '\0';
         int ty =
             is_placeholder ? spec->text_y + spec->placeholder_dy : spec->text_y;
-        Platform_DrawTextRaw((DrawTextRawSpec){.x = layout->caret_x,
+        Platform_DrawTextRaw((DrawTextRaw){.x = layout->caret_x,
                                                .y = ty,
                                                .text = ch,
                                                .color = bg,
@@ -969,7 +969,7 @@ static void editbox_single_click_to_caret(PromptState *state,
   int len = (int)strlen(text);
   int font_size = entry->font_size > 0 ? entry->font_size : FontSize;
   int text_w = Platform_MeasureTextWidth(
-      (MeasureTextWidthSpec){.text = text, .len = len, .font_size = font_size});
+      (MeasureTextWidth){.text = text, .len = len, .font_size = font_size});
   int inset = text_w > 0 && entry->w < text_w + PROMPT_EDIT_SCROLL_PAD + 16
                   ? EDITBOX_TIGHT_INSET
                   : PROMPT_EDIT_INSET;
@@ -985,8 +985,8 @@ static void editbox_single_click_to_caret(PromptState *state,
     if (i + glen > len)
       glen = len - i;
     int before = Platform_MeasureTextWidth(
-        (MeasureTextWidthSpec){.text = text, .len = i, .font_size = font_size});
-    int after = Platform_MeasureTextWidth((MeasureTextWidthSpec){
+        (MeasureTextWidth){.text = text, .len = i, .font_size = font_size});
+    int after = Platform_MeasureTextWidth((MeasureTextWidth){
         .text = text, .len = i + glen, .font_size = font_size});
     int before_dist = before - target_x;
     if (before_dist < 0)
@@ -1073,7 +1073,7 @@ static bool editbox_wrap_caret_from_point(PromptState *state,
       after = cache->positions[next].x;
     } else {
       after =
-          before + Platform_MeasureTextWidth((MeasureTextWidthSpec){
+          before + Platform_MeasureTextWidth((MeasureTextWidth){
                        .text = text + i, .len = glen, .font_size = font_size});
     }
     int dx = before - target_x;
@@ -1216,7 +1216,7 @@ bool editbox_wrap_move_vertical(PromptState *state, int dir) {
       after = cache->positions[next].x;
     } else {
       after =
-          before + Platform_MeasureTextWidth((MeasureTextWidthSpec){
+          before + Platform_MeasureTextWidth((MeasureTextWidth){
                        .text = text + i, .len = glen, .font_size = font_size});
     }
     int before_dist = before - desired_x;
@@ -1245,4 +1245,5 @@ const char *editbox_registry_active_name(const PromptState *state) {
     return NULL;
   return state->editboxes[state->active_editbox].name;
 }
+
 

@@ -1736,7 +1736,7 @@ static size_t x11_http_write_file_cb(char *ptr, size_t sz, size_t nm,
   return fwrite(ptr, sz, nm, (FILE *)userdata);
 }
 
-char *Platform_HttpCollect(PlatformHttpCollectSpec *argspec) {
+char *Platform_HttpCollect(PlatformHttpCollect *argspec) {
   const char *url = argspec->f_url;
   const char *method = argspec->f_method;
   const char *content_type = argspec->f_content_type;
@@ -2251,7 +2251,7 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     text_w = te.xOff;
   }
 
-  EditboxUiSpec ui = {.color_text = spec->color_text,
+  EditboxUi ui = {.color_text = spec->color_text,
                       .color_bg = spec->color_bg,
                       .placeholder = spec->placeholder,
                       .caret_h = spec->caret_h,
@@ -2283,7 +2283,7 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
       unsigned long title_col = rgb_to_hex(COLOR_TEXT);
       x11_set_draw_context(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
-          (DrawTextRawSpec){.x = PROMPT_FOOTER_X,
+          (DrawTextRaw){.x = PROMPT_FOOTER_X,
                             .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
                             .text = state->window_title,
                             .color = title_col,
@@ -2297,5 +2297,6 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     Platform_DestroyFont(fh);
   return true;
 }
+
 
 
