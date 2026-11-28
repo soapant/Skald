@@ -143,15 +143,15 @@ bool widget_base_set_no_bg(PlatformWidgetBase *base, bool no_bg);
 bool widget_base_set_bg_color(PlatformWidgetBase *base, ColorRef bg_color);
 
 typedef struct {
-  PlatformWidgetBase *f_base;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  int f_fps;
-  bool f_no_bg;
-  void (*f_on_click)(void);
-  const char *f_name;
+  PlatformWidgetBase *base;
+  int x;
+  int y;
+  int w;
+  int h;
+  int fps;
+  bool no_bg;
+  void (*on_click)(void);
+  const char *name;
 } WidgetInitBase;
 
 void widget_init_base(WidgetInitBase *argspec);

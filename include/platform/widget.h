@@ -25,14 +25,14 @@ typedef struct PlatformWidgetBase {
 typedef struct PlatformWidget PlatformWidget;
 
 typedef struct {
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  int f_fps;
-  bool f_no_bg;
-  void (*f_on_click)(void);
-  const char *f_name;
+  int x;
+  int y;
+  int w;
+  int h;
+  int fps;
+  bool no_bg;
+  void (*on_click)(void);
+  const char *name;
 } PlatformWidgetCreate;
 
 PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec);

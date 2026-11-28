@@ -4,14 +4,14 @@
 #include "core/types/color.h"
 
 PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
-  (void)argspec->f_x;
-  (void)argspec->f_y;
-  (void)argspec->f_w;
-  (void)argspec->f_h;
-  (void)argspec->f_fps;
-  (void)argspec->f_no_bg;
-  (void)argspec->f_on_click;
-  (void)argspec->f_name;
+  (void)argspec->x;
+  (void)argspec->y;
+  (void)argspec->w;
+  (void)argspec->h;
+  (void)argspec->fps;
+  (void)argspec->no_bg;
+  (void)argspec->on_click;
+  (void)argspec->name;
   return NULL;
 }
 

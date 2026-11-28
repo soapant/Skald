@@ -18,12 +18,12 @@ typedef struct {
 } SnippetBinding;
 
 typedef struct {
-  const char *f_trigger;
-  const char *f_text;
-  void (*f_func)(void);
-  bool f_whitelist;
-  const char *const *f_windows;
-  void *f_caller;
+  const char *trigger;
+  const char *text;
+  void (*func)(void);
+  bool whitelist;
+  const char *const *windows;
+  void *caller;
 } SnippetRegisterInternal;
 
 bool snippet_register_internal(SnippetRegisterInternal *argspec);

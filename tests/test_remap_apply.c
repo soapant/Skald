@@ -45,7 +45,7 @@ static bool saw_emit(int vk, int down) {
 TEST(binding_fires_destination_and_swallows_trigger) {
   TEST_TEARDOWN(remap_teardown);
   remap_set_emit_hook(fake_emit);
-  ASSERT_TRUE(remap_register_internal(&(RemapRegisterInternal){.f_src = "Ctrl+A", .f_dst = "B", .f_whitelist = false, .f_windows = NULL, .f_caller = (void *)test_binding_fires_destination_and_swallows_trigger}));
+  ASSERT_TRUE(remap_register_internal(&(RemapRegisterInternal){.src = "Ctrl+A", .dst = "B", .whitelist = false, .windows = NULL, .caller = (void *)test_binding_fires_destination_and_swallows_trigger}));
   ASSERT_TRUE(remap_has_bindings());
   remap_update_phys(VK_LCONTROL, 1);
   ASSERT_TRUE(remap_handle_vk('A', 1));
@@ -80,7 +80,7 @@ TEST(purge_owner_removes_binding) {
   char owner[OWNER_PATH_MAX];
   owner_resolve_for_func((void *)test_purge_owner_removes_binding, owner,
                          sizeof(owner));
-  ASSERT_TRUE(remap_register_internal(&(RemapRegisterInternal){.f_src = "Ctrl+K", .f_dst = "J", .f_whitelist = false, .f_windows = NULL, .f_caller = (void *)test_purge_owner_removes_binding}));
+  ASSERT_TRUE(remap_register_internal(&(RemapRegisterInternal){.src = "Ctrl+K", .dst = "J", .whitelist = false, .windows = NULL, .caller = (void *)test_purge_owner_removes_binding}));
   ASSERT_TRUE(remap_has_bindings());
   if (owner[0]) {
     remap_purge_owner(owner, NULL);
@@ -91,7 +91,7 @@ TEST(purge_owner_removes_binding) {
 TEST(emit_hook_failure_keeps_virtual_key_released) {
   TEST_TEARDOWN(remap_teardown);
   remap_set_emit_hook(rejecting_emit);
-  ASSERT_TRUE(remap_register_internal(&(RemapRegisterInternal){.f_src = "Ctrl+M", .f_dst = "N", .f_whitelist = false, .f_windows = NULL, .f_caller = (void *)test_emit_hook_failure_keeps_virtual_key_released}));
+  ASSERT_TRUE(remap_register_internal(&(RemapRegisterInternal){.src = "Ctrl+M", .dst = "N", .whitelist = false, .windows = NULL, .caller = (void *)test_emit_hook_failure_keeps_virtual_key_released}));
   remap_update_phys(VK_LCONTROL, 1);
   remap_handle_vk('M', 1);
   ASSERT_FALSE(remap_is_virt_held('N'));

@@ -52,7 +52,7 @@ void win32_set_prev_fg(HWND h) {
 }
 
 bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
-  (void)argspec->f_self;
+  (void)argspec->self;
 
   listbox_invalidate_mouse_pos();
   HWND fg = GetForegroundWindow();
@@ -78,31 +78,31 @@ bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
   DWORD ex_style = WS_EX_TOOLWINDOW | WS_EX_LAYERED;
   SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(
       CreateWindowExA(ex_style, SKALD_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN,
-                      argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h, NULL, NULL, hInstance, NULL));
+                      argspec->x, argspec->y, argspec->w, argspec->h, NULL, NULL, hInstance, NULL));
   if (WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) == NULL) {
     return false;
   }
   HWND hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
-  if (argspec->f_self)
-    argspec->f_self->handle = SkaldContext_Get()->window.hPopupWnd;
-  win32_apply_rounded_corners(hwnd, argspec->f_w, argspec->f_h);
+  if (argspec->self)
+    argspec->self->handle = SkaldContext_Get()->window.hPopupWnd;
+  win32_apply_rounded_corners(hwnd, argspec->w, argspec->h);
   ShowWindow(hwnd, SW_SHOW);
   win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd);
   return true;
 }
 
 bool Platform_PromptPopupResize(PlatformPromptPopupResize *argspec) {
-  if (argspec->f_w <= 0 || argspec->f_h <= 0)
+  if (argspec->w <= 0 || argspec->h <= 0)
     return false;
-  HWND hwnd = argspec->f_self ? WH_TO_HWND(argspec->f_self->handle) : NULL;
+  HWND hwnd = argspec->self ? WH_TO_HWND(argspec->self->handle) : NULL;
   if (!hwnd || !IsWindow(hwnd))
     hwnd = WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd);
   if (!hwnd || !IsWindow(hwnd))
     return false;
-  if (!SetWindowPos(hwnd, NULL, argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h,
+  if (!SetWindowPos(hwnd, NULL, argspec->x, argspec->y, argspec->w, argspec->h,
                     SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER))
     return false;
-  win32_apply_rounded_corners(hwnd, argspec->f_w, argspec->f_h);
+  win32_apply_rounded_corners(hwnd, argspec->w, argspec->h);
   return true;
 }
 
@@ -162,7 +162,7 @@ void Platform_PromptPopupRender(Popup *self) {
     prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    focus_frame_begin(&(FocusFrameBegin){.f_include_listbox = state->lb != NULL, .f_lb_x = 0, .f_lb_y = prompt_list_top(), .f_lb_w = state->width, .f_lb_h = state->height - prompt_list_top() -
+    focus_frame_begin(&(FocusFrameBegin){.include_listbox = state->lb != NULL, .lb_x = 0, .lb_y = prompt_list_top(), .lb_w = state->width, .lb_h = state->height - prompt_list_top() -
                           prompt_list_bottom_margin()});
     editbox_registry_register_focus(state);
     editbox_registry_tick(state);

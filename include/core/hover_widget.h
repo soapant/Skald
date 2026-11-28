@@ -47,13 +47,13 @@ typedef struct {
 } TextPromptRenderData;
 
 typedef struct {
-  TextPromptRenderData *f_render_data;
-  const char *f_placeholder;
-  const char *f_initial_text;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
+  TextPromptRenderData *render_data;
+  const char *placeholder;
+  const char *initial_text;
+  int x;
+  int y;
+  int w;
+  int h;
 } TextPrompt;
 
 PromptSpec text_prompt_spec(TextPrompt *argspec);

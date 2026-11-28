@@ -33,12 +33,12 @@ typedef enum {
 } TomlKeyValueStatus;
 
 typedef struct {
-  const char *f_line;
-  size_t f_len;
-  char *f_key;
-  size_t f_key_cap;
-  char *f_value;
-  size_t f_value_cap;
+  const char *line;
+  size_t len;
+  char *key;
+  size_t key_cap;
+  char *value;
+  size_t value_cap;
 } TomlParseKeyValue;
 
 TomlKeyValueStatus toml_parse_key_value(TomlParseKeyValue *argspec);

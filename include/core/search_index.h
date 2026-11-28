@@ -38,11 +38,11 @@ void search_index_push_context(SearchIndex *idx, int source_id,
                                const char *context);
 void search_index_pop_context(SearchIndex *idx);
 typedef struct {
-  SearchIndex *f_idx;
-  const char *f_text;
-  SearchKind f_kind;
-  const char *f_widget_name;
-  const char *f_value;
+  SearchIndex *idx;
+  const char *text;
+  SearchKind kind;
+  const char *widget_name;
+  const char *value;
 } SearchIndexAddText;
 
 void search_index_add_text(SearchIndexAddText *argspec);

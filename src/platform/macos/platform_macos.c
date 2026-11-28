@@ -14,8 +14,8 @@
 #define UNUSED(x) (void)(x)
 
 char *Platform_HttpCollect(PlatformHttpCollect *argspec) {
-  if (argspec->f_out_len)
-    *argspec->f_out_len = 0;
+  if (argspec->out_len)
+    *argspec->out_len = 0;
   return NULL;
 }
 
@@ -194,13 +194,13 @@ FontHandle Platform_CreateFont(int size, const char *face_name) {
 void Platform_DestroyFont(FontHandle font) { UNUSED(font); }
 
 void Platform_GetTextExtents(PlatformGetTextExtents *argspec) {
-  UNUSED(argspec->f_font);
-  UNUSED(argspec->f_text);
-  UNUSED(argspec->f_max_width);
-  if (argspec->f_outWidth)
-    *argspec->f_outWidth = 0;
-  if (argspec->f_outHeight)
-    *argspec->f_outHeight = 0;
+  UNUSED(argspec->font);
+  UNUSED(argspec->text);
+  UNUSED(argspec->max_width);
+  if (argspec->outWidth)
+    *argspec->outWidth = 0;
+  if (argspec->outHeight)
+    *argspec->outHeight = 0;
 }
 
 int Platform_InitializeTrayIcon(void) { return 0; }
@@ -228,13 +228,13 @@ bool Platform_ListboxBackendBegin(int item_height_override,
 }
 
 void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) {
-  UNUSED(argspec->f_bx);
-  UNUSED(argspec->f_bw);
-  UNUSED(argspec->f_y);
-  UNUSED(argspec->f_item_h);
-  UNUSED(argspec->f_fw);
-  UNUSED(argspec->f_frame_h);
-  UNUSED(argspec->f_sel);
+  UNUSED(argspec->bx);
+  UNUSED(argspec->bw);
+  UNUSED(argspec->y);
+  UNUSED(argspec->item_h);
+  UNUSED(argspec->fw);
+  UNUSED(argspec->frame_h);
+  UNUSED(argspec->sel);
 }
 
 void Platform_ListboxBackendEnd(void) {}

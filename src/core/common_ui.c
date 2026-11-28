@@ -28,22 +28,22 @@
 #include "platform/wm_platform.h"
 
 bool cover_scale(CoverScale *argspec) {
-  double scale = (double)argspec->f_tw / (double)argspec->f_sw;
-  double scale_y = (double)argspec->f_th / (double)argspec->f_sh;
+  double scale = (double)argspec->tw / (double)argspec->sw;
+  double scale_y = (double)argspec->th / (double)argspec->sh;
   if (scale_y > scale)
     scale = scale_y;
   if (scale <= 0.0)
     return 0;
-  int w = (int)((double)argspec->f_sw * scale + 0.5);
-  int hgt = (int)((double)argspec->f_sh * scale + 0.5);
+  int w = (int)((double)argspec->sw * scale + 0.5);
+  int hgt = (int)((double)argspec->sh * scale + 0.5);
   if (w < 1)
     w = 1;
   if (hgt < 1)
     hgt = 1;
-  if (argspec->f_dw)
-    *argspec->f_dw = w;
-  if (argspec->f_dh)
-    *argspec->f_dh = hgt;
+  if (argspec->dw)
+    *argspec->dw = w;
+  if (argspec->dh)
+    *argspec->dh = hgt;
   return 1;
 }
 
@@ -394,41 +394,41 @@ static void populate_update_ui(ListBox *lb, int total_matches,
 
 void populate_listbox(PopulateListbox *argspec) {
   populate_listbox_ranked(&(PopulateListboxRanked){
-      .f_lb = argspec->f_lb, .f_filter = argspec->f_filter,
-      .f_items = argspec->f_items, .f_item_count = argspec->f_item_count,
-      .f_filter_match = argspec->f_filter_match, .f_item_rank = NULL});
+      .lb = argspec->lb, .filter = argspec->filter,
+      .items = argspec->items, .item_count = argspec->item_count,
+      .filter_match = argspec->filter_match, .item_rank = NULL});
 }
 
 void populate_listbox_ranked(PopulateListboxRanked *argspec) {
-  if (!argspec->f_lb)
+  if (!argspec->lb)
     return;
 
   UI_LB_BeginUpdate();
-  if (!argspec->f_filter)
-    argspec->f_filter = "";
+  if (!argspec->filter)
+    argspec->filter = "";
   int current_sel;
   char current_text[256];
-  populate_capture_selection(argspec->f_lb, current_text, sizeof(current_text),
+  populate_capture_selection(argspec->lb, current_text, sizeof(current_text),
                              &current_sel);
 
   char clean_filter[256];
-  populate_clean_filter(argspec->f_filter, clean_filter, sizeof(clean_filter));
+  populate_clean_filter(argspec->filter, clean_filter, sizeof(clean_filter));
   int total_matches = 0;
 
   total_matches =
-      populate_filter(argspec->f_lb, argspec->f_items, argspec->f_item_count, clean_filter, argspec->f_filter_match);
+      populate_filter(argspec->lb, argspec->items, argspec->item_count, clean_filter, argspec->filter_match);
 
-  populate_rank_matches(argspec->f_lb, argspec->f_items, clean_filter, total_matches, argspec->f_item_rank);
+  populate_rank_matches(argspec->lb, argspec->items, clean_filter, total_matches, argspec->item_rank);
 
-  populate_ensure_matches(argspec->f_lb, argspec->f_item_count, clean_filter, &total_matches);
+  populate_ensure_matches(argspec->lb, argspec->item_count, clean_filter, &total_matches);
 
-  populate_build_cache(argspec->f_lb, argspec->f_items, total_matches);
+  populate_build_cache(argspec->lb, argspec->items, total_matches);
 
-  populate_update_ui(argspec->f_lb, total_matches, argspec->f_filter);
+  populate_update_ui(argspec->lb, total_matches, argspec->filter);
 
-  argspec->f_lb->total_matches = total_matches;
+  argspec->lb->total_matches = total_matches;
 
-  log_info("populate_listbox completed for filter='%s'", argspec->f_filter ? argspec->f_filter : "");
+  log_info("populate_listbox completed for filter='%s'", argspec->filter ? argspec->filter : "");
   UI_LB_EndUpdate();
 }
 
@@ -516,39 +516,39 @@ void display_message_slot(const MessageSlotSpec *spec) {
 
 void listbox_compute_layout(ListboxComputeLayout *argspec) {
 
-  if (!argspec->f_out) {
+  if (!argspec->out) {
     return;
   }
-  memset(argspec->f_out, 0, sizeof(*argspec->f_out));
-  if (!argspec->f_spec) {
+  memset(argspec->out, 0, sizeof(*argspec->out));
+  if (!argspec->spec) {
     return;
   }
 
-  argspec->f_out->y0 = argspec->f_spec->y ? argspec->f_spec->y : argspec->f_default_y0;
-  argspec->f_out->item_h = argspec->f_item_h > 0 ? argspec->f_item_h : 1;
-  argspec->f_out->list_h =
-      argspec->f_spec->h ? argspec->f_spec->h
-              : (argspec->f_popup_h > 0 ? (argspec->f_popup_h - argspec->f_out->y0 - prompt_list_bottom_margin())
+  argspec->out->y0 = argspec->spec->y ? argspec->spec->y : argspec->default_y0;
+  argspec->out->item_h = argspec->item_h > 0 ? argspec->item_h : 1;
+  argspec->out->list_h =
+      argspec->spec->h ? argspec->spec->h
+              : (argspec->popup_h > 0 ? (argspec->popup_h - argspec->out->y0 - prompt_list_bottom_margin())
                              : PROMPT_CUSTOM_FALLBACK_LIST_H);
-  if (!argspec->f_spec->x && !argspec->f_spec->w) {
-    argspec->f_out->bx = PROMPT_SEL_X;
-    argspec->f_out->bw = (argspec->f_popup_w > 0 ? argspec->f_popup_w : PROMPT_CUSTOM_FALLBACK_W) -
+  if (!argspec->spec->x && !argspec->spec->w) {
+    argspec->out->bx = PROMPT_SEL_X;
+    argspec->out->bw = (argspec->popup_w > 0 ? argspec->popup_w : PROMPT_CUSTOM_FALLBACK_W) -
               PROMPT_SEL_W_SHRINK;
-    argspec->f_out->fw = argspec->f_popup_w > 0 ? argspec->f_popup_w : PromptW;
-    argspec->f_out->fh = argspec->f_popup_h > 0 ? argspec->f_popup_h : PromptH;
+    argspec->out->fw = argspec->popup_w > 0 ? argspec->popup_w : PromptW;
+    argspec->out->fh = argspec->popup_h > 0 ? argspec->popup_h : PromptH;
   } else {
-    argspec->f_out->bx = argspec->f_spec->x + PROMPT_SEL_INSET;
-    argspec->f_out->bw = (argspec->f_spec->w ? argspec->f_spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
-    argspec->f_out->fw = argspec->f_spec->w ? argspec->f_spec->w : PromptW;
-    argspec->f_out->fh = argspec->f_spec->h ? argspec->f_spec->h : PromptH;
+    argspec->out->bx = argspec->spec->x + PROMPT_SEL_INSET;
+    argspec->out->bw = (argspec->spec->w ? argspec->spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
+    argspec->out->fw = argspec->spec->w ? argspec->spec->w : PromptW;
+    argspec->out->fh = argspec->spec->h ? argspec->spec->h : PromptH;
   }
-  int visible = (argspec->f_out->list_h + argspec->f_out->item_h - 1) /
-                argspec->f_out->item_h;
+  int visible = (argspec->out->list_h + argspec->out->item_h - 1) /
+                argspec->out->item_h;
   if (visible < 1)
     visible = 1;
-  if (argspec->f_count > 0 && visible > argspec->f_count)
-    visible = argspec->f_count;
-  argspec->f_out->visible = visible;
+  if (argspec->count > 0 && visible > argspec->count)
+    visible = argspec->count;
+  argspec->out->visible = visible;
 }
 
 bool terminal_guard(const char *working_dir, const char *extra_args) {
@@ -732,41 +732,41 @@ void get_draw_offset(int *out_x, int *out_y) {
 }
 
 int draw_line_prep(DrawLinePrep *argspec) {
-  int t = draw_thickness_px(argspec->f_spec->thickness);
+  int t = draw_thickness_px(argspec->spec->thickness);
   if (t < 1)
     t = 1;
-  *argspec->f_x1 = argspec->f_spec->x1 + argspec->f_off_x;
-  *argspec->f_y1 = argspec->f_spec->y1 + argspec->f_off_y;
-  *argspec->f_x2 = argspec->f_spec->x2 + argspec->f_off_x;
-  *argspec->f_y2 = argspec->f_spec->y2 + argspec->f_off_y;
-  int bx = *argspec->f_x1 < *argspec->f_x2 ? *argspec->f_x1 : *argspec->f_x2;
-  int by = *argspec->f_y1 < *argspec->f_y2 ? *argspec->f_y1 : *argspec->f_y2;
-  int bw = (*argspec->f_x1 > *argspec->f_x2 ? *argspec->f_x1 - *argspec->f_x2 : *argspec->f_x2 - *argspec->f_x1) + t;
-  int bh = (*argspec->f_y1 > *argspec->f_y2 ? *argspec->f_y1 - *argspec->f_y2 : *argspec->f_y2 - *argspec->f_y1) + t;
+  *argspec->x1 = argspec->spec->x1 + argspec->off_x;
+  *argspec->y1 = argspec->spec->y1 + argspec->off_y;
+  *argspec->x2 = argspec->spec->x2 + argspec->off_x;
+  *argspec->y2 = argspec->spec->y2 + argspec->off_y;
+  int bx = *argspec->x1 < *argspec->x2 ? *argspec->x1 : *argspec->x2;
+  int by = *argspec->y1 < *argspec->y2 ? *argspec->y1 : *argspec->y2;
+  int bw = (*argspec->x1 > *argspec->x2 ? *argspec->x1 - *argspec->x2 : *argspec->x2 - *argspec->x1) + t;
+  int bh = (*argspec->y1 > *argspec->y2 ? *argspec->y1 - *argspec->y2 : *argspec->y2 - *argspec->y1) + t;
   draw_measure_track(bx - t / 2, by - t / 2, bw, bh);
   return t;
 }
 
 int draw_circle_prep(DrawCirclePrep *argspec) {
-  int t = draw_thickness_px(argspec->f_spec->thickness);
-  *argspec->f_cx = argspec->f_spec->cx + argspec->f_off_x;
-  *argspec->f_cy = argspec->f_spec->cy + argspec->f_off_y;
-  draw_measure_track(*argspec->f_cx - argspec->f_spec->radius, *argspec->f_cy - argspec->f_spec->radius, argspec->f_spec->radius * 2,
-                     argspec->f_spec->radius * 2);
+  int t = draw_thickness_px(argspec->spec->thickness);
+  *argspec->cx = argspec->spec->cx + argspec->off_x;
+  *argspec->cy = argspec->spec->cy + argspec->off_y;
+  draw_measure_track(*argspec->cx - argspec->spec->radius, *argspec->cy - argspec->spec->radius, argspec->spec->radius * 2,
+                     argspec->spec->radius * 2);
   return t;
 }
 
 int bg_tile_lru_pick(BgTileLruPick *argspec) {
   int i;
-  for (i = 0; i < argspec->f_count; i++)
-    if (argspec->f_is_empty((const char *)argspec->f_slots + (size_t)i * argspec->f_stride))
+  for (i = 0; i < argspec->count; i++)
+    if (argspec->is_empty((const char *)argspec->slots + (size_t)i * argspec->stride))
       return i;
 
   int oldest = 0;
-  for (i = 1; i < argspec->f_count; i++) {
-    const void *cand = (const char *)argspec->f_slots + (size_t)i * argspec->f_stride;
-    const void *best = (const char *)argspec->f_slots + (size_t)oldest * argspec->f_stride;
-    if (argspec->f_stamp(cand) < argspec->f_stamp(best))
+  for (i = 1; i < argspec->count; i++) {
+    const void *cand = (const char *)argspec->slots + (size_t)i * argspec->stride;
+    const void *best = (const char *)argspec->slots + (size_t)oldest * argspec->stride;
+    if (argspec->stamp(cand) < argspec->stamp(best))
       oldest = i;
   }
   return oldest;
@@ -791,12 +791,12 @@ void draw_text_centered_impl(const DrawTextCentered *spec,
 }
 
 int msg_anchor_center(MsgAnchorCenter *argspec) {
-  if (argspec->f_slot == 0)
-    return argspec->f_outward ? argspec->f_rect - argspec->f_gap - argspec->f_win_size / 2 : argspec->f_rect + argspec->f_gap + argspec->f_win_size / 2;
-  if (argspec->f_slot == 2)
-    return argspec->f_outward ? argspec->f_rect + argspec->f_rect_size + argspec->f_gap + argspec->f_win_size / 2
-                   : argspec->f_rect + argspec->f_rect_size - argspec->f_gap - argspec->f_win_size / 2;
-  return argspec->f_rect + argspec->f_rect_size / 2;
+  if (argspec->slot == 0)
+    return argspec->outward ? argspec->rect - argspec->gap - argspec->win_size / 2 : argspec->rect + argspec->gap + argspec->win_size / 2;
+  if (argspec->slot == 2)
+    return argspec->outward ? argspec->rect + argspec->rect_size + argspec->gap + argspec->win_size / 2
+                   : argspec->rect + argspec->rect_size - argspec->gap - argspec->win_size / 2;
+  return argspec->rect + argspec->rect_size / 2;
 }
 
 int msg_stack_dir(int v_slot, bool outward) {

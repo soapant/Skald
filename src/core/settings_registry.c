@@ -96,7 +96,7 @@ static bool settings_capture_text(const char *text) {
   if (!settings_capturing())
     return false;
   if (text && text[0])
-    search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = text, .f_kind = SEARCH_KIND_TEXT, .f_widget_name = NULL, .f_value = NULL});
+    search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = text, .kind = SEARCH_KIND_TEXT, .widget_name = NULL, .value = NULL});
   return true;
 }
 
@@ -196,7 +196,7 @@ static bool settings_draw_image_local(const SettingsDrawImage *spec) {
   char asset[MAX_PATH];
   const char *path = feature_path_resolve_asset_or_path(
       __builtin_return_address(0), spec->path, asset, sizeof(asset));
-  return Platform_DrawImageAt(&(PlatformDrawImageAt){.f_path = path, .f_x = spec->x, .f_y = spec->y, .f_w = spec->w, .f_h = spec->h});
+  return Platform_DrawImageAt(&(PlatformDrawImageAt){.path = path, .x = spec->x, .y = spec->y, .w = spec->w, .h = spec->h});
 }
 
 static bool settings_draw_line_local(const Line *spec) {
@@ -270,7 +270,7 @@ static bool settings_place_checkbox_impl(const SettingsPlaceCheckbox *spec,
     return false;
   if (settings_capturing()) {
     const char *text = (spec->text && spec->text[0]) ? spec->text : spec->name;
-    search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = text, .f_kind = button ? SEARCH_KIND_BUTTON : SEARCH_KIND_CHECKBOX, .f_widget_name = spec->name, .f_value = NULL});
+    search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = text, .kind = button ? SEARCH_KIND_BUTTON : SEARCH_KIND_CHECKBOX, .widget_name = spec->name, .value = NULL});
     return true;
   }
   Checkbox cb = {0};
@@ -299,7 +299,7 @@ static bool settings_place_slider_impl(const SettingsPlaceSlider *spec) {
   if (settings_capturing()) {
     char value[32];
     snprintf(value, sizeof(value), "%g", spec->value);
-    search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = spec->name, .f_kind = SEARCH_KIND_SLIDER, .f_widget_name = spec->name, .f_value = value});
+    search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = spec->name, .kind = SEARCH_KIND_SLIDER, .widget_name = spec->name, .value = value});
     return true;
   }
   Slider sl = {0};
@@ -332,7 +332,7 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditbox *spec) {
     name = PROMPT_PRIMARY_EDITBOX_NAME;
   if (settings_capturing()) {
     if (strncmp(name, "settings-search:", 16) != 0)
-      search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = spec->buffer, .f_kind = SEARCH_KIND_EDITBOX, .f_widget_name = name, .f_value = NULL});
+      search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = spec->buffer, .kind = SEARCH_KIND_EDITBOX, .widget_name = name, .value = NULL});
     return true;
   }
   SkaldContext_Get()->window.editbox_placed = true;
@@ -340,7 +340,7 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditbox *spec) {
   int dx = 0, dy = 0;
   get_draw_offset(&dx, &dy);
   int idx =
-      editbox_registry_place(&(EditboxRegistryPlace){.f_state = state, .f_name = name, .f_buffer = spec->buffer, .f_buffer_size = spec->buffer_size, .f_x = spec->x + dx, .f_y = spec->y + dy + 2, .f_w = spec->w, .f_h = spec->h});
+      editbox_registry_place(&(EditboxRegistryPlace){.state = state, .name = name, .buffer = spec->buffer, .buffer_size = spec->buffer_size, .x = spec->x + dx, .y = spec->y + dy + 2, .w = spec->w, .h = spec->h});
   if (idx < 0)
     return false;
   PromptEditbox *entry = &state->editboxes[idx];
@@ -374,7 +374,7 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditbox *spec) {
                       .placeholder = spec->placeholder,
                       .caret_h = spec->caret_h};
   EditboxSpec eb;
-  editbox_spec_from_place(&(EditboxSpecFromPlace){.f_out = &eb, .f_place = &place, .f_state = state, .f_ui = &ui, .f_metrics = &(EditboxMetrics){.text_w = text_w,
+  editbox_spec_from_place(&(EditboxSpecFromPlace){.out = &eb, .place = &place, .state = state, .ui = &ui, .metrics = &(EditboxMetrics){.text_w = text_w,
                         .cursor_x = cursor_x,
                         .ascent = (line_h * 3) / 4,
                         .descent = line_h - (line_h * 3) / 4,
@@ -1471,7 +1471,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
       int count = dropdown_options(b, &options);
       if (capturing) {
         for (int oi = 0; oi < count; oi++)
-          search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = options ? options[oi] : NULL, .f_kind = SEARCH_KIND_DROPDOWN, .f_widget_name = pretty_title, .f_value = NULL});
+          search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = options ? options[oi] : NULL, .kind = SEARCH_KIND_DROPDOWN, .widget_name = pretty_title, .value = NULL});
       }
       if (b->selected >= count)
         b->selected = count > 0 ? 0 : -1;

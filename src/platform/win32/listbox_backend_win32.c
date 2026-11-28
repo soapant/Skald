@@ -30,26 +30,26 @@ bool Platform_ListboxBackendBegin(int item_height_override,
 }
 
 void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) {
-  (void)argspec->f_frame_h;
-  (void)argspec->f_fw;
+  (void)argspec->frame_h;
+  (void)argspec->fw;
   if (RoundedCorners && CornerRadius > 0) {
     int R = PROMPT_SEL_RADIUS;
     if (R > CornerRadius)
       R = CornerRadius;
     int t = PROMPT_SEL_INSET;
-    RECT inner = {argspec->f_bx + t, argspec->f_y + PROMPT_SEL_TOP_INSET + t, argspec->f_bx + argspec->f_bw - t,
-                  argspec->f_y + argspec->f_item_h - 1 - t};
+    RECT inner = {argspec->bx + t, argspec->y + PROMPT_SEL_TOP_INSET + t, argspec->bx + argspec->bw - t,
+                  argspec->y + argspec->item_h - 1 - t};
     int innerR = R - 1;
     if (innerR < 0)
       innerR = 0;
     if (inner.right <= inner.left || inner.bottom <= inner.top) {
-      inner = (RECT){argspec->f_bx, argspec->f_y, argspec->f_bx + argspec->f_bw, argspec->f_y + argspec->f_item_h};
+      inner = (RECT){argspec->bx, argspec->y, argspec->bx + argspec->bw, argspec->y + argspec->item_h};
       innerR = R;
     }
-    if (argspec->f_sel)
+    if (argspec->sel)
       win32_fill_rounded_rect(b_hdc, &inner, COLOR_SELECTION_HIGHLIGHT, innerR);
-  } else if (argspec->f_sel) {
-    RECT rc = {argspec->f_bx, argspec->f_y, argspec->f_bx + argspec->f_bw, argspec->f_y + argspec->f_item_h};
+  } else if (argspec->sel) {
+    RECT rc = {argspec->bx, argspec->y, argspec->bx + argspec->bw, argspec->y + argspec->item_h};
     HBRUSH br = CreateSolidBrush(COLOR_SELECTION_HIGHLIGHT);
     FillRect(b_hdc, &rc, br);
     DeleteObject(br);

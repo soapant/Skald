@@ -20,11 +20,11 @@ typedef struct {
 int monitor_fill(MonitorEntry *out, int max_entries);
 int monitor_count(void);
 typedef struct {
-  int f_index;
-  int *f_x;
-  int *f_y;
-  int *f_w;
-  int *f_h;
+  int index;
+  int *x;
+  int *y;
+  int *w;
+  int *h;
 } MonitorGeometryAt;
 
 bool monitor_geometry_at(MonitorGeometryAt *argspec);

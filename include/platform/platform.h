@@ -125,12 +125,12 @@ typedef struct {
 #define HTTP_DEFAULT_LIMIT ((size_t)64 * 1024 * 1024)
 
 typedef struct {
-  const char *f_url;
-  const char *f_method;
-  const char *f_content_type;
-  const char *f_body;
-  size_t f_max_bytes;
-  size_t *f_out_len;
+  const char *url;
+  const char *method;
+  const char *content_type;
+  const char *body;
+  size_t max_bytes;
+  size_t *out_len;
 } PlatformHttpCollect;
 
 char *Platform_HttpCollect(PlatformHttpCollect *argspec);
@@ -215,11 +215,11 @@ FontHandle Platform_CreateFont(int size, const char *face_name);
 void Platform_DestroyFont(FontHandle font);
 int Platform_EditboxPlaceholderOffset(void);
 typedef struct {
-  FontHandle f_font;
-  const char *f_text;
-  int f_max_width;
-  int *f_outWidth;
-  int *f_outHeight;
+  FontHandle font;
+  const char *text;
+  int max_width;
+  int *outWidth;
+  int *outHeight;
 } PlatformGetTextExtents;
 
 void Platform_GetTextExtents(PlatformGetTextExtents *argspec);
@@ -238,13 +238,13 @@ typedef struct {
 bool Platform_ListboxBackendBegin(int item_height_override,
                                   ListboxBackendInit *out);
 typedef struct {
-  int f_bx;
-  int f_bw;
-  int f_y;
-  int f_item_h;
-  int f_fw;
-  int f_frame_h;
-  bool f_sel;
+  int bx;
+  int bw;
+  int y;
+  int item_h;
+  int fw;
+  int frame_h;
+  bool sel;
 } ListboxBackendDrawSelection;
 
 void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec);

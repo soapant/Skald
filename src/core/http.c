@@ -33,8 +33,8 @@ char *http_get_limited(const char *url, size_t max_bytes, size_t *out_len) {
     return NULL;
   }
   return http_transport.collect(&(PlatformHttpCollect){
-      .f_url = url, .f_method = "GET", .f_content_type = NULL, .f_body = NULL,
-      .f_max_bytes = max_bytes, .f_out_len = out_len});
+      .url = url, .method = "GET", .content_type = NULL, .body = NULL,
+      .max_bytes = max_bytes, .out_len = out_len});
 }
 
 char *http_get(const char *url) {
@@ -45,9 +45,9 @@ char *http_post(const char *url, const char *content_type, const char *body) {
   if (!url || !url[0])
     return NULL;
   return http_transport.collect(&(PlatformHttpCollect){
-      .f_url = url, .f_method = "POST", .f_content_type = content_type,
-      .f_body = body ? body : "", .f_max_bytes = HTTP_DEFAULT_LIMIT,
-      .f_out_len = NULL});
+      .url = url, .method = "POST", .content_type = content_type,
+      .body = body ? body : "", .max_bytes = HTTP_DEFAULT_LIMIT,
+      .out_len = NULL});
 }
 
 bool http_download(const char *url, const char *save_path) {

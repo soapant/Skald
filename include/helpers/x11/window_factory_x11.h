@@ -7,56 +7,56 @@
 #include <sys/types.h>
 
 typedef struct {
-  Display *f_dpy;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  unsigned long f_bg_color;
-  const char *f_res_name;
-  const char *f_res_class;
-  long f_event_mask;
+  Display *dpy;
+  int x;
+  int y;
+  int w;
+  int h;
+  unsigned long bg_color;
+  const char *res_name;
+  const char *res_class;
+  long event_mask;
 } X11CreateWindowEx;
 
 Window x11_create_window_ex(X11CreateWindowEx *argspec);
 typedef struct {
-  Display *f_dpy;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
+  Display *dpy;
+  int x;
+  int y;
+  int w;
+  int h;
 } X11CreatePromptWindow;
 
 Window x11_create_prompt_window(X11CreatePromptWindow *argspec);
 typedef struct {
-  Display *f_dpy;
-  Drawable f_drw;
-  Visual *f_vis;
-  int f_w;
-  int f_h;
-  bool f_no_bg;
+  Display *dpy;
+  Drawable drw;
+  Visual *vis;
+  int w;
+  int h;
+  bool no_bg;
 } X11DrawWindowBorder;
 
 void x11_draw_window_border(X11DrawWindowBorder *argspec);
 typedef struct {
-  Display *f_dpy;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  bool f_clickable;
+  Display *dpy;
+  int x;
+  int y;
+  int w;
+  int h;
+  bool clickable;
 } X11CreateDisplayMessageWindow;
 
 Window x11_create_display_message_window(X11CreateDisplayMessageWindow *argspec);
 typedef struct {
-  Display *f_dpy;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  bool f_clickable;
-  bool f_rounded;
-  int f_radius;
+  Display *dpy;
+  int x;
+  int y;
+  int w;
+  int h;
+  bool clickable;
+  bool rounded;
+  int radius;
 } X11CreateDisplayMessageWindowEx;
 
 Window x11_create_display_message_window_ex(X11CreateDisplayMessageWindowEx *argspec);
@@ -64,12 +64,12 @@ void x11_apply_click_through(Display *dpy, Window win);
 void x11_set_fixed_size_hints(Display *dpy, Window win, int w, int h);
 void x11_apply_shape_rounded_window(Display *dpy, Window win, int w, int h);
 typedef struct {
-  Display *f_dpy;
-  Window f_win;
-  int f_w;
-  int f_h;
-  bool f_rounded;
-  int f_radius;
+  Display *dpy;
+  Window win;
+  int w;
+  int h;
+  bool rounded;
+  int radius;
 } X11ApplyShape;
 
 void x11_apply_shape(X11ApplyShape *argspec);

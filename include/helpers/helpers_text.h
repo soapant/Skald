@@ -27,15 +27,15 @@ const char *text_resolve(const char *text, char tmp[2]);
 bool capture_text(const char *text);
 int text_segment_width(const void *seg, int font_size);
 typedef struct {
-  WrappedWord **f_words;
-  int *f_count;
-  int *f_cap;
-  const char *f_s;
-  size_t f_len;
-  unsigned long f_color;
-  int f_lead;
-  int f_breaks;
-  int f_font_size;
+  WrappedWord **words;
+  int *count;
+  int *cap;
+  const char *s;
+  size_t len;
+  unsigned long color;
+  int lead;
+  int breaks;
+  int font_size;
 } WrappedWordPush;
 
 void wrapped_word_push(WrappedWordPush *argspec);
@@ -48,15 +48,15 @@ typedef struct {
 int wrap_measure_thunk(void *ctx, const char *s, int n);
 
 typedef struct {
-  const char *f_text;
-  int f_x0;
-  int f_y0;
-  int f_max_width;
-  int f_line_height;
-  TextWrapMeasureFn f_measure;
-  void *f_ctx;
-  Pos *f_out;
-  int f_maxout;
+  const char *text;
+  int x0;
+  int y0;
+  int max_width;
+  int line_height;
+  TextWrapMeasureFn measure;
+  void *ctx;
+  Pos *out;
+  int maxout;
 } TextWrapLayout;
 
 int text_wrap_layout(TextWrapLayout *argspec);
@@ -77,12 +77,12 @@ void url_build_search_url(const char *engine, const char *query, char *out,
                           size_t cap);
 
 typedef struct {
-  const char *f_dir_path;
-  char **f_list_of_allowed_extensions;
-  ListOfFiles *f_list_of_files;
-  char **f_list_of_names_to_ignore;
-  bool f_strip_extension;
-  int f_max_depth;
+  const char *dir_path;
+  char **list_of_allowed_extensions;
+  ListOfFiles *list_of_files;
+  char **list_of_names_to_ignore;
+  bool strip_extension;
+  int max_depth;
 } FileWalkAllFilesFromDir;
 
 bool file_walk_all_files_from_dir(FileWalkAllFilesFromDir *argspec);

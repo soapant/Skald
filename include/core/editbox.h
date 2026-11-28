@@ -186,11 +186,11 @@ void editbox_init_from_spec(EditboxInit *out, const EditboxInitFrom *args);
 
 void editbox_build_spec(EditboxSpec *out, const EditboxInit *in);
 typedef struct {
-  EditboxSpec *f_out;
-  const EditboxPlace *f_place;
-  PromptState *f_state;
-  const EditboxUi *f_ui;
-  const EditboxMetrics *f_metrics;
+  EditboxSpec *out;
+  const EditboxPlace *place;
+  PromptState *state;
+  const EditboxUi *ui;
+  const EditboxMetrics *metrics;
 } EditboxSpecFromPlace;
 
 void editbox_spec_from_place(EditboxSpecFromPlace *argspec);
@@ -198,12 +198,12 @@ int editbox_caret_y(int box_top, int ascent, int descent, int font_size);
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                    int text_len, const EditboxMetrics *metrics);
 typedef struct {
-  PromptState *f_state;
-  int f_text_len;
-  bool f_prefer_state;
-  int *f_out_start;
-  int *f_out_end;
-  bool *f_out_has;
+  PromptState *state;
+  int text_len;
+  bool prefer_state;
+  int *out_start;
+  int *out_end;
+  bool *out_has;
 } EditboxResolveSelection;
 
 void editbox_resolve_selection(EditboxResolveSelection *argspec);
@@ -215,14 +215,14 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
 void editbox_registry_begin(PromptState *state);
 void editbox_registry_begin_frame(PromptState *state);
 typedef struct {
-  PromptState *f_state;
-  const char *f_name;
-  char *f_buffer;
-  size_t f_buffer_size;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
+  PromptState *state;
+  const char *name;
+  char *buffer;
+  size_t buffer_size;
+  int x;
+  int y;
+  int w;
+  int h;
 } EditboxRegistryPlace;
 
 int editbox_registry_place(EditboxRegistryPlace *argspec);
@@ -230,12 +230,12 @@ PromptEditbox *editbox_registry_find(PromptState *state, const char *name);
 EditBox *editbox_registry_lookup(PromptState *state, const char *name);
 void editbox_registry_tick(PromptState *state);
 typedef struct {
-  PromptState *f_state;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  int f_font_size;
+  PromptState *state;
+  int x;
+  int y;
+  int w;
+  int h;
+  int font_size;
 } EditboxLegacyTick;
 
 void editbox_legacy_tick(EditboxLegacyTick *argspec);

@@ -99,28 +99,28 @@ TEST(color_ref_parses_hex_forms) {
 TEST(parse_key_value_shared_parser) {
   char key[384], val[1024];
   const char *line = "  Title = \"hello\" # note";
-  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.f_line = line, .f_len = strlen(line), .f_key = key, .f_key_cap = sizeof(key), .f_value = val, .f_value_cap = sizeof(val)}),
+  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.line = line, .len = strlen(line), .key = key, .key_cap = sizeof(key), .value = val, .value_cap = sizeof(val)}),
                 (int)TOML_KV_OK);
   ASSERT_EQ_STR(key, "Title");
   ASSERT_EQ_STR(val, "\"hello\"");
 
   line = "\"my key\" = \"v\"";
-  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.f_line = line, .f_len = strlen(line), .f_key = key, .f_key_cap = sizeof(key), .f_value = val, .f_value_cap = sizeof(val)}),
+  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.line = line, .len = strlen(line), .key = key, .key_cap = sizeof(key), .value = val, .value_cap = sizeof(val)}),
                 (int)TOML_KV_OK);
   ASSERT_EQ_STR(key, "my key");
   ASSERT_EQ_STR(val, "\"v\"");
 
   line = "  # comment only";
-  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.f_line = line, .f_len = strlen(line), .f_key = key, .f_key_cap = sizeof(key), .f_value = val, .f_value_cap = sizeof(val)}),
+  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.line = line, .len = strlen(line), .key = key, .key_cap = sizeof(key), .value = val, .value_cap = sizeof(val)}),
                 (int)TOML_KV_EMPTY);
   line = "no separator";
-  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.f_line = line, .f_len = strlen(line), .f_key = key, .f_key_cap = sizeof(key), .f_value = val, .f_value_cap = sizeof(val)}),
+  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.line = line, .len = strlen(line), .key = key, .key_cap = sizeof(key), .value = val, .value_cap = sizeof(val)}),
                 (int)TOML_KV_NO_KEY);
   line = "= \"x\"";
-  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.f_line = line, .f_len = strlen(line), .f_key = key, .f_key_cap = sizeof(key), .f_value = val, .f_value_cap = sizeof(val)}),
+  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.line = line, .len = strlen(line), .key = key, .key_cap = sizeof(key), .value = val, .value_cap = sizeof(val)}),
                 (int)TOML_KV_INVALID_KEY);
   line = "Key =";
-  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.f_line = line, .f_len = strlen(line), .f_key = key, .f_key_cap = sizeof(key), .f_value = val, .f_value_cap = sizeof(val)}),
+  ASSERT_EQ_INT((int)toml_parse_key_value(&(TomlParseKeyValue){.line = line, .len = strlen(line), .key = key, .key_cap = sizeof(key), .value = val, .value_cap = sizeof(val)}),
                 (int)TOML_KV_INVALID_VALUE);
 }
 

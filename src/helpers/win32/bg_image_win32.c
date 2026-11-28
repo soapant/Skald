@@ -397,7 +397,7 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
     int sw = s->src_w;
     int sh = s->src_h;
     int dw = 0, dh = 0;
-    if (!cover_scale(&(CoverScale){.f_sw = sw, .f_sh = sh, .f_tw = w, .f_th = h, .f_dw = &dw, .f_dh = &dh})) {
+    if (!cover_scale(&(CoverScale){.sw = sw, .sh = sh, .tw = w, .th = h, .dw = &dw, .dh = &dh})) {
       DeleteDC(dc);
       DeleteObject(bmp);
       return NULL;
@@ -424,7 +424,7 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
       bg_cache_store(cacheFile, w, h, bits, &ft, sz);
   }
 
-  int slot_idx = bg_tile_lru_pick(&(BgTileLruPick){.f_slots = bg_tiles, .f_count = BG_TILE_SLOTS, .f_stride = sizeof(bg_tiles[0]), .f_is_empty = bg_slot_empty, .f_stamp = bg_slot_stamp});
+  int slot_idx = bg_tile_lru_pick(&(BgTileLruPick){.slots = bg_tiles, .count = BG_TILE_SLOTS, .stride = sizeof(bg_tiles[0]), .is_empty = bg_slot_empty, .stamp = bg_slot_stamp});
   BgTileSlot *slot = &bg_tiles[slot_idx];
   bg_tile_drop(slot);
   slot->bmp = bmp;
@@ -485,29 +485,29 @@ bool win32_bg_image_enabled(void) {
 
 bool win32_draw_bg_image_slice(Win32DrawBgImageSlice *argspec) {
 
-  if (!argspec->f_hdc || !argspec->f_rc)
+  if (!argspec->hdc || !argspec->rc)
     return false;
   if (!win32_bg_image_enabled())
     return false;
-  int dw = argspec->f_rc->right - argspec->f_rc->left;
-  int dh = argspec->f_rc->bottom - argspec->f_rc->top;
+  int dw = argspec->rc->right - argspec->rc->left;
+  int dh = argspec->rc->bottom - argspec->rc->top;
   if (dw <= 0 || dh <= 0)
     return false;
-  if (argspec->f_containerW <= 0 || argspec->f_containerH <= 0)
+  if (argspec->containerW <= 0 || argspec->containerH <= 0)
     return false;
 
   BgTileSlot *t = NULL;
   bg_lock();
-  t = bg_tile_get(argspec->f_hdc, BackgroundImage, argspec->f_containerW, argspec->f_containerH);
+  t = bg_tile_get(argspec->hdc, BackgroundImage, argspec->containerW, argspec->containerH);
   if (!t || !t->bmp || !t->dc) {
     bg_unlock();
     return false;
   }
 
-  int sx = argspec->f_rc->left + argspec->f_originX;
-  int sy = argspec->f_rc->top + argspec->f_originY;
-  int dx = argspec->f_rc->left;
-  int dy = argspec->f_rc->top;
+  int sx = argspec->rc->left + argspec->originX;
+  int sy = argspec->rc->top + argspec->originY;
+  int dx = argspec->rc->left;
+  int dy = argspec->rc->top;
   int sw = dw;
   int sh = dh;
   if (sx < 0) {
@@ -522,13 +522,13 @@ bool win32_draw_bg_image_slice(Win32DrawBgImageSlice *argspec) {
     dy += adj;
     sh -= adj;
   }
-  if (sx + sw > argspec->f_containerW)
-    sw = argspec->f_containerW - sx;
-  if (sy + sh > argspec->f_containerH)
-    sh = argspec->f_containerH - sy;
+  if (sx + sw > argspec->containerW)
+    sw = argspec->containerW - sx;
+  if (sy + sh > argspec->containerH)
+    sh = argspec->containerH - sy;
   bool ok = sw > 0 && sh > 0;
   if (ok)
-    BitBlt(argspec->f_hdc, dx, dy, sw, sh, t->dc, sx, sy, SRCCOPY);
+    BitBlt(argspec->hdc, dx, dy, sw, sh, t->dc, sx, sy, SRCCOPY);
   bg_unlock();
   return ok;
 }

@@ -74,11 +74,11 @@ bool config_section_clear(const char *path, const char *section,
                           const char *name);
 
 typedef struct {
-  const char *f_path;
-  const char *f_section;
-  const char *f_name;
-  const char *f_value;
-  ConfigTomlError *f_err;
+  const char *path;
+  const char *section;
+  const char *name;
+  const char *value;
+  ConfigTomlError *err;
 } ConfigSectionSetEx;
 
 ConfigTomlStatus config_section_set_ex(ConfigSectionSetEx *argspec);

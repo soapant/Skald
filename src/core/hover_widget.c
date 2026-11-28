@@ -155,7 +155,7 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   s->h_px = h;
 
   PlatformWidget *pw =
-      Platform_Widget_Create(&(PlatformWidgetCreate){.f_x = x - w / 2, .f_y = y - h / 2, .f_w = w, .f_h = h, .f_fps = fps, .f_no_bg = no_bg, .f_on_click = NULL, .f_name = key});
+      Platform_Widget_Create(&(PlatformWidgetCreate){.x = x - w / 2, .y = y - h / 2, .w = w, .h = h, .fps = fps, .no_bg = no_bg, .on_click = NULL, .name = key});
   if (!pw) {
     hover_widget_destroy_slot(s);
     return;
@@ -349,16 +349,16 @@ static void text_prompt_render(PromptState *state) {
 }
 
 PromptSpec text_prompt_spec(TextPrompt *argspec) {
-  argspec->f_render_data->placeholder = argspec->f_placeholder;
-  argspec->f_render_data->initial_text = argspec->f_initial_text;
+  argspec->render_data->placeholder = argspec->placeholder;
+  argspec->render_data->initial_text = argspec->initial_text;
   PromptSpec spec = {0};
   spec.enter = text_prompt_enter;
   spec.render = text_prompt_render;
-  spec.render_data = argspec->f_render_data;
-  spec.x = argspec->f_x;
-  spec.y = argspec->f_y;
-  spec.w = argspec->f_w;
-  spec.h = argspec->f_h;
+  spec.render_data = argspec->render_data;
+  spec.x = argspec->x;
+  spec.y = argspec->y;
+  spec.w = argspec->w;
+  spec.h = argspec->h;
   return spec;
 }
 

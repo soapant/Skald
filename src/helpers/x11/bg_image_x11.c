@@ -163,7 +163,7 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
     return false;
 
   int dw = 0, dh = 0;
-  if (!cover_scale(&(CoverScale){.f_sw = sw, .f_sh = sh, .f_tw = w, .f_th = h, .f_dw = &dw, .f_dh = &dh}))
+  if (!cover_scale(&(CoverScale){.sw = sw, .sh = sh, .tw = w, .th = h, .dw = &dw, .dh = &dh}))
     return false;
 
   int cw = dw, ch = dh;
@@ -191,7 +191,7 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
 
   Pixmap pm = 0;
   Picture pic = 0;
-  bool ok = x11_upload_argb(&(X11UploadArgb){.f_dpy = dpy, .f_ref = DefaultRootWindow(dpy), .f_argb = crop, .f_w = w, .f_h = h, .f_out_pm = &pm, .f_out_pic = &pic});
+  bool ok = x11_upload_argb(&(X11UploadArgb){.dpy = dpy, .ref = DefaultRootWindow(dpy), .argb = crop, .w = w, .h = h, .out_pm = &pm, .out_pic = &pic});
   free(crop);
   if (!ok)
     return false;
@@ -259,7 +259,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
   BgTileSlot *slot = fresh;
   if (!slot) {
     slot =
-        &bg_tiles[bg_tile_lru_pick(&(BgTileLruPick){.f_slots = bg_tiles, .f_count = BG_TILE_SLOTS, .f_stride = sizeof(bg_tiles[0]), .f_is_empty = bg_slot_empty, .f_stamp = bg_slot_stamp})];
+        &bg_tiles[bg_tile_lru_pick(&(BgTileLruPick){.slots = bg_tiles, .count = BG_TILE_SLOTS, .stride = sizeof(bg_tiles[0]), .is_empty = bg_slot_empty, .stamp = bg_slot_stamp})];
   }
 
   bg_slot_release(dpy, slot);
@@ -286,9 +286,9 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
 }
 
 bool x11_bg_image_blit(X11BgImageBlit *argspec) {
-  if (!x11_bg_image_enabled() || !argspec->f_dpy || !argspec->f_dst || argspec->f_w <= 0 || argspec->f_h <= 0)
+  if (!x11_bg_image_enabled() || !argspec->dpy || !argspec->dst || argspec->w <= 0 || argspec->h <= 0)
     return false;
-  Pixmap pm = x11_bg_image_tile(argspec->f_dpy, argspec->f_w, argspec->f_h);
+  Pixmap pm = x11_bg_image_tile(argspec->dpy, argspec->w, argspec->h);
   if (!pm)
     return false;
 
@@ -302,13 +302,13 @@ bool x11_bg_image_blit(X11BgImageBlit *argspec) {
   }
   bool ok = false;
   if (src) {
-    if (!argspec->f_vis)
-      argspec->f_vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(argspec->f_dpy));
-    XRenderPictFormat *dfmt = XRenderFindVisualFormat(argspec->f_dpy, argspec->f_vis);
-    Picture dp = dfmt ? XRenderCreatePicture(argspec->f_dpy, argspec->f_dst, dfmt, 0, NULL) : 0;
+    if (!argspec->vis)
+      argspec->vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(argspec->dpy));
+    XRenderPictFormat *dfmt = XRenderFindVisualFormat(argspec->dpy, argspec->vis);
+    Picture dp = dfmt ? XRenderCreatePicture(argspec->dpy, argspec->dst, dfmt, 0, NULL) : 0;
     if (dp) {
-      XRenderComposite(argspec->f_dpy, PictOpOver, src, None, dp, 0, 0, 0, 0, 0, 0, argspec->f_w, argspec->f_h);
-      XRenderFreePicture(argspec->f_dpy, dp);
+      XRenderComposite(argspec->dpy, PictOpOver, src, None, dp, 0, 0, 0, 0, 0, 0, argspec->w, argspec->h);
+      XRenderFreePicture(argspec->dpy, dp);
       ok = true;
     }
   }

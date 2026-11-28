@@ -77,49 +77,49 @@ void search_index_pop_context(SearchIndex *idx) {
 }
 
 void search_index_add_text(SearchIndexAddText *argspec) {
-  if (!argspec->f_idx)
-    argspec->f_idx = g_capture_index;
-  if (!argspec->f_idx)
+  if (!argspec->idx)
+    argspec->idx = g_capture_index;
+  if (!argspec->idx)
     return;
-  if ((!argspec->f_text || !argspec->f_text[0]) && (!argspec->f_value || !argspec->f_value[0]) &&
-      (!argspec->f_widget_name || !argspec->f_widget_name[0]))
+  if ((!argspec->text || !argspec->text[0]) && (!argspec->value || !argspec->value[0]) &&
+      (!argspec->widget_name || !argspec->widget_name[0]))
     return;
 
   char combined[256];
-  if (argspec->f_text && argspec->f_text[0]) {
-    if (argspec->f_value && argspec->f_value[0] && strcmp(argspec->f_text, argspec->f_value) != 0)
-      snprintf(combined, sizeof(combined), "%s: %s", argspec->f_text, argspec->f_value);
+  if (argspec->text && argspec->text[0]) {
+    if (argspec->value && argspec->value[0] && strcmp(argspec->text, argspec->value) != 0)
+      snprintf(combined, sizeof(combined), "%s: %s", argspec->text, argspec->value);
     else
-      search_copy(combined, sizeof(combined), argspec->f_text);
-  } else if (argspec->f_value && argspec->f_value[0]) {
-    search_copy(combined, sizeof(combined), argspec->f_value);
+      search_copy(combined, sizeof(combined), argspec->text);
+  } else if (argspec->value && argspec->value[0]) {
+    search_copy(combined, sizeof(combined), argspec->value);
   } else {
-    search_copy(combined, sizeof(combined), argspec->f_widget_name);
+    search_copy(combined, sizeof(combined), argspec->widget_name);
   }
 
   int source_id = -1;
   char context[128] = {0};
-  if (arrlenu(argspec->f_idx->stack) > 0) {
-    const SearchContext *c = &arrlast(argspec->f_idx->stack);
+  if (arrlenu(argspec->idx->stack) > 0) {
+    const SearchContext *c = &arrlast(argspec->idx->stack);
     source_id = c->source_id;
     search_copy(context, sizeof(context), c->context);
   }
 
   char name[128];
-  search_copy(name, sizeof(name), argspec->f_widget_name);
-  for (size_t i = 0; i < arrlenu(argspec->f_idx->entries); i++) {
-    const SearchEntry *e = &argspec->f_idx->entries[i];
-    if (e->source_id == source_id && e->kind == argspec->f_kind &&
+  search_copy(name, sizeof(name), argspec->widget_name);
+  for (size_t i = 0; i < arrlenu(argspec->idx->entries); i++) {
+    const SearchEntry *e = &argspec->idx->entries[i];
+    if (e->source_id == source_id && e->kind == argspec->kind &&
         strcmp(e->text, combined) == 0 && strcmp(e->widget_name, name) == 0)
       return;
   }
 
-  SearchEntry *e = arraddnptr(argspec->f_idx->entries, 1);
+  SearchEntry *e = arraddnptr(argspec->idx->entries, 1);
   e->source_id = source_id;
-  e->kind = argspec->f_kind;
+  e->kind = argspec->kind;
   search_copy(e->text, sizeof(e->text), combined);
   search_copy(e->context, sizeof(e->context), context);
-  search_copy(e->widget_name, sizeof(e->widget_name), argspec->f_widget_name);
+  search_copy(e->widget_name, sizeof(e->widget_name), argspec->widget_name);
 }
 
 void search_index_set_activate(SearchIndex *idx, SearchActivateFn activate,

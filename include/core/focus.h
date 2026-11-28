@@ -24,25 +24,25 @@ typedef enum {
 } FocusDirection;
 
 typedef struct {
-  bool f_include_listbox;
-  int f_lb_x;
-  int f_lb_y;
-  int f_lb_w;
-  int f_lb_h;
+  bool include_listbox;
+  int lb_x;
+  int lb_y;
+  int lb_w;
+  int lb_h;
 } FocusFrameBegin;
 
 void focus_frame_begin(FocusFrameBegin *argspec);
 void focus_frame_end(void);
 typedef struct {
-  const char *f_name;
-  FocusKind f_kind;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  void *f_owner;
-  FocusActivateFn f_activate;
-  FocusAdjustFn f_adjust;
+  const char *name;
+  FocusKind kind;
+  int x;
+  int y;
+  int w;
+  int h;
+  void *owner;
+  FocusActivateFn activate;
+  FocusAdjustFn adjust;
 } FocusRegister;
 
 void focus_register(FocusRegister *argspec);

@@ -68,63 +68,63 @@ void x11_msg_remove_slot_locked(Display *dpy, int idx);
 int x11_msg_find_key_locked(const char *key);
 void x11_msg_remove_indefinite_locked(Display *dpy);
 typedef struct {
-  Display *f_dpy;
-  XftFont *f_xf;
-  const char *f_text;
-  int f_max_w;
-  MsgLine *f_out;
-  int f_maxLines;
+  Display *dpy;
+  XftFont *xf;
+  const char *text;
+  int max_w;
+  MsgLine *out;
+  int maxLines;
 } X11MsgWrapText;
 
 int x11_msg_wrap_text(X11MsgWrapText *argspec);
 typedef struct {
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  int f_dir;
+  int x;
+  int y;
+  int w;
+  int h;
+  int dir;
 } X11MsgStackAdjustY;
 
 int x11_msg_stack_adjust_y(X11MsgStackAdjustY *argspec);
 typedef struct {
-  Display *f_dpy;
-  const char *f_message;
-  int f_x;
-  int f_y;
-  int f_win_w;
-  int f_win_h;
-  double f_timeout;
-  ColorRef f_color;
-  bool f_no_bg;
-  void (*f_render)(void *ud);
-  void *f_render_data;
-  const char *f_name;
-  bool f_rounded;
-  int f_radius;
-  int f_fps;
+  Display *dpy;
+  const char *message;
+  int x;
+  int y;
+  int win_w;
+  int win_h;
+  double timeout;
+  ColorRef color;
+  bool no_bg;
+  void (*render)(void *ud);
+  void *render_data;
+  const char *name;
+  bool rounded;
+  int radius;
+  int fps;
 } X11MsgPresent;
 
 void x11_msg_present(X11MsgPresent *argspec);
 typedef struct {
-  Display *f_dpy;
-  const char *f_key;
-  const char *f_message;
-  int f_center_x;
-  int f_center_y;
-  int f_win_w;
-  int f_win_h;
-  ColorRef f_color;
-  bool f_no_bg;
+  Display *dpy;
+  const char *key;
+  const char *message;
+  int center_x;
+  int center_y;
+  int win_w;
+  int win_h;
+  ColorRef color;
+  bool no_bg;
 } X11MsgHoverPresent;
 
 void x11_msg_hover_present(X11MsgHoverPresent *argspec);
 typedef struct {
-  Display *f_dpy;
-  const char *f_message;
-  int f_max_width;
-  int f_max_height;
-  int *f_out_w;
-  int *f_out_h;
+  Display *dpy;
+  const char *message;
+  int max_width;
+  int max_height;
+  int *out_w;
+  int *out_h;
 } X11MsgMeasure;
 
 void x11_msg_measure(X11MsgMeasure *argspec);

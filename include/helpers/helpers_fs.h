@@ -10,11 +10,11 @@ bool data_dir(char *out, size_t out_len);
 void data_dir_set_override(const char *path);
 bool expand_path(const char *template_path, char *out, size_t out_size);
 typedef struct {
-  const char *f_name;
-  const void *f_data;
-  size_t f_len;
-  char *f_out_path;
-  size_t f_out_len;
+  const char *name;
+  const void *data;
+  size_t len;
+  char *out_path;
+  size_t out_len;
 } TempFileWrite;
 
 bool temp_file_write(TempFileWrite *argspec);

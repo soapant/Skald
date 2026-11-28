@@ -477,34 +477,34 @@ void Platform_DestroyFont(FontHandle font) {
 
 void Platform_GetTextExtents(PlatformGetTextExtents *argspec) {
 
-  if (!FH_TO_HFONT(argspec->f_font) || !argspec->f_text) {
-    *argspec->f_outWidth = 0;
-    *argspec->f_outHeight = 0;
+  if (!FH_TO_HFONT(argspec->font) || !argspec->text) {
+    *argspec->outWidth = 0;
+    *argspec->outHeight = 0;
     return;
   }
   HDC hdc = CreateCompatibleDC(NULL);
-  HFONT hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(argspec->f_font));
+  HFONT hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(argspec->font));
   int width = 0;
   int height = 0;
-  if (argspec->f_max_width > 0) {
+  if (argspec->max_width > 0) {
     RECT measure = {0, 0, 0, 0};
-    DrawTextA(hdc, argspec->f_text, -1, &measure, DT_CALCRECT);
-    RECT wrapped = {0, 0, argspec->f_max_width, 0x7FFFFFFF};
-    DrawTextA(hdc, argspec->f_text, -1, &wrapped, DT_CALCRECT | DT_WORDBREAK);
+    DrawTextA(hdc, argspec->text, -1, &measure, DT_CALCRECT);
+    RECT wrapped = {0, 0, argspec->max_width, 0x7FFFFFFF};
+    DrawTextA(hdc, argspec->text, -1, &wrapped, DT_CALCRECT | DT_WORDBREAK);
     height = wrapped.bottom - wrapped.top;
     width = measure.right - measure.left;
-    if (width > argspec->f_max_width)
-      width = argspec->f_max_width;
+    if (width > argspec->max_width)
+      width = argspec->max_width;
   } else {
     RECT measure = {0, 0, 0, 0};
-    DrawTextA(hdc, argspec->f_text, -1, &measure, DT_CALCRECT);
+    DrawTextA(hdc, argspec->text, -1, &measure, DT_CALCRECT);
     width = measure.right - measure.left;
     height = measure.bottom - measure.top;
   }
   SelectObject(hdc, hOldFont);
   DeleteDC(hdc);
-  *argspec->f_outWidth = width;
-  *argspec->f_outHeight = height;
+  *argspec->outWidth = width;
+  *argspec->outHeight = height;
 }
 
 static HWND win32_find_window_by_title(const char *title) {
@@ -1354,12 +1354,12 @@ static int win32_http_perform(const char *url, const char *method,
                               long max_redirects);
 
 char *Platform_HttpCollect(PlatformHttpCollect *argspec) {
-  const char *url = argspec->f_url;
-  const char *method = argspec->f_method;
-  const char *content_type = argspec->f_content_type;
-  const char *body = argspec->f_body;
-  size_t max_bytes = argspec->f_max_bytes;
-  size_t *out_len = argspec->f_out_len;
+  const char *url = argspec->url;
+  const char *method = argspec->method;
+  const char *content_type = argspec->content_type;
+  const char *body = argspec->body;
+  size_t max_bytes = argspec->max_bytes;
+  size_t *out_len = argspec->out_len;
   HttpBuf buf;
   win32_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
   int ok = win32_http_perform(url, method, content_type, body, &buf, NULL,
@@ -1871,7 +1871,7 @@ static char *win32_lookup_walk_programs(const char *name) {
     if (!win32_lookup_is_dir(roots[i]))
       continue;
     ListOfFiles found = {0};
-    if (file_walk_all_files_from_dir(&(FileWalkAllFilesFromDir){.f_dir_path = (char *)roots[i], .f_list_of_allowed_extensions = allowed, .f_list_of_files = &found, .f_list_of_names_to_ignore = NULL, .f_strip_extension = true, .f_max_depth = 3})) {
+    if (file_walk_all_files_from_dir(&(FileWalkAllFilesFromDir){.dir_path = (char *)roots[i], .list_of_allowed_extensions = allowed, .list_of_files = &found, .list_of_names_to_ignore = NULL, .strip_extension = true, .max_depth = 3})) {
       for (size_t j = 0; j < found.count; j++) {
         if (string_equals_ci(found.files[j].name, name)) {
           char *hit = _strdup(found.files[j].path);
@@ -1993,7 +1993,7 @@ bool Platform_SnapActiveWindow(SnapPreset preset) {
     ShowWindow(hwnd, SW_RESTORE);
   RECT w = mi.rcWork;
   SnapRect r =
-      wm_snap_rect(&(WmSnapRect){.f_mx = w.left, .f_my = w.top, .f_mw = w.right - w.left, .f_mh = w.bottom - w.top, .f_p = preset});
+      wm_snap_rect(&(WmSnapRect){.mx = w.left, .my = w.top, .mw = w.right - w.left, .mh = w.bottom - w.top, .p = preset});
   SetWindowPos(hwnd, HWND_TOP, r.x, r.y, r.w, r.h,
                SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
   return true;
@@ -2299,7 +2299,7 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
                       .caret_y = spec->caret_y,
                       .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_spec_from_place(&(EditboxSpecFromPlace){.f_out = &eb, .f_place = &place, .f_state = state, .f_ui = &ui, .f_metrics = &(EditboxMetrics){.text_w = text_w,
+  editbox_spec_from_place(&(EditboxSpecFromPlace){.out = &eb, .place = &place, .state = state, .ui = &ui, .metrics = &(EditboxMetrics){.text_w = text_w,
                                             .cursor_x = cursor_x,
                                             .ascent = ascent,
                                             .descent = descent,

@@ -10,22 +10,22 @@
 
 void win32_force_window_focus(WindowHandle hwndTarget);
 typedef struct {
-  HDC f_hdc;
-  int f_ox;
-  int f_oy;
-  int f_ww;
-  int f_wh;
-  const RECT *f_region;
+  HDC hdc;
+  int ox;
+  int oy;
+  int ww;
+  int wh;
+  const RECT *region;
 } Win32DrawWindowBorder;
 
 void win32_draw_window_border(Win32DrawWindowBorder *argspec);
 void win32_apply_rounded_corners(HWND hwnd, int w, int h);
 typedef struct {
-  HWND f_hwnd;
-  int f_w;
-  int f_h;
-  bool f_rounded;
-  int f_radius;
+  HWND hwnd;
+  int w;
+  int h;
+  bool rounded;
+  int radius;
 } Win32ApplyRounded;
 
 void win32_apply_rounded(Win32ApplyRounded *argspec);

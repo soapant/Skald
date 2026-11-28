@@ -17,7 +17,7 @@ bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius) {
   XWindowAttributes attrs;
   if (!XGetWindowAttributes(dpy, w, &attrs))
     return false;
-  x11_apply_shape(&(X11ApplyShape){.f_dpy = dpy, .f_win = w, .f_w = attrs.width, .f_h = attrs.height, .f_rounded = rounded, .f_radius = radius});
+  x11_apply_shape(&(X11ApplyShape){.dpy = dpy, .win = w, .w = attrs.width, .h = attrs.height, .rounded = rounded, .radius = radius});
   XFlush(dpy);
   return true;
 }
@@ -46,18 +46,18 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
 void Platform_FlushDraw(void) { x11_raw_line_flush(); }
 
 bool Platform_DrawImageAt(PlatformDrawImageAt *argspec) {
-  if (!argspec->f_path || !argspec->f_path[0] || !g_draw_dpy || !g_draw_xd)
+  if (!argspec->path || !argspec->path[0] || !g_draw_dpy || !g_draw_xd)
     return false;
   int _offx = draw_state_get()->off_x;
   int _offy = draw_state_get()->off_y;
-  argspec->f_x += _offx;
-  argspec->f_y += _offy;
-  if (argspec->f_w <= 0)
-    argspec->f_w = IconSize;
-  if (argspec->f_h <= 0)
-    argspec->f_h = IconSize;
-  draw_measure_track(argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
-  return x11_draw_image_scaled(&(X11DrawImageScaled){.f_dpy = g_draw_dpy, .f_xd = g_draw_xd, .f_vis = g_draw_vis, .f_path = argspec->f_path, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_tw = argspec->f_w, .f_th = argspec->f_h});
+  argspec->x += _offx;
+  argspec->y += _offy;
+  if (argspec->w <= 0)
+    argspec->w = IconSize;
+  if (argspec->h <= 0)
+    argspec->h = IconSize;
+  draw_measure_track(argspec->x, argspec->y, argspec->w, argspec->h);
+  return x11_draw_image_scaled(&(X11DrawImageScaled){.dpy = g_draw_dpy, .xd = g_draw_xd, .vis = g_draw_vis, .path = argspec->path, .x = argspec->x, .y = argspec->y, .tw = argspec->w, .th = argspec->h});
 }
 
 bool Platform_GetImageSize(const char *path, int *w, int *h) {
@@ -90,7 +90,7 @@ static bool x11_draw_text_raw_inner(DrawTextRaw spec) {
     XftFont *mf = FH_TO_XFT(fh);
     int tw = 0;
     if (mf) {
-      tw = x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){.f_dpy = g_draw_dpy, .f_xf = mf, .f_s = spec.text, .f_n = (int)strlen(spec.text), .f_px = spec.font_size > 0 ? spec.font_size : FontSize});
+      tw = x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){.dpy = g_draw_dpy, .xf = mf, .s = spec.text, .n = (int)strlen(spec.text), .px = spec.font_size > 0 ? spec.font_size : FontSize});
     }
     int th = mf ? (mf->ascent + mf->descent)
                 : (spec.font_size > 0 ? spec.font_size : FontSize);
@@ -102,23 +102,23 @@ static bool x11_draw_text_raw_inner(DrawTextRaw spec) {
     draw_measure_track(bx, y, tw, th);
   }
   XftColor col;
-  x11_xft_color_cached(&(X11XftColorCached){.f_dpy = g_draw_dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = 0xFFFF, .f_out = &col});
+  x11_xft_color_cached(&(X11XftColorCached){.dpy = g_draw_dpy, .vis = g_draw_vis, .cmap = g_draw_cmap, .hex = color, .alpha = 0xFFFF, .out = &col});
   if (string_contains_ci(a, "CENTER") || string_contains_ci(a, "LEFT") ||
       string_contains_ci(a, "RIGHT")) {
     int box = 0;
     if (spec.pad == 0 && !string_contains_ci(a, "LEFT"))
       box = x;
-    x11_draw_wrapped_text(&(X11DrawWrappedText){.f_dpy = g_draw_dpy, .f_xd = g_draw_xd, .f_color = &col, .f_font = fh, .f_text = spec.text, .f_start_y = y, .f_centered_to = (char *)a, .f_x_offset = spec.pad ? spec.pad : x, .f_box_width = box});
+    x11_draw_wrapped_text(&(X11DrawWrappedText){.dpy = g_draw_dpy, .xd = g_draw_xd, .color = &col, .font = fh, .text = spec.text, .start_y = y, .centered_to = (char *)a, .x_offset = spec.pad ? spec.pad : x, .box_width = box});
   } else {
     XftFont *xf = FH_TO_XFT(fh);
     int len = (int)strlen(spec.text);
     if (len == 1 && xf &&
-        x11_raw_line_push(&(X11RawLinePush){.f_x = x, .f_y = y, .f_ch = spec.text[0], .f_color = color, .f_fh = fh, .f_owned = needDestroy, .f_font_size = spec.font_size})) {
+        x11_raw_line_push(&(X11RawLinePush){.x = x, .y = y, .ch = spec.text[0], .color = color, .fh = fh, .owned = needDestroy, .font_size = spec.font_size})) {
       needDestroy = false;
     } else {
       x11_raw_line_flush();
       if (xf)
-        x11_draw_utf8_fallback(&(X11DrawUtf8Fallback){.f_dpy = g_draw_dpy, .f_xd = g_draw_xd, .f_color = &col, .f_x = x, .f_y = y + (xf->ascent), .f_xf = xf, .f_s = spec.text, .f_n = len, .f_px = spec.font_size > 0 ? spec.font_size : FontSize});
+        x11_draw_utf8_fallback(&(X11DrawUtf8Fallback){.dpy = g_draw_dpy, .xd = g_draw_xd, .color = &col, .x = x, .y = y + (xf->ascent), .xf = xf, .s = spec.text, .n = len, .px = spec.font_size > 0 ? spec.font_size : FontSize});
     }
   }
   if (needDestroy)
@@ -169,7 +169,7 @@ int Platform_MeasureTextWidth(MeasureTextWidth spec) {
   XftFont *xf = x11_line_font(g_draw_dpy, spec.font_size);
   if (!xf)
     return spec.len * (spec.font_size > 0 ? spec.font_size : FontSize) / 2;
-  return x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){.f_dpy = g_draw_dpy, .f_xf = xf, .f_s = spec.text, .f_n = spec.len, .f_px = spec.font_size > 0 ? spec.font_size
+  return x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){.dpy = g_draw_dpy, .xf = xf, .s = spec.text, .n = spec.len, .px = spec.font_size > 0 ? spec.font_size
                                                       : FontSize});
 }
 
@@ -184,26 +184,26 @@ bool Platform_DrawTextLine(DrawTextLine spec) {
   unsigned long color =
       spec.color == COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec.color;
   XftColor col;
-  x11_xft_color_cached(&(X11XftColorCached){.f_dpy = g_draw_dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = 0xFFFF, .f_out = &col});
-  x11_draw_utf8_fallback(&(X11DrawUtf8Fallback){.f_dpy = g_draw_dpy, .f_xd = g_draw_xd, .f_color = &col, .f_x = x, .f_y = y + xf->ascent, .f_xf = xf, .f_s = spec.text, .f_n = spec.len, .f_px = spec.font_size > 0 ? spec.font_size : FontSize});
+  x11_xft_color_cached(&(X11XftColorCached){.dpy = g_draw_dpy, .vis = g_draw_vis, .cmap = g_draw_cmap, .hex = color, .alpha = 0xFFFF, .out = &col});
+  x11_draw_utf8_fallback(&(X11DrawUtf8Fallback){.dpy = g_draw_dpy, .xd = g_draw_xd, .color = &col, .x = x, .y = y + xf->ascent, .xf = xf, .s = spec.text, .n = spec.len, .px = spec.font_size > 0 ? spec.font_size : FontSize});
   return true;
 }
 
 void x11_draw_list_item(X11DrawListItem *argspec) {
   XftColor pcolor;
-  x11_xft_color_cached(&(X11XftColorCached){.f_dpy = argspec->f_dpy, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_hex = rgb_to_hex(COLOR_TEXT), .f_alpha = 0xFFFF, .f_out = &pcolor});
-  x11_draw_listbox_item_text(&(X11DrawListboxItemText){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = argspec->f_font, .f_plain_color = &pcolor, .f_lb = argspec->f_lb, .f_icon_path = (char *)argspec->f_icon_path, .f_idx = argspec->f_idx, .f_y = argspec->f_y});
+  x11_xft_color_cached(&(X11XftColorCached){.dpy = argspec->dpy, .vis = argspec->vis, .cmap = argspec->cmap, .hex = rgb_to_hex(COLOR_TEXT), .alpha = 0xFFFF, .out = &pcolor});
+  x11_draw_listbox_item_text(&(X11DrawListboxItemText){.dpy = argspec->dpy, .xd = argspec->xd, .vis = argspec->vis, .cmap = argspec->cmap, .font = argspec->font, .plain_color = &pcolor, .lb = argspec->lb, .icon_path = (char *)argspec->icon_path, .idx = argspec->idx, .y = argspec->y});
 }
 
 void x11_draw_edit_background(X11DrawEditBackground *argspec) {
-  x11_set_draw_context(argspec->f_dpy, argspec->f_xd, argspec->f_vis, argspec->f_cmap);
+  x11_set_draw_context(argspec->dpy, argspec->xd, argspec->vis, argspec->cmap);
   if (WindowTitleText)
     Platform_DrawTextRaw(
         (DrawTextRaw){.x = PROMPT_FOOTER_X,
-                          .y = argspec->f_state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
-                          .text = argspec->f_state->window_title,
+                          .y = argspec->state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
+                          .text = argspec->state->window_title,
                           .color = rgb_to_hex(COLOR_TEXT),
-                          .font = argspec->f_font,
+                          .font = argspec->font,
                           .align = "LEFT",
                           .pad = PROMPT_FOOTER_PAD,
                           .font_size = FontSize});
@@ -224,17 +224,17 @@ static void draw_editbox_part(PromptState *state, Display *dpy, XftDraw *xd,
 }
 
 void x11_draw_edit_text(X11DrawEditText *argspec) {
-  if (!argspec->f_state)
+  if (!argspec->state)
     return;
-  draw_editbox_part(argspec->f_state, argspec->f_dpy, argspec->f_xd, argspec->f_vis, argspec->f_cmap, argspec->f_font, EDITBOX_PART_TEXT);
+  draw_editbox_part(argspec->state, argspec->dpy, argspec->xd, argspec->vis, argspec->cmap, argspec->font, EDITBOX_PART_TEXT);
 }
 
 void x11_draw_edit_tint(X11DrawEditTint *argspec) {
-  draw_editbox_part(argspec->f_state, argspec->f_dpy, argspec->f_xd, argspec->f_vis, argspec->f_cmap, argspec->f_font, EDITBOX_PART_TINT);
+  draw_editbox_part(argspec->state, argspec->dpy, argspec->xd, argspec->vis, argspec->cmap, argspec->font, EDITBOX_PART_TINT);
 }
 
 void x11_draw_edit_cursor(X11DrawEditCursor *argspec) {
-  draw_editbox_part(argspec->f_state, argspec->f_dpy, argspec->f_xd, argspec->f_vis, argspec->f_cmap, argspec->f_font, EDITBOX_PART_CARET);
+  draw_editbox_part(argspec->state, argspec->dpy, argspec->xd, argspec->vis, argspec->cmap, argspec->font, EDITBOX_PART_CARET);
 }
 
 static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by,
@@ -243,7 +243,7 @@ static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by,
     return false;
   Pixmap pm = 0;
   Picture pic = 0;
-  bool ok = x11_upload_argb(&(X11UploadArgb){.f_dpy = g_draw_dpy, .f_ref = 0, .f_argb = buf, .f_w = w, .f_h = h, .f_out_pm = &pm, .f_out_pic = &pic});
+  bool ok = x11_upload_argb(&(X11UploadArgb){.dpy = g_draw_dpy, .ref = 0, .argb = buf, .w = w, .h = h, .out_pm = &pm, .out_pic = &pic});
   if (owned)
     free(buf);
   if (!ok)
@@ -278,7 +278,7 @@ static bool blit_argb_buf_scaled(const unsigned char *buf, int w, int h, int bx,
     return false;
   Pixmap pm = 0;
   Picture pic = 0;
-  if (!x11_upload_argb(&(X11UploadArgb){.f_dpy = g_draw_dpy, .f_ref = 0, .f_argb = (unsigned char *)buf, .f_w = w, .f_h = h, .f_out_pm = &pm, .f_out_pic = &pic}))
+  if (!x11_upload_argb(&(X11UploadArgb){.dpy = g_draw_dpy, .ref = 0, .argb = (unsigned char *)buf, .w = w, .h = h, .out_pm = &pm, .out_pic = &pic}))
     return false;
   XRenderPictFormat *dfmt = XRenderFindVisualFormat(g_draw_dpy, g_draw_vis);
   Picture dst =
@@ -313,18 +313,18 @@ static bool blit_argb_buf_scaled(const unsigned char *buf, int w, int h, int bx,
 }
 
 bool Platform_DrawImageBuffer(PlatformDrawImageBuffer *argspec) {
-  if (!argspec->f_image || !argspec->f_image->pixels || argspec->f_image->w <= 0 || argspec->f_image->h <= 0)
+  if (!argspec->image || !argspec->image->pixels || argspec->image->w <= 0 || argspec->image->h <= 0)
     return false;
   if (!g_draw_dpy || !g_draw_xd)
     return false;
-  argspec->f_x += draw_state_get()->off_x;
-  argspec->f_y += draw_state_get()->off_y;
-  if (argspec->f_w <= 0)
-    argspec->f_w = argspec->f_image->w;
-  if (argspec->f_h <= 0)
-    argspec->f_h = argspec->f_image->h;
-  draw_measure_track(argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
-  return blit_argb_buf_scaled(argspec->f_image->pixels, argspec->f_image->w, argspec->f_image->h, argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
+  argspec->x += draw_state_get()->off_x;
+  argspec->y += draw_state_get()->off_y;
+  if (argspec->w <= 0)
+    argspec->w = argspec->image->w;
+  if (argspec->h <= 0)
+    argspec->h = argspec->image->h;
+  draw_measure_track(argspec->x, argspec->y, argspec->w, argspec->h);
+  return blit_argb_buf_scaled(argspec->image->pixels, argspec->image->w, argspec->image->h, argspec->x, argspec->y, argspec->w, argspec->h);
 }
 
 static unsigned char *make_rect_border_argb(int rect_w, int rect_h,
@@ -511,10 +511,10 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
 
   if (filled) {
     if (want_round && r > 0) {
-      x11_fill_rounded_rect(&(X11FillRoundedRect){.f_dpy = g_draw_dpy, .f_xd = g_draw_xd, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha16 = target_alpha, .f_x = x, .f_y = y, .f_w = w, .f_h = h, .f_radius = r});
+      x11_fill_rounded_rect(&(X11FillRoundedRect){.dpy = g_draw_dpy, .xd = g_draw_xd, .vis = g_draw_vis, .cmap = g_draw_cmap, .hex = color, .alpha16 = target_alpha, .x = x, .y = y, .w = w, .h = h, .radius = r});
     } else {
       XftColor col;
-      x11_xft_color_cached(&(X11XftColorCached){.f_dpy = g_draw_dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = target_alpha, .f_out = &col});
+      x11_xft_color_cached(&(X11XftColorCached){.dpy = g_draw_dpy, .vis = g_draw_vis, .cmap = g_draw_cmap, .hex = color, .alpha = target_alpha, .out = &col});
       const DrawCanvas *ds = draw_state_get();
       bool clipped = ds->clip_y1 > ds->clip_y0;
       if (clipped) {
@@ -631,7 +631,7 @@ bool Platform_DrawLineRaw(DrawLineRaw spec) {
   if (!x11_raw_can_draw())
     return false;
   int x1, y1, x2, y2;
-  int t = draw_line_prep(&(DrawLinePrep){.f_spec = &spec, .f_off_x = draw_state_get()->off_x, .f_off_y = draw_state_get()->off_y, .f_x1 = &x1, .f_y1 = &y1, .f_x2 = &x2, .f_y2 = &y2});
+  int t = draw_line_prep(&(DrawLinePrep){.spec = &spec, .off_x = draw_state_get()->off_x, .off_y = draw_state_get()->off_y, .x1 = &x1, .y1 = &y1, .x2 = &x2, .y2 = &y2});
   int thickness = t > 0 ? t : 1;
   int pad = (int)((float)thickness * 0.5f) + 2;
   int bx = (x1 < x2 ? x1 : x2) - pad;
@@ -648,7 +648,7 @@ bool Platform_DrawCircleRaw(DrawCircleRaw spec) {
   if (!x11_raw_can_draw() || spec.radius <= 0)
     return false;
   int cx, cy;
-  int t = draw_circle_prep(&(DrawCirclePrep){.f_spec = &spec, .f_off_x = draw_state_get()->off_x, .f_off_y = draw_state_get()->off_y, .f_cx = &cx, .f_cy = &cy});
+  int t = draw_circle_prep(&(DrawCirclePrep){.spec = &spec, .off_x = draw_state_get()->off_x, .off_y = draw_state_get()->off_y, .cx = &cx, .cy = &cy});
   GC gc = x11_raw_prepare(spec.color, t);
   if (!gc)
     return false;

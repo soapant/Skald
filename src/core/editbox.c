@@ -90,40 +90,40 @@ void editbox_resolve_place(const EditboxPlaceSpec *spec, PromptState *state,
 }
 
 void editbox_spec_from_place(EditboxSpecFromPlace *argspec) {
-  if (!argspec->f_out || !argspec->f_place || !argspec->f_ui || !argspec->f_metrics)
+  if (!argspec->out || !argspec->place || !argspec->ui || !argspec->metrics)
     return;
-  int text_w = argspec->f_metrics->text_w, cursor_x = argspec->f_metrics->cursor_x;
-  int ascent = argspec->f_metrics->ascent, descent = argspec->f_metrics->descent;
-  FontHandle font = argspec->f_metrics->font;
+  int text_w = argspec->metrics->text_w, cursor_x = argspec->metrics->cursor_x;
+  int ascent = argspec->metrics->ascent, descent = argspec->metrics->descent;
+  FontHandle font = argspec->metrics->font;
   EditboxInitFrom init_args = {0};
-  init_args.state = argspec->f_state;
-  init_args.buf = argspec->f_place->buf;
-  init_args.text_len = argspec->f_place->text_len;
-  init_args.cursor = argspec->f_place->cursor;
-  init_args.x = argspec->f_place->x;
-  init_args.y = argspec->f_place->y_raw;
-  init_args.w = argspec->f_place->w;
-  init_args.h = argspec->f_place->h;
+  init_args.state = argspec->state;
+  init_args.buf = argspec->place->buf;
+  init_args.text_len = argspec->place->text_len;
+  init_args.cursor = argspec->place->cursor;
+  init_args.x = argspec->place->x;
+  init_args.y = argspec->place->y_raw;
+  init_args.w = argspec->place->w;
+  init_args.h = argspec->place->h;
   init_args.cursor_x = cursor_x;
   init_args.text_w = text_w;
   init_args.ascent = ascent;
   init_args.descent = descent;
-  init_args.wrapped = argspec->f_place->wrapped;
-  init_args.font_size = argspec->f_place->font_size;
+  init_args.wrapped = argspec->place->wrapped;
+  init_args.font_size = argspec->place->font_size;
   init_args.font = font;
-  init_args.text_color = argspec->f_ui->color_text;
-  init_args.bg_color = argspec->f_ui->color_bg;
-  init_args.placeholder = argspec->f_ui->placeholder;
-  init_args.caret_h = argspec->f_ui->caret_h;
-  init_args.caret_w = argspec->f_ui->caret_w;
-  init_args.caret_x = argspec->f_ui->caret_x;
-  init_args.caret_y = argspec->f_ui->caret_y;
-  init_args.caret_pos = argspec->f_ui->caret_pos;
+  init_args.text_color = argspec->ui->color_text;
+  init_args.bg_color = argspec->ui->color_bg;
+  init_args.placeholder = argspec->ui->placeholder;
+  init_args.caret_h = argspec->ui->caret_h;
+  init_args.caret_w = argspec->ui->caret_w;
+  init_args.caret_x = argspec->ui->caret_x;
+  init_args.caret_y = argspec->ui->caret_y;
+  init_args.caret_pos = argspec->ui->caret_pos;
   EditboxInit ebi;
   editbox_init_from_spec(&ebi, &init_args);
-  editbox_build_spec(argspec->f_out, &ebi);
-  argspec->f_out->draw_bg = argspec->f_ui->color_bg != 0;
-  argspec->f_out->wrap_cache = editbox_prompt_wrap_cache(argspec->f_state);
+  editbox_build_spec(argspec->out, &ebi);
+  argspec->out->draw_bg = argspec->ui->color_bg != 0;
+  argspec->out->wrap_cache = editbox_prompt_wrap_cache(argspec->state);
 }
 
 void editbox_init_from_spec(EditboxInit *out, const EditboxInitFrom *args) {
@@ -199,7 +199,7 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->text_color = in->text_color;
   out->bg_color = in->bg_color;
   out->font = in->font;
-  editbox_resolve_selection(&(EditboxResolveSelection){.f_state = in->state, .f_text_len = in->text_len, .f_prefer_state = true, .f_out_start = &out->sel_start, .f_out_end = &out->sel_end, .f_out_has = &out->has_selection});
+  editbox_resolve_selection(&(EditboxResolveSelection){.state = in->state, .text_len = in->text_len, .prefer_state = true, .out_start = &out->sel_start, .out_end = &out->sel_end, .out_has = &out->has_selection});
 }
 
 int editbox_caret_y(int box_top, int ascent, int descent, int font_size) {
@@ -234,7 +234,7 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   FontHandle font = metrics->font;
   int sel_start = 0, sel_end = 0;
   bool has_sel = false;
-  editbox_resolve_selection(&(EditboxResolveSelection){.f_state = state, .f_text_len = text_len, .f_prefer_state = true, .f_out_start = &sel_start, .f_out_end = &sel_end, .f_out_has = &has_sel});
+  editbox_resolve_selection(&(EditboxResolveSelection){.state = state, .text_len = text_len, .prefer_state = true, .out_start = &sel_start, .out_end = &sel_end, .out_has = &has_sel});
   memset(spec, 0, sizeof(*spec));
   spec->wrap_cache = editbox_prompt_wrap_cache(state);
   spec->metrics = editbox_state_metrics(state);
@@ -275,27 +275,27 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   int edit_h = ascent + descent;
   if (edit_h <= 0)
     edit_h = FontSize > 0 ? FontSize : 16;
-  editbox_legacy_tick(&(EditboxLegacyTick){.f_state = state, .f_x = 0, .f_y = edit_y, .f_w = state->width, .f_h = edit_h, .f_font_size = FontSize});
+  editbox_legacy_tick(&(EditboxLegacyTick){.state = state, .x = 0, .y = edit_y, .w = state->width, .h = edit_h, .font_size = FontSize});
 }
 
 void editbox_resolve_selection(EditboxResolveSelection *argspec) {
   int sel_start = 0;
   int sel_end = 0;
   bool has = false;
-  if (argspec->f_prefer_state && argspec->f_state && argspec->f_state->eb->sel_start >= 0 &&
-      argspec->f_state->eb->sel_end > argspec->f_state->eb->sel_start) {
-    sel_start = argspec->f_state->eb->sel_start;
-    sel_end = argspec->f_state->eb->sel_end;
+  if (argspec->prefer_state && argspec->state && argspec->state->eb->sel_start >= 0 &&
+      argspec->state->eb->sel_end > argspec->state->eb->sel_start) {
+    sel_start = argspec->state->eb->sel_start;
+    sel_end = argspec->state->eb->sel_end;
     has = true;
   } else {
-    has = edit_state_get_selection(&sel_start, &sel_end) && argspec->f_text_len > 0;
+    has = edit_state_get_selection(&sel_start, &sel_end) && argspec->text_len > 0;
   }
-  if (argspec->f_out_start)
-    *argspec->f_out_start = sel_start;
-  if (argspec->f_out_end)
-    *argspec->f_out_end = sel_end;
-  if (argspec->f_out_has)
-    *argspec->f_out_has = has;
+  if (argspec->out_start)
+    *argspec->out_start = sel_start;
+  if (argspec->out_end)
+    *argspec->out_end = sel_end;
+  if (argspec->out_has)
+    *argspec->out_has = has;
 }
 
 int editbox_scroll_offset(const EditboxSpec *spec) {
@@ -408,7 +408,7 @@ static const Pos *editbox_wrap_positions(const EditboxSpec *spec,
   }
   Pos *out = *buf;
   EditboxWrapCtx ctx = {spec, src};
-  int n = text_wrap_layout(&(TextWrapLayout){.f_text = src, .f_x0 = 0, .f_y0 = 0, .f_max_width = max_width, .f_line_height = line_h, .f_measure = editbox_wrap_measure, .f_ctx = &ctx, .f_out = out, .f_maxout = need});
+  int n = text_wrap_layout(&(TextWrapLayout){.text = src, .x0 = 0, .y0 = 0, .max_width = max_width, .line_height = line_h, .measure = editbox_wrap_measure, .ctx = &ctx, .out = out, .maxout = need});
   if (cache) {
     cache->key = key;
     cache->len = len;
@@ -833,28 +833,28 @@ EditBox *editbox_registry_lookup(PromptState *state, const char *name) {
 }
 
 int editbox_registry_place(EditboxRegistryPlace *argspec) {
-  if (!argspec->f_state || !argspec->f_name || !argspec->f_name[0])
+  if (!argspec->state || !argspec->name || !argspec->name[0])
     return -1;
-  PromptEditbox *entry = editbox_registry_find(argspec->f_state, argspec->f_name);
+  PromptEditbox *entry = editbox_registry_find(argspec->state, argspec->name);
   if (!entry) {
-    if (argspec->f_state->editbox_count >= PROMPT_EDITBOX_MAX)
+    if (argspec->state->editbox_count >= PROMPT_EDITBOX_MAX)
       return -1;
-    entry = &argspec->f_state->editboxes[argspec->f_state->editbox_count++];
+    entry = &argspec->state->editboxes[argspec->state->editbox_count++];
     memset(entry, 0, sizeof(*entry));
     entry->metrics = *metrics_get();
-    snprintf(entry->name, sizeof(entry->name), "%s", argspec->f_name);
+    snprintf(entry->name, sizeof(entry->name), "%s", argspec->name);
     entry->eb.sel_start = -1;
     entry->eb.sel_end = -1;
   }
-  if (entry->buffer != argspec->f_buffer || entry->buffer_size != argspec->f_buffer_size) {
-    entry->buffer = argspec->f_buffer;
-    entry->buffer_size = argspec->f_buffer_size;
-    size_t cap = argspec->f_buffer_size > 0 ? argspec->f_buffer_size : sizeof(entry->eb.filter);
-    size_t n = argspec->f_buffer ? strnlen(argspec->f_buffer, cap - 1) : 0;
+  if (entry->buffer != argspec->buffer || entry->buffer_size != argspec->buffer_size) {
+    entry->buffer = argspec->buffer;
+    entry->buffer_size = argspec->buffer_size;
+    size_t cap = argspec->buffer_size > 0 ? argspec->buffer_size : sizeof(entry->eb.filter);
+    size_t n = argspec->buffer ? strnlen(argspec->buffer, cap - 1) : 0;
     if (n >= sizeof(entry->eb.filter))
       n = sizeof(entry->eb.filter) - 1;
-    if (argspec->f_buffer)
-      memcpy(entry->eb.filter, argspec->f_buffer, n);
+    if (argspec->buffer)
+      memcpy(entry->eb.filter, argspec->buffer, n);
     entry->eb.filter[n] = '\0';
     entry->eb.cursor = n;
     entry->eb.sel_start = -1;
@@ -863,16 +863,16 @@ int editbox_registry_place(EditboxRegistryPlace *argspec) {
     free(entry->eb.placeholder);
     entry->eb.placeholder = NULL;
   }
-  if (argspec->f_w <= 0)
-    argspec->f_w = argspec->f_state->width;
-  if (argspec->f_h <= 0)
-    argspec->f_h = prompt_custom_edit_height();
-  entry->x = argspec->f_x;
-  entry->y = argspec->f_y;
-  entry->w = argspec->f_w;
-  entry->h = argspec->f_h;
+  if (argspec->w <= 0)
+    argspec->w = argspec->state->width;
+  if (argspec->h <= 0)
+    argspec->h = prompt_custom_edit_height();
+  entry->x = argspec->x;
+  entry->y = argspec->y;
+  entry->w = argspec->w;
+  entry->h = argspec->h;
   entry->placed = true;
-  int idx = (int)(entry - argspec->f_state->editboxes);
+  int idx = (int)(entry - argspec->state->editboxes);
   return idx;
 }
 
@@ -915,7 +915,7 @@ void editbox_registry_register_focus(PromptState *state) {
       continue;
     char name[160];
     editbox_focus_name(name, sizeof(name), entry);
-    focus_register(&(FocusRegister){.f_name = name, .f_kind = FOCUS_KIND_EDITBOX, .f_x = entry->x, .f_y = entry->y, .f_w = entry->w, .f_h = entry->h, .f_owner = state, .f_activate = editbox_focus_activate, .f_adjust = NULL});
+    focus_register(&(FocusRegister){.name = name, .kind = FOCUS_KIND_EDITBOX, .x = entry->x, .y = entry->y, .w = entry->w, .h = entry->h, .owner = state, .activate = editbox_focus_activate, .adjust = NULL});
   }
 }
 
@@ -1126,23 +1126,23 @@ void editbox_registry_tick(PromptState *state) {
 }
 
 void editbox_legacy_tick(EditboxLegacyTick *argspec) {
-  if (!argspec->f_state || !argspec->f_state->eb)
+  if (!argspec->state || !argspec->state->eb)
     return;
-  int idx = editbox_registry_place(&(EditboxRegistryPlace){.f_state = argspec->f_state, .f_name = PROMPT_PRIMARY_EDITBOX_NAME, .f_buffer = argspec->f_state->eb->filter, .f_buffer_size = sizeof(argspec->f_state->eb->filter), .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h});
+  int idx = editbox_registry_place(&(EditboxRegistryPlace){.state = argspec->state, .name = PROMPT_PRIMARY_EDITBOX_NAME, .buffer = argspec->state->eb->filter, .buffer_size = sizeof(argspec->state->eb->filter), .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h});
   if (idx < 0)
     return;
-  PromptEditbox *entry = &argspec->f_state->editboxes[idx];
-  entry->font_size = argspec->f_font_size > 0 ? argspec->f_font_size : FontSize;
+  PromptEditbox *entry = &argspec->state->editboxes[idx];
+  entry->font_size = argspec->font_size > 0 ? argspec->font_size : FontSize;
   entry->primary = true;
-  entry->eb = *argspec->f_state->eb;
-  EditBox *saved_eb = argspec->f_state->eb;
-  int saved_active = argspec->f_state->active_editbox;
-  argspec->f_state->eb = &entry->eb;
-  argspec->f_state->active_editbox = idx;
-  editbox_registry_tick(argspec->f_state);
-  *saved_eb = *argspec->f_state->eb;
-  argspec->f_state->eb = saved_eb;
-  argspec->f_state->active_editbox = saved_active;
+  entry->eb = *argspec->state->eb;
+  EditBox *saved_eb = argspec->state->eb;
+  int saved_active = argspec->state->active_editbox;
+  argspec->state->eb = &entry->eb;
+  argspec->state->active_editbox = idx;
+  editbox_registry_tick(argspec->state);
+  *saved_eb = *argspec->state->eb;
+  argspec->state->eb = saved_eb;
+  argspec->state->active_editbox = saved_active;
 }
 
 void editbox_registry_sync(PromptState *state) {

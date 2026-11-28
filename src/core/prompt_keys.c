@@ -123,7 +123,7 @@ void prompt_insert_text(PromptState *state, const char *text, int len) {
   }
   prompt_delete_selection(state);
   size_t fcur = (size_t)state->eb->cursor;
-  edit_buffer_insert_text(&(EditBufferInsertText){.f_buf = state->eb->filter, .f_cap = sizeof(state->eb->filter), .f_cursor = &fcur, .f_text = text, .f_len = (size_t)len});
+  edit_buffer_insert_text(&(EditBufferInsertText){.buf = state->eb->filter, .cap = sizeof(state->eb->filter), .cursor = &fcur, .text = text, .len = (size_t)len});
   state->eb->cursor = (int)fcur;
   listbox_focus_by_mouse();
   prompt_refresh_typing(state);
@@ -191,7 +191,7 @@ bool prompt_handle_list_click(PromptState *state, bool ctrl, bool shift,
   int mx = 0, my = 0;
   if (!listbox_client_mouse_pos(&mx, &my))
     return false;
-  int idx = listbox_row_at_y(&(ListboxRowAtY){.f_lb = lb, .f_list_top = list_top, .f_item_height = item_height, .f_top_index = lb->view_offset, .f_visible_count = visible_count, .f_mouse_y = my});
+  int idx = listbox_row_at_y(&(ListboxRowAtY){.lb = lb, .list_top = list_top, .item_height = item_height, .top_index = lb->view_offset, .visible_count = visible_count, .mouse_y = my});
   if (idx < 0)
     return false;
   UI_SetSelection(lb, idx);

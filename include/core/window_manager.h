@@ -70,21 +70,21 @@ char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
 Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec);
 typedef struct {
-  Popup *f_p;
-  int *f_x;
-  int *f_y;
-  int *f_w;
-  int *f_h;
+  Popup *p;
+  int *x;
+  int *y;
+  int *w;
+  int *h;
 } PromptPopupGetBounds;
 
 int prompt_popup_get_bounds(PromptPopupGetBounds *argspec);
 bool prompt_popup_resize_current(int x, int y, int w, int h);
 typedef struct {
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
-  int f_duration_ms;
+  int x;
+  int y;
+  int w;
+  int h;
+  int duration_ms;
 } PromptPopupResizeCurrentAnimated;
 
 bool prompt_popup_resize_current_animated(PromptPopupResizeCurrentAnimated *argspec);

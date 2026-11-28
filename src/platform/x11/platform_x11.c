@@ -32,7 +32,7 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
   X11SessionEnv env;
   x11_env_get_session_env(&env);
   char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-  x11_env_build_env_strings(&(X11EnvBuildEnvStrings){.f_env = &env, .f_disp_env = disp_env, .f_xauth_env = xauth_env, .f_runtime_env = runtime_env, .f_wayland_env = wayland_env});
+  x11_env_build_env_strings(&(X11EnvBuildEnvStrings){.env = &env, .disp_env = disp_env, .xauth_env = xauth_env, .runtime_env = runtime_env, .wayland_env = wayland_env});
 
   pid_t pid = fork();
   if (pid < 0) {
@@ -523,28 +523,28 @@ static int xft_text_width(Display *dpy, XftFont *xf, const char *text,
 
 void Platform_GetTextExtents(PlatformGetTextExtents *argspec) {
 
-  if (!FH_TO_XFT(argspec->f_font) || !argspec->f_text) {
-    *argspec->f_outWidth = 0;
-    *argspec->f_outHeight = 0;
-    log_info("Platform_GetTextExtents text='%s' max_width=%d", argspec->f_text ? argspec->f_text : "",
-             argspec->f_max_width);
+  if (!FH_TO_XFT(argspec->font) || !argspec->text) {
+    *argspec->outWidth = 0;
+    *argspec->outHeight = 0;
+    log_info("Platform_GetTextExtents text='%s' max_width=%d", argspec->text ? argspec->text : "",
+             argspec->max_width);
     return;
   }
-  Display *dpy = FH_TO_DPY(argspec->f_font);
-  XftFont *xf = FH_TO_XFT(argspec->f_font);
+  Display *dpy = FH_TO_DPY(argspec->font);
+  XftFont *xf = FH_TO_XFT(argspec->font);
   int line_height = xf->ascent + xf->descent;
   int space_width = xft_text_width(dpy, xf, " ", 1);
 
   int line_width = 0;
   int totalHeight = line_height;
-  const char *p = argspec->f_text;
+  const char *p = argspec->text;
   while (*p) {
     const char *word_start = p;
     while (*p && *p != ' ')
       p++;
     int word_width = xft_text_width(dpy, xf, word_start, p - word_start);
     int add = word_width + (line_width > 0 ? space_width : 0);
-    if (line_width > 0 && line_width + add > argspec->f_max_width) {
+    if (line_width > 0 && line_width + add > argspec->max_width) {
       totalHeight += line_height;
       line_width = word_width;
     } else {
@@ -553,8 +553,8 @@ void Platform_GetTextExtents(PlatformGetTextExtents *argspec) {
     while (*p == ' ')
       p++;
   }
-  *argspec->f_outWidth = line_width;
-  *argspec->f_outHeight = totalHeight;
+  *argspec->outWidth = line_width;
+  *argspec->outHeight = totalHeight;
 }
 
 bool Platform_FocusWindow(const char *title) {
@@ -1737,12 +1737,12 @@ static size_t x11_http_write_file_cb(char *ptr, size_t sz, size_t nm,
 }
 
 char *Platform_HttpCollect(PlatformHttpCollect *argspec) {
-  const char *url = argspec->f_url;
-  const char *method = argspec->f_method;
-  const char *content_type = argspec->f_content_type;
-  const char *body = argspec->f_body;
-  size_t max_bytes = argspec->f_max_bytes;
-  size_t *out_len = argspec->f_out_len;
+  const char *url = argspec->url;
+  const char *method = argspec->method;
+  const char *content_type = argspec->content_type;
+  const char *body = argspec->body;
+  size_t max_bytes = argspec->max_bytes;
+  size_t *out_len = argspec->out_len;
   if (!url || !url[0]) {
     if (out_len)
       *out_len = 0;
@@ -2260,7 +2260,7 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
                       .caret_y = spec->caret_y,
                       .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_spec_from_place(&(EditboxSpecFromPlace){.f_out = &eb, .f_place = &place, .f_state = state, .f_ui = &ui, .f_metrics = &(EditboxMetrics){.text_w = text_w,
+  editbox_spec_from_place(&(EditboxSpecFromPlace){.out = &eb, .place = &place, .state = state, .ui = &ui, .metrics = &(EditboxMetrics){.text_w = text_w,
                                             .cursor_x = cursor_x,
                                             .ascent = xf ? xf->ascent : 0,
                                             .descent = xf ? xf->descent : 0,

@@ -149,24 +149,24 @@ bool listbox_client_mouse_pos(int *out_x, int *out_y) {
 
 int listbox_row_at_y(ListboxRowAtY *argspec) {
 
-  if (!argspec->f_lb || argspec->f_item_height <= 0 || argspec->f_visible_count <= 0) {
+  if (!argspec->lb || argspec->item_height <= 0 || argspec->visible_count <= 0) {
     return -1;
   }
-  int rel = argspec->f_mouse_y - argspec->f_list_top;
+  int rel = argspec->mouse_y - argspec->list_top;
   if (rel < 0)
     return -1;
-  int row = rel / argspec->f_item_height;
-  if (row >= argspec->f_visible_count)
+  int row = rel / argspec->item_height;
+  if (row >= argspec->visible_count)
     return -1;
-  int idx = argspec->f_top_index + row;
-  if (idx < 0 || idx >= argspec->f_lb->item_count)
+  int idx = argspec->top_index + row;
+  if (idx < 0 || idx >= argspec->lb->item_count)
     return -1;
   return idx;
 }
 
 bool listbox_hover_focus(ListboxHoverFocus *argspec) {
 
-  if (!argspec->f_lb || argspec->f_lb->item_count <= 0)
+  if (!argspec->lb || argspec->lb->item_count <= 0)
     return false;
   if (!mouse_moved)
     return false;
@@ -184,14 +184,14 @@ bool listbox_hover_focus(ListboxHoverFocus *argspec) {
   hover_y = my;
   if (!moved)
     return false;
-  if (mx < argspec->f_left_x || mx >= argspec->f_right_x)
+  if (mx < argspec->left_x || mx >= argspec->right_x)
     return false;
   listbox_focus_by_mouse();
   focus_set_pseudo_passive(FOCUS_KIND_LISTBOX);
-  int idx = listbox_row_at_y(&(ListboxRowAtY){.f_lb = argspec->f_lb, .f_list_top = argspec->f_list_top, .f_item_height = argspec->f_item_height, .f_top_index = argspec->f_top_index, .f_visible_count = argspec->f_visible_count, .f_mouse_y = my});
-  if (idx < 0 || idx == argspec->f_lb->selected_index)
+  int idx = listbox_row_at_y(&(ListboxRowAtY){.lb = argspec->lb, .list_top = argspec->list_top, .item_height = argspec->item_height, .top_index = argspec->top_index, .visible_count = argspec->visible_count, .mouse_y = my});
+  if (idx < 0 || idx == argspec->lb->selected_index)
     return false;
-  UI_SetSelection(argspec->f_lb, idx);
+  UI_SetSelection(argspec->lb, idx);
   return true;
 }
 
@@ -421,7 +421,7 @@ bool listbox_begin_common(const List *spec) {
   item_h = item_h > 0 ? item_h : bi.item_h;
   PromptState *st = Platform_ListboxBackendPromptState(lb);
   ListboxLayout lay;
-  listbox_compute_layout(&(ListboxComputeLayout){.f_spec = spec, .f_default_y0 = bi.list_top, .f_item_h = item_h, .f_popup_w = st ? st->width : PromptW, .f_popup_h = st ? st->height : PromptH, .f_count = lb->item_count, .f_out = &lay});
+  listbox_compute_layout(&(ListboxComputeLayout){.spec = spec, .default_y0 = bi.list_top, .item_h = item_h, .popup_w = st ? st->width : PromptW, .popup_h = st ? st->height : PromptH, .count = lb->item_count, .out = &lay});
   common_spec = *spec;
   common_lb = lb;
   common_item_h = item_h;
@@ -437,7 +437,7 @@ bool listbox_begin_common(const List *spec) {
   UI_LB_SetVisibleCount(lay.visible);
   listbox_apply_pending_scroll(lb, lay.visible);
   listbox_set_geometry(common_y0, common_item_h, lay.visible);
-  listbox_hover_focus(&(ListboxHoverFocus){.f_lb = lb, .f_list_top = common_y0, .f_item_height = common_item_h, .f_top_index = lb->view_offset, .f_visible_count = lay.visible, .f_left_x = common_bx, .f_right_x = common_bx + common_bw});
+  listbox_hover_focus(&(ListboxHoverFocus){.lb = lb, .list_top = common_y0, .item_height = common_item_h, .top_index = lb->view_offset, .visible_count = lay.visible, .left_x = common_bx, .right_x = common_bx + common_bw});
   draw_state_get()->listbox_rows = true;
   draw_state_set_clip(common_y0, common_y0 + common_h);
   SkaldContext_Get()->window.listbox_placed = true;
@@ -463,7 +463,7 @@ bool listbox_next_common(ListItemCtx *out) {
     draw_prompt_separator(
         (DrawPromptSeparator){.y = common_y0, .width = common_fw});
   bool sel = (idx == common_lb->selected_index);
-  Platform_ListboxBackendDrawSelection(&(ListboxBackendDrawSelection){.f_bx = common_bx, .f_bw = common_bw, .f_y = y, .f_item_h = row_h, .f_fw = common_fw, .f_frame_h = common_fh, .f_sel = sel});
+  Platform_ListboxBackendDrawSelection(&(ListboxBackendDrawSelection){.bx = common_bx, .bw = common_bw, .y = y, .item_h = row_h, .fw = common_fw, .frame_h = common_fh, .sel = sel});
   listbox_set_row_h_scroll(sel ? common_lb->text_hscroll : 0);
   out->idx = idx;
   out->selected = sel;

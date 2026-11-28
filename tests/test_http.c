@@ -21,16 +21,16 @@ static bool SAVE_FAILS;
 static char *fake_collect(PlatformHttpCollect *argspec) {
   COLLECT_CALLS++;
   snprintf(LAST_URL, sizeof(LAST_URL), "%s",
-           argspec->f_url ? argspec->f_url : "");
+           argspec->url ? argspec->url : "");
   snprintf(LAST_METHOD, sizeof(LAST_METHOD), "%s",
-           argspec->f_method ? argspec->f_method : "");
+           argspec->method ? argspec->method : "");
   snprintf(LAST_CONTENT_TYPE, sizeof(LAST_CONTENT_TYPE), "%s",
-           argspec->f_content_type ? argspec->f_content_type : "");
+           argspec->content_type ? argspec->content_type : "");
   snprintf(LAST_BODY, sizeof(LAST_BODY), "%s",
-           argspec->f_body ? argspec->f_body : "");
-  LAST_LIMIT = argspec->f_max_bytes;
-  if (argspec->f_out_len)
-    *argspec->f_out_len = 7;
+           argspec->body ? argspec->body : "");
+  LAST_LIMIT = argspec->max_bytes;
+  if (argspec->out_len)
+    *argspec->out_len = 7;
   return strdup("payload");
 }
 

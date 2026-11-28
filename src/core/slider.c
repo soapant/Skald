@@ -390,7 +390,7 @@ bool slider_place(const Slider *spec) {
   sl->on_hover = spec->on_hover;
   sl->render = spec->render;
 
-  focus_register(&(FocusRegister){.f_name = spec->name, .f_kind = FOCUS_KIND_SLIDER, .f_x = x, .f_y = y, .f_w = w, .f_h = h, .f_owner = sl, .f_activate = slider_focus_activate, .f_adjust = slider_focus_step});
+  focus_register(&(FocusRegister){.name = spec->name, .kind = FOCUS_KIND_SLIDER, .x = x, .y = y, .w = w, .h = h, .owner = sl, .activate = slider_focus_activate, .adjust = slider_focus_step});
   sl->focused = focus_is(spec->name);
 
   if (fresh)

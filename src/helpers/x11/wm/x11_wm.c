@@ -902,7 +902,7 @@ bool x11_snap_active_window(SnapPreset preset) {
   DrawRect win = {0}, mon = {0};
   if (!x11_active_in_monitor(display, &focus, &win, &mon))
     return false;
-  SnapRect r = wm_snap_rect(&(WmSnapRect){.f_mx = mon.x, .f_my = mon.y, .f_mw = mon.w, .f_mh = mon.h, .f_p = preset});
+  SnapRect r = wm_snap_rect(&(WmSnapRect){.mx = mon.x, .my = mon.y, .mw = mon.w, .mh = mon.h, .p = preset});
   return x11_moveresize_window(display, focus, r.x, r.y, r.w, r.h);
 }
 

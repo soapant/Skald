@@ -6,12 +6,12 @@
 
 bool win32_bg_image_enabled(void);
 typedef struct {
-  HDC f_hdc;
-  const RECT *f_rc;
-  int f_containerW;
-  int f_containerH;
-  int f_originX;
-  int f_originY;
+  HDC hdc;
+  const RECT *rc;
+  int containerW;
+  int containerH;
+  int originX;
+  int originY;
 } Win32DrawBgImageSlice;
 
 bool win32_draw_bg_image_slice(Win32DrawBgImageSlice *argspec);

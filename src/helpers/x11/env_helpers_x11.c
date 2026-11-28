@@ -65,18 +65,18 @@ void x11_env_get_session_env(X11SessionEnv *out) {
 }
 
 void x11_env_build_env_strings(X11EnvBuildEnvStrings *argspec) {
-  if (argspec->f_disp_env)
-    snprintf(argspec->f_disp_env, 256, "DISPLAY=%s",
-             argspec->f_env && argspec->f_env->display ? argspec->f_env->display : "");
-  if (argspec->f_xauth_env)
-    snprintf(argspec->f_xauth_env, 512, "XAUTHORITY=%s",
-             argspec->f_env && argspec->f_env->xauthority ? argspec->f_env->xauthority : "");
-  if (argspec->f_runtime_env)
-    snprintf(argspec->f_runtime_env, 512, "XDG_RUNTIME_DIR=%s",
-             argspec->f_env && argspec->f_env->runtime_dir ? argspec->f_env->runtime_dir : "");
-  if (argspec->f_wayland_env)
-    snprintf(argspec->f_wayland_env, 512, "WAYLAND_DISPLAY=%s",
-             argspec->f_env && argspec->f_env->wayland_display ? argspec->f_env->wayland_display : "");
+  if (argspec->disp_env)
+    snprintf(argspec->disp_env, 256, "DISPLAY=%s",
+             argspec->env && argspec->env->display ? argspec->env->display : "");
+  if (argspec->xauth_env)
+    snprintf(argspec->xauth_env, 512, "XAUTHORITY=%s",
+             argspec->env && argspec->env->xauthority ? argspec->env->xauthority : "");
+  if (argspec->runtime_env)
+    snprintf(argspec->runtime_env, 512, "XDG_RUNTIME_DIR=%s",
+             argspec->env && argspec->env->runtime_dir ? argspec->env->runtime_dir : "");
+  if (argspec->wayland_env)
+    snprintf(argspec->wayland_env, 512, "WAYLAND_DISPLAY=%s",
+             argspec->env && argspec->env->wayland_display ? argspec->env->wayland_display : "");
 }
 
 void x11_env_apply_to_current_process(const X11SessionEnv *env) {

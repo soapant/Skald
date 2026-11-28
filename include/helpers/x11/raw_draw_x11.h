@@ -25,56 +25,56 @@
 #include "core/types/window.h"
 
 typedef struct {
-  const PromptState *f_state;
-  Display *f_dpy;
-  XftDraw *f_xd;
-  Visual *f_vis;
-  Colormap f_cmap;
-  FontHandle f_font;
+  const PromptState *state;
+  Display *dpy;
+  XftDraw *xd;
+  Visual *vis;
+  Colormap cmap;
+  FontHandle font;
 } X11DrawEditBackground;
 
 void x11_draw_edit_background(X11DrawEditBackground *argspec);
 typedef struct {
-  PromptState *f_state;
-  Display *f_dpy;
-  XftDraw *f_xd;
-  Visual *f_vis;
-  Colormap f_cmap;
-  FontHandle f_font;
+  PromptState *state;
+  Display *dpy;
+  XftDraw *xd;
+  Visual *vis;
+  Colormap cmap;
+  FontHandle font;
 } X11DrawEditTint;
 
 void x11_draw_edit_tint(X11DrawEditTint *argspec);
 typedef struct {
-  PromptState *f_state;
-  Display *f_dpy;
-  XftDraw *f_xd;
-  Visual *f_vis;
-  Colormap f_cmap;
-  FontHandle f_font;
+  PromptState *state;
+  Display *dpy;
+  XftDraw *xd;
+  Visual *vis;
+  Colormap cmap;
+  FontHandle font;
 } X11DrawEditText;
 
 void x11_draw_edit_text(X11DrawEditText *argspec);
 typedef struct {
-  PromptState *f_state;
-  Display *f_dpy;
-  XftDraw *f_xd;
-  Visual *f_vis;
-  Colormap f_cmap;
-  FontHandle f_font;
+  PromptState *state;
+  Display *dpy;
+  XftDraw *xd;
+  Visual *vis;
+  Colormap cmap;
+  FontHandle font;
 } X11DrawEditCursor;
 
 void x11_draw_edit_cursor(X11DrawEditCursor *argspec);
 typedef struct {
-  Display *f_dpy;
-  XftDraw *f_xd;
-  Visual *f_vis;
-  Colormap f_cmap;
-  FontHandle f_font;
-  ListBox *f_lb;
-  int f_idx;
-  int f_y;
-  int f_text_x;
-  const char *f_icon_path;
+  Display *dpy;
+  XftDraw *xd;
+  Visual *vis;
+  Colormap cmap;
+  FontHandle font;
+  ListBox *lb;
+  int idx;
+  int y;
+  int text_x;
+  const char *icon_path;
 } X11DrawListItem;
 
 void x11_draw_list_item(X11DrawListItem *argspec);
@@ -86,13 +86,13 @@ extern __thread Colormap g_draw_cmap;
 
 void x11_raw_line_flush(void);
 typedef struct {
-  int f_x;
-  int f_y;
-  char f_ch;
-  unsigned long f_color;
-  FontHandle f_fh;
-  bool f_owned;
-  int f_font_size;
+  int x;
+  int y;
+  char ch;
+  unsigned long color;
+  FontHandle fh;
+  bool owned;
+  int font_size;
 } X11RawLinePush;
 
 bool x11_raw_line_push(X11RawLinePush *argspec);

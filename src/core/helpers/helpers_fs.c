@@ -58,33 +58,33 @@ static void path_fold_exe(char *out) {
 }
 
 bool temp_file_write(TempFileWrite *argspec) {
-  if (!argspec->f_name || !argspec->f_name[0] || !argspec->f_out_path || argspec->f_out_len == 0)
+  if (!argspec->name || !argspec->name[0] || !argspec->out_path || argspec->out_len == 0)
     return false;
-  if (!argspec->f_data && argspec->f_len > 0)
+  if (!argspec->data && argspec->len > 0)
     return false;
-  for (const char *p = argspec->f_name; *p; p++) {
+  for (const char *p = argspec->name; *p; p++) {
     if (*p == '/' || *p == '\\')
       return false;
   }
-  if (strstr(argspec->f_name, ".."))
+  if (strstr(argspec->name, ".."))
     return false;
   char dir[1024];
   if (!Platform_TempDirPath(dir, sizeof(dir)))
     return false;
   const char sep[2] = {(char)FEAT_SEP, '\0'};
-  safe_copy(argspec->f_out_path, argspec->f_out_len, dir);
-  safe_cat(argspec->f_out_path, argspec->f_out_len, sep);
-  safe_cat(argspec->f_out_path, argspec->f_out_len, argspec->f_name);
-  FILE *f = fopen(argspec->f_out_path, "wb");
+  safe_copy(argspec->out_path, argspec->out_len, dir);
+  safe_cat(argspec->out_path, argspec->out_len, sep);
+  safe_cat(argspec->out_path, argspec->out_len, argspec->name);
+  FILE *f = fopen(argspec->out_path, "wb");
   if (!f)
     return false;
   bool ok = true;
-  if (argspec->f_len > 0 && fwrite(argspec->f_data, 1, argspec->f_len, f) != argspec->f_len)
+  if (argspec->len > 0 && fwrite(argspec->data, 1, argspec->len, f) != argspec->len)
     ok = false;
   if (fclose(f) != 0)
     ok = false;
   if (!ok)
-    remove(argspec->f_out_path);
+    remove(argspec->out_path);
   return ok;
 }
 

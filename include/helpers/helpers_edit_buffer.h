@@ -8,11 +8,11 @@ void edit_buffer_backspace(char *buf, size_t *cursor);
 bool edit_buffer_delete_char(char *buf, size_t *cursor);
 char edit_buffer_pair_for(char c);
 typedef struct {
-  char *f_buf;
-  size_t f_cap;
-  size_t *f_cursor;
-  const char *f_text;
-  size_t f_len;
+  char *buf;
+  size_t cap;
+  size_t *cursor;
+  const char *text;
+  size_t len;
 } EditBufferInsertText;
 
 size_t edit_buffer_insert_text(EditBufferInsertText *argspec);

@@ -20,11 +20,11 @@ const char *x11_env_xdg_runtime_dir(void);
 bool x11_env_is_wayland(void);
 bool x11_env_is_compositor(void);
 typedef struct {
-  const X11SessionEnv *f_env;
-  char *f_disp_env;
-  char *f_xauth_env;
-  char *f_runtime_env;
-  char *f_wayland_env;
+  const X11SessionEnv *env;
+  char *disp_env;
+  char *xauth_env;
+  char *runtime_env;
+  char *wayland_env;
 } X11EnvBuildEnvStrings;
 
 void x11_env_build_env_strings(X11EnvBuildEnvStrings *argspec);
@@ -40,11 +40,11 @@ bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
 void x11_desktop_clean_exec(char exec_line[1024]);
 bool x11_exe_in_path(const char *name);
 typedef struct {
-  const char *f_exec_line;
-  const char *f_desktop_dir;
-  const char *f_workdir;
-  char *f_out;
-  size_t f_out_size;
+  const char *exec_line;
+  const char *desktop_dir;
+  const char *workdir;
+  char *out;
+  size_t out_size;
 } X11ResolveDesktopExec;
 
 bool x11_resolve_desktop_exec(X11ResolveDesktopExec *argspec);

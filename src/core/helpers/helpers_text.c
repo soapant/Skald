@@ -61,21 +61,21 @@ hotkey_convert_into_binding(HotkeyConvertIntoBinding *argspec) {
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 
-  output.valid = hotkey_string_parse(argspec->f_hotkey_string, &key);
+  output.valid = hotkey_string_parse(argspec->hotkey_string, &key);
   if (!output.valid)
     log_warn("hotkey_convert_into_binding: invalid hotkey string '%s'",
-             argspec->f_hotkey_string ? argspec->f_hotkey_string : "(null)");
+             argspec->hotkey_string ? argspec->hotkey_string : "(null)");
 
   output.vk = key.vk;
   output.modifiers = key.mods;
-  output.hotkey_callback = argspec->f_on_hotkey_trigger;
-  output.hotkey_condition = argspec->f_optional_condition_for_hotkey;
-  output.whitelist = argspec->f_whitelist;
-  output.user_ud = argspec->f_user_ud;
+  output.hotkey_callback = argspec->on_hotkey_trigger;
+  output.hotkey_condition = argspec->optional_condition_for_hotkey;
+  output.whitelist = argspec->whitelist;
+  output.user_ud = argspec->user_ud;
 
-  if (argspec->f_optional_blacklistedwindows) {
+  if (argspec->optional_blacklistedwindows) {
     int cnt = 0;
-    while (argspec->f_optional_blacklistedwindows[cnt] != NULL)
+    while (argspec->optional_blacklistedwindows[cnt] != NULL)
       cnt++;
     output.window_count = cnt;
 
@@ -88,7 +88,7 @@ hotkey_convert_into_binding(HotkeyConvertIntoBinding *argspec) {
         return output;
       }
       for (int i = 0; i < cnt; i++) {
-        output.window_list[i] = strdup(argspec->f_optional_blacklistedwindows[i]);
+        output.window_list[i] = strdup(argspec->optional_blacklistedwindows[i]);
         if (!output.window_list[i]) {
           log_error("hotkey_convert_into_binding: strdup failed for entry %d",
                     i);
@@ -756,10 +756,10 @@ static bool file_walk_dir(const char *dir_path,
 }
 
 bool file_walk_all_files_from_dir(FileWalkAllFilesFromDir *argspec) {
-  if (!argspec->f_dir_path || !argspec->f_list_of_files)
+  if (!argspec->dir_path || !argspec->list_of_files)
     return false;
-  return file_walk_dir(argspec->f_dir_path, argspec->f_list_of_allowed_extensions, argspec->f_list_of_files,
-                       argspec->f_list_of_names_to_ignore, argspec->f_strip_extension, argspec->f_max_depth);
+  return file_walk_dir(argspec->dir_path, argspec->list_of_allowed_extensions, argspec->list_of_files,
+                       argspec->list_of_names_to_ignore, argspec->strip_extension, argspec->max_depth);
 }
 
 #include <sys/time.h>
@@ -930,16 +930,16 @@ static int text_wrap_place_word(TextWrapMeasureFn measure, void *ctx,
 
 int text_wrap_layout(TextWrapLayout *argspec) {
   int count = 0;
-  int len = (int)strlen(argspec->f_text);
-  int avail = argspec->f_max_width < 40 ? 40 : argspec->f_max_width;
-  int space_w = argspec->f_measure(argspec->f_ctx, " ", 1);
+  int len = (int)strlen(argspec->text);
+  int avail = argspec->max_width < 40 ? 40 : argspec->max_width;
+  int space_w = argspec->measure(argspec->ctx, " ", 1);
   int row = 0;
   int p = 0;
   int lw = 0;
   bool has = false;
   while (p < len) {
-    if (argspec->f_text[p] == '\n') {
-      text_wrap_record(argspec->f_out, argspec->f_maxout, &count, argspec->f_x0, argspec->f_y0 + (row + 1) * argspec->f_line_height);
+    if (argspec->text[p] == '\n') {
+      text_wrap_record(argspec->out, argspec->maxout, &count, argspec->x0, argspec->y0 + (row + 1) * argspec->line_height);
       row++;
       lw = 0;
       has = false;
@@ -947,26 +947,26 @@ int text_wrap_layout(TextWrapLayout *argspec) {
       continue;
     }
     int ws = p;
-    while (ws < len && (argspec->f_text[ws] == ' ' || argspec->f_text[ws] == '\t'))
+    while (ws < len && (argspec->text[ws] == ' ' || argspec->text[ws] == '\t'))
       ws++;
     for (int m = p; m < ws; m++)
-      text_wrap_record(argspec->f_out, argspec->f_maxout, &count, argspec->f_x0 + (has ? lw : 0),
-                       argspec->f_y0 + row * argspec->f_line_height);
+      text_wrap_record(argspec->out, argspec->maxout, &count, argspec->x0 + (has ? lw : 0),
+                       argspec->y0 + row * argspec->line_height);
     if (ws >= len)
       break;
-    if (argspec->f_text[ws] == '\n') {
+    if (argspec->text[ws] == '\n') {
       p = ws;
       continue;
     }
     int we = ws;
-    while (we < len && argspec->f_text[we] != ' ' && argspec->f_text[we] != '\t' && argspec->f_text[we] != '\n')
+    while (we < len && argspec->text[we] != ' ' && argspec->text[we] != '\t' && argspec->text[we] != '\n')
       we++;
-    int ww = argspec->f_measure(argspec->f_ctx, argspec->f_text + ws, we - ws);
-    int rowtop = argspec->f_y0 + row * argspec->f_line_height;
+    int ww = argspec->measure(argspec->ctx, argspec->text + ws, we - ws);
+    int rowtop = argspec->y0 + row * argspec->line_height;
     if (ww > avail) {
       if (has) {
         row++;
-        rowtop = argspec->f_y0 + row * argspec->f_line_height;
+        rowtop = argspec->y0 + row * argspec->line_height;
         lw = 0;
         has = false;
       }
@@ -975,30 +975,30 @@ int text_wrap_layout(TextWrapLayout *argspec) {
         int lo = 0, hi = we - c;
         while (lo < hi) {
           int mid = (lo + hi + 1) / 2;
-          if (argspec->f_measure(argspec->f_ctx, argspec->f_text + c, mid) <= avail)
+          if (argspec->measure(argspec->ctx, argspec->text + c, mid) <= avail)
             lo = mid;
           else
             hi = mid - 1;
         }
         int n = lo;
-        while (n > 0 && (((unsigned char)argspec->f_text[c + n] & 0xC0) == 0x80))
+        while (n > 0 && (((unsigned char)argspec->text[c + n] & 0xC0) == 0x80))
           n--;
         if (n <= 0) {
-          n = utf8_lead_len((unsigned char)argspec->f_text[c]);
+          n = utf8_lead_len((unsigned char)argspec->text[c]);
           if (n > we - c)
             n = we - c;
         }
         if (c + n >= we) {
-          lw = text_wrap_place_word(argspec->f_measure, argspec->f_ctx, argspec->f_text, c, we, argspec->f_x0, rowtop, argspec->f_out,
-                                    argspec->f_maxout, &count);
+          lw = text_wrap_place_word(argspec->measure, argspec->ctx, argspec->text, c, we, argspec->x0, rowtop, argspec->out,
+                                    argspec->maxout, &count);
           has = true;
           c = we;
           break;
         }
-        text_wrap_place_word(argspec->f_measure, argspec->f_ctx, argspec->f_text, c, c + n, argspec->f_x0, rowtop, argspec->f_out,
-                             argspec->f_maxout, &count);
+        text_wrap_place_word(argspec->measure, argspec->ctx, argspec->text, c, c + n, argspec->x0, rowtop, argspec->out,
+                             argspec->maxout, &count);
         row++;
-        rowtop = argspec->f_y0 + row * argspec->f_line_height;
+        rowtop = argspec->y0 + row * argspec->line_height;
         c += n;
       }
       p = we;
@@ -1007,13 +1007,13 @@ int text_wrap_layout(TextWrapLayout *argspec) {
     int add = ww + (has ? space_w : 0);
     if (has && lw + add > avail) {
       row++;
-      rowtop = argspec->f_y0 + row * argspec->f_line_height;
+      rowtop = argspec->y0 + row * argspec->line_height;
       lw = 0;
       has = false;
     }
-    int wx = argspec->f_x0 + (has ? lw + space_w : 0);
-    int pxw = text_wrap_place_word(argspec->f_measure, argspec->f_ctx, argspec->f_text, ws, we, wx, rowtop, argspec->f_out,
-                                   argspec->f_maxout, &count);
+    int wx = argspec->x0 + (has ? lw + space_w : 0);
+    int pxw = text_wrap_place_word(argspec->measure, argspec->ctx, argspec->text, ws, we, wx, rowtop, argspec->out,
+                                   argspec->maxout, &count);
     lw = has ? lw + space_w + pxw : pxw;
     has = true;
     p = we;
@@ -1085,7 +1085,7 @@ bool capture_text(const char *text) {
   if (!search_index_current())
     return false;
   if (text[0])
-    search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = text, .f_kind = SEARCH_KIND_TEXT, .f_widget_name = NULL, .f_value = NULL});
+    search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = text, .kind = SEARCH_KIND_TEXT, .widget_name = NULL, .value = NULL});
   return true;
 }
 
@@ -1100,26 +1100,26 @@ int text_segment_width(const void *seg_ptr, int font_size) {
 }
 
 void wrapped_word_push(WrappedWordPush *argspec) {
-  if (!argspec->f_len)
+  if (!argspec->len)
     return;
-  if (*argspec->f_count >= *argspec->f_cap) {
-    int nc = *argspec->f_cap ? *argspec->f_cap * 2 : 32;
-    WrappedWord *grown = realloc(*argspec->f_words, (size_t)nc * sizeof(**argspec->f_words));
+  if (*argspec->count >= *argspec->cap) {
+    int nc = *argspec->cap ? *argspec->cap * 2 : 32;
+    WrappedWord *grown = realloc(*argspec->words, (size_t)nc * sizeof(**argspec->words));
     if (!grown)
       return;
-    *argspec->f_words = grown;
-    *argspec->f_cap = nc;
+    *argspec->words = grown;
+    *argspec->cap = nc;
   }
-  WrappedWord *w = &(*argspec->f_words)[(*argspec->f_count)++];
-  if (argspec->f_len >= sizeof(w->text))
-    argspec->f_len = sizeof(w->text) - 1;
-  memcpy(w->text, argspec->f_s, argspec->f_len);
-  w->text[argspec->f_len] = '\0';
-  w->color = argspec->f_color;
+  WrappedWord *w = &(*argspec->words)[(*argspec->count)++];
+  if (argspec->len >= sizeof(w->text))
+    argspec->len = sizeof(w->text) - 1;
+  memcpy(w->text, argspec->s, argspec->len);
+  w->text[argspec->len] = '\0';
+  w->color = argspec->color;
   w->width = Platform_MeasureTextWidth((MeasureTextWidth){
-      .text = w->text, .len = (int)argspec->f_len, .font_size = argspec->f_font_size});
-  w->lead = argspec->f_lead;
-  w->breaks = argspec->f_breaks;
+      .text = w->text, .len = (int)argspec->len, .font_size = argspec->font_size});
+  w->lead = argspec->lead;
+  w->breaks = argspec->breaks;
   w->x = 0;
   w->line = 0;
 }

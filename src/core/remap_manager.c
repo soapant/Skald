@@ -189,7 +189,7 @@ static bool remap_register_internal_locked(const char *src, const char *dst,
 bool remap_register_internal(RemapRegisterInternal *argspec) {
   remap_lock();
   bool ok =
-      remap_register_internal_locked(argspec->f_src, argspec->f_dst, argspec->f_whitelist, argspec->f_windows, argspec->f_caller);
+      remap_register_internal_locked(argspec->src, argspec->dst, argspec->whitelist, argspec->windows, argspec->caller);
   remap_unlock();
   return ok;
 }

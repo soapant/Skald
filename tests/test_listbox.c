@@ -10,10 +10,10 @@
 #include "config.h"
 #include "platform/platform.h"
 
-#define POPULATE(lb, filter, items, count, match)                              \
-  populate_listbox(&(PopulateListbox){                                   \
-      .f_lb = (lb), .f_filter = (filter), .f_items = (items),                  \
-      .f_item_count = (count), .f_filter_match = (match)})
+#define POPULATE(f_lb, f_filter, f_items, f_count, f_match)                    \
+  populate_listbox(&(PopulateListbox){                                         \
+      .lb = (f_lb), .filter = (f_filter), .items = (f_items),                  \
+      .item_count = (f_count), .filter_match = (f_match)})
 
 TEST(populate_normal_mode_selects_first) {
   static ListBox lb;
@@ -130,8 +130,8 @@ TEST(listbox_layout_includes_partial_last_row) {
   spec.h = 25;
   ListboxLayout lay = {0};
   listbox_compute_layout(&(ListboxComputeLayout){
-      .f_spec = &spec, .f_default_y0 = 0, .f_item_h = 10, .f_popup_w = 100,
-      .f_popup_h = 100, .f_count = 10, .f_out = &lay});
+      .spec = &spec, .default_y0 = 0, .item_h = 10, .popup_w = 100,
+      .popup_h = 100, .count = 10, .out = &lay});
   ASSERT_EQ_INT(lay.visible, 3);
 }
 

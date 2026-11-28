@@ -53,8 +53,8 @@ static void prompt_popup_on_show(Popup *self) {
            data->spec.title ? data->spec.title : "(null)", data->x, data->y,
            wm->popup_count);
 
-  Platform_PromptPopupShowWindow(&(PlatformPromptPopupShowWindow){.f_self = self, .f_x = data->x, .f_y = data->y, .f_w = data->w, .f_h = data->h});
-  Platform_PromptPopupResize(&(PlatformPromptPopupResize){.f_self = self, .f_x = data->x, .f_y = data->y, .f_w = data->w, .f_h = data->h});
+  Platform_PromptPopupShowWindow(&(PlatformPromptPopupShowWindow){.self = self, .x = data->x, .y = data->y, .w = data->w, .h = data->h});
+  Platform_PromptPopupResize(&(PlatformPromptPopupResize){.self = self, .x = data->x, .y = data->y, .w = data->w, .h = data->h});
   {
     bool want_rounded =
         data->spec.rounded ? data->spec.rounded : RoundedCorners;
@@ -229,17 +229,17 @@ static const PopupVTable prompt_popup_vtable = {
     .destroy = prompt_popup_destroy};
 
 int prompt_popup_get_bounds(PromptPopupGetBounds *argspec) {
-  if (!argspec->f_p || argspec->f_p->type != POPUP_PROMPT)
+  if (!argspec->p || argspec->p->type != POPUP_PROMPT)
     return 0;
-  const PromptPopupData *d = (PromptPopupData *)argspec->f_p;
-  if (argspec->f_x)
-    *argspec->f_x = d->x;
-  if (argspec->f_y)
-    *argspec->f_y = d->y;
-  if (argspec->f_w)
-    *argspec->f_w = d->w;
-  if (argspec->f_h)
-    *argspec->f_h = d->h;
+  const PromptPopupData *d = (PromptPopupData *)argspec->p;
+  if (argspec->x)
+    *argspec->x = d->x;
+  if (argspec->y)
+    *argspec->y = d->y;
+  if (argspec->w)
+    *argspec->w = d->w;
+  if (argspec->h)
+    *argspec->h = d->h;
   return 1;
 }
 
@@ -247,7 +247,7 @@ static bool prompt_popup_apply_bounds(Popup *p, int x, int y, int w, int h,
                                       bool from_animation) {
   if (w <= 0 || h <= 0)
     return false;
-  if (!Platform_PromptPopupResize(&(PlatformPromptPopupResize){.f_self = p, .f_x = x, .f_y = y, .f_w = w, .f_h = h}))
+  if (!Platform_PromptPopupResize(&(PlatformPromptPopupResize){.self = p, .x = x, .y = y, .w = w, .h = h}))
     return false;
   PromptPopupData *data = (PromptPopupData *)p;
   data->x = x;
@@ -280,7 +280,7 @@ bool prompt_popup_resize_current(int x, int y, int w, int h) {
 }
 
 bool prompt_popup_resize_current_animated(PromptPopupResizeCurrentAnimated *argspec) {
-  if (argspec->f_w <= 0 || argspec->f_h <= 0)
+  if (argspec->w <= 0 || argspec->h <= 0)
     return false;
   WindowManager *wm = WindowManager_Get();
   if (!wm)
@@ -292,15 +292,15 @@ bool prompt_popup_resize_current_animated(PromptPopupResizeCurrentAnimated *args
   PopupResizeAnim *anim = &data->resize_anim;
   anim->active = true;
   anim->start_ms = Platform_GetWallClockMs();
-  anim->duration_ms = argspec->f_duration_ms > 0 ? argspec->f_duration_ms : 1;
+  anim->duration_ms = argspec->duration_ms > 0 ? argspec->duration_ms : 1;
   anim->from_x = data->x;
   anim->from_y = data->y;
   anim->from_w = data->w;
   anim->from_h = data->h;
-  anim->to_x = argspec->f_x;
-  anim->to_y = argspec->f_y;
-  anim->to_w = argspec->f_w;
-  anim->to_h = argspec->f_h;
+  anim->to_x = argspec->x;
+  anim->to_y = argspec->y;
+  anim->to_w = argspec->w;
+  anim->to_h = argspec->h;
   prompt_popup_tick_resize_animation_popup(p);
   return true;
 }

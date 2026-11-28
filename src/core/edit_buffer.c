@@ -62,31 +62,31 @@ char edit_buffer_pair_for(char c) {
 
 size_t edit_buffer_insert_text(EditBufferInsertText *argspec) {
 
-  if (!argspec->f_buf || !argspec->f_cursor || !argspec->f_text || argspec->f_len == 0 || argspec->f_cap == 0)
+  if (!argspec->buf || !argspec->cursor || !argspec->text || argspec->len == 0 || argspec->cap == 0)
     return 0;
-  size_t n = strlen(argspec->f_buf);
-  if (*argspec->f_cursor > n)
-    *argspec->f_cursor = n;
+  size_t n = strlen(argspec->buf);
+  if (*argspec->cursor > n)
+    *argspec->cursor = n;
 
   char closer = 0;
-  if (EnableAutoPairing && argspec->f_len == 1) {
-    if (edit_is_closer(argspec->f_text[0]) && *argspec->f_cursor < n && argspec->f_buf[*argspec->f_cursor] == argspec->f_text[0]) {
-      (*argspec->f_cursor)++;
+  if (EnableAutoPairing && argspec->len == 1) {
+    if (edit_is_closer(argspec->text[0]) && *argspec->cursor < n && argspec->buf[*argspec->cursor] == argspec->text[0]) {
+      (*argspec->cursor)++;
       return 0;
     }
-    if (!edit_is_quote(argspec->f_text[0]) || edit_quote_at_word_start(argspec->f_buf, *argspec->f_cursor)) {
-      closer = edit_buffer_pair_for(argspec->f_text[0]);
+    if (!edit_is_quote(argspec->text[0]) || edit_quote_at_word_start(argspec->buf, *argspec->cursor)) {
+      closer = edit_buffer_pair_for(argspec->text[0]);
     }
   }
 
-  size_t total = argspec->f_len + (closer ? (size_t)1 : (size_t)0);
-  if (n + total >= argspec->f_cap)
+  size_t total = argspec->len + (closer ? (size_t)1 : (size_t)0);
+  if (n + total >= argspec->cap)
     return 0;
-  memmove(argspec->f_buf + *argspec->f_cursor + total, argspec->f_buf + *argspec->f_cursor, n - *argspec->f_cursor + 1);
-  memcpy(argspec->f_buf + *argspec->f_cursor, argspec->f_text, argspec->f_len);
+  memmove(argspec->buf + *argspec->cursor + total, argspec->buf + *argspec->cursor, n - *argspec->cursor + 1);
+  memcpy(argspec->buf + *argspec->cursor, argspec->text, argspec->len);
   if (closer)
-    argspec->f_buf[*argspec->f_cursor + argspec->f_len] = closer;
-  *argspec->f_cursor += argspec->f_len;
+    argspec->buf[*argspec->cursor + argspec->len] = closer;
+  *argspec->cursor += argspec->len;
   return total;
 }
 

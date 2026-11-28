@@ -886,14 +886,14 @@ void ski_message(const SkMessageSpec *spec);
 void ski_window(const SkPromptSpec *spec);
 
 typedef struct {
-  const char *f_text;
-  SkPos f_pos;
-  int f_max_width;
-  int f_line_height;
-  SkWrapMeasureFn f_measure;
-  void *f_ctx;
-  SkPos *f_out;
-  int f_maxout;
+  const char *text;
+  SkPos pos;
+  int max_width;
+  int line_height;
+  SkWrapMeasureFn measure;
+  void *ctx;
+  SkPos *out;
+  int maxout;
 } SkiTextWrapLayout;
 
 int ski_text_wrap_layout(SkiTextWrapLayout *argspec);

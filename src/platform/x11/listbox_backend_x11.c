@@ -37,16 +37,16 @@ bool Platform_ListboxBackendBegin(int item_height_override,
 
 void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) {
   if (RoundedCorners && CornerRadius > 0) {
-    if (argspec->f_sel) {
+    if (argspec->sel) {
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
-      x11_fill_rounded_rect(&(X11FillRoundedRect){.f_dpy = b_dpy, .f_xd = b_xd, .f_vis = b_vis, .f_cmap = b_cmap, .f_hex = rgb_to_hex(COLOR_SELECTION_HIGHLIGHT), .f_alpha16 = 0xFFFF, .f_x = argspec->f_bx + t, .f_y = argspec->f_y + PROMPT_SEL_TOP_INSET + t, .f_w = argspec->f_bw - 2 * t, .f_h = argspec->f_item_h - 2 - 2 * t, .f_radius = R - 1});
+      x11_fill_rounded_rect(&(X11FillRoundedRect){.dpy = b_dpy, .xd = b_xd, .vis = b_vis, .cmap = b_cmap, .hex = rgb_to_hex(COLOR_SELECTION_HIGHLIGHT), .alpha16 = 0xFFFF, .x = argspec->bx + t, .y = argspec->y + PROMPT_SEL_TOP_INSET + t, .w = argspec->bw - 2 * t, .h = argspec->item_h - 2 - 2 * t, .radius = R - 1});
     }
   } else {
     PromptState tmp = {0};
-    tmp.width = argspec->f_fw;
-    tmp.height = argspec->f_frame_h;
-    x11_draw_list_background(&(X11DrawListBackground){.f_state = &tmp, .f_dpy = b_dpy, .f_xd = b_xd, .f_vis = b_vis, .f_cmap = b_cmap, .f_y = argspec->f_y, .f_h = argspec->f_item_h, .f_selected = argspec->f_sel});
+    tmp.width = argspec->fw;
+    tmp.height = argspec->frame_h;
+    x11_draw_list_background(&(X11DrawListBackground){.state = &tmp, .dpy = b_dpy, .xd = b_xd, .vis = b_vis, .cmap = b_cmap, .y = argspec->y, .h = argspec->item_h, .selected = argspec->sel});
   }
 }
 

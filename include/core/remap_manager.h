@@ -9,11 +9,11 @@ bool remap_parse_triggers(const char *str, int *out_mods, int *out_vks,
                           int *out_count);
 
 typedef struct {
-  const char *f_src;
-  const char *f_dst;
-  bool f_whitelist;
-  const char *const *f_windows;
-  void *f_caller;
+  const char *src;
+  const char *dst;
+  bool whitelist;
+  const char *const *windows;
+  void *caller;
 } RemapRegisterInternal;
 
 bool remap_register_internal(RemapRegisterInternal *argspec);

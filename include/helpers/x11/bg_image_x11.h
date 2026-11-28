@@ -14,11 +14,11 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h);
 int x11_bg_image_prewarm(Display *dpy, int w, int h);
 
 typedef struct {
-  Display *f_dpy;
-  Drawable f_dst;
-  Visual *f_vis;
-  int f_w;
-  int f_h;
+  Display *dpy;
+  Drawable dst;
+  Visual *vis;
+  int w;
+  int h;
 } X11BgImageBlit;
 
 bool x11_bg_image_blit(X11BgImageBlit *argspec);

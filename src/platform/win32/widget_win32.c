@@ -27,24 +27,24 @@ void Platform_Widget_FlushDestruction(void) {
 
 PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
 
-  if (argspec->f_w <= 0 || argspec->f_h <= 0)
+  if (argspec->w <= 0 || argspec->h <= 0)
     return NULL;
-  if (!render_thread_ensure_started(argspec->f_fps))
+  if (!render_thread_ensure_started(argspec->fps))
     return NULL;
   win32_widget_register_class();
 
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
     return NULL;
-  widget_init_base(&(WidgetInitBase){.f_base = &widget->base, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_fps = argspec->f_fps, .f_no_bg = argspec->f_no_bg, .f_on_click = argspec->f_on_click, .f_name = argspec->f_name});
+  widget_init_base(&(WidgetInitBase){.base = &widget->base, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h, .fps = argspec->fps, .no_bg = argspec->no_bg, .on_click = argspec->on_click, .name = argspec->name});
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exstyle =
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
-  if (!argspec->f_on_click)
+  if (!argspec->on_click)
     exstyle |= WS_EX_TRANSPARENT;
-  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP, argspec->f_x, argspec->f_y, argspec->f_w,
-                                 argspec->f_h, NULL, NULL, hInstance, widget);
+  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP, argspec->x, argspec->y, argspec->w,
+                                 argspec->h, NULL, NULL, hInstance, widget);
   if (!widget->hwnd) {
     log_warn("widget: CreateWindowExA failed err=%lu", GetLastError());
     free(widget);
@@ -52,7 +52,7 @@ PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
   }
 
   if (!widget->base.no_bg) {
-    win32_apply_rounded_corners(widget->hwnd, argspec->f_w, argspec->f_h);
+    win32_apply_rounded_corners(widget->hwnd, argspec->w, argspec->h);
   }
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);

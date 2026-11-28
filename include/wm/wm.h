@@ -17,50 +17,50 @@ typedef struct {
 } SnapRect;
 
 typedef struct {
-  int f_mx;
-  int f_my;
-  int f_mw;
-  int f_mh;
-  SnapPreset f_p;
+  int mx;
+  int my;
+  int mw;
+  int mh;
+  SnapPreset p;
 } WmSnapRect;
 
 static inline SnapRect wm_snap_rect(WmSnapRect *argspec) {
-  SnapRect r = {argspec->f_mx, argspec->f_my, argspec->f_mw, argspec->f_mh};
-  int hw = argspec->f_mw / 2, hh = argspec->f_mh / 2;
-  switch (argspec->f_p) {
+  SnapRect r = {argspec->mx, argspec->my, argspec->mw, argspec->mh};
+  int hw = argspec->mw / 2, hh = argspec->mh / 2;
+  switch (argspec->p) {
   case SNAP_LEFT:
     r.w = hw;
     break;
   case SNAP_RIGHT:
-    r.x = argspec->f_mx + hw;
-    r.w = argspec->f_mw - hw;
+    r.x = argspec->mx + hw;
+    r.w = argspec->mw - hw;
     break;
   case SNAP_TOP:
     r.h = hh;
     break;
   case SNAP_BOTTOM:
-    r.y = argspec->f_my + hh;
-    r.h = argspec->f_mh - hh;
+    r.y = argspec->my + hh;
+    r.h = argspec->mh - hh;
     break;
   case SNAP_TOP_LEFT:
     r.w = hw;
     r.h = hh;
     break;
   case SNAP_TOP_RIGHT:
-    r.x = argspec->f_mx + hw;
-    r.w = argspec->f_mw - hw;
+    r.x = argspec->mx + hw;
+    r.w = argspec->mw - hw;
     r.h = hh;
     break;
   case SNAP_BOTTOM_LEFT:
-    r.y = argspec->f_my + hh;
+    r.y = argspec->my + hh;
     r.w = hw;
-    r.h = argspec->f_mh - hh;
+    r.h = argspec->mh - hh;
     break;
   case SNAP_BOTTOM_RIGHT:
-    r.x = argspec->f_mx + hw;
-    r.y = argspec->f_my + hh;
-    r.w = argspec->f_mw - hw;
-    r.h = argspec->f_mh - hh;
+    r.x = argspec->mx + hw;
+    r.y = argspec->my + hh;
+    r.w = argspec->mw - hw;
+    r.h = argspec->mh - hh;
     break;
   }
   return r;

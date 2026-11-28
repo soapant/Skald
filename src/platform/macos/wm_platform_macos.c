@@ -23,20 +23,20 @@ void Platform_GetMonitorGeometry(int *x, int *y, int *w, int *h) {
 void Platform_PromptFlushDisplay(WindowManager *wm) { (void)wm; }
 
 bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
-  (void)argspec->f_self;
-  (void)argspec->f_x;
-  (void)argspec->f_y;
-  (void)argspec->f_w;
-  (void)argspec->f_h;
+  (void)argspec->self;
+  (void)argspec->x;
+  (void)argspec->y;
+  (void)argspec->w;
+  (void)argspec->h;
   return false;
 }
 
 bool Platform_PromptPopupResize(PlatformPromptPopupResize *argspec) {
-  (void)argspec->f_self;
-  (void)argspec->f_x;
-  (void)argspec->f_y;
-  (void)argspec->f_w;
-  (void)argspec->f_h;
+  (void)argspec->self;
+  (void)argspec->x;
+  (void)argspec->y;
+  (void)argspec->w;
+  (void)argspec->h;
   return false;
 }
 

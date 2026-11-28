@@ -15,12 +15,12 @@ unsigned int color_lerp(unsigned int a, unsigned int b, float t);
 ColorRef color_lerp_bgr(ColorRef a, ColorRef b, float t);
 
 typedef struct {
-  int f_sw;
-  int f_sh;
-  int f_tw;
-  int f_th;
-  int *f_dw;
-  int *f_dh;
+  int sw;
+  int sh;
+  int tw;
+  int th;
+  int *dw;
+  int *dh;
 } CoverScale;
 
 bool cover_scale(CoverScale *argspec);
@@ -28,42 +28,42 @@ bool cover_scale(CoverScale *argspec);
 int draw_thickness_px(float thickness);
 void draw_measure_track(int x, int y, int w, int h);
 typedef struct {
-  const DrawLineRaw *f_spec;
-  int f_off_x;
-  int f_off_y;
-  int *f_x1;
-  int *f_y1;
-  int *f_x2;
-  int *f_y2;
+  const DrawLineRaw *spec;
+  int off_x;
+  int off_y;
+  int *x1;
+  int *y1;
+  int *x2;
+  int *y2;
 } DrawLinePrep;
 
 int draw_line_prep(DrawLinePrep *argspec);
 typedef struct {
-  const DrawCircleRaw *f_spec;
-  int f_off_x;
-  int f_off_y;
-  int *f_cx;
-  int *f_cy;
+  const DrawCircleRaw *spec;
+  int off_x;
+  int off_y;
+  int *cx;
+  int *cy;
 } DrawCirclePrep;
 
 int draw_circle_prep(DrawCirclePrep *argspec);
 typedef struct {
-  ListBox *f_lb;
-  const char *f_filter;
-  const char **f_items;
-  int f_item_count;
-  bool (*f_filter_match)(const char *item, const char *filter);
+  ListBox *lb;
+  const char *filter;
+  const char **items;
+  int item_count;
+  bool (*filter_match)(const char *item, const char *filter);
 } PopulateListbox;
 
 void populate_listbox(PopulateListbox *argspec);
 typedef struct {
-  ListBox *f_lb;
-  const char *f_filter;
-  const char **f_items;
-  int f_item_count;
-  bool (*f_filter_match)(const char *item,
+  ListBox *lb;
+  const char *filter;
+  const char **items;
+  int item_count;
+  bool (*filter_match)(const char *item,
                                                   const char *filter);
-  int (*f_item_rank)(int item_index);
+  int (*item_rank)(int item_index);
 } PopulateListboxRanked;
 
 void populate_listbox_ranked(PopulateListboxRanked *argspec);
@@ -118,13 +118,13 @@ void draw_prompt_separator(DrawPromptSeparator spec);
 bool prompt_band_take_placed(void);
 void prompt_band_commit_placed(void);
 typedef struct {
-  const List *f_spec;
-  int f_default_y0;
-  int f_item_h;
-  int f_popup_w;
-  int f_popup_h;
-  int f_count;
-  ListboxLayout *f_out;
+  const List *spec;
+  int default_y0;
+  int item_h;
+  int popup_w;
+  int popup_h;
+  int count;
+  ListboxLayout *out;
 } ListboxComputeLayout;
 
 void listbox_compute_layout(ListboxComputeLayout *argspec);
@@ -212,23 +212,23 @@ int UI_InsertChar(wchar_t wc);
 #define UI_TICK_TIMER_MS 1000
 
 typedef struct {
-  const void *f_slots;
-  int f_count;
-  size_t f_stride;
-  int (*f_is_empty)(const void *slot);
-  unsigned long (*f_stamp)(const void *slot);
+  const void *slots;
+  int count;
+  size_t stride;
+  int (*is_empty)(const void *slot);
+  unsigned long (*stamp)(const void *slot);
 } BgTileLruPick;
 
 int bg_tile_lru_pick(BgTileLruPick *argspec);
 
 void draw_text_centered_impl(const DrawTextCentered *spec, int line_height);
 typedef struct {
-  int f_rect;
-  int f_rect_size;
-  int f_slot;
-  int f_gap;
-  int f_outward;
-  int f_win_size;
+  int rect;
+  int rect_size;
+  int slot;
+  int gap;
+  int outward;
+  int win_size;
 } MsgAnchorCenter;
 
 int msg_anchor_center(MsgAnchorCenter *argspec);

@@ -13,20 +13,20 @@ void x11_draw_prompt_user_edit_control(Display *dpy, Window *win,
 void x11_draw_prompt_user_listbox(Display *dpy, Window *win,
                                   PromptState *state);
 typedef struct {
-  Display *f_dpy;
-  XftDraw *f_xd;
-  Visual *f_vis;
-  Colormap f_cmap;
-  PromptState *f_state;
+  Display *dpy;
+  XftDraw *xd;
+  Visual *vis;
+  Colormap cmap;
+  PromptState *state;
 } X11DrawPromptUserEditControlOnDraw;
 
 void x11_draw_prompt_user_edit_control_on_draw(X11DrawPromptUserEditControlOnDraw *argspec);
 typedef struct {
-  Display *f_dpy;
-  XftDraw *f_xd;
-  Visual *f_vis;
-  Colormap f_cmap;
-  PromptState *f_state;
+  Display *dpy;
+  XftDraw *xd;
+  Visual *vis;
+  Colormap cmap;
+  PromptState *state;
 } X11DrawPromptUserListboxOnDraw;
 
 void x11_draw_prompt_user_listbox_on_draw(X11DrawPromptUserListboxOnDraw *argspec);

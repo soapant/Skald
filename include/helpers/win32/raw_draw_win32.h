@@ -84,11 +84,11 @@ bool win32_text_is_symbolic(const wchar_t *wide, int len);
 bool win32_font_covers(HFONT f, const wchar_t *wide, int len);
 bool win32_text_needs_boost(const wchar_t *wide, int len);
 typedef struct {
-  const wchar_t *f_wide;
-  int f_len;
-  int f_font_size;
-  HFONT *f_out_old;
-  int *f_out_dy;
+  const wchar_t *wide;
+  int len;
+  int font_size;
+  HFONT *out_old;
+  int *out_dy;
 } Win32FontForText;
 
 HFONT win32_font_for_text(Win32FontForText *argspec);
@@ -102,24 +102,24 @@ HDC win32_screen_dc(void);
 void win32_img_cache_lock(void);
 void win32_img_cache_unlock(void);
 typedef struct {
-  const char *f_path;
-  HDC f_screen;
-  int f_w;
-  int f_h;
-  HDC *f_out_dc;
-  bool *f_out_opaque;
+  const char *path;
+  HDC screen;
+  int w;
+  int h;
+  HDC *out_dc;
+  bool *out_opaque;
 } Win32ImgCacheGet;
 
 void *win32_img_cache_get(Win32ImgCacheGet *argspec);
 typedef struct {
-  const char *f_path;
-  HDC f_screen;
-  int f_w;
-  int f_h;
-  void *f_img;
-  HBITMAP f_dib;
-  HDC f_dc;
-  bool f_opaque;
+  const char *path;
+  HDC screen;
+  int w;
+  int h;
+  void *img;
+  HBITMAP dib;
+  HDC dc;
+  bool opaque;
 } Win32ImgCachePut;
 
 void win32_img_cache_put(Win32ImgCachePut *argspec);
@@ -127,12 +127,12 @@ void *win32_src_cache_get(const char *path);
 void win32_src_cache_put(const char *path, void *src);
 void win32_img_cache_free_all(void);
 typedef struct {
-  const char *f_path;
-  int f_w;
-  int f_h;
-  HBITMAP *f_out_dib;
-  HDC *f_out_dc;
-  bool *f_out_opaque;
+  const char *path;
+  int w;
+  int h;
+  HBITMAP *out_dib;
+  HDC *out_dc;
+  bool *out_opaque;
 } Win32LoadScaledBitmap;
 
 void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec);

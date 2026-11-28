@@ -255,18 +255,18 @@ bool win32_text_needs_boost(const wchar_t *wide, int len) {
 HFONT win32_font_for_text(Win32FontForText *argspec) {
 
   HFONT prev = NULL;
-  if (argspec->f_out_dy)
-    *argspec->f_out_dy = 0;
-  if (win32_text_is_symbolic(argspec->f_wide, argspec->f_len)) {
-    bool boost = win32_text_needs_boost(argspec->f_wide, argspec->f_len);
+  if (argspec->out_dy)
+    *argspec->out_dy = 0;
+  if (win32_text_is_symbolic(argspec->wide, argspec->len)) {
+    bool boost = win32_text_needs_boost(argspec->wide, argspec->len);
     int want = boost
-                   ? (argspec->f_font_size * WIN32_SYMBOL_SIZE_NUM / WIN32_SYMBOL_SIZE_DEN)
-                   : argspec->f_font_size;
-    HFONT sf = win32_symbol_font(want, argspec->f_wide, argspec->f_len);
+                   ? (argspec->font_size * WIN32_SYMBOL_SIZE_NUM / WIN32_SYMBOL_SIZE_DEN)
+                   : argspec->font_size;
+    HFONT sf = win32_symbol_font(want, argspec->wide, argspec->len);
     if (sf) {
-      HFONT nf = win32_sized_font(argspec->f_font_size);
+      HFONT nf = win32_sized_font(argspec->font_size);
       if (!nf)
-        nf = win32_sized_font(argspec->f_font_size);
+        nf = win32_sized_font(argspec->font_size);
       HFONT tmp = nf ? (HFONT)SelectObject(g_draw_hdc, nf) : NULL;
       TEXTMETRICW ts;
       ts.tmAscent = 0;
@@ -278,21 +278,21 @@ HFONT win32_font_for_text(Win32FontForText *argspec) {
       if (boost) {
         TEXTMETRICW tb;
         GetTextMetricsW(g_draw_hdc, &tb);
-        if (argspec->f_out_dy)
-          *argspec->f_out_dy = (ts.tmAscent - tb.tmAscent);
+        if (argspec->out_dy)
+          *argspec->out_dy = (ts.tmAscent - tb.tmAscent);
       }
-      if (argspec->f_out_old)
-        *argspec->f_out_old = prev;
+      if (argspec->out_old)
+        *argspec->out_old = prev;
       return sf;
     }
   }
-  HFONT hfont = win32_sized_font(argspec->f_font_size);
+  HFONT hfont = win32_sized_font(argspec->font_size);
   if (!hfont)
-    hfont = win32_sized_font(argspec->f_font_size);
+    hfont = win32_sized_font(argspec->font_size);
   if (hfont)
     prev = (HFONT)SelectObject(g_draw_hdc, hfont);
-  if (argspec->f_out_old)
-    *argspec->f_out_old = prev;
+  if (argspec->out_old)
+    *argspec->out_old = prev;
   return hfont;
 }
 
@@ -433,10 +433,10 @@ static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
 }
 
 void *win32_img_cache_get(Win32ImgCacheGet *argspec) {
-  if (argspec->f_out_dc)
-    *argspec->f_out_dc = NULL;
-  if (argspec->f_out_opaque)
-    *argspec->f_out_opaque = false;
+  if (argspec->out_dc)
+    *argspec->out_dc = NULL;
+  if (argspec->out_opaque)
+    *argspec->out_opaque = false;
   HBITMAP found = NULL;
   DWORD now = GetTickCount();
   win32_img_cache_lock();
@@ -444,11 +444,11 @@ void *win32_img_cache_get(Win32ImgCacheGet *argspec) {
     Win32ImgSlot *s = &img_cache[i];
     if (!s->bmp && !s->failed)
       continue;
-    if (s->screen != argspec->f_screen || s->w != argspec->f_w || s->h != argspec->f_h)
+    if (s->screen != argspec->screen || s->w != argspec->w || s->h != argspec->h)
       continue;
-    if (strcmp(s->key, argspec->f_path) != 0)
+    if (strcmp(s->key, argspec->path) != 0)
       continue;
-    if (win32_entry_changed(now, &s->checked_ms, argspec->f_path, &s->mtime, s->size)) {
+    if (win32_entry_changed(now, &s->checked_ms, argspec->path, &s->mtime, s->size)) {
       win32_gdip_dispose(s->bmp);
       win32_dib_release(s->dc, s->dib);
       s->bmp = NULL;
@@ -459,10 +459,10 @@ void *win32_img_cache_get(Win32ImgCacheGet *argspec) {
     }
     s->stamp = ++img_cache_tick;
     found = s->bmp ? s->bmp : WIN32_IMG_FAILED;
-    if (s->bmp && argspec->f_out_dc)
-      *argspec->f_out_dc = s->dc;
-    if (s->bmp && argspec->f_out_opaque)
-      *argspec->f_out_opaque = s->opaque;
+    if (s->bmp && argspec->out_dc)
+      *argspec->out_dc = s->dc;
+    if (s->bmp && argspec->out_opaque)
+      *argspec->out_opaque = s->opaque;
     break;
   }
   win32_img_cache_unlock();
@@ -473,7 +473,7 @@ void win32_img_cache_put(Win32ImgCachePut *argspec) {
 
   FILETIME ft;
   DWORD size;
-  win32_img_stat(argspec->f_path, &ft, &size);
+  win32_img_stat(argspec->path, &ft, &size);
   win32_img_cache_lock();
   int slot = -1;
   ULONGLONG oldest = ~(ULONGLONG)0;
@@ -483,8 +483,8 @@ void win32_img_cache_put(Win32ImgCachePut *argspec) {
       slot = i;
       break;
     }
-    if (s->screen != argspec->f_screen || s->w != argspec->f_w || s->h != argspec->f_h ||
-        strcmp(s->key, argspec->f_path) != 0)
+    if (s->screen != argspec->screen || s->w != argspec->w || s->h != argspec->h ||
+        strcmp(s->key, argspec->path) != 0)
       continue;
     if (s->stamp < oldest) {
       oldest = s->stamp;
@@ -494,7 +494,7 @@ void win32_img_cache_put(Win32ImgCachePut *argspec) {
   if (slot < 0) {
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
       const Win32ImgSlot *s = &img_cache[i];
-      if (s->screen != argspec->f_screen)
+      if (s->screen != argspec->screen)
         continue;
       if (s->stamp < oldest) {
         oldest = s->stamp;
@@ -507,17 +507,17 @@ void win32_img_cache_put(Win32ImgCachePut *argspec) {
   Win32ImgSlot *s = &img_cache[slot];
   win32_gdip_dispose(s->bmp);
   win32_dib_release(s->dc, s->dib);
-  snprintf(s->key, sizeof(s->key), "%s", argspec->f_path);
-  s->w = argspec->f_w;
-  s->h = argspec->f_h;
+  snprintf(s->key, sizeof(s->key), "%s", argspec->path);
+  s->w = argspec->w;
+  s->h = argspec->h;
   s->mtime = ft;
   s->size = size;
-  s->screen = argspec->f_screen;
-  s->bmp = argspec->f_img;
-  s->dib = argspec->f_dib;
-  s->dc = argspec->f_dc;
-  s->opaque = argspec->f_opaque;
-  s->failed = (argspec->f_img == NULL) ? 1 : 0;
+  s->screen = argspec->screen;
+  s->bmp = argspec->img;
+  s->dib = argspec->dib;
+  s->dc = argspec->dc;
+  s->opaque = argspec->opaque;
+  s->failed = (argspec->img == NULL) ? 1 : 0;
   s->checked_ms = GetTickCount();
   s->stamp = ++img_cache_tick;
   win32_img_cache_unlock();
@@ -630,25 +630,25 @@ GpBitmap *win32_load_shell_icon_bitmap(const char *path) {
 }
 
 void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec) {
-  if (argspec->f_out_dib)
-    *argspec->f_out_dib = NULL;
-  if (argspec->f_out_dc)
-    *argspec->f_out_dc = NULL;
-  if (argspec->f_out_opaque)
-    *argspec->f_out_opaque = false;
+  if (argspec->out_dib)
+    *argspec->out_dib = NULL;
+  if (argspec->out_dc)
+    *argspec->out_dc = NULL;
+  if (argspec->out_opaque)
+    *argspec->out_opaque = false;
 
   win32_gdip_ensure();
   if (g_gdip_token == 0) {
     log_error("img: GdiplusStartup failed");
     return NULL;
   }
-  if (argspec->f_w <= 0 || argspec->f_h <= 0)
+  if (argspec->w <= 0 || argspec->h <= 0)
     return NULL;
 
-  GpBitmap *src = (GpBitmap *)win32_src_cache_get(argspec->f_path);
+  GpBitmap *src = (GpBitmap *)win32_src_cache_get(argspec->path);
   if (!src) {
     char native[MAX_PATH * 2];
-    win32_path_to_native(native, sizeof(native), argspec->f_path);
+    win32_path_to_native(native, sizeof(native), argspec->path);
 
     wchar_t wpath[MAX_PATH * 2];
     win32_utf8_to_wide(native, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
@@ -659,12 +659,12 @@ void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec) {
         GdipDisposeImage(src);
       src = win32_load_shell_icon_bitmap(native);
       if (!src) {
-        log_error("img: cannot decode '%s' st=%d and no shell icon", argspec->f_path,
+        log_error("img: cannot decode '%s' st=%d and no shell icon", argspec->path,
                   (int)_fs);
         return NULL;
       }
     }
-    win32_src_cache_put(argspec->f_path, src);
+    win32_src_cache_put(argspec->path, src);
   }
 
   PixelFormat src_format = PixelFormatUndefined;
@@ -678,9 +678,9 @@ void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec) {
   HBITMAP dib = NULL;
   HDC dc = NULL;
   void *bits = NULL;
-  GpBitmap *out = win32_create_dib_bitmap(argspec->f_w, argspec->f_h, &dib, &dc, &bits);
+  GpBitmap *out = win32_create_dib_bitmap(argspec->w, argspec->h, &dib, &dc, &bits);
   if (!out) {
-    log_error("img: cannot create dib %dx%d", argspec->f_w, argspec->f_h);
+    log_error("img: cannot create dib %dx%d", argspec->w, argspec->h);
     return NULL;
   }
   GpGraphics *g = NULL;
@@ -689,17 +689,17 @@ void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec) {
     GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
     GdipSetCompositingMode(g, CompositingModeSourceCopy);
     GdipSetSmoothingMode(g, SmoothingModeHighQuality);
-    GdipDrawImageRectI(g, src, 0, 0, argspec->f_w, argspec->f_h);
+    GdipDrawImageRectI(g, src, 0, 0, argspec->w, argspec->h);
     GdipDeleteGraphics(g);
   } else {
     log_error("img: ctx st=%d", (int)_gs);
   }
-  if (argspec->f_out_dib)
-    *argspec->f_out_dib = dib;
-  if (argspec->f_out_dc)
-    *argspec->f_out_dc = dc;
-  if (argspec->f_out_opaque)
-    *argspec->f_out_opaque = source_opaque || win32_bits_opaque(bits, argspec->f_w, argspec->f_h);
+  if (argspec->out_dib)
+    *argspec->out_dib = dib;
+  if (argspec->out_dc)
+    *argspec->out_dc = dc;
+  if (argspec->out_opaque)
+    *argspec->out_opaque = source_opaque || win32_bits_opaque(bits, argspec->w, argspec->h);
   return out;
 }
 

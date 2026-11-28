@@ -135,16 +135,16 @@ static void x11_widget_frame(void *ud) {
   if (widget->base.fn)
     widget->base.fn(widget->base.ud);
   Platform_FlushDraw();
-  x11_draw_window_border(&(X11DrawWindowBorder){.f_dpy = dpy, .f_drw = widget->win, .f_vis = NULL, .f_w = widget->base.w, .f_h = widget->base.h, .f_no_bg = widget->base.no_bg});
+  x11_draw_window_border(&(X11DrawWindowBorder){.dpy = dpy, .drw = widget->win, .vis = NULL, .w = widget->base.w, .h = widget->base.h, .no_bg = widget->base.no_bg});
   XFlush(dpy);
 }
 
 PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
 
-  (void)argspec->f_name;
-  if (argspec->f_w <= 0 || argspec->f_h <= 0)
+  (void)argspec->name;
+  if (argspec->w <= 0 || argspec->h <= 0)
     return NULL;
-  if (!render_thread_ensure_started(argspec->f_fps))
+  if (!render_thread_ensure_started(argspec->fps))
     return NULL;
   Display *dpy = (Display *)render_thread_display();
   if (!dpy) {
@@ -156,19 +156,19 @@ PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
   if (!widget)
     return NULL;
   widget->dpy = dpy;
-  widget_init_base(&(WidgetInitBase){.f_base = &widget->base, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_fps = argspec->f_fps, .f_no_bg = argspec->f_no_bg, .f_on_click = argspec->f_on_click, .f_name = argspec->f_name});
+  widget_init_base(&(WidgetInitBase){.base = &widget->base, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h, .fps = argspec->fps, .no_bg = argspec->no_bg, .on_click = argspec->on_click, .name = argspec->name});
   widget->last_draw_w = 0;
   widget->last_draw_h = 0;
 
-  set_transparent_window(argspec->f_no_bg);
+  set_transparent_window(argspec->no_bg);
   widget->win =
-      x11_create_display_message_window(&(X11CreateDisplayMessageWindow){.f_dpy = dpy, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_clickable = argspec->f_on_click != NULL});
+      x11_create_display_message_window(&(X11CreateDisplayMessageWindow){.dpy = dpy, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h, .clickable = argspec->on_click != NULL});
   set_transparent_window(false);
   if (!widget->win) {
     free(widget);
     return NULL;
   }
-  if (!x11_get_drawable_visual(&(X11GetDrawableVisual){.f_dpy = dpy, .f_d = widget->win, .f_vis_out = &widget->vis, .f_cmap_out = &widget->cmap, .f_depth_out = NULL})) {
+  if (!x11_get_drawable_visual(&(X11GetDrawableVisual){.dpy = dpy, .d = widget->win, .vis_out = &widget->vis, .cmap_out = &widget->cmap, .depth_out = NULL})) {
     int screen = DefaultScreen(dpy);
     widget->vis = DefaultVisual(dpy, screen);
     widget->cmap = DefaultColormap(dpy, screen);

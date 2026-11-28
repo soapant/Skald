@@ -25,11 +25,11 @@ void Platform_DrawPromptEditCursor(PromptState *state);
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius);
 typedef struct {
-  const char *f_path;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
+  const char *path;
+  int x;
+  int y;
+  int w;
+  int h;
 } PlatformDrawImageAt;
 
 bool Platform_DrawImageAt(PlatformDrawImageAt *argspec);
@@ -38,11 +38,11 @@ ImageBuffer *Platform_CaptureWindowByTitle(const char *title);
 ImageBuffer *Platform_CaptureWindowById(const char *id);
 void Platform_FreeImage(ImageBuffer *image);
 typedef struct {
-  const ImageBuffer *f_image;
-  int f_x;
-  int f_y;
-  int f_w;
-  int f_h;
+  const ImageBuffer *image;
+  int x;
+  int y;
+  int w;
+  int h;
 } PlatformDrawImageBuffer;
 
 bool Platform_DrawImageBuffer(PlatformDrawImageBuffer *argspec);
