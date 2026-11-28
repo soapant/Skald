@@ -26,11 +26,27 @@ bool listbox_client_mouse_pos(int *out_x, int *out_y);
 bool listbox_window_origin(int *out_x, int *out_y);
 void listbox_publish_mouse_pos(int x, int y);
 void listbox_invalidate_mouse_pos(void);
-int listbox_row_at_y(const ListBox *lb, int list_top, int item_height,
-                     int top_index, int visible_count, int mouse_y);
-bool listbox_hover_focus(ListBox *lb, int list_top, int item_height,
-                         int top_index, int visible_count, int left_x,
-                         int right_x);
+typedef struct {
+  const ListBox *f_lb;
+  int f_list_top;
+  int f_item_height;
+  int f_top_index;
+  int f_visible_count;
+  int f_mouse_y;
+} FnListboxRowAtYSpec;
+
+int listbox_row_at_y(FnListboxRowAtYSpec *argspec);
+typedef struct {
+  ListBox *f_lb;
+  int f_list_top;
+  int f_item_height;
+  int f_top_index;
+  int f_visible_count;
+  int f_left_x;
+  int f_right_x;
+} FnListboxHoverFocusSpec;
+
+bool listbox_hover_focus(FnListboxHoverFocusSpec *argspec);
 void listbox_focus_by_keyboard(void);
 void listbox_set_row_h_scroll(int px);
 int listbox_get_row_h_scroll(void);

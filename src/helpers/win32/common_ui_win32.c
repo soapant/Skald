@@ -11,15 +11,15 @@
 #include <commctrl.h>
 #include <string.h>
 
-void win32_apply_rounded(HWND hwnd, int w, int h, bool rounded, int radius) {
-  if (!hwnd || !IsWindow(hwnd))
+void win32_apply_rounded(FnWin32ApplyRoundedSpec *argspec) {
+  if (!argspec->f_hwnd || !IsWindow(argspec->f_hwnd))
     return;
-  if (w <= 0 || h <= 0) {
+  if (argspec->f_w <= 0 || argspec->f_h <= 0) {
     RECT rc;
-    GetWindowRect(hwnd, &rc);
-    w = rc.right - rc.left;
-    h = rc.bottom - rc.top;
-    if (w <= 0 || h <= 0)
+    GetWindowRect(argspec->f_hwnd, &rc);
+    argspec->f_w = rc.right - rc.left;
+    argspec->f_h = rc.bottom - rc.top;
+    if (argspec->f_w <= 0 || argspec->f_h <= 0)
       return;
   }
 
@@ -30,39 +30,39 @@ void win32_apply_rounded(HWND hwnd, int w, int h, bool rounded, int radius) {
     if (pDwmSetWindowAttribute) {
       const DWORD DWMWA_BORDER_COLOR = 34;
       COLORREF border = 0xFFFFFFFE;
-      pDwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &border, sizeof(border));
-      if (!rounded) {
+      pDwmSetWindowAttribute(argspec->f_hwnd, DWMWA_BORDER_COLOR, &border, sizeof(border));
+      if (!argspec->f_rounded) {
         FreeLibrary(dwm);
         return;
       }
       const int DWMWCP_DONOTROUND = 0;
       const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-      pDwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
+      pDwmSetWindowAttribute(argspec->f_hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
                              &DWMWCP_DONOTROUND, sizeof(DWMWCP_DONOTROUND));
     }
     FreeLibrary(dwm);
   }
 
-  if (!rounded)
+  if (!argspec->f_rounded)
     return;
 
-  if (radius < 0)
-    radius = 0;
-  if (radius > 32)
-    radius = 32;
-  if (radius * 2 > w)
-    radius = w / 2;
-  if (radius * 2 > h)
-    radius = h / 2;
-  if (radius <= 0)
+  if (argspec->f_radius < 0)
+    argspec->f_radius = 0;
+  if (argspec->f_radius > 32)
+    argspec->f_radius = 32;
+  if (argspec->f_radius * 2 > argspec->f_w)
+    argspec->f_radius = argspec->f_w / 2;
+  if (argspec->f_radius * 2 > argspec->f_h)
+    argspec->f_radius = argspec->f_h / 2;
+  if (argspec->f_radius <= 0)
     return;
-  HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius * 2, radius * 2);
+  HRGN rgn = CreateRoundRectRgn(0, 0, argspec->f_w + 1, argspec->f_h + 1, argspec->f_radius * 2, argspec->f_radius * 2);
   if (rgn)
-    SetWindowRgn(hwnd, rgn, TRUE);
+    SetWindowRgn(argspec->f_hwnd, rgn, TRUE);
 }
 
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
-  win32_apply_rounded(hwnd, w, h, RoundedCorners, CornerRadius);
+  win32_apply_rounded(&(FnWin32ApplyRoundedSpec){.f_hwnd = hwnd, .f_w = w, .f_h = h, .f_rounded = RoundedCorners, .f_radius = CornerRadius});
 }
 
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1,
@@ -82,46 +82,45 @@ static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1,
   FillRect(hdc, &r, brush);
 }
 
-void win32_draw_window_border(HDC hdc, int ox, int oy, int ww, int wh,
-                              const RECT *region) {
-  if (!hdc || !EnableBorders || ww <= 0 || wh <= 0)
+void win32_draw_window_border(FnWin32DrawWindowBorderSpec *argspec) {
+  if (!argspec->f_hdc || !EnableBorders || argspec->f_ww <= 0 || argspec->f_wh <= 0)
     return;
   int t = PROMPT_BORDER_W;
   if (t <= 0)
     return;
-  int rx0 = 0, ry0 = 0, rx1 = ww, ry1 = wh;
-  if (region) {
-    rx0 = region->left;
-    ry0 = region->top;
-    rx1 = region->right;
-    ry1 = region->bottom;
+  int rx0 = 0, ry0 = 0, rx1 = argspec->f_ww, ry1 = argspec->f_wh;
+  if (argspec->f_region) {
+    rx0 = argspec->f_region->left;
+    ry0 = argspec->f_region->top;
+    rx1 = argspec->f_region->right;
+    ry1 = argspec->f_region->bottom;
   }
   if (rx1 <= rx0 || ry1 <= ry0)
     return;
   int r = (RoundedCorners && CornerRadius > 0) ? CornerRadius : 0;
-  if (r > ww / 2)
-    r = ww / 2;
-  if (r > wh / 2)
-    r = wh / 2;
+  if (r > argspec->f_ww / 2)
+    r = argspec->f_ww / 2;
+  if (r > argspec->f_wh / 2)
+    r = argspec->f_wh / 2;
   if (r <= t)
     r = 0;
   HBRUSH brush = CreateSolidBrush(COLOR_BORDER);
   if (!brush)
     return;
-  win32_border_edge(hdc, brush, r, 0, ww - r, t, ox, oy, rx0, ry0, rx1, ry1);
-  win32_border_edge(hdc, brush, r, wh - t, ww - r, wh, ox, oy, rx0, ry0, rx1,
+  win32_border_edge(argspec->f_hdc, brush, r, 0, argspec->f_ww - r, t, argspec->f_ox, argspec->f_oy, rx0, ry0, rx1, ry1);
+  win32_border_edge(argspec->f_hdc, brush, r, argspec->f_wh - t, argspec->f_ww - r, argspec->f_wh, argspec->f_ox, argspec->f_oy, rx0, ry0, rx1,
                     ry1);
-  win32_border_edge(hdc, brush, 0, r, t, wh - r, ox, oy, rx0, ry0, rx1, ry1);
-  win32_border_edge(hdc, brush, ww - t, r, ww, wh - r, ox, oy, rx0, ry0, rx1,
+  win32_border_edge(argspec->f_hdc, brush, 0, r, t, argspec->f_wh - r, argspec->f_ox, argspec->f_oy, rx0, ry0, rx1, ry1);
+  win32_border_edge(argspec->f_hdc, brush, argspec->f_ww - t, r, argspec->f_ww, argspec->f_wh - r, argspec->f_ox, argspec->f_oy, rx0, ry0, rx1,
                     ry1);
   if (r > t) {
-    HRGN shape = CreateRoundRectRgn(0, 0, ww + 1, wh + 1, r * 2, r * 2);
+    HRGN shape = CreateRoundRectRgn(0, 0, argspec->f_ww + 1, argspec->f_wh + 1, r * 2, r * 2);
     if (shape) {
-      for (int y = 0; y < wh; y++) {
-        if (y >= r && y < wh - r)
+      for (int y = 0; y < argspec->f_wh; y++) {
+        if (y >= r && y < argspec->f_wh - r)
           continue;
-        for (int x = 0; x < ww; x++) {
-          if (x >= r && x < ww - r)
+        for (int x = 0; x < argspec->f_ww; x++) {
+          if (x >= r && x < argspec->f_ww - r)
             continue;
           if (x < rx0 || x >= rx1 || y < ry0 || y >= ry1)
             continue;
@@ -139,11 +138,11 @@ void win32_draw_window_border(HDC hdc, int ox, int oy, int ww, int wh,
           if (!edge)
             continue;
           RECT px;
-          px.left = x + ox;
-          px.top = y + oy;
-          px.right = x + ox + 1;
-          px.bottom = y + oy + 1;
-          FillRect(hdc, &px, brush);
+          px.left = x + argspec->f_ox;
+          px.top = y + argspec->f_oy;
+          px.right = x + argspec->f_ox + 1;
+          px.bottom = y + argspec->f_oy + 1;
+          FillRect(argspec->f_hdc, &px, brush);
         }
       }
       DeleteObject(shape);

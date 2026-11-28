@@ -18,10 +18,10 @@ static void focus_test_adjust(void *owner, int dir) {
 
 TEST(focus_move_cycles_widgets) {
   focus_clear();
-  focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
-  focus_register("b2", FOCUS_KIND_BUTTON, 20, 0, 10, 10, NULL, NULL, NULL);
-  focus_register("sl", FOCUS_KIND_SLIDER, 40, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b2", .f_kind = FOCUS_KIND_BUTTON, .f_x = 20, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "sl", .f_kind = FOCUS_KIND_SLIDER, .f_x = 40, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_TRUE(focus_has_entries());
   ASSERT_TRUE(focus_move(1));
   ASSERT_EQ_STR(focus_name(), "b1");
@@ -37,10 +37,9 @@ TEST(focus_move_cycles_widgets) {
 
 TEST(focus_activate_invokes_callback) {
   focus_clear();
-  focus_frame_begin(false, 0, 0, 0, 0);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
   s_activated = 0;
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL,
-                 focus_test_activate, NULL);
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = focus_test_activate, .f_adjust = NULL});
   ASSERT_TRUE(focus_select("b1"));
   ASSERT_TRUE(focus_activate());
   ASSERT_EQ_INT(s_activated, 1);
@@ -48,11 +47,10 @@ TEST(focus_activate_invokes_callback) {
 
 TEST(focus_adjust_invokes_callback) {
   focus_clear();
-  focus_frame_begin(false, 0, 0, 0, 0);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
   s_adjusted = 0;
   s_adjust_dir = 0;
-  focus_register("sl", FOCUS_KIND_SLIDER, 0, 0, 10, 10, NULL, NULL,
-                 focus_test_adjust);
+  focus_register(&(FnFocusRegisterSpec){.f_name = "sl", .f_kind = FOCUS_KIND_SLIDER, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = focus_test_adjust});
   ASSERT_TRUE(focus_select("sl"));
   ASSERT_TRUE(focus_adjust(-1));
   ASSERT_EQ_INT(s_adjusted, 1);
@@ -61,23 +59,23 @@ TEST(focus_adjust_invokes_callback) {
 
 TEST(focus_register_restores_selection_for_draw) {
   focus_clear();
-  focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_TRUE(focus_select("b1"));
-  focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_TRUE(focus_is("b1"));
 }
 
 TEST(focus_frame_end_drops_missing_widget) {
   focus_clear();
-  focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   focus_select("b1");
   focus_frame_end();
   ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_BUTTON);
-  focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("b2", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b2", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   focus_frame_end();
   ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_NONE);
 }
@@ -85,8 +83,8 @@ TEST(focus_frame_end_drops_missing_widget) {
 TEST(focus_pseudo_listbox_survives_frame) {
   focus_clear();
   focus_set_pseudo(FOCUS_KIND_LISTBOX);
-  focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   focus_frame_end();
   ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_LISTBOX);
   ASSERT_FALSE(focus_is("b1"));
@@ -94,8 +92,8 @@ TEST(focus_pseudo_listbox_survives_frame) {
 
 TEST(focus_listbox_is_part_of_ring) {
   focus_clear();
-  focus_frame_begin(true, 0, 0, 100, 100);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = true, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 100, .f_lb_h = 100});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_EQ_STR(focus_name(), "__listbox__");
   ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_LISTBOX);
   ASSERT_TRUE(focus_move(1));
@@ -103,15 +101,15 @@ TEST(focus_listbox_is_part_of_ring) {
   ASSERT_TRUE(focus_move(1));
   ASSERT_EQ_STR(focus_name(), "__listbox__");
   focus_frame_end();
-  focus_frame_begin(true, 0, 0, 100, 100);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = true, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 100, .f_lb_h = 100});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_EQ_STR(focus_name(), "__listbox__");
 }
 
 TEST(focus_passive_listbox_selects_ring_entry) {
   focus_clear();
-  focus_frame_begin(true, 0, 0, 100, 100);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = true, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 100, .f_lb_h = 100});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_TRUE(focus_select("b1"));
   focus_set_pseudo_passive(FOCUS_KIND_LISTBOX);
   ASSERT_EQ_STR(focus_name(), "__listbox__");
@@ -120,13 +118,12 @@ TEST(focus_passive_listbox_selects_ring_entry) {
 
 TEST(focus_move_direction_picks_axis_neighbor) {
   focus_clear();
-  focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("center", FOCUS_KIND_BUTTON, 50, 50, 10, 10, NULL, NULL, NULL);
-  focus_register("left", FOCUS_KIND_CHECKBOX, 0, 50, 10, 10, NULL, NULL, NULL);
-  focus_register("right", FOCUS_KIND_SLIDER, 100, 50, 10, 10, NULL, NULL, NULL);
-  focus_register("top", FOCUS_KIND_CUSTOM, 50, 0, 10, 10, NULL, NULL, NULL);
-  focus_register("bottom", FOCUS_KIND_BUTTON, 50, 100, 10, 10, NULL, NULL,
-                 NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "center", .f_kind = FOCUS_KIND_BUTTON, .f_x = 50, .f_y = 50, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "left", .f_kind = FOCUS_KIND_CHECKBOX, .f_x = 0, .f_y = 50, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "right", .f_kind = FOCUS_KIND_SLIDER, .f_x = 100, .f_y = 50, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "top", .f_kind = FOCUS_KIND_CUSTOM, .f_x = 50, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "bottom", .f_kind = FOCUS_KIND_BUTTON, .f_x = 50, .f_y = 100, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_TRUE(focus_select("center"));
 
   ASSERT_TRUE(focus_move_direction(FOCUS_LEFT));
@@ -144,9 +141,9 @@ TEST(focus_move_direction_picks_axis_neighbor) {
 
 TEST(focus_set_kind_selects_first_match) {
   focus_clear();
-  focus_frame_begin(false, 0, 0, 0, 0);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
-  focus_register("c1", FOCUS_KIND_CHECKBOX, 20, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = false, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 0, .f_lb_h = 0});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "c1", .f_kind = FOCUS_KIND_CHECKBOX, .f_x = 20, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_TRUE(focus_set_kind(FOCUS_KIND_CHECKBOX));
   ASSERT_EQ_STR(focus_name(), "c1");
   ASSERT_TRUE(focus_set_kind(FOCUS_KIND_NONE));
@@ -155,22 +152,22 @@ TEST(focus_set_kind_selects_first_match) {
 
 TEST(focus_pseudo_editbox_survives_listbox_frame) {
   focus_clear();
-  focus_frame_begin(true, 0, 0, 100, 100);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = true, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 100, .f_lb_h = 100});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   focus_set_pseudo(FOCUS_KIND_EDITBOX);
   ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_EDITBOX);
   focus_frame_end();
-  focus_frame_begin(true, 0, 0, 100, 100);
-  focus_register("b1", FOCUS_KIND_BUTTON, 0, 0, 10, 10, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = true, .f_lb_x = 0, .f_lb_y = 0, .f_lb_w = 100, .f_lb_h = 100});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "b1", .f_kind = FOCUS_KIND_BUTTON, .f_x = 0, .f_y = 0, .f_w = 10, .f_h = 10, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   ASSERT_EQ_INT(focus_kind(), FOCUS_KIND_EDITBOX);
   ASSERT_TRUE(focus_name() == NULL);
 }
 
 TEST(focus_editbox_down_selects_listbox) {
   focus_clear();
-  focus_frame_begin(true, 0, 30, 100, 100);
-  focus_register("eb", FOCUS_KIND_EDITBOX, 0, 0, 100, 20, NULL, NULL, NULL);
-  focus_register("btn", FOCUS_KIND_BUTTON, 70, 200, 30, 20, NULL, NULL, NULL);
+  focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = true, .f_lb_x = 0, .f_lb_y = 30, .f_lb_w = 100, .f_lb_h = 100});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "eb", .f_kind = FOCUS_KIND_EDITBOX, .f_x = 0, .f_y = 0, .f_w = 100, .f_h = 20, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+  focus_register(&(FnFocusRegisterSpec){.f_name = "btn", .f_kind = FOCUS_KIND_BUTTON, .f_x = 70, .f_y = 200, .f_w = 30, .f_h = 20, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
   focus_frame_end();
   ASSERT_TRUE(focus_select("btn"));
   ASSERT_TRUE(focus_move(1));

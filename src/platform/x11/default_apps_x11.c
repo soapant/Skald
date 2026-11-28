@@ -55,8 +55,7 @@ static const char *get_default_browser(int slot) {
                                      "Internet Explorer",
                                      "Zen"};
   ListOfFiles browser_files = {0};
-  file_walk_all_files_from_dir("/usr/share/applications", NULL, &browser_files,
-                               NULL, true, 0);
+  file_walk_all_files_from_dir(&(FnFileWalkAllFilesFromDirSpec){.f_dir_path = "/usr/share/applications", .f_list_of_allowed_extensions = NULL, .f_list_of_files = &browser_files, .f_list_of_names_to_ignore = NULL, .f_strip_extension = true, .f_max_depth = 0});
   for (size_t i = 0; i < browser_files.count; i++) {
     const char *name = browser_files.files[i].name;
     for (size_t j = 0;

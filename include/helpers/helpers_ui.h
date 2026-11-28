@@ -14,23 +14,54 @@ unsigned short opacity_alpha16(void);
 unsigned int color_lerp(unsigned int a, unsigned int b, float t);
 ColorRef color_lerp_bgr(ColorRef a, ColorRef b, float t);
 
-bool cover_scale(int sw, int sh, int tw, int th, int *dw, int *dh);
+typedef struct {
+  int f_sw;
+  int f_sh;
+  int f_tw;
+  int f_th;
+  int *f_dw;
+  int *f_dh;
+} FnCoverScaleSpec;
+
+bool cover_scale(FnCoverScaleSpec *argspec);
 
 int draw_thickness_px(float thickness);
 void draw_measure_track(int x, int y, int w, int h);
-int draw_line_prep(const DrawLineRawSpec *spec, int off_x, int off_y, int *x1,
-                   int *y1, int *x2, int *y2);
-int draw_circle_prep(const DrawCircleRawSpec *spec, int off_x, int off_y,
-                     int *cx, int *cy);
+typedef struct {
+  const DrawLineRawSpec *f_spec;
+  int f_off_x;
+  int f_off_y;
+  int *f_x1;
+  int *f_y1;
+  int *f_x2;
+  int *f_y2;
+} FnDrawLinePrepSpec;
+
+int draw_line_prep(FnDrawLinePrepSpec *argspec);
+typedef struct {
+  const DrawCircleRawSpec *f_spec;
+  int f_off_x;
+  int f_off_y;
+  int *f_cx;
+  int *f_cy;
+} FnDrawCirclePrepSpec;
+
+int draw_circle_prep(FnDrawCirclePrepSpec *argspec);
 void populate_listbox(ListBox *lb, const char *filter, const char **items,
                       int item_count,
                       bool (*filter_match)(const char *item,
                                            const char *filter));
-void populate_listbox_ranked(ListBox *lb, const char *filter,
-                             const char **items, int item_count,
-                             bool (*filter_match)(const char *item,
-                                                  const char *filter),
-                             int (*item_rank)(int item_index));
+typedef struct {
+  ListBox *f_lb;
+  const char *f_filter;
+  const char **f_items;
+  int f_item_count;
+  bool (*f_filter_match)(const char *item,
+                                                  const char *filter);
+  int (*f_item_rank)(int item_index);
+} FnPopulateListboxRankedSpec;
+
+void populate_listbox_ranked(FnPopulateListboxRankedSpec *argspec);
 
 typedef enum {
   AUTO = 0,
@@ -81,9 +112,17 @@ Metrics *metrics_get(void);
 void draw_prompt_separator(DrawPromptSeparatorSpec spec);
 bool prompt_band_take_placed(void);
 void prompt_band_commit_placed(void);
-void listbox_compute_layout(const ListSpec *spec, int default_y0, int item_h,
-                            int popup_w, int popup_h, int count,
-                            ListboxLayout *out);
+typedef struct {
+  const ListSpec *f_spec;
+  int f_default_y0;
+  int f_item_h;
+  int f_popup_w;
+  int f_popup_h;
+  int f_count;
+  ListboxLayout *f_out;
+} FnListboxComputeLayoutSpec;
+
+void listbox_compute_layout(FnListboxComputeLayoutSpec *argspec);
 
 typedef struct {
   int x, y, w, h;
@@ -166,13 +205,27 @@ int UI_InsertChar(wchar_t wc);
 #define UI_TICK_TIMER_ID 997
 #define UI_TICK_TIMER_MS 1000
 
-int bg_tile_lru_pick(const void *slots, int count, size_t stride,
-                     int (*is_empty)(const void *slot),
-                     unsigned long (*stamp)(const void *slot));
+typedef struct {
+  const void *f_slots;
+  int f_count;
+  size_t f_stride;
+  int (*f_is_empty)(const void *slot);
+  unsigned long (*f_stamp)(const void *slot);
+} FnBgTileLruPickSpec;
+
+int bg_tile_lru_pick(FnBgTileLruPickSpec *argspec);
 
 void draw_text_centered_impl(const DrawTextCenteredSpec *spec, int line_height);
-int msg_anchor_center(int rect, int rect_size, int slot, int gap, int outward,
-                      int win_size);
+typedef struct {
+  int f_rect;
+  int f_rect_size;
+  int f_slot;
+  int f_gap;
+  int f_outward;
+  int f_win_size;
+} FnMsgAnchorCenterSpec;
+
+int msg_anchor_center(FnMsgAnchorCenterSpec *argspec);
 int msg_stack_dir(int v_slot, bool outward);
 
 #endif

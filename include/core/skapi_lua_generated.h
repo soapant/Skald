@@ -11,6 +11,43 @@
 #include <string.h>
 
 #include "helpers/helpers_misc.h"
+static const LuaFieldDesc lf_FnConfigIndexOfSpec[] = {
+    {"f_entries", LSF_PTR, offsetof(FnConfigIndexOfSpec, f_entries), 0, 0, NULL},
+    {"f_count", LSF_INT, offsetof(FnConfigIndexOfSpec, f_count), 0, 0, NULL},
+    {"f_elem_size", LSF_INT, offsetof(FnConfigIndexOfSpec, f_elem_size), 0, 0, NULL},
+    {"f_key_off", LSF_INT, offsetof(FnConfigIndexOfSpec, f_key_off), 0, 0, NULL},
+    {"f_key_size", LSF_INT, offsetof(FnConfigIndexOfSpec, f_key_size), 0, 0, NULL},
+    {"f_key", LSF_BUFFER, offsetof(FnConfigIndexOfSpec, f_key), offsetof(FnConfigIndexOfSpec, f_key_size), 8, NULL},
+};
+static const LuaStructDesc lsd_FnConfigIndexOfSpec = {"FnConfigIndexOfSpec", sizeof(FnConfigIndexOfSpec), lf_FnConfigIndexOfSpec, (int)(sizeof(lf_FnConfigIndexOfSpec)/sizeof(lf_FnConfigIndexOfSpec[0]))};
+#include "helpers/helpers_misc.h"
+static const LuaFieldDesc lf_FnFeatureShortcutParseSpec[] = {
+    {"f_target", LSF_STR, offsetof(FnFeatureShortcutParseSpec, f_target), 0, 0, NULL},
+    {"f_feature", LSF_STR, offsetof(FnFeatureShortcutParseSpec, f_feature), 0, 0, NULL},
+    {"f_feature_cap", LSF_INT, offsetof(FnFeatureShortcutParseSpec, f_feature_cap), 0, 0, NULL},
+    {"f_filter", LSF_STR, offsetof(FnFeatureShortcutParseSpec, f_filter), 0, 0, NULL},
+    {"f_filter_cap", LSF_INT, offsetof(FnFeatureShortcutParseSpec, f_filter_cap), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnFeatureShortcutParseSpec = {"FnFeatureShortcutParseSpec", sizeof(FnFeatureShortcutParseSpec), lf_FnFeatureShortcutParseSpec, (int)(sizeof(lf_FnFeatureShortcutParseSpec)/sizeof(lf_FnFeatureShortcutParseSpec[0]))};
+#include "helpers/helpers_misc.h"
+static const LuaFieldDesc lf_FnResolveCallerPathSpec[] = {
+    {"f_caller_ret", LSF_PTR, offsetof(FnResolveCallerPathSpec, f_caller_ret), 0, 0, NULL},
+    {"f_name", LSF_STR, offsetof(FnResolveCallerPathSpec, f_name), 0, 0, NULL},
+    {"f_full", LSF_STR, offsetof(FnResolveCallerPathSpec, f_full), 0, 0, NULL},
+    {"f_cap", LSF_INT, offsetof(FnResolveCallerPathSpec, f_cap), 0, 0, NULL},
+    {"f_func", LSF_STR, offsetof(FnResolveCallerPathSpec, f_func), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnResolveCallerPathSpec = {"FnResolveCallerPathSpec", sizeof(FnResolveCallerPathSpec), lf_FnResolveCallerPathSpec, (int)(sizeof(lf_FnResolveCallerPathSpec)/sizeof(lf_FnResolveCallerPathSpec[0]))};
+#include "helpers/helpers_misc.h"
+static const LuaFieldDesc lf_FnDrawRectRawSpec[] = {
+    {"f_spec", LSF_PTR, offsetof(FnDrawRectRawSpec, f_spec), 0, 0, NULL},
+    {"f_color", LSF_INT, offsetof(FnDrawRectRawSpec, f_color), 0, 0, NULL},
+    {"f_thickness", LSF_FLOAT, offsetof(FnDrawRectRawSpec, f_thickness), 0, 0, NULL},
+    {"f_filled", LSF_BOOL, offsetof(FnDrawRectRawSpec, f_filled), 0, 0, NULL},
+    {"f_transparent", LSF_BOOL, offsetof(FnDrawRectRawSpec, f_transparent), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnDrawRectRawSpec = {"FnDrawRectRawSpec", sizeof(FnDrawRectRawSpec), lf_FnDrawRectRawSpec, (int)(sizeof(lf_FnDrawRectRawSpec)/sizeof(lf_FnDrawRectRawSpec[0]))};
+#include "helpers/helpers_misc.h"
 static const LuaFieldDesc lf_EditSpec[] = {
     {"name", LSF_STR, offsetof(EditSpec, name), 0, 0, NULL},
     {"buffer", LSF_BUFFER, offsetof(EditSpec, buffer), offsetof(EditSpec, buffer_size), 8, NULL},
@@ -37,6 +74,15 @@ static const LuaFieldDesc lf_EditSpec[] = {
     {"wrapped", LSF_BOOL, offsetof(EditSpec, wrapped), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_EditSpec = {"EditSpec", sizeof(EditSpec), lf_EditSpec, (int)(sizeof(lf_EditSpec)/sizeof(lf_EditSpec[0]))};
+#include "helpers/helpers_fs.h"
+static const LuaFieldDesc lf_FnTempFileWriteSpec[] = {
+    {"f_name", LSF_STR, offsetof(FnTempFileWriteSpec, f_name), 0, 0, NULL},
+    {"f_data", LSF_PTR, offsetof(FnTempFileWriteSpec, f_data), 0, 0, NULL},
+    {"f_len", LSF_INT, offsetof(FnTempFileWriteSpec, f_len), 0, 0, NULL},
+    {"f_out_path", LSF_STR, offsetof(FnTempFileWriteSpec, f_out_path), 0, 0, NULL},
+    {"f_out_len", LSF_INT, offsetof(FnTempFileWriteSpec, f_out_len), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnTempFileWriteSpec = {"FnTempFileWriteSpec", sizeof(FnTempFileWriteSpec), lf_FnTempFileWriteSpec, (int)(sizeof(lf_FnTempFileWriteSpec)/sizeof(lf_FnTempFileWriteSpec[0]))};
 #include "helpers/helpers_hotkey.h"
 static const LuaFieldDesc lf_HotkeyBinding[] = {
     {"vk", LSF_INT, offsetof(HotkeyBinding, vk), 0, 0, NULL},
@@ -53,6 +99,55 @@ static const LuaFieldDesc lf_HotkeyBinding[] = {
     {"user_ud", LSF_PTR, offsetof(HotkeyBinding, user_ud), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_HotkeyBinding = {"HotkeyBinding", sizeof(HotkeyBinding), lf_HotkeyBinding, (int)(sizeof(lf_HotkeyBinding)/sizeof(lf_HotkeyBinding[0]))};
+#include "helpers/helpers_hotkey.h"
+static const LuaFieldDesc lf_FnHotkeyConvertIntoBindingSpec[] = {
+    {"f_hotkey_string", LSF_STR, offsetof(FnHotkeyConvertIntoBindingSpec, f_hotkey_string), 0, 0, NULL},
+    {"f_on_hotkey_trigger", LSF_CB, offsetof(FnHotkeyConvertIntoBindingSpec, f_on_hotkey_trigger), 0, 0, NULL},
+    {"f_optional_condition_for_hotkey", LSF_CB, offsetof(FnHotkeyConvertIntoBindingSpec, f_optional_condition_for_hotkey), 0, 3, NULL},
+    {"f_optional_blacklistedwindows", LSF_STR, offsetof(FnHotkeyConvertIntoBindingSpec, f_optional_blacklistedwindows), 0, 0, NULL},
+    {"f_whitelist", LSF_BOOL, offsetof(FnHotkeyConvertIntoBindingSpec, f_whitelist), 0, 0, NULL},
+    {"f_user_ud", LSF_PTR, offsetof(FnHotkeyConvertIntoBindingSpec, f_user_ud), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnHotkeyConvertIntoBindingSpec = {"FnHotkeyConvertIntoBindingSpec", sizeof(FnHotkeyConvertIntoBindingSpec), lf_FnHotkeyConvertIntoBindingSpec, (int)(sizeof(lf_FnHotkeyConvertIntoBindingSpec)/sizeof(lf_FnHotkeyConvertIntoBindingSpec[0]))};
+#include "helpers/helpers_ui.h"
+static const LuaFieldDesc lf_FnCoverScaleSpec[] = {
+    {"f_sw", LSF_INT, offsetof(FnCoverScaleSpec, f_sw), 0, 0, NULL},
+    {"f_sh", LSF_INT, offsetof(FnCoverScaleSpec, f_sh), 0, 0, NULL},
+    {"f_tw", LSF_INT, offsetof(FnCoverScaleSpec, f_tw), 0, 0, NULL},
+    {"f_th", LSF_INT, offsetof(FnCoverScaleSpec, f_th), 0, 0, NULL},
+    {"f_dw", LSF_PTR, offsetof(FnCoverScaleSpec, f_dw), 0, 0, NULL},
+    {"f_dh", LSF_PTR, offsetof(FnCoverScaleSpec, f_dh), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnCoverScaleSpec = {"FnCoverScaleSpec", sizeof(FnCoverScaleSpec), lf_FnCoverScaleSpec, (int)(sizeof(lf_FnCoverScaleSpec)/sizeof(lf_FnCoverScaleSpec[0]))};
+#include "helpers/helpers_ui.h"
+static const LuaFieldDesc lf_FnDrawLinePrepSpec[] = {
+    {"f_spec", LSF_PTR, offsetof(FnDrawLinePrepSpec, f_spec), 0, 0, NULL},
+    {"f_off_x", LSF_INT, offsetof(FnDrawLinePrepSpec, f_off_x), 0, 0, NULL},
+    {"f_off_y", LSF_INT, offsetof(FnDrawLinePrepSpec, f_off_y), 0, 0, NULL},
+    {"f_x1", LSF_PTR, offsetof(FnDrawLinePrepSpec, f_x1), 0, 0, NULL},
+    {"f_y1", LSF_PTR, offsetof(FnDrawLinePrepSpec, f_y1), 0, 0, NULL},
+    {"f_x2", LSF_PTR, offsetof(FnDrawLinePrepSpec, f_x2), 0, 0, NULL},
+    {"f_y2", LSF_PTR, offsetof(FnDrawLinePrepSpec, f_y2), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnDrawLinePrepSpec = {"FnDrawLinePrepSpec", sizeof(FnDrawLinePrepSpec), lf_FnDrawLinePrepSpec, (int)(sizeof(lf_FnDrawLinePrepSpec)/sizeof(lf_FnDrawLinePrepSpec[0]))};
+#include "helpers/helpers_ui.h"
+static const LuaFieldDesc lf_FnDrawCirclePrepSpec[] = {
+    {"f_spec", LSF_PTR, offsetof(FnDrawCirclePrepSpec, f_spec), 0, 0, NULL},
+    {"f_off_x", LSF_INT, offsetof(FnDrawCirclePrepSpec, f_off_x), 0, 0, NULL},
+    {"f_off_y", LSF_INT, offsetof(FnDrawCirclePrepSpec, f_off_y), 0, 0, NULL},
+    {"f_cx", LSF_PTR, offsetof(FnDrawCirclePrepSpec, f_cx), 0, 0, NULL},
+    {"f_cy", LSF_PTR, offsetof(FnDrawCirclePrepSpec, f_cy), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnDrawCirclePrepSpec = {"FnDrawCirclePrepSpec", sizeof(FnDrawCirclePrepSpec), lf_FnDrawCirclePrepSpec, (int)(sizeof(lf_FnDrawCirclePrepSpec)/sizeof(lf_FnDrawCirclePrepSpec[0]))};
+#include "helpers/helpers_ui.h"
+static const LuaFieldDesc lf_FnPopulateListboxRankedSpec[] = {
+    {"f_lb", LSF_PTR, offsetof(FnPopulateListboxRankedSpec, f_lb), 0, 0, NULL},
+    {"f_filter", LSF_STR, offsetof(FnPopulateListboxRankedSpec, f_filter), 0, 0, NULL},
+    {"f_items", LSF_STR, offsetof(FnPopulateListboxRankedSpec, f_items), 0, 0, NULL},
+    {"f_item_count", LSF_INT, offsetof(FnPopulateListboxRankedSpec, f_item_count), 0, 0, NULL},
+    {"f_filter_match", LSF_CB, offsetof(FnPopulateListboxRankedSpec, f_filter_match), 0, 3, NULL},
+};
+static const LuaStructDesc lsd_FnPopulateListboxRankedSpec = {"FnPopulateListboxRankedSpec", sizeof(FnPopulateListboxRankedSpec), lf_FnPopulateListboxRankedSpec, (int)(sizeof(lf_FnPopulateListboxRankedSpec)/sizeof(lf_FnPopulateListboxRankedSpec[0]))};
 #include "helpers/helpers_ui.h"
 static const LuaFieldDesc lf_ListboxLayout[] = {
     {"bx", LSF_INT, offsetof(ListboxLayout, bx), 0, 0, NULL},
@@ -65,6 +160,17 @@ static const LuaFieldDesc lf_ListboxLayout[] = {
     {"visible", LSF_INT, offsetof(ListboxLayout, visible), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_ListboxLayout = {"ListboxLayout", sizeof(ListboxLayout), lf_ListboxLayout, (int)(sizeof(lf_ListboxLayout)/sizeof(lf_ListboxLayout[0]))};
+#include "helpers/helpers_ui.h"
+static const LuaFieldDesc lf_FnListboxComputeLayoutSpec[] = {
+    {"f_spec", LSF_PTR, offsetof(FnListboxComputeLayoutSpec, f_spec), 0, 0, NULL},
+    {"f_default_y0", LSF_INT, offsetof(FnListboxComputeLayoutSpec, f_default_y0), 0, 0, NULL},
+    {"f_item_h", LSF_INT, offsetof(FnListboxComputeLayoutSpec, f_item_h), 0, 0, NULL},
+    {"f_popup_w", LSF_INT, offsetof(FnListboxComputeLayoutSpec, f_popup_w), 0, 0, NULL},
+    {"f_popup_h", LSF_INT, offsetof(FnListboxComputeLayoutSpec, f_popup_h), 0, 0, NULL},
+    {"f_count", LSF_INT, offsetof(FnListboxComputeLayoutSpec, f_count), 0, 0, NULL},
+    {"f_out", LSF_STRUCT_PTR, offsetof(FnListboxComputeLayoutSpec, f_out), 0, 0, "ListboxLayout"},
+};
+static const LuaStructDesc lsd_FnListboxComputeLayoutSpec = {"FnListboxComputeLayoutSpec", sizeof(FnListboxComputeLayoutSpec), lf_FnListboxComputeLayoutSpec, (int)(sizeof(lf_FnListboxComputeLayoutSpec)/sizeof(lf_FnListboxComputeLayoutSpec[0]))};
 #include "helpers/helpers_ui.h"
 static const LuaFieldDesc lf_SlotRect[] = {
     {"x", LSF_INT, offsetof(SlotRect, x), 0, 0, NULL},
@@ -104,6 +210,23 @@ static const LuaFieldDesc lf_WidgetMouseState[] = {
     {"down", LSF_BOOL, offsetof(WidgetMouseState, down), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_WidgetMouseState = {"WidgetMouseState", sizeof(WidgetMouseState), lf_WidgetMouseState, (int)(sizeof(lf_WidgetMouseState)/sizeof(lf_WidgetMouseState[0]))};
+#include "helpers/helpers_ui.h"
+static const LuaFieldDesc lf_FnBgTileLruPickSpec[] = {
+    {"f_slots", LSF_PTR, offsetof(FnBgTileLruPickSpec, f_slots), 0, 0, NULL},
+    {"f_count", LSF_INT, offsetof(FnBgTileLruPickSpec, f_count), 0, 0, NULL},
+    {"f_stride", LSF_INT, offsetof(FnBgTileLruPickSpec, f_stride), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnBgTileLruPickSpec = {"FnBgTileLruPickSpec", sizeof(FnBgTileLruPickSpec), lf_FnBgTileLruPickSpec, (int)(sizeof(lf_FnBgTileLruPickSpec)/sizeof(lf_FnBgTileLruPickSpec[0]))};
+#include "helpers/helpers_ui.h"
+static const LuaFieldDesc lf_FnMsgAnchorCenterSpec[] = {
+    {"f_rect", LSF_INT, offsetof(FnMsgAnchorCenterSpec, f_rect), 0, 0, NULL},
+    {"f_rect_size", LSF_INT, offsetof(FnMsgAnchorCenterSpec, f_rect_size), 0, 0, NULL},
+    {"f_slot", LSF_INT, offsetof(FnMsgAnchorCenterSpec, f_slot), 0, 0, NULL},
+    {"f_gap", LSF_INT, offsetof(FnMsgAnchorCenterSpec, f_gap), 0, 0, NULL},
+    {"f_outward", LSF_INT, offsetof(FnMsgAnchorCenterSpec, f_outward), 0, 0, NULL},
+    {"f_win_size", LSF_INT, offsetof(FnMsgAnchorCenterSpec, f_win_size), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnMsgAnchorCenterSpec = {"FnMsgAnchorCenterSpec", sizeof(FnMsgAnchorCenterSpec), lf_FnMsgAnchorCenterSpec, (int)(sizeof(lf_FnMsgAnchorCenterSpec)/sizeof(lf_FnMsgAnchorCenterSpec[0]))};
 #include "helpers/helpers_text.h"
 static const LuaFieldDesc lf_TextSegment[] = {
     {"text", LSF_STR, offsetof(TextSegment, text), 0, 0, NULL},
@@ -122,17 +245,53 @@ static const LuaFieldDesc lf_WrappedWord[] = {
 };
 static const LuaStructDesc lsd_WrappedWord = {"WrappedWord", sizeof(WrappedWord), lf_WrappedWord, (int)(sizeof(lf_WrappedWord)/sizeof(lf_WrappedWord[0]))};
 #include "helpers/helpers_text.h"
+static const LuaFieldDesc lf_FnWrappedWordPushSpec[] = {
+    {"f_words", LSF_STRUCT_PTR, offsetof(FnWrappedWordPushSpec, f_words), 0, 0, "WrappedWord"},
+    {"f_count", LSF_PTR, offsetof(FnWrappedWordPushSpec, f_count), 0, 0, NULL},
+    {"f_cap", LSF_PTR, offsetof(FnWrappedWordPushSpec, f_cap), 0, 0, NULL},
+    {"f_s", LSF_STR, offsetof(FnWrappedWordPushSpec, f_s), 0, 0, NULL},
+    {"f_len", LSF_INT, offsetof(FnWrappedWordPushSpec, f_len), 0, 0, NULL},
+    {"f_color", LSF_INT, offsetof(FnWrappedWordPushSpec, f_color), 0, 0, NULL},
+    {"f_lead", LSF_INT, offsetof(FnWrappedWordPushSpec, f_lead), 0, 0, NULL},
+    {"f_breaks", LSF_INT, offsetof(FnWrappedWordPushSpec, f_breaks), 0, 0, NULL},
+    {"f_font_size", LSF_INT, offsetof(FnWrappedWordPushSpec, f_font_size), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnWrappedWordPushSpec = {"FnWrappedWordPushSpec", sizeof(FnWrappedWordPushSpec), lf_FnWrappedWordPushSpec, (int)(sizeof(lf_FnWrappedWordPushSpec)/sizeof(lf_FnWrappedWordPushSpec[0]))};
+#include "helpers/helpers_text.h"
 static const LuaFieldDesc lf_WrapCtx[] = {
     {"color", LSF_INT, offsetof(WrapCtx, color), 0, 0, NULL},
     {"font_size", LSF_INT, offsetof(WrapCtx, font_size), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_WrapCtx = {"WrapCtx", sizeof(WrapCtx), lf_WrapCtx, (int)(sizeof(lf_WrapCtx)/sizeof(lf_WrapCtx[0]))};
 #include "helpers/helpers_text.h"
+static const LuaFieldDesc lf_FnTextWrapLayoutSpec[] = {
+    {"f_text", LSF_STR, offsetof(FnTextWrapLayoutSpec, f_text), 0, 0, NULL},
+    {"f_x0", LSF_INT, offsetof(FnTextWrapLayoutSpec, f_x0), 0, 0, NULL},
+    {"f_y0", LSF_INT, offsetof(FnTextWrapLayoutSpec, f_y0), 0, 0, NULL},
+    {"f_max_width", LSF_INT, offsetof(FnTextWrapLayoutSpec, f_max_width), 0, 0, NULL},
+    {"f_line_height", LSF_INT, offsetof(FnTextWrapLayoutSpec, f_line_height), 0, 0, NULL},
+    {"f_measure", LSF_CB, offsetof(FnTextWrapLayoutSpec, f_measure), 0, 0, NULL},
+    {"f_ctx", LSF_PTR, offsetof(FnTextWrapLayoutSpec, f_ctx), 0, 0, NULL},
+    {"f_out", LSF_PTR, offsetof(FnTextWrapLayoutSpec, f_out), 0, 0, NULL},
+    {"f_maxout", LSF_INT, offsetof(FnTextWrapLayoutSpec, f_maxout), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnTextWrapLayoutSpec = {"FnTextWrapLayoutSpec", sizeof(FnTextWrapLayoutSpec), lf_FnTextWrapLayoutSpec, (int)(sizeof(lf_FnTextWrapLayoutSpec)/sizeof(lf_FnTextWrapLayoutSpec[0]))};
+#include "helpers/helpers_text.h"
 static const LuaFieldDesc lf_StringList[] = {
     {"items", LSF_STR_LIST, offsetof(StringList, items), offsetof(StringList, count), 8, NULL},
     {"count", LSF_INT, offsetof(StringList, count), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_StringList = {"StringList", sizeof(StringList), lf_StringList, (int)(sizeof(lf_StringList)/sizeof(lf_StringList[0]))};
+#include "helpers/helpers_text.h"
+static const LuaFieldDesc lf_FnFileWalkAllFilesFromDirSpec[] = {
+    {"f_dir_path", LSF_STR, offsetof(FnFileWalkAllFilesFromDirSpec, f_dir_path), 0, 0, NULL},
+    {"f_list_of_allowed_extensions", LSF_STR, offsetof(FnFileWalkAllFilesFromDirSpec, f_list_of_allowed_extensions), 0, 0, NULL},
+    {"f_list_of_files", LSF_PTR, offsetof(FnFileWalkAllFilesFromDirSpec, f_list_of_files), 0, 0, NULL},
+    {"f_list_of_names_to_ignore", LSF_STR, offsetof(FnFileWalkAllFilesFromDirSpec, f_list_of_names_to_ignore), 0, 0, NULL},
+    {"f_strip_extension", LSF_BOOL, offsetof(FnFileWalkAllFilesFromDirSpec, f_strip_extension), 0, 0, NULL},
+    {"f_max_depth", LSF_INT, offsetof(FnFileWalkAllFilesFromDirSpec, f_max_depth), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnFileWalkAllFilesFromDirSpec = {"FnFileWalkAllFilesFromDirSpec", sizeof(FnFileWalkAllFilesFromDirSpec), lf_FnFileWalkAllFilesFromDirSpec, (int)(sizeof(lf_FnFileWalkAllFilesFromDirSpec)/sizeof(lf_FnFileWalkAllFilesFromDirSpec[0]))};
 #include "helpers/helpers_input_state.h"
 static const LuaFieldDesc lf_KeyEvent[] = {
     {"vk", LSF_INT, offsetof(KeyEvent, vk), 0, 0, NULL},
@@ -185,6 +344,24 @@ static const LuaFieldDesc lf_MonitorInfo[] = {
     {"name", LSF_STR_INLINE, offsetof(MonitorInfo, name), 128, 0, NULL},
 };
 static const LuaStructDesc lsd_MonitorInfo = {"MonitorInfo", sizeof(MonitorInfo), lf_MonitorInfo, (int)(sizeof(lf_MonitorInfo)/sizeof(lf_MonitorInfo[0]))};
+#include "helpers/helpers_monitor.h"
+static const LuaFieldDesc lf_FnMonitorGeometryAtSpec[] = {
+    {"f_index", LSF_INT, offsetof(FnMonitorGeometryAtSpec, f_index), 0, 0, NULL},
+    {"f_x", LSF_PTR, offsetof(FnMonitorGeometryAtSpec, f_x), 0, 0, NULL},
+    {"f_y", LSF_PTR, offsetof(FnMonitorGeometryAtSpec, f_y), 0, 0, NULL},
+    {"f_w", LSF_PTR, offsetof(FnMonitorGeometryAtSpec, f_w), 0, 0, NULL},
+    {"f_h", LSF_PTR, offsetof(FnMonitorGeometryAtSpec, f_h), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnMonitorGeometryAtSpec = {"FnMonitorGeometryAtSpec", sizeof(FnMonitorGeometryAtSpec), lf_FnMonitorGeometryAtSpec, (int)(sizeof(lf_FnMonitorGeometryAtSpec)/sizeof(lf_FnMonitorGeometryAtSpec[0]))};
+#include "helpers/helpers_edit_buffer.h"
+static const LuaFieldDesc lf_FnEditBufferInsertTextSpec[] = {
+    {"f_buf", LSF_STR, offsetof(FnEditBufferInsertTextSpec, f_buf), 0, 0, NULL},
+    {"f_cap", LSF_INT, offsetof(FnEditBufferInsertTextSpec, f_cap), 0, 0, NULL},
+    {"f_cursor", LSF_PTR, offsetof(FnEditBufferInsertTextSpec, f_cursor), 0, 0, NULL},
+    {"f_text", LSF_STR, offsetof(FnEditBufferInsertTextSpec, f_text), 0, 0, NULL},
+    {"f_len", LSF_INT, offsetof(FnEditBufferInsertTextSpec, f_len), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnEditBufferInsertTextSpec = {"FnEditBufferInsertTextSpec", sizeof(FnEditBufferInsertTextSpec), lf_FnEditBufferInsertTextSpec, (int)(sizeof(lf_FnEditBufferInsertTextSpec)/sizeof(lf_FnEditBufferInsertTextSpec[0]))};
 #include "core/window_manager.h"
 static const LuaFieldDesc lf_PopupVTable[] = {
     {"on_show", LSF_CB, offsetof(PopupVTable, on_show), 0, 1, NULL},
@@ -204,6 +381,24 @@ static const LuaFieldDesc lf_Popup[] = {
     {"type", LSF_INT, offsetof(Popup, type), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_Popup = {"Popup", sizeof(Popup), lf_Popup, (int)(sizeof(lf_Popup)/sizeof(lf_Popup[0]))};
+#include "core/window_manager.h"
+static const LuaFieldDesc lf_FnPromptPopupGetBoundsSpec[] = {
+    {"f_p", LSF_STRUCT_PTR, offsetof(FnPromptPopupGetBoundsSpec, f_p), 0, 0, "Popup"},
+    {"f_x", LSF_PTR, offsetof(FnPromptPopupGetBoundsSpec, f_x), 0, 0, NULL},
+    {"f_y", LSF_PTR, offsetof(FnPromptPopupGetBoundsSpec, f_y), 0, 0, NULL},
+    {"f_w", LSF_PTR, offsetof(FnPromptPopupGetBoundsSpec, f_w), 0, 0, NULL},
+    {"f_h", LSF_PTR, offsetof(FnPromptPopupGetBoundsSpec, f_h), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnPromptPopupGetBoundsSpec = {"FnPromptPopupGetBoundsSpec", sizeof(FnPromptPopupGetBoundsSpec), lf_FnPromptPopupGetBoundsSpec, (int)(sizeof(lf_FnPromptPopupGetBoundsSpec)/sizeof(lf_FnPromptPopupGetBoundsSpec[0]))};
+#include "core/window_manager.h"
+static const LuaFieldDesc lf_FnPromptPopupResizeCurrentAnimatedSpec[] = {
+    {"f_x", LSF_INT, offsetof(FnPromptPopupResizeCurrentAnimatedSpec, f_x), 0, 0, NULL},
+    {"f_y", LSF_INT, offsetof(FnPromptPopupResizeCurrentAnimatedSpec, f_y), 0, 0, NULL},
+    {"f_w", LSF_INT, offsetof(FnPromptPopupResizeCurrentAnimatedSpec, f_w), 0, 0, NULL},
+    {"f_h", LSF_INT, offsetof(FnPromptPopupResizeCurrentAnimatedSpec, f_h), 0, 0, NULL},
+    {"f_duration_ms", LSF_INT, offsetof(FnPromptPopupResizeCurrentAnimatedSpec, f_duration_ms), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnPromptPopupResizeCurrentAnimatedSpec = {"FnPromptPopupResizeCurrentAnimatedSpec", sizeof(FnPromptPopupResizeCurrentAnimatedSpec), lf_FnPromptPopupResizeCurrentAnimatedSpec, (int)(sizeof(lf_FnPromptPopupResizeCurrentAnimatedSpec)/sizeof(lf_FnPromptPopupResizeCurrentAnimatedSpec[0]))};
 #include "core/config_toml.h"
 static const LuaFieldDesc lf_ConfigTomlEntry[] = {
     {"section", LSF_STR_INLINE, offsetof(ConfigTomlEntry, section), sizeof(((ConfigTomlEntry *)0)->section)/sizeof(((ConfigTomlEntry *)0)->section[0]), 0, NULL},
@@ -232,6 +427,15 @@ static const LuaFieldDesc lf_ConfigHotkeyRegisterSpec[] = {
     {"ud", LSF_PTR, offsetof(ConfigHotkeyRegisterSpec, ud), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_ConfigHotkeyRegisterSpec = {"ConfigHotkeyRegisterSpec", sizeof(ConfigHotkeyRegisterSpec), lf_ConfigHotkeyRegisterSpec, (int)(sizeof(lf_ConfigHotkeyRegisterSpec)/sizeof(lf_ConfigHotkeyRegisterSpec[0]))};
+#include "core/config_section.h"
+static const LuaFieldDesc lf_FnConfigSectionSetExSpec[] = {
+    {"f_path", LSF_STR, offsetof(FnConfigSectionSetExSpec, f_path), 0, 0, NULL},
+    {"f_section", LSF_STR, offsetof(FnConfigSectionSetExSpec, f_section), 0, 0, NULL},
+    {"f_name", LSF_STR, offsetof(FnConfigSectionSetExSpec, f_name), 0, 0, NULL},
+    {"f_value", LSF_STR, offsetof(FnConfigSectionSetExSpec, f_value), 0, 0, NULL},
+    {"f_err", LSF_STRUCT_PTR, offsetof(FnConfigSectionSetExSpec, f_err), 0, 0, "ConfigTomlError"},
+};
+static const LuaStructDesc lsd_FnConfigSectionSetExSpec = {"FnConfigSectionSetExSpec", sizeof(FnConfigSectionSetExSpec), lf_FnConfigSectionSetExSpec, (int)(sizeof(lf_FnConfigSectionSetExSpec)/sizeof(lf_FnConfigSectionSetExSpec[0]))};
 #include "core/search_index.h"
 static const LuaFieldDesc lf_SearchHit[] = {
     {"source_id", LSF_INT, offsetof(SearchHit, source_id), 0, 0, NULL},
@@ -242,6 +446,15 @@ static const LuaFieldDesc lf_SearchHit[] = {
     {"score", LSF_INT, offsetof(SearchHit, score), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_SearchHit = {"SearchHit", sizeof(SearchHit), lf_SearchHit, (int)(sizeof(lf_SearchHit)/sizeof(lf_SearchHit[0]))};
+#include "core/search_index.h"
+static const LuaFieldDesc lf_FnSearchIndexAddTextSpec[] = {
+    {"f_idx", LSF_PTR, offsetof(FnSearchIndexAddTextSpec, f_idx), 0, 0, NULL},
+    {"f_text", LSF_STR, offsetof(FnSearchIndexAddTextSpec, f_text), 0, 0, NULL},
+    {"f_kind", LSF_INT, offsetof(FnSearchIndexAddTextSpec, f_kind), 0, 0, NULL},
+    {"f_widget_name", LSF_STR, offsetof(FnSearchIndexAddTextSpec, f_widget_name), 0, 0, NULL},
+    {"f_value", LSF_STR, offsetof(FnSearchIndexAddTextSpec, f_value), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnSearchIndexAddTextSpec = {"FnSearchIndexAddTextSpec", sizeof(FnSearchIndexAddTextSpec), lf_FnSearchIndexAddTextSpec, (int)(sizeof(lf_FnSearchIndexAddTextSpec)/sizeof(lf_FnSearchIndexAddTextSpec[0]))};
 #include "core/settings_registry.h"
 static const LuaFieldDesc lf_SettingsEntrySpec[] = {
     {"name", LSF_STR, offsetof(SettingsEntrySpec, name), 0, 0, NULL},
@@ -325,12 +538,52 @@ static const LuaFieldDesc lf_SettingsSliderSpec[] = {
     {"on_hover", LSF_CB, offsetof(SettingsSliderSpec, on_hover), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_SettingsSliderSpec = {"SettingsSliderSpec", sizeof(SettingsSliderSpec), lf_SettingsSliderSpec, (int)(sizeof(lf_SettingsSliderSpec)/sizeof(lf_SettingsSliderSpec[0]))};
+#include "core/toml_common.h"
+static const LuaFieldDesc lf_FnTomlParseKeyValueSpec[] = {
+    {"f_line", LSF_STR, offsetof(FnTomlParseKeyValueSpec, f_line), 0, 0, NULL},
+    {"f_len", LSF_INT, offsetof(FnTomlParseKeyValueSpec, f_len), 0, 0, NULL},
+    {"f_key", LSF_STR, offsetof(FnTomlParseKeyValueSpec, f_key), 0, 0, NULL},
+    {"f_key_cap", LSF_INT, offsetof(FnTomlParseKeyValueSpec, f_key_cap), 0, 0, NULL},
+    {"f_value", LSF_STR, offsetof(FnTomlParseKeyValueSpec, f_value), 0, 0, NULL},
+    {"f_value_cap", LSF_INT, offsetof(FnTomlParseKeyValueSpec, f_value_cap), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnTomlParseKeyValueSpec = {"FnTomlParseKeyValueSpec", sizeof(FnTomlParseKeyValueSpec), lf_FnTomlParseKeyValueSpec, (int)(sizeof(lf_FnTomlParseKeyValueSpec)/sizeof(lf_FnTomlParseKeyValueSpec[0]))};
 #include "core/owner_registry.h"
 static const LuaFieldDesc lf_OwnerTag[] = {
     {"owner", LSF_STR, offsetof(OwnerTag, owner), 0, 0, NULL},
     {"gen", LSF_INT, offsetof(OwnerTag, gen), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_OwnerTag = {"OwnerTag", sizeof(OwnerTag), lf_OwnerTag, (int)(sizeof(lf_OwnerTag)/sizeof(lf_OwnerTag[0]))};
+#include "core/owner_registry.h"
+static const LuaFieldDesc lf_FnOwnerPurgeArraySpec[] = {
+    {"f_arr", LSF_PTR, offsetof(FnOwnerPurgeArraySpec, f_arr), 0, 0, NULL},
+    {"f_elem_size", LSF_INT, offsetof(FnOwnerPurgeArraySpec, f_elem_size), 0, 0, NULL},
+    {"f_tag_offset", LSF_INT, offsetof(FnOwnerPurgeArraySpec, f_tag_offset), 0, 0, NULL},
+    {"f_path_a", LSF_STR, offsetof(FnOwnerPurgeArraySpec, f_path_a), 0, 0, NULL},
+    {"f_path_b", LSF_STR, offsetof(FnOwnerPurgeArraySpec, f_path_b), 0, 0, NULL},
+    {"f_max_gen", LSF_INT, offsetof(FnOwnerPurgeArraySpec, f_max_gen), 0, 0, NULL},
+    {"f_destroy", LSF_CB, offsetof(FnOwnerPurgeArraySpec, f_destroy), 0, 1, NULL},
+};
+static const LuaStructDesc lsd_FnOwnerPurgeArraySpec = {"FnOwnerPurgeArraySpec", sizeof(FnOwnerPurgeArraySpec), lf_FnOwnerPurgeArraySpec, (int)(sizeof(lf_FnOwnerPurgeArraySpec)/sizeof(lf_FnOwnerPurgeArraySpec[0]))};
+#include "core/owner_registry.h"
+static const LuaFieldDesc lf_FnOwnerPurgePointersSpec[] = {
+    {"f_arr", LSF_PTR, offsetof(FnOwnerPurgePointersSpec, f_arr), 0, 0, NULL},
+    {"f_tag_offset", LSF_INT, offsetof(FnOwnerPurgePointersSpec, f_tag_offset), 0, 0, NULL},
+    {"f_path_a", LSF_STR, offsetof(FnOwnerPurgePointersSpec, f_path_a), 0, 0, NULL},
+    {"f_path_b", LSF_STR, offsetof(FnOwnerPurgePointersSpec, f_path_b), 0, 0, NULL},
+    {"f_max_gen", LSF_INT, offsetof(FnOwnerPurgePointersSpec, f_max_gen), 0, 0, NULL},
+    {"f_destroy", LSF_CB, offsetof(FnOwnerPurgePointersSpec, f_destroy), 0, 1, NULL},
+};
+static const LuaStructDesc lsd_FnOwnerPurgePointersSpec = {"FnOwnerPurgePointersSpec", sizeof(FnOwnerPurgePointersSpec), lf_FnOwnerPurgePointersSpec, (int)(sizeof(lf_FnOwnerPurgePointersSpec)/sizeof(lf_FnOwnerPurgePointersSpec[0]))};
+#include "core/owner_registry.h"
+static const LuaFieldDesc lf_FnOwnerArrayHasActiveSpec[] = {
+    {"f_arr", LSF_PTR, offsetof(FnOwnerArrayHasActiveSpec, f_arr), 0, 0, NULL},
+    {"f_elem_size", LSF_INT, offsetof(FnOwnerArrayHasActiveSpec, f_elem_size), 0, 0, NULL},
+    {"f_count", LSF_INT, offsetof(FnOwnerArrayHasActiveSpec, f_count), 0, 0, NULL},
+    {"f_tag_offset", LSF_INT, offsetof(FnOwnerArrayHasActiveSpec, f_tag_offset), 0, 0, NULL},
+    {"f_path", LSF_STR, offsetof(FnOwnerArrayHasActiveSpec, f_path), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnOwnerArrayHasActiveSpec = {"FnOwnerArrayHasActiveSpec", sizeof(FnOwnerArrayHasActiveSpec), lf_FnOwnerArrayHasActiveSpec, (int)(sizeof(lf_FnOwnerArrayHasActiveSpec)/sizeof(lf_FnOwnerArrayHasActiveSpec[0]))};
 #include "core/theme.h"
 static const LuaFieldDesc lf_ThemeEntry[] = {
     {"name", LSF_STR, offsetof(ThemeEntry, name), 0, 0, NULL},
@@ -629,6 +882,17 @@ static const LuaFieldDesc lf_SkSnippetSpec[] = {
     {"blacklist", LSF_STR_ARRAY, offsetof(SkSnippetSpec, blacklist), 16, 0, NULL},
 };
 static const LuaStructDesc lsd_SkSnippetSpec = {"SkSnippetSpec", sizeof(SkSnippetSpec), lf_SkSnippetSpec, (int)(sizeof(lf_SkSnippetSpec)/sizeof(lf_SkSnippetSpec[0]))};
+#include "core/skapi.h"
+static const LuaFieldDesc lf_FnSkiTextWrapLayoutSpec[] = {
+    {"f_text", LSF_STR, offsetof(FnSkiTextWrapLayoutSpec, f_text), 0, 0, NULL},
+    {"f_max_width", LSF_INT, offsetof(FnSkiTextWrapLayoutSpec, f_max_width), 0, 0, NULL},
+    {"f_line_height", LSF_INT, offsetof(FnSkiTextWrapLayoutSpec, f_line_height), 0, 0, NULL},
+    {"f_measure", LSF_CB, offsetof(FnSkiTextWrapLayoutSpec, f_measure), 0, 0, NULL},
+    {"f_ctx", LSF_PTR, offsetof(FnSkiTextWrapLayoutSpec, f_ctx), 0, 0, NULL},
+    {"f_out", LSF_PTR, offsetof(FnSkiTextWrapLayoutSpec, f_out), 0, 0, NULL},
+    {"f_maxout", LSF_INT, offsetof(FnSkiTextWrapLayoutSpec, f_maxout), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnSkiTextWrapLayoutSpec = {"FnSkiTextWrapLayoutSpec", sizeof(FnSkiTextWrapLayoutSpec), lf_FnSkiTextWrapLayoutSpec, (int)(sizeof(lf_FnSkiTextWrapLayoutSpec)/sizeof(lf_FnSkiTextWrapLayoutSpec[0]))};
 #include "core/manifest.h"
 static const LuaFieldDesc lf_FeatureManifest[] = {
     {"name", LSF_STR_INLINE, offsetof(FeatureManifest, name), 64, 0, NULL},
@@ -640,6 +904,28 @@ static const LuaFieldDesc lf_FeatureManifest[] = {
     {"valid", LSF_BOOL, offsetof(FeatureManifest, valid), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_FeatureManifest = {"FeatureManifest", sizeof(FeatureManifest), lf_FeatureManifest, (int)(sizeof(lf_FeatureManifest)/sizeof(lf_FeatureManifest[0]))};
+#include "core/focus.h"
+static const LuaFieldDesc lf_FnFocusFrameBeginSpec[] = {
+    {"f_include_listbox", LSF_BOOL, offsetof(FnFocusFrameBeginSpec, f_include_listbox), 0, 0, NULL},
+    {"f_lb_x", LSF_INT, offsetof(FnFocusFrameBeginSpec, f_lb_x), 0, 0, NULL},
+    {"f_lb_y", LSF_INT, offsetof(FnFocusFrameBeginSpec, f_lb_y), 0, 0, NULL},
+    {"f_lb_w", LSF_INT, offsetof(FnFocusFrameBeginSpec, f_lb_w), 0, 0, NULL},
+    {"f_lb_h", LSF_INT, offsetof(FnFocusFrameBeginSpec, f_lb_h), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnFocusFrameBeginSpec = {"FnFocusFrameBeginSpec", sizeof(FnFocusFrameBeginSpec), lf_FnFocusFrameBeginSpec, (int)(sizeof(lf_FnFocusFrameBeginSpec)/sizeof(lf_FnFocusFrameBeginSpec[0]))};
+#include "core/focus.h"
+static const LuaFieldDesc lf_FnFocusRegisterSpec[] = {
+    {"f_name", LSF_STR, offsetof(FnFocusRegisterSpec, f_name), 0, 0, NULL},
+    {"f_kind", LSF_INT, offsetof(FnFocusRegisterSpec, f_kind), 0, 0, NULL},
+    {"f_x", LSF_INT, offsetof(FnFocusRegisterSpec, f_x), 0, 0, NULL},
+    {"f_y", LSF_INT, offsetof(FnFocusRegisterSpec, f_y), 0, 0, NULL},
+    {"f_w", LSF_INT, offsetof(FnFocusRegisterSpec, f_w), 0, 0, NULL},
+    {"f_h", LSF_INT, offsetof(FnFocusRegisterSpec, f_h), 0, 0, NULL},
+    {"f_owner", LSF_PTR, offsetof(FnFocusRegisterSpec, f_owner), 0, 0, NULL},
+    {"f_activate", LSF_CB, offsetof(FnFocusRegisterSpec, f_activate), 0, 1, NULL},
+    {"f_adjust", LSF_CB, offsetof(FnFocusRegisterSpec, f_adjust), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnFocusRegisterSpec = {"FnFocusRegisterSpec", sizeof(FnFocusRegisterSpec), lf_FnFocusRegisterSpec, (int)(sizeof(lf_FnFocusRegisterSpec)/sizeof(lf_FnFocusRegisterSpec[0]))};
 #include "core/hover_widget.h"
 static const LuaFieldDesc lf_HoverWidgetShowSpec[] = {
     {"key", LSF_STR, offsetof(HoverWidgetShowSpec, key), 0, 0, NULL},
@@ -681,6 +967,17 @@ static const LuaFieldDesc lf_TextPromptRenderData[] = {
     {"initial_text", LSF_STR, offsetof(TextPromptRenderData, initial_text), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_TextPromptRenderData = {"TextPromptRenderData", sizeof(TextPromptRenderData), lf_TextPromptRenderData, (int)(sizeof(lf_TextPromptRenderData)/sizeof(lf_TextPromptRenderData[0]))};
+#include "core/hover_widget.h"
+static const LuaFieldDesc lf_FnTextPromptSpecSpec[] = {
+    {"f_render_data", LSF_STRUCT_PTR, offsetof(FnTextPromptSpecSpec, f_render_data), 0, 0, "TextPromptRenderData"},
+    {"f_placeholder", LSF_STR, offsetof(FnTextPromptSpecSpec, f_placeholder), 0, 0, NULL},
+    {"f_initial_text", LSF_STR, offsetof(FnTextPromptSpecSpec, f_initial_text), 0, 0, NULL},
+    {"f_x", LSF_INT, offsetof(FnTextPromptSpecSpec, f_x), 0, 0, NULL},
+    {"f_y", LSF_INT, offsetof(FnTextPromptSpecSpec, f_y), 0, 0, NULL},
+    {"f_w", LSF_INT, offsetof(FnTextPromptSpecSpec, f_w), 0, 0, NULL},
+    {"f_h", LSF_INT, offsetof(FnTextPromptSpecSpec, f_h), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnTextPromptSpecSpec = {"FnTextPromptSpecSpec", sizeof(FnTextPromptSpecSpec), lf_FnTextPromptSpecSpec, (int)(sizeof(lf_FnTextPromptSpecSpec)/sizeof(lf_FnTextPromptSpecSpec[0]))};
 #include "core/types.h"
 static const LuaFieldDesc lf_ImageBuffer[] = {
     {"w", LSF_INT, offsetof(ImageBuffer, w), 0, 0, NULL},
@@ -777,6 +1074,15 @@ static const LuaFieldDesc lf_CheckboxSpec[] = {
     {"render", LSF_CB, offsetof(CheckboxSpec, render), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_CheckboxSpec = {"CheckboxSpec", sizeof(CheckboxSpec), lf_CheckboxSpec, (int)(sizeof(lf_CheckboxSpec)/sizeof(lf_CheckboxSpec[0]))};
+#include "core/remap_manager.h"
+static const LuaFieldDesc lf_FnRemapRegisterInternalSpec[] = {
+    {"f_src", LSF_STR, offsetof(FnRemapRegisterInternalSpec, f_src), 0, 0, NULL},
+    {"f_dst", LSF_STR, offsetof(FnRemapRegisterInternalSpec, f_dst), 0, 0, NULL},
+    {"f_whitelist", LSF_BOOL, offsetof(FnRemapRegisterInternalSpec, f_whitelist), 0, 0, NULL},
+    {"f_windows", LSF_STR, offsetof(FnRemapRegisterInternalSpec, f_windows), 0, 0, NULL},
+    {"f_caller", LSF_PTR, offsetof(FnRemapRegisterInternalSpec, f_caller), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnRemapRegisterInternalSpec = {"FnRemapRegisterInternalSpec", sizeof(FnRemapRegisterInternalSpec), lf_FnRemapRegisterInternalSpec, (int)(sizeof(lf_FnRemapRegisterInternalSpec)/sizeof(lf_FnRemapRegisterInternalSpec[0]))};
 #include "core/http.h"
 static const LuaFieldDesc lf_HttpTransport[] = {
     {"save_to_file", LSF_CB, offsetof(HttpTransport, save_to_file), 0, 3, NULL},
@@ -1108,6 +1414,16 @@ static const LuaFieldDesc lf_SnippetBinding[] = {
     {"window_count", LSF_INT, offsetof(SnippetBinding, window_count), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_SnippetBinding = {"SnippetBinding", sizeof(SnippetBinding), lf_SnippetBinding, (int)(sizeof(lf_SnippetBinding)/sizeof(lf_SnippetBinding[0]))};
+#include "core/snippet_manager.h"
+static const LuaFieldDesc lf_FnSnippetRegisterInternalSpec[] = {
+    {"f_trigger", LSF_STR, offsetof(FnSnippetRegisterInternalSpec, f_trigger), 0, 0, NULL},
+    {"f_text", LSF_STR, offsetof(FnSnippetRegisterInternalSpec, f_text), 0, 0, NULL},
+    {"f_func", LSF_CB, offsetof(FnSnippetRegisterInternalSpec, f_func), 0, 0, NULL},
+    {"f_whitelist", LSF_BOOL, offsetof(FnSnippetRegisterInternalSpec, f_whitelist), 0, 0, NULL},
+    {"f_windows", LSF_STR, offsetof(FnSnippetRegisterInternalSpec, f_windows), 0, 0, NULL},
+    {"f_caller", LSF_PTR, offsetof(FnSnippetRegisterInternalSpec, f_caller), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnSnippetRegisterInternalSpec = {"FnSnippetRegisterInternalSpec", sizeof(FnSnippetRegisterInternalSpec), lf_FnSnippetRegisterInternalSpec, (int)(sizeof(lf_FnSnippetRegisterInternalSpec)/sizeof(lf_FnSnippetRegisterInternalSpec[0]))};
 #include "core/slider.h"
 static const LuaFieldDesc lf_SliderState[] = {
     {"name", LSF_STR, offsetof(SliderState, name), 0, 0, NULL},
@@ -1304,6 +1620,47 @@ static const LuaFieldDesc lf_EditboxInitFromSpec[] = {
     {"wrapped", LSF_BOOL, offsetof(EditboxInitFromSpec, wrapped), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_EditboxInitFromSpec = {"EditboxInitFromSpec", sizeof(EditboxInitFromSpec), lf_EditboxInitFromSpec, (int)(sizeof(lf_EditboxInitFromSpec)/sizeof(lf_EditboxInitFromSpec[0]))};
+#include "core/editbox.h"
+static const LuaFieldDesc lf_FnEditboxSpecFromPlaceSpec[] = {
+    {"f_out", LSF_STRUCT_PTR, offsetof(FnEditboxSpecFromPlaceSpec, f_out), 0, 0, "EditboxSpec"},
+    {"f_place", LSF_STRUCT_PTR, offsetof(FnEditboxSpecFromPlaceSpec, f_place), 0, 0, "EditboxPlace"},
+    {"f_state", LSF_STRUCT_PTR, offsetof(FnEditboxSpecFromPlaceSpec, f_state), 0, 0, "PromptState"},
+    {"f_ui", LSF_STRUCT_PTR, offsetof(FnEditboxSpecFromPlaceSpec, f_ui), 0, 0, "EditboxUiSpec"},
+    {"f_metrics", LSF_STRUCT_PTR, offsetof(FnEditboxSpecFromPlaceSpec, f_metrics), 0, 0, "EditboxMetrics"},
+};
+static const LuaStructDesc lsd_FnEditboxSpecFromPlaceSpec = {"FnEditboxSpecFromPlaceSpec", sizeof(FnEditboxSpecFromPlaceSpec), lf_FnEditboxSpecFromPlaceSpec, (int)(sizeof(lf_FnEditboxSpecFromPlaceSpec)/sizeof(lf_FnEditboxSpecFromPlaceSpec[0]))};
+#include "core/editbox.h"
+static const LuaFieldDesc lf_FnEditboxResolveSelectionSpec[] = {
+    {"f_state", LSF_STRUCT_PTR, offsetof(FnEditboxResolveSelectionSpec, f_state), 0, 0, "PromptState"},
+    {"f_text_len", LSF_INT, offsetof(FnEditboxResolveSelectionSpec, f_text_len), 0, 0, NULL},
+    {"f_prefer_state", LSF_BOOL, offsetof(FnEditboxResolveSelectionSpec, f_prefer_state), 0, 0, NULL},
+    {"f_out_start", LSF_PTR, offsetof(FnEditboxResolveSelectionSpec, f_out_start), 0, 0, NULL},
+    {"f_out_end", LSF_PTR, offsetof(FnEditboxResolveSelectionSpec, f_out_end), 0, 0, NULL},
+    {"f_out_has", LSF_PTR, offsetof(FnEditboxResolveSelectionSpec, f_out_has), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnEditboxResolveSelectionSpec = {"FnEditboxResolveSelectionSpec", sizeof(FnEditboxResolveSelectionSpec), lf_FnEditboxResolveSelectionSpec, (int)(sizeof(lf_FnEditboxResolveSelectionSpec)/sizeof(lf_FnEditboxResolveSelectionSpec[0]))};
+#include "core/editbox.h"
+static const LuaFieldDesc lf_FnEditboxRegistryPlaceSpec[] = {
+    {"f_state", LSF_STRUCT_PTR, offsetof(FnEditboxRegistryPlaceSpec, f_state), 0, 0, "PromptState"},
+    {"f_name", LSF_STR, offsetof(FnEditboxRegistryPlaceSpec, f_name), 0, 0, NULL},
+    {"f_buffer", LSF_BUFFER, offsetof(FnEditboxRegistryPlaceSpec, f_buffer), offsetof(FnEditboxRegistryPlaceSpec, f_buffer_size), 8, NULL},
+    {"f_buffer_size", LSF_INT, offsetof(FnEditboxRegistryPlaceSpec, f_buffer_size), 0, 0, NULL},
+    {"f_x", LSF_INT, offsetof(FnEditboxRegistryPlaceSpec, f_x), 0, 0, NULL},
+    {"f_y", LSF_INT, offsetof(FnEditboxRegistryPlaceSpec, f_y), 0, 0, NULL},
+    {"f_w", LSF_INT, offsetof(FnEditboxRegistryPlaceSpec, f_w), 0, 0, NULL},
+    {"f_h", LSF_INT, offsetof(FnEditboxRegistryPlaceSpec, f_h), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnEditboxRegistryPlaceSpec = {"FnEditboxRegistryPlaceSpec", sizeof(FnEditboxRegistryPlaceSpec), lf_FnEditboxRegistryPlaceSpec, (int)(sizeof(lf_FnEditboxRegistryPlaceSpec)/sizeof(lf_FnEditboxRegistryPlaceSpec[0]))};
+#include "core/editbox.h"
+static const LuaFieldDesc lf_FnEditboxLegacyTickSpec[] = {
+    {"f_state", LSF_STRUCT_PTR, offsetof(FnEditboxLegacyTickSpec, f_state), 0, 0, "PromptState"},
+    {"f_x", LSF_INT, offsetof(FnEditboxLegacyTickSpec, f_x), 0, 0, NULL},
+    {"f_y", LSF_INT, offsetof(FnEditboxLegacyTickSpec, f_y), 0, 0, NULL},
+    {"f_w", LSF_INT, offsetof(FnEditboxLegacyTickSpec, f_w), 0, 0, NULL},
+    {"f_h", LSF_INT, offsetof(FnEditboxLegacyTickSpec, f_h), 0, 0, NULL},
+    {"f_font_size", LSF_INT, offsetof(FnEditboxLegacyTickSpec, f_font_size), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnEditboxLegacyTickSpec = {"FnEditboxLegacyTickSpec", sizeof(FnEditboxLegacyTickSpec), lf_FnEditboxLegacyTickSpec, (int)(sizeof(lf_FnEditboxLegacyTickSpec)/sizeof(lf_FnEditboxLegacyTickSpec[0]))};
 #include "core/draw_state.h"
 static const LuaFieldDesc lf_DrawCanvas[] = {
     {"off_x", LSF_INT, offsetof(DrawCanvas, off_x), 0, 0, NULL},
@@ -1336,6 +1693,27 @@ static const LuaFieldDesc lf_ListItemCtx[] = {
     {"text", LSF_STR, offsetof(ListItemCtx, text), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_ListItemCtx = {"ListItemCtx", sizeof(ListItemCtx), lf_ListItemCtx, (int)(sizeof(lf_ListItemCtx)/sizeof(lf_ListItemCtx[0]))};
+#include "core/listbox_hover.h"
+static const LuaFieldDesc lf_FnListboxRowAtYSpec[] = {
+    {"f_lb", LSF_STRUCT_PTR, offsetof(FnListboxRowAtYSpec, f_lb), 0, 0, "ListBox"},
+    {"f_list_top", LSF_INT, offsetof(FnListboxRowAtYSpec, f_list_top), 0, 0, NULL},
+    {"f_item_height", LSF_INT, offsetof(FnListboxRowAtYSpec, f_item_height), 0, 0, NULL},
+    {"f_top_index", LSF_INT, offsetof(FnListboxRowAtYSpec, f_top_index), 0, 0, NULL},
+    {"f_visible_count", LSF_INT, offsetof(FnListboxRowAtYSpec, f_visible_count), 0, 0, NULL},
+    {"f_mouse_y", LSF_INT, offsetof(FnListboxRowAtYSpec, f_mouse_y), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnListboxRowAtYSpec = {"FnListboxRowAtYSpec", sizeof(FnListboxRowAtYSpec), lf_FnListboxRowAtYSpec, (int)(sizeof(lf_FnListboxRowAtYSpec)/sizeof(lf_FnListboxRowAtYSpec[0]))};
+#include "core/listbox_hover.h"
+static const LuaFieldDesc lf_FnListboxHoverFocusSpec[] = {
+    {"f_lb", LSF_STRUCT_PTR, offsetof(FnListboxHoverFocusSpec, f_lb), 0, 0, "ListBox"},
+    {"f_list_top", LSF_INT, offsetof(FnListboxHoverFocusSpec, f_list_top), 0, 0, NULL},
+    {"f_item_height", LSF_INT, offsetof(FnListboxHoverFocusSpec, f_item_height), 0, 0, NULL},
+    {"f_top_index", LSF_INT, offsetof(FnListboxHoverFocusSpec, f_top_index), 0, 0, NULL},
+    {"f_visible_count", LSF_INT, offsetof(FnListboxHoverFocusSpec, f_visible_count), 0, 0, NULL},
+    {"f_left_x", LSF_INT, offsetof(FnListboxHoverFocusSpec, f_left_x), 0, 0, NULL},
+    {"f_right_x", LSF_INT, offsetof(FnListboxHoverFocusSpec, f_right_x), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnListboxHoverFocusSpec = {"FnListboxHoverFocusSpec", sizeof(FnListboxHoverFocusSpec), lf_FnListboxHoverFocusSpec, (int)(sizeof(lf_FnListboxHoverFocusSpec)/sizeof(lf_FnListboxHoverFocusSpec[0]))};
 #include "core/cc_registry.h"
 static const LuaFieldDesc lf_CcEntrySpec[] = {
     {"display_name", LSF_STR, offsetof(CcEntrySpec, display_name), 0, 0, NULL},
@@ -1451,6 +1829,19 @@ static const LuaFieldDesc lf_Widget[] = {
     {"key_dropped", LSF_INT, offsetof(Widget, key_dropped), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_Widget = {"Widget", sizeof(Widget), lf_Widget, (int)(sizeof(lf_Widget)/sizeof(lf_Widget[0]))};
+#include "core/widget_registry.h"
+static const LuaFieldDesc lf_FnWidgetInitBaseSpec[] = {
+    {"f_base", LSF_PTR, offsetof(FnWidgetInitBaseSpec, f_base), 0, 0, NULL},
+    {"f_x", LSF_INT, offsetof(FnWidgetInitBaseSpec, f_x), 0, 0, NULL},
+    {"f_y", LSF_INT, offsetof(FnWidgetInitBaseSpec, f_y), 0, 0, NULL},
+    {"f_w", LSF_INT, offsetof(FnWidgetInitBaseSpec, f_w), 0, 0, NULL},
+    {"f_h", LSF_INT, offsetof(FnWidgetInitBaseSpec, f_h), 0, 0, NULL},
+    {"f_fps", LSF_INT, offsetof(FnWidgetInitBaseSpec, f_fps), 0, 0, NULL},
+    {"f_no_bg", LSF_BOOL, offsetof(FnWidgetInitBaseSpec, f_no_bg), 0, 0, NULL},
+    {"f_on_click", LSF_CB, offsetof(FnWidgetInitBaseSpec, f_on_click), 0, 0, NULL},
+    {"f_name", LSF_STR, offsetof(FnWidgetInitBaseSpec, f_name), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnWidgetInitBaseSpec = {"FnWidgetInitBaseSpec", sizeof(FnWidgetInitBaseSpec), lf_FnWidgetInitBaseSpec, (int)(sizeof(lf_FnWidgetInitBaseSpec)/sizeof(lf_FnWidgetInitBaseSpec[0]))};
 #include "wm/wm.h"
 static const LuaFieldDesc lf_SnapRect[] = {
     {"x", LSF_INT, offsetof(SnapRect, x), 0, 0, NULL},
@@ -1459,28 +1850,59 @@ static const LuaFieldDesc lf_SnapRect[] = {
     {"h", LSF_INT, offsetof(SnapRect, h), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_SnapRect = {"SnapRect", sizeof(SnapRect), lf_SnapRect, (int)(sizeof(lf_SnapRect)/sizeof(lf_SnapRect[0]))};
+#include "wm/wm.h"
+static const LuaFieldDesc lf_FnWmSnapRectSpec[] = {
+    {"f_mx", LSF_INT, offsetof(FnWmSnapRectSpec, f_mx), 0, 0, NULL},
+    {"f_my", LSF_INT, offsetof(FnWmSnapRectSpec, f_my), 0, 0, NULL},
+    {"f_mw", LSF_INT, offsetof(FnWmSnapRectSpec, f_mw), 0, 0, NULL},
+    {"f_mh", LSF_INT, offsetof(FnWmSnapRectSpec, f_mh), 0, 0, NULL},
+    {"f_p", LSF_INT, offsetof(FnWmSnapRectSpec, f_p), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_FnWmSnapRectSpec = {"FnWmSnapRectSpec", sizeof(FnWmSnapRectSpec), lf_FnWmSnapRectSpec, (int)(sizeof(lf_FnWmSnapRectSpec)/sizeof(lf_FnWmSnapRectSpec[0]))};
 static const LuaStructDesc *lua_generated_structs[] = {
+    &lsd_FnConfigIndexOfSpec,
+    &lsd_FnFeatureShortcutParseSpec,
+    &lsd_FnResolveCallerPathSpec,
+    &lsd_FnDrawRectRawSpec,
     &lsd_EditSpec,
+    &lsd_FnTempFileWriteSpec,
     &lsd_HotkeyBinding,
+    &lsd_FnHotkeyConvertIntoBindingSpec,
+    &lsd_FnCoverScaleSpec,
+    &lsd_FnDrawLinePrepSpec,
+    &lsd_FnDrawCirclePrepSpec,
+    &lsd_FnPopulateListboxRankedSpec,
     &lsd_ListboxLayout,
+    &lsd_FnListboxComputeLayoutSpec,
     &lsd_SlotRect,
     &lsd_MessageSlotSpec,
     &lsd_WidgetMouseState,
+    &lsd_FnBgTileLruPickSpec,
+    &lsd_FnMsgAnchorCenterSpec,
     &lsd_TextSegment,
     &lsd_WrappedWord,
+    &lsd_FnWrappedWordPushSpec,
     &lsd_WrapCtx,
+    &lsd_FnTextWrapLayoutSpec,
     &lsd_StringList,
+    &lsd_FnFileWalkAllFilesFromDirSpec,
     &lsd_KeyEvent,
     &lsd_MouseEvent,
     &lsd_ScrollEvent,
     &lsd_MonitorEntry,
     &lsd_MonitorInfo,
+    &lsd_FnMonitorGeometryAtSpec,
+    &lsd_FnEditBufferInsertTextSpec,
     &lsd_PopupVTable,
     &lsd_Popup,
+    &lsd_FnPromptPopupGetBoundsSpec,
+    &lsd_FnPromptPopupResizeCurrentAnimatedSpec,
     &lsd_ConfigTomlEntry,
     &lsd_ConfigTomlError,
     &lsd_ConfigHotkeyRegisterSpec,
+    &lsd_FnConfigSectionSetExSpec,
     &lsd_SearchHit,
+    &lsd_FnSearchIndexAddTextSpec,
     &lsd_SettingsEntrySpec,
     &lsd_SettingsEditboxField,
     &lsd_SettingsEditboxSpec,
@@ -1489,7 +1911,11 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_SettingsCheckboxSpec,
     &lsd_SettingsButtonSpec,
     &lsd_SettingsSliderSpec,
+    &lsd_FnTomlParseKeyValueSpec,
     &lsd_OwnerTag,
+    &lsd_FnOwnerPurgeArraySpec,
+    &lsd_FnOwnerPurgePointersSpec,
+    &lsd_FnOwnerArrayHasActiveSpec,
     &lsd_ThemeEntry,
     &lsd_SkSize,
     &lsd_SkFeature,
@@ -1518,11 +1944,15 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_SkConfigHotkeyRegisterSpec,
     &lsd_SkRemappingSpec,
     &lsd_SkSnippetSpec,
+    &lsd_FnSkiTextWrapLayoutSpec,
     &lsd_FeatureManifest,
+    &lsd_FnFocusFrameBeginSpec,
+    &lsd_FnFocusRegisterSpec,
     &lsd_HoverWidgetShowSpec,
     &lsd_HoverPopupCreateSpec,
     &lsd_HoverPopupCtx,
     &lsd_TextPromptRenderData,
+    &lsd_FnTextPromptSpecSpec,
     &lsd_ImageBuffer,
     &lsd_SubwindowInfo,
     &lsd_HeadlessDispatch,
@@ -1532,6 +1962,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_ClipboardHistory,
     &lsd_PlaceState,
     &lsd_CheckboxSpec,
+    &lsd_FnRemapRegisterInternalSpec,
     &lsd_HttpTransport,
     &lsd_Pos,
     &lsd_Metrics,
@@ -1562,6 +1993,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_ListOfFiles,
     &lsd_EditSelection,
     &lsd_SnippetBinding,
+    &lsd_FnSnippetRegisterInternalSpec,
     &lsd_SliderState,
     &lsd_SliderSpec,
     &lsd_EditboxSpec,
@@ -1572,15 +2004,23 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_EditboxPlaceSpec,
     &lsd_EditboxMetrics,
     &lsd_EditboxInitFromSpec,
+    &lsd_FnEditboxSpecFromPlaceSpec,
+    &lsd_FnEditboxResolveSelectionSpec,
+    &lsd_FnEditboxRegistryPlaceSpec,
+    &lsd_FnEditboxLegacyTickSpec,
     &lsd_DrawCanvas,
     &lsd_ListItemCtx,
+    &lsd_FnListboxRowAtYSpec,
+    &lsd_FnListboxHoverFocusSpec,
     &lsd_CcEntrySpec,
     &lsd_ScrollAreaSpec,
     &lsd_WidgetKey,
     &lsd_WidgetSpec,
     &lsd_WidgetState,
     &lsd_Widget,
+    &lsd_FnWidgetInitBaseSpec,
     &lsd_SnapRect,
+    &lsd_FnWmSnapRectSpec,
 };
 static const char *lua_alias_from[] = {
     "SkStringList",
@@ -3016,6 +3456,17 @@ static inline int lthunk_sk_replace_line_in_file(lua_State *L) {
   bool r = ((fn_t)sym)((const char *)a0, (int)a1, (const char *)a2);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_text_wrap_layout(lua_State *L) {
+  slua_owner_from_state(L);
+  void *a0 = slua_callback(L, 1, 0);
+  void *sym = Platform_GetMainSymbol("ski_text_wrap_layout");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_text_wrap_layout"); }
+  typedef int (*fn_t)(FnSkiTextWrapLayoutSpec *);
+  int r = ((fn_t)sym)(a0);
+  slua_owner_clear();
+  lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 static inline int lthunk_sk_image_from_window_title(lua_State *L) {
@@ -5328,6 +5779,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_get_edit_cursor); lua_setfield(L, -2, "sk_get_edit_cursor");
   lua_pushcfunction(L, lthunk_sk_get_edit_text); lua_setfield(L, -2, "sk_get_edit_text");
   lua_pushcfunction(L, lthunk_sk_replace_line_in_file); lua_setfield(L, -2, "sk_replace_line_in_file");
+  lua_pushcfunction(L, lthunk_ski_text_wrap_layout); lua_setfield(L, -2, "ski_text_wrap_layout");
   lua_pushcfunction(L, lthunk_sk_image_from_window_title); lua_setfield(L, -2, "sk_image_from_window_title");
   lua_pushcfunction(L, lthunk_sk_image_from_window_id); lua_setfield(L, -2, "sk_image_from_window_id");
   lua_pushcfunction(L, lthunk_sk_image_free); lua_setfield(L, -2, "sk_image_free");

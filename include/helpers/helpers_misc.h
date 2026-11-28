@@ -15,20 +15,33 @@ void resolve_window_list(const char *const *wl, const char *const *bl,
 bool setting_parse_bool(const char *v, bool *out);
 bool setting_parse_int(const char *v, int *out);
 bool setting_parse_float(const char *v, float *out);
-int config_index_of(const void *entries, size_t count, size_t elem_size,
-                    size_t key_off, size_t key_size, const char *key);
+typedef struct {
+  const void *f_entries;
+  size_t f_count;
+  size_t f_elem_size;
+  size_t f_key_off;
+  size_t f_key_size;
+  const char *f_key;
+} FnConfigIndexOfSpec;
+
+int config_index_of(FnConfigIndexOfSpec *argspec);
 
 #define CONFIG_INDEX_OF(entries, count, type, field, key)                      \
-  config_index_of((entries), (count), sizeof(type), offsetof(type, field),     \
-                  sizeof(((type *)0)->field), (key))
+  config_index_of(&(FnConfigIndexOfSpec){.f_entries = (entries), .f_count = (count), .f_elem_size = sizeof(type), .f_key_off = offsetof(type, field), .f_key_size = sizeof(((type *)0)->field), .f_key = (key)})
 
 bool canonical_path(const char *path, char *out, size_t cap);
 bool paths_equal(const char *a, const char *b);
 bool rel_to_abs(Pos pos, Pos *out);
 bool pixel_color_matches_tol(RgbColor c, RgbColor target, int tolerance);
-bool feature_shortcut_parse(const char *target, char *feature,
-                            size_t feature_cap, char *filter,
-                            size_t filter_cap);
+typedef struct {
+  const char *f_target;
+  char *f_feature;
+  size_t f_feature_cap;
+  char *f_filter;
+  size_t f_filter_cap;
+} FnFeatureShortcutParseSpec;
+
+bool feature_shortcut_parse(FnFeatureShortcutParseSpec *argspec);
 void feature_shortcut_select(ListBox *lb, const char *filter);
 PromptCallbacks feature_shortcut_make_callbacks(const PromptSpec *spec,
                                                 const PromptCallbacks *saved);
@@ -37,8 +50,15 @@ PromptState *current_prompt_state(void);
 unsigned long draw_color(unsigned long color);
 bool resolve_caller_path_silent(void *caller_ret, const char *name, char *full,
                                 size_t cap);
-bool resolve_caller_path(void *caller_ret, const char *name, char *full,
-                         size_t cap, const char *func);
+typedef struct {
+  void *f_caller_ret;
+  const char *f_name;
+  char *f_full;
+  size_t f_cap;
+  const char *f_func;
+} FnResolveCallerPathSpec;
+
+bool resolve_caller_path(FnResolveCallerPathSpec *argspec);
 bool resolve_icon_path(void *caller, const char *icon, char *out, size_t cap);
 StringList load_file_list_from(void *caller, const char *filepath);
 bool write_lines_from(void *caller, const char *filepath, const char *lines[],
@@ -47,8 +67,15 @@ bool filter_lines_from(void *caller, const char *path, const char *needle,
                        bool match_substr);
 bool type_text_common(const char *s);
 ImageBuffer image_take(ImageBuffer *img);
-bool draw_rect_raw(const DrawRect *spec, unsigned long color, float thickness,
-                   bool filled, bool transparent);
+typedef struct {
+  const DrawRect *f_spec;
+  unsigned long f_color;
+  float f_thickness;
+  bool f_filled;
+  bool f_transparent;
+} FnDrawRectRawSpec;
+
+bool draw_rect_raw(FnDrawRectRawSpec *argspec);
 
 typedef struct {
   const char *name;

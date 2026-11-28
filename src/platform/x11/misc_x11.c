@@ -409,7 +409,7 @@ void Platform_PrewarmBackgroundPixmap(void) {
     return;
   }
   x11_bg_image_prewarm(dpy, PromptW, PromptH);
-  Window _pw = x11_create_prompt_window(dpy, 0, 0, PromptW, PromptH);
+  Window _pw = x11_create_prompt_window(&(FnX11CreatePromptWindowSpec){.f_dpy = dpy, .f_x = 0, .f_y = 0, .f_w = PromptW, .f_h = PromptH});
   if (_pw != None) {
     x11_get_cached_background(dpy, _pw, PromptW, PromptH);
     XDestroyWindow(dpy, _pw);

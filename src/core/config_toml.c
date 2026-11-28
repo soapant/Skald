@@ -159,8 +159,7 @@ ConfigTomlStatus config_toml_parse_ex(const char *path, ConfigTomlVisitFn visit,
 
     char keybuf[384];
     char raw[1024];
-    TomlKeyValueStatus kvs = toml_parse_key_value(
-        s, s_len, keybuf, sizeof(keybuf), raw, sizeof(raw));
+    TomlKeyValueStatus kvs = toml_parse_key_value(&(FnTomlParseKeyValueSpec){.f_line = s, .f_len = s_len, .f_key = keybuf, .f_key_cap = sizeof(keybuf), .f_value = raw, .f_value_cap = sizeof(raw)});
     if (kvs != TOML_KV_OK) {
       const char *msg = "invalid key";
       switch (kvs) {

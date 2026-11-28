@@ -126,16 +126,12 @@ static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
   return true;
 }
 
-void x11_draw_prompt_user_edit_control_on_draw(Display *dpy, XftDraw *xd,
-                                               Visual *vis, Colormap cmap,
-                                               PromptState *state) {
-  x11_draw_editbox(state, dpy, xd, vis, cmap);
+void x11_draw_prompt_user_edit_control_on_draw(FnX11DrawPromptUserEditControlOnDrawSpec *argspec) {
+  x11_draw_editbox(&(FnX11DrawEditboxSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap});
 }
 
-void x11_draw_prompt_user_listbox_on_draw(Display *dpy, XftDraw *xd,
-                                          Visual *vis, Colormap cmap,
-                                          PromptState *state) {
-  x11_draw_listbox(state, dpy, xd, vis, cmap);
+void x11_draw_prompt_user_listbox_on_draw(FnX11DrawPromptUserListboxOnDrawSpec *argspec) {
+  x11_draw_listbox(&(FnX11DrawListboxSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap});
 }
 
 static XftDraw *x11_prompt_create_draw(Display *dpy, Window *win,
@@ -163,7 +159,7 @@ void x11_draw_prompt_user_edit_control(Display *dpy, Window *win,
   XftDraw *xd = x11_prompt_create_draw(dpy, win, &vis, &cmap);
   if (!xd)
     return;
-  x11_draw_prompt_user_edit_control_on_draw(dpy, xd, vis, cmap, state);
+  x11_draw_prompt_user_edit_control_on_draw(&(FnX11DrawPromptUserEditControlOnDrawSpec){.f_dpy = dpy, .f_xd = xd, .f_vis = vis, .f_cmap = cmap, .f_state = state});
   XftDrawDestroy(xd);
 }
 
@@ -174,7 +170,7 @@ void x11_draw_prompt_user_listbox(Display *dpy, Window *win,
   XftDraw *xd = x11_prompt_create_draw(dpy, win, &vis, &cmap);
   if (!xd)
     return;
-  x11_draw_prompt_user_listbox_on_draw(dpy, xd, vis, cmap, state);
+  x11_draw_prompt_user_listbox_on_draw(&(FnX11DrawPromptUserListboxOnDrawSpec){.f_dpy = dpy, .f_xd = xd, .f_vis = vis, .f_cmap = cmap, .f_state = state});
   XftDrawDestroy(xd);
 }
 
@@ -188,9 +184,8 @@ static void prompt_render_frame(Display *dpy, Window *win, XftDraw *xd,
     prompt_state_update_delta(state);
     checkbox_frame_begin();
     slider_frame_begin();
-    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
-                      state->height - prompt_list_top() -
-                          prompt_list_bottom_margin());
+    focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = state->lb != NULL, .f_lb_x = 0, .f_lb_y = prompt_list_top(), .f_lb_w = state->width, .f_lb_h = state->height - prompt_list_top() -
+                          prompt_list_bottom_margin()});
     editbox_registry_register_focus(state);
     if (clear_ctx)
       x11_set_draw_context(dpy, NULL, NULL, 0);
@@ -204,20 +199,19 @@ static void prompt_render_frame(Display *dpy, Window *win, XftDraw *xd,
     focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   } else {
-    focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
-                      state->height - prompt_list_top() -
-                          prompt_list_bottom_margin());
+    focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = state->lb != NULL, .f_lb_x = 0, .f_lb_y = prompt_list_top(), .f_lb_w = state->width, .f_lb_h = state->height - prompt_list_top() -
+                          prompt_list_bottom_margin()});
     editbox_registry_register_focus(state);
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb) {
       if (on_draw)
-        x11_draw_prompt_user_listbox_on_draw(dpy, xd, vis, cmap, state);
+        x11_draw_prompt_user_listbox_on_draw(&(FnX11DrawPromptUserListboxOnDrawSpec){.f_dpy = dpy, .f_xd = xd, .f_vis = vis, .f_cmap = cmap, .f_state = state});
       else
         x11_draw_prompt_user_listbox(dpy, win, state);
     }
     if (on_draw)
-      x11_draw_prompt_user_edit_control_on_draw(dpy, xd, vis, cmap, state);
+      x11_draw_prompt_user_edit_control_on_draw(&(FnX11DrawPromptUserEditControlOnDrawSpec){.f_dpy = dpy, .f_xd = xd, .f_vis = vis, .f_cmap = cmap, .f_state = state});
     else
       x11_draw_prompt_user_edit_control(dpy, win, state);
     draw_state_get()->suppress_separators = sep_prev;
@@ -271,7 +265,7 @@ static bool x11_render_prompt_user_locked(Display *dpy, Window *win,
     XFillRectangle(dpy, dbl, gc, 0, 0, w, h);
     XFreeGC(dpy, gc);
   } else if (!(pss && pss->no_bg)) {
-    if (!x11_bg_image_blit(dpy, dbl, vis, w, h)) {
+    if (!x11_bg_image_blit(&(FnX11BgImageBlitSpec){.f_dpy = dpy, .f_dst = dbl, .f_vis = vis, .f_w = w, .f_h = h})) {
       Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
       if (bg) {
         GC gc = XCreateGC(dpy, dbl, 0, NULL);
@@ -293,7 +287,7 @@ static bool x11_render_prompt_user_locked(Display *dpy, Window *win,
                       suppress_content);
   x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();
-  x11_draw_window_border(dpy, dbl, vis, w, h, state && state->no_bg);
+  x11_draw_window_border(&(FnX11DrawWindowBorderSpec){.f_dpy = dpy, .f_drw = dbl, .f_vis = vis, .f_w = w, .f_h = h, .f_no_bg = state && state->no_bg});
   GC gc = XCreateGC(dpy, *win, 0, NULL);
   XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
   XFreeGC(dpy, gc);

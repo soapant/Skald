@@ -65,17 +65,66 @@ extern int g_msg_slot_count;
 void x11_msg_remove_slot_locked(Display *dpy, int idx);
 int x11_msg_find_key_locked(const char *key);
 void x11_msg_remove_indefinite_locked(Display *dpy);
-int x11_msg_wrap_text(Display *dpy, XftFont *xf, const char *text, int max_w,
-                      MsgLine *out, int maxLines);
-int x11_msg_stack_adjust_y(int x, int y, int w, int h, int dir);
-void x11_msg_present(Display *dpy, const char *message, int x, int y, int win_w,
-                     int win_h, double timeout, ColorRef color, bool no_bg,
-                     void (*render)(void *ud), void *render_data,
-                     const char *name, bool rounded, int radius, int fps);
-void x11_msg_hover_present(Display *dpy, const char *key, const char *message,
-                           int center_x, int center_y, int win_w, int win_h,
-                           ColorRef color, bool no_bg);
-void x11_msg_measure(Display *dpy, const char *message, int max_width,
-                     int max_height, int *out_w, int *out_h);
+typedef struct {
+  Display *f_dpy;
+  XftFont *f_xf;
+  const char *f_text;
+  int f_max_w;
+  MsgLine *f_out;
+  int f_maxLines;
+} FnX11MsgWrapTextSpec;
+
+int x11_msg_wrap_text(FnX11MsgWrapTextSpec *argspec);
+typedef struct {
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+  int f_dir;
+} FnX11MsgStackAdjustYSpec;
+
+int x11_msg_stack_adjust_y(FnX11MsgStackAdjustYSpec *argspec);
+typedef struct {
+  Display *f_dpy;
+  const char *f_message;
+  int f_x;
+  int f_y;
+  int f_win_w;
+  int f_win_h;
+  double f_timeout;
+  ColorRef f_color;
+  bool f_no_bg;
+  void (*f_render)(void *ud);
+  void *f_render_data;
+  const char *f_name;
+  bool f_rounded;
+  int f_radius;
+  int f_fps;
+} FnX11MsgPresentSpec;
+
+void x11_msg_present(FnX11MsgPresentSpec *argspec);
+typedef struct {
+  Display *f_dpy;
+  const char *f_key;
+  const char *f_message;
+  int f_center_x;
+  int f_center_y;
+  int f_win_w;
+  int f_win_h;
+  ColorRef f_color;
+  bool f_no_bg;
+} FnX11MsgHoverPresentSpec;
+
+void x11_msg_hover_present(FnX11MsgHoverPresentSpec *argspec);
+typedef struct {
+  Display *f_dpy;
+  const char *f_message;
+  int f_max_width;
+  int f_max_height;
+  int *f_out_w;
+  int *f_out_h;
+} FnX11MsgMeasureSpec;
+
+void x11_msg_measure(FnX11MsgMeasureSpec *argspec);
 
 #endif

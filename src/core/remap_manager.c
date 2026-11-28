@@ -185,11 +185,10 @@ static bool remap_register_internal_locked(const char *src, const char *dst,
   return true;
 }
 
-bool remap_register_internal(const char *src, const char *dst, bool whitelist,
-                             const char *const *windows, void *caller) {
+bool remap_register_internal(FnRemapRegisterInternalSpec *argspec) {
   remap_lock();
   bool ok =
-      remap_register_internal_locked(src, dst, whitelist, windows, caller);
+      remap_register_internal_locked(argspec->f_src, argspec->f_dst, argspec->f_whitelist, argspec->f_windows, argspec->f_caller);
   remap_unlock();
   return ok;
 }

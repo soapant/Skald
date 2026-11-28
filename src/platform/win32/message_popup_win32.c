@@ -149,8 +149,7 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
   int textWidth = 0, textHeight = 0;
-  Platform_GetTextExtents(msgFont, message, max_width - 30, &textWidth,
-                          &textHeight);
+  Platform_GetTextExtents(&(FnPlatformGetTextExtentsSpec){.f_font = msgFont, .f_text = message, .f_max_width = max_width - 30, .f_outWidth = &textWidth, .f_outHeight = &textHeight});
   Platform_DestroyFont(msgFont);
 
   int winWidth = textWidth + 30;
@@ -170,9 +169,9 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
     winHeight = max_height;
 
   int center_x =
-      msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, winWidth);
+      msg_anchor_center(&(FnMsgAnchorCenterSpec){.f_rect = rect_x, .f_rect_size = rect_w, .f_slot = h_slot, .f_gap = gap, .f_outward = outward, .f_win_size = winWidth});
   int center_y =
-      msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, winHeight);
+      msg_anchor_center(&(FnMsgAnchorCenterSpec){.f_rect = rect_y, .f_rect_size = rect_h, .f_slot = v_slot, .f_gap = gap, .f_outward = outward, .f_win_size = winHeight});
 
   {
     int stack_dir = msg_stack_dir(v_slot, outward);
@@ -235,8 +234,7 @@ void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindowSpec spec) {
     winWidth = max_width;
     winHeight = max_height;
   } else {
-    Platform_GetTextExtents(msgFont, message, max_width - 30, &textWidth,
-                            &textHeight);
+    Platform_GetTextExtents(&(FnPlatformGetTextExtentsSpec){.f_font = msgFont, .f_text = message, .f_max_width = max_width - 30, .f_outWidth = &textWidth, .f_outHeight = &textHeight});
     int padding = 30;
     winWidth = textWidth + padding;
     winHeight = textHeight + padding;

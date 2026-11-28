@@ -9,8 +9,15 @@
 bool data_dir(char *out, size_t out_len);
 void data_dir_set_override(const char *path);
 bool expand_path(const char *template_path, char *out, size_t out_size);
-bool temp_file_write(const char *name, const void *data, size_t len,
-                     char *out_path, size_t out_len);
+typedef struct {
+  const char *f_name;
+  const void *f_data;
+  size_t f_len;
+  char *f_out_path;
+  size_t f_out_len;
+} FnTempFileWriteSpec;
+
+bool temp_file_write(FnTempFileWriteSpec *argspec);
 bool feature_path_get(const char *feature, const char *name, char *out,
                       size_t out_len);
 bool feature_path_data_dir_exists(const char *stem);

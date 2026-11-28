@@ -22,25 +22,25 @@
 #include "config_values.h"
 #include "core/types.h"
 
-bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
-  WindowManager *wm = (WindowManager *)self->manager;
+bool Platform_PromptPopupShowWindow(FnPlatformPromptPopupShowWindowSpec *argspec) {
+  WindowManager *wm = (WindowManager *)argspec->f_self->manager;
   Display *dpy = wm ? wm->display : NULL;
   if (!dpy)
     return false;
   struct timespec _t0, _t1, _t2, _t3;
   clock_gettime(CLOCK_MONOTONIC, &_t0);
   listbox_invalidate_mouse_pos();
-  self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
-  SkaldContext_Get()->window.hPopupWnd = WH_FROM_XID(self->handle.xid);
-  XSelectInput(dpy, self->handle.xid,
+  argspec->f_self->handle.xid = x11_create_prompt_window(&(FnX11CreatePromptWindowSpec){.f_dpy = dpy, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h});
+  SkaldContext_Get()->window.hPopupWnd = WH_FROM_XID(argspec->f_self->handle.xid);
+  XSelectInput(dpy, argspec->f_self->handle.xid,
                KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask |
                    ButtonPressMask | PointerMotionMask);
   clock_gettime(CLOCK_MONOTONIC, &_t1);
-  Popup *popup = self;
+  Popup *popup = argspec->f_self;
   (void)popup;
   clock_gettime(CLOCK_MONOTONIC, &_t2);
-  if (self->vtable && self->vtable->on_render)
-    self->vtable->on_render(self);
+  if (argspec->f_self->vtable && argspec->f_self->vtable->on_render)
+    argspec->f_self->vtable->on_render(argspec->f_self);
   clock_gettime(CLOCK_MONOTONIC, &_t3);
   log_info(
       "prompt show: create=%.2fms bg=%.2fms first_render=%.2fms rounded=%d "
@@ -49,36 +49,36 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
       (_t2.tv_sec - _t1.tv_sec) * 1000.0 + (_t2.tv_nsec - _t1.tv_nsec) / 1e6,
       (_t3.tv_sec - _t2.tv_sec) * 1000.0 + (_t3.tv_nsec - _t2.tv_nsec) / 1e6,
       (int)RoundedCorners, CornerRadius, (int)WindowOpacity);
-  XMapWindow(dpy, self->handle.xid);
+  XMapWindow(dpy, argspec->f_self->handle.xid);
   XSync(dpy, False);
   {
     XWindowAttributes _a;
-    if (XGetWindowAttributes(dpy, self->handle.xid, &_a)) {
+    if (XGetWindowAttributes(dpy, argspec->f_self->handle.xid, &_a)) {
       log_info("prompt mapped req=(%d,%d %dx%d) actual=(%d,%d %dx%d) state=%d",
-               x, y, w, h, _a.x, _a.y, _a.width, _a.height, (int)_a.map_state);
+               argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h, _a.x, _a.y, _a.width, _a.height, (int)_a.map_state);
     } else {
-      log_info("prompt mapped req=(%d,%d %dx%d) actual=unknown", x, y, w, h);
+      log_info("prompt mapped req=(%d,%d %dx%d) actual=unknown", argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
     }
   }
   {
     int (*old)(Display *, XErrorEvent *) = XSetErrorHandler(x11_error_handler);
-    XSetInputFocus(dpy, self->handle.xid, RevertToParent, CurrentTime);
+    XSetInputFocus(dpy, argspec->f_self->handle.xid, RevertToParent, CurrentTime);
     XSync(dpy, False);
     XSetErrorHandler(old);
     Window _fw = None;
     int _rev = 0;
     XGetInputFocus(dpy, &_fw, &_rev);
-    if (_fw != self->handle.xid) {
+    if (_fw != argspec->f_self->handle.xid) {
       old = XSetErrorHandler(x11_error_handler);
-      XSetInputFocus(dpy, self->handle.xid, RevertToParent, CurrentTime);
+      XSetInputFocus(dpy, argspec->f_self->handle.xid, RevertToParent, CurrentTime);
       XSync(dpy, False);
       XSetErrorHandler(old);
       XGetInputFocus(dpy, &_fw, &_rev);
     }
     log_info("prompt focus win=%lu want=%lu ok=%d", (unsigned long)_fw,
-             (unsigned long)self->handle.xid, _fw == self->handle.xid);
+             (unsigned long)argspec->f_self->handle.xid, _fw == argspec->f_self->handle.xid);
     char *_nm = NULL;
-    if (XFetchName(dpy, self->handle.xid, &_nm) && _nm) {
+    if (XFetchName(dpy, argspec->f_self->handle.xid, &_nm) && _nm) {
       wm_focus_by_title(_nm);
       XFree(_nm);
     }
@@ -87,18 +87,17 @@ bool Platform_PromptPopupShowWindow(Popup *self, int x, int y, int w, int h) {
   return true;
 }
 
-bool Platform_PromptPopupResize(Popup *self, int x, int y, int w, int h) {
-  if (w <= 0 || h <= 0 || !self)
+bool Platform_PromptPopupResize(FnPlatformPromptPopupResizeSpec *argspec) {
+  if (argspec->f_w <= 0 || argspec->f_h <= 0 || !argspec->f_self)
     return false;
-  WindowManager *wm = (WindowManager *)self->manager;
+  WindowManager *wm = (WindowManager *)argspec->f_self->manager;
   Display *dpy = wm ? wm->display : x11_get_display();
-  Window win = self->handle.xid;
+  Window win = argspec->f_self->handle.xid;
   if (!dpy || win == None)
     return false;
-  x11_set_fixed_size_hints(dpy, win, w, h);
-  XMoveResizeWindow(dpy, win, x, y, (unsigned)w, (unsigned)h);
-  x11_apply_shape(dpy, win, w, h, RoundedCorners,
-                  RoundedCorners ? CornerRadius : 0);
+  x11_set_fixed_size_hints(dpy, win, argspec->f_w, argspec->f_h);
+  XMoveResizeWindow(dpy, win, argspec->f_x, argspec->f_y, (unsigned)argspec->f_w, (unsigned)argspec->f_h);
+  x11_apply_shape(&(FnX11ApplyShapeSpec){.f_dpy = dpy, .f_win = win, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_rounded = RoundedCorners, .f_radius = RoundedCorners ? CornerRadius : 0});
   x11_release_prompt_buffer(dpy, win);
   XSync(dpy, False);
   return true;

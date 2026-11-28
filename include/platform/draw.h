@@ -24,13 +24,28 @@ void Platform_DrawPromptEditText(PromptState *state);
 void Platform_DrawPromptEditCursor(PromptState *state);
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius);
-bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h);
+typedef struct {
+  const char *f_path;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+} FnPlatformDrawImageAtSpec;
+
+bool Platform_DrawImageAt(FnPlatformDrawImageAtSpec *argspec);
 bool Platform_GetImageSize(const char *path, int *w, int *h);
 ImageBuffer *Platform_CaptureWindowByTitle(const char *title);
 ImageBuffer *Platform_CaptureWindowById(const char *id);
 void Platform_FreeImage(ImageBuffer *image);
-bool Platform_DrawImageBuffer(const ImageBuffer *image, int x, int y, int w,
-                              int h);
+typedef struct {
+  const ImageBuffer *f_image;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+} FnPlatformDrawImageBufferSpec;
+
+bool Platform_DrawImageBuffer(FnPlatformDrawImageBufferSpec *argspec);
 
 #define COLOR_AUTO (~0UL)
 

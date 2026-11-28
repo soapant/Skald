@@ -17,9 +17,16 @@ typedef struct {
   OwnerTag tag;
 } SnippetBinding;
 
-bool snippet_register_internal(const char *trigger, const char *text,
-                               void (*func)(void), bool whitelist,
-                               const char *const *windows, void *caller);
+typedef struct {
+  const char *f_trigger;
+  const char *f_text;
+  void (*f_func)(void);
+  bool f_whitelist;
+  const char *const *f_windows;
+  void *f_caller;
+} FnSnippetRegisterInternalSpec;
+
+bool snippet_register_internal(FnSnippetRegisterInternalSpec *argspec);
 bool snippet_unregister_internal(const char *trigger);
 void snippet_set_fire_fn(SnippetFireFn fn);
 void snippet_fire(int binding_index, int delete_count);

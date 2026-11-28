@@ -185,15 +185,28 @@ typedef struct {
 void editbox_init_from_spec(EditboxInit *out, const EditboxInitFromSpec *args);
 
 void editbox_build_spec(EditboxSpec *out, const EditboxInit *in);
-void editbox_spec_from_place(EditboxSpec *out, const EditboxPlace *place,
-                             PromptState *state, const EditboxUiSpec *ui,
-                             const EditboxMetrics *metrics);
+typedef struct {
+  EditboxSpec *f_out;
+  const EditboxPlace *f_place;
+  PromptState *f_state;
+  const EditboxUiSpec *f_ui;
+  const EditboxMetrics *f_metrics;
+} FnEditboxSpecFromPlaceSpec;
+
+void editbox_spec_from_place(FnEditboxSpecFromPlaceSpec *argspec);
 int editbox_caret_y(int box_top, int ascent, int descent, int font_size);
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                    int text_len, const EditboxMetrics *metrics);
-void editbox_resolve_selection(PromptState *state, int text_len,
-                               bool prefer_state, int *out_start, int *out_end,
-                               bool *out_has);
+typedef struct {
+  PromptState *f_state;
+  int f_text_len;
+  bool f_prefer_state;
+  int *f_out_start;
+  int *f_out_end;
+  bool *f_out_has;
+} FnEditboxResolveSelectionSpec;
+
+void editbox_resolve_selection(FnEditboxResolveSelectionSpec *argspec);
 int editbox_scroll_offset(const EditboxSpec *spec);
 void editbox_layout(EditboxSpec *spec, EditboxLayout *out);
 void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
@@ -201,13 +214,31 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
 
 void editbox_registry_begin(PromptState *state);
 void editbox_registry_begin_frame(PromptState *state);
-int editbox_registry_place(PromptState *state, const char *name, char *buffer,
-                           size_t buffer_size, int x, int y, int w, int h);
+typedef struct {
+  PromptState *f_state;
+  const char *f_name;
+  char *f_buffer;
+  size_t f_buffer_size;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+} FnEditboxRegistryPlaceSpec;
+
+int editbox_registry_place(FnEditboxRegistryPlaceSpec *argspec);
 PromptEditbox *editbox_registry_find(PromptState *state, const char *name);
 EditBox *editbox_registry_lookup(PromptState *state, const char *name);
 void editbox_registry_tick(PromptState *state);
-void editbox_legacy_tick(PromptState *state, int x, int y, int w, int h,
-                         int font_size);
+typedef struct {
+  PromptState *f_state;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+  int f_font_size;
+} FnEditboxLegacyTickSpec;
+
+void editbox_legacy_tick(FnEditboxLegacyTickSpec *argspec);
 void editbox_registry_register_focus(PromptState *state);
 void editbox_registry_sync(PromptState *state);
 void editbox_registry_set_active(PromptState *state, const char *name);

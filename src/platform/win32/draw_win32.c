@@ -16,7 +16,7 @@ bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius) {
   int h = rc.bottom - rc.top;
   if (w <= 0 || h <= 0)
     return false;
-  win32_apply_rounded(hwnd, w, h, rounded, radius);
+  win32_apply_rounded(&(FnWin32ApplyRoundedSpec){.f_hwnd = hwnd, .f_w = w, .f_h = h, .f_rounded = rounded, .f_radius = radius});
   return true;
 }
 
@@ -26,7 +26,7 @@ bool Platform_PrewarmImage(char *path) {
   HDC screen = win32_screen_dc();
   if (!screen)
     return false;
-  void *bmp = win32_img_cache_get(path, screen, FontSize, FontSize, NULL, NULL);
+  void *bmp = win32_img_cache_get(&(FnWin32ImgCacheGetSpec){.f_path = path, .f_screen = screen, .f_w = FontSize, .f_h = FontSize, .f_out_dc = NULL, .f_out_opaque = NULL});
   if (bmp == WIN32_IMG_FAILED)
     return false;
   if (!bmp) {
@@ -34,8 +34,8 @@ bool Platform_PrewarmImage(char *path) {
     HDC dc = NULL;
     bool opaque = false;
     bmp =
-        win32_load_scaled_bitmap(path, FontSize, FontSize, &dib, &dc, &opaque);
-    win32_img_cache_put(path, screen, FontSize, FontSize, bmp, dib, dc, opaque);
+        win32_load_scaled_bitmap(&(FnWin32LoadScaledBitmapSpec){.f_path = path, .f_w = FontSize, .f_h = FontSize, .f_out_dib = &dib, .f_out_dc = &dc, .f_out_opaque = &opaque});
+    win32_img_cache_put(&(FnWin32ImgCachePutSpec){.f_path = path, .f_screen = screen, .f_w = FontSize, .f_h = FontSize, .f_img = bmp, .f_dib = dib, .f_dc = dc, .f_opaque = opaque});
   }
   return bmp != NULL;
 }
@@ -81,7 +81,7 @@ bool Platform_DrawTextRaw(DrawTextRawSpec spec) {
   HFONT hfont =
       spec.font.hfont
           ? spec.font.hfont
-          : win32_font_for_text(wide, wlen, spec.font_size, &old, &dy);
+          : win32_font_for_text(&(FnWin32FontForTextSpec){.f_wide = wide, .f_len = wlen, .f_font_size = spec.font_size, .f_out_old = &old, .f_out_dy = &dy});
   if (!hfont)
     hfont = win32_sized_font(spec.font_size);
   if (!old && hfont)
@@ -192,7 +192,7 @@ int Platform_MeasureTextWidth(MeasureTextWidthSpec spec) {
   if (!wide)
     return 0;
   HFONT old = NULL;
-  HFONT hfont = win32_font_for_text(wide, wlen, spec.font_size, &old, NULL);
+  HFONT hfont = win32_font_for_text(&(FnWin32FontForTextSpec){.f_wide = wide, .f_len = wlen, .f_font_size = spec.font_size, .f_out_old = &old, .f_out_dy = NULL});
   if (!hfont)
     hfont = win32_sized_font(spec.font_size);
   SIZE sz;
@@ -368,8 +368,7 @@ int Platform_GetTextLineHeight(int font_size) {
 
 bool Platform_DrawLineRaw(DrawLineRawSpec spec) {
   int x1, y1, x2, y2;
-  int t = draw_line_prep(&spec, draw_state_get()->off_x,
-                         draw_state_get()->off_y, &x1, &y1, &x2, &y2);
+  int t = draw_line_prep(&(FnDrawLinePrepSpec){.f_spec = &spec, .f_off_x = draw_state_get()->off_x, .f_off_y = draw_state_get()->off_y, .f_x1 = &x1, .f_y1 = &y1, .f_x2 = &x2, .f_y2 = &y2});
   HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(spec.color));
   HGDIOBJ old = SelectObject(g_draw_hdc, pen);
   MoveToEx(g_draw_hdc, x1, y1, NULL);
@@ -383,8 +382,7 @@ bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
   if (spec.radius <= 0)
     return false;
   int cx, cy;
-  int t = draw_circle_prep(&spec, draw_state_get()->off_x,
-                           draw_state_get()->off_y, &cx, &cy);
+  int t = draw_circle_prep(&(FnDrawCirclePrepSpec){.f_spec = &spec, .f_off_x = draw_state_get()->off_x, .f_off_y = draw_state_get()->off_y, .f_cx = &cx, .f_cy = &cy});
   int left = cx - spec.radius, top = cy - spec.radius;
   int right = cx + spec.radius, bottom = cy + spec.radius;
   if (t > 0) {
@@ -407,21 +405,20 @@ bool Platform_DrawCircleRaw(DrawCircleRawSpec spec) {
   return true;
 }
 
-bool Platform_DrawImageBuffer(const ImageBuffer *image, int x, int y, int w,
-                              int h) {
-  if (!image || !image->pixels || image->w <= 0 || image->h <= 0)
+bool Platform_DrawImageBuffer(FnPlatformDrawImageBufferSpec *argspec) {
+  if (!argspec->f_image || !argspec->f_image->pixels || argspec->f_image->w <= 0 || argspec->f_image->h <= 0)
     return false;
   if (!g_draw_hdc)
     return false;
-  x += draw_state_get()->off_x;
-  y += draw_state_get()->off_y;
+  argspec->f_x += draw_state_get()->off_x;
+  argspec->f_y += draw_state_get()->off_y;
   if (draw_state_get()->listbox_rows && draw_state_get()->win32_listbox_surface)
-    y -= 2;
-  if (w <= 0)
-    w = image->w;
-  if (h <= 0)
-    h = image->h;
-  draw_measure_track(x, y, w, h);
+    argspec->f_y -= 2;
+  if (argspec->f_w <= 0)
+    argspec->f_w = argspec->f_image->w;
+  if (argspec->f_h <= 0)
+    argspec->f_h = argspec->f_image->h;
+  draw_measure_track(argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
 
   win32_gdip_ensure();
   if (g_gdip_token == 0)
@@ -440,17 +437,17 @@ bool Platform_DrawImageBuffer(const ImageBuffer *image, int x, int y, int w,
     GdipSetPixelOffsetMode(s_cached_g, PixelOffsetModeNone);
   }
   GpBitmap *bmp = NULL;
-  if (GdipCreateBitmapFromScan0(image->w, image->h, image->w * 4,
-                                PixelFormat32bppARGB, image->pixels,
+  if (GdipCreateBitmapFromScan0(argspec->f_image->w, argspec->f_image->h, argspec->f_image->w * 4,
+                                PixelFormat32bppARGB, argspec->f_image->pixels,
                                 &bmp) != Ok ||
       !bmp)
     return false;
-  bool scaled = w != image->w || h != image->h;
+  bool scaled = argspec->f_w != argspec->f_image->w || argspec->f_h != argspec->f_image->h;
   if (scaled) {
     GdipSetInterpolationMode(s_cached_g, InterpolationModeHighQualityBicubic);
     GdipSetPixelOffsetMode(s_cached_g, PixelOffsetModeHighQuality);
   }
-  GpStatus status = GdipDrawImageRectI(s_cached_g, bmp, x, y, w, h);
+  GpStatus status = GdipDrawImageRectI(s_cached_g, bmp, argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
   if (scaled) {
     GdipSetInterpolationMode(s_cached_g, InterpolationModeNearestNeighbor);
     GdipSetPixelOffsetMode(s_cached_g, PixelOffsetModeNone);
@@ -459,20 +456,20 @@ bool Platform_DrawImageBuffer(const ImageBuffer *image, int x, int y, int w,
   return status == Ok;
 }
 
-bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
-  if (!path || !path[0])
+bool Platform_DrawImageAt(FnPlatformDrawImageAtSpec *argspec) {
+  if (!argspec->f_path || !argspec->f_path[0])
     return false;
   int _offx = draw_state_get()->off_x;
   int _offy = draw_state_get()->off_y;
-  x += _offx;
-  y += _offy;
+  argspec->f_x += _offx;
+  argspec->f_y += _offy;
   if (draw_state_get()->listbox_rows && draw_state_get()->win32_listbox_surface)
-    y -= 2;
-  if (w <= 0)
-    w = (IconSize > 0) ? IconSize : 16;
-  if (h <= 0)
-    h = (IconSize > 0) ? IconSize : 16;
-  draw_measure_track(x, y, w, h);
+    argspec->f_y -= 2;
+  if (argspec->f_w <= 0)
+    argspec->f_w = (IconSize > 0) ? IconSize : 16;
+  if (argspec->f_h <= 0)
+    argspec->f_h = (IconSize > 0) ? IconSize : 16;
+  draw_measure_track(argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
 
   if (!g_draw_hdc) {
     log_error("img: no draw context (g_draw_hdc NULL)");
@@ -487,19 +484,19 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
 
   HDC img_dc = NULL;
   bool opaque = false;
-  void *bmp = win32_img_cache_get(path, screen, w, h, &img_dc, &opaque);
+  void *bmp = win32_img_cache_get(&(FnWin32ImgCacheGetSpec){.f_path = argspec->f_path, .f_screen = screen, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_out_dc = &img_dc, .f_out_opaque = &opaque});
   if (bmp == WIN32_IMG_FAILED)
     return false;
   if (!bmp) {
     HBITMAP dib = NULL;
-    bmp = win32_load_scaled_bitmap(path, w, h, &dib, &img_dc, &opaque);
-    win32_img_cache_put(path, screen, w, h, bmp, dib, img_dc, opaque);
+    bmp = win32_load_scaled_bitmap(&(FnWin32LoadScaledBitmapSpec){.f_path = argspec->f_path, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_out_dib = &dib, .f_out_dc = &img_dc, .f_out_opaque = &opaque});
+    win32_img_cache_put(&(FnWin32ImgCachePutSpec){.f_path = argspec->f_path, .f_screen = screen, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_img = bmp, .f_dib = dib, .f_dc = img_dc, .f_opaque = opaque});
   }
   if (!bmp)
     return false;
 
   if (img_dc && opaque) {
-    BitBlt(g_draw_hdc, x, y, w, h, img_dc, 0, 0, SRCCOPY);
+    BitBlt(g_draw_hdc, argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h, img_dc, 0, 0, SRCCOPY);
     return true;
   }
 
@@ -529,10 +526,10 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
   GdipSetCompositingMode(s_cached_g, opaque ? CompositingModeSourceCopy
                                             : CompositingModeSourceOver);
 
-  GpStatus status = GdipDrawImageRectI(s_cached_g, (GpBitmap *)bmp, x, y, w, h);
+  GpStatus status = GdipDrawImageRectI(s_cached_g, (GpBitmap *)bmp, argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
   if (status != Ok) {
     log_error("img: GdipDrawImageRectI failed st=%d at %d,%d %dx%d",
-              (int)status, x, y, w, h);
+              (int)status, argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
   }
   return (status == Ok);
 }

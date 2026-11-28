@@ -116,15 +116,14 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (data && data->no_bg) {
       win32_fill_rounded_rect(hdc, &rect, RGB(0, 0, 0), 0);
     } else if (win32_bg_image_enabled() &&
-               win32_draw_bg_image_slice(hdc, &rect, rect.right, rect.bottom, 0,
-                                         0)) {
+               win32_draw_bg_image_slice(&(FnWin32DrawBgImageSliceSpec){.f_hdc = hdc, .f_rc = &rect, .f_containerW = rect.right, .f_containerH = rect.bottom, .f_originX = 0, .f_originY = 0})) {
     } else {
       HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG);
       FillRect(hdc, &rect, hBackgroundBrush);
       DeleteObject(hBackgroundBrush);
     }
     if (!(data && data->no_bg)) {
-      win32_draw_window_border(hdc, 0, 0, rect.right, rect.bottom, NULL);
+      win32_draw_window_border(&(FnWin32DrawWindowBorderSpec){.f_hdc = hdc, .f_ox = 0, .f_oy = 0, .f_ww = rect.right, .f_wh = rect.bottom, .f_region = NULL});
     }
 
     if (data && data->render) {
@@ -249,10 +248,10 @@ bool win32_message_popup_create(int x, int y, int w, int h) {
   }
   s_msg_show_data = NULL;
   if (!s_msg_show_no_bg) {
-    win32_apply_rounded(hPopupWnd, w, h, s_msg_rounded, s_msg_radius);
+    win32_apply_rounded(&(FnWin32ApplyRoundedSpec){.f_hwnd = hPopupWnd, .f_w = w, .f_h = h, .f_rounded = s_msg_rounded, .f_radius = s_msg_radius});
     SetLayeredWindowAttributes(hPopupWnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
   } else {
-    win32_apply_rounded(hPopupWnd, w, h, s_msg_rounded, s_msg_radius);
+    win32_apply_rounded(&(FnWin32ApplyRoundedSpec){.f_hwnd = hPopupWnd, .f_w = w, .f_h = h, .f_rounded = s_msg_rounded, .f_radius = s_msg_radius});
     SetLayeredWindowAttributes(hPopupWnd, 0, 0, LWA_COLORKEY);
   }
   ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
@@ -323,8 +322,7 @@ void win32_msg_hover_present(HoverMessageSpec spec) {
   if (!(winWidth > 0 && winHeight > 0)) {
     FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
     int textWidth = 0, textHeight = 0;
-    Platform_GetTextExtents(msgFont, message, max_width - 30, &textWidth,
-                            &textHeight);
+    Platform_GetTextExtents(&(FnPlatformGetTextExtentsSpec){.f_font = msgFont, .f_text = message, .f_max_width = max_width - 30, .f_outWidth = &textWidth, .f_outHeight = &textHeight});
     Platform_DestroyFont(msgFont);
     winWidth = textWidth + 30;
     winHeight = textHeight + 30;

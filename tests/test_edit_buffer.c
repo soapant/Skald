@@ -69,7 +69,7 @@ TEST(insert_into_middle) {
   EnableAutoPairing = false;
   char buf[16] = "ac";
   size_t cur = 1;
-  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, "b", 1);
+  size_t total = edit_buffer_insert_text(&(FnEditBufferInsertTextSpec){.f_buf = buf, .f_cap = sizeof(buf), .f_cursor = &cur, .f_text = "b", .f_len = 1});
   ASSERT_EQ_INT(total, 1);
   ASSERT_EQ_STR(buf, "abc");
   ASSERT_EQ_INT(cur, 2);
@@ -79,13 +79,13 @@ TEST(insert_respects_capacity) {
   EnableAutoPairing = false;
   char buf[4] = "abc";
   size_t cur = 3;
-  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, "yy", 2);
+  size_t total = edit_buffer_insert_text(&(FnEditBufferInsertTextSpec){.f_buf = buf, .f_cap = sizeof(buf), .f_cursor = &cur, .f_text = "yy", .f_len = 2});
   ASSERT_EQ_INT(total, 0);
   ASSERT_EQ_STR(buf, "abc");
 
   char small[4] = "abc";
   size_t end = 3;
-  ASSERT_EQ_INT(edit_buffer_insert_text(small, sizeof(small), &end, "y", 1), 0);
+  ASSERT_EQ_INT(edit_buffer_insert_text(&(FnEditBufferInsertTextSpec){.f_buf = small, .f_cap = sizeof(small), .f_cursor = &end, .f_text = "y", .f_len = 1}), 0);
   ASSERT_EQ_STR(small, "abc");
 }
 
@@ -94,14 +94,14 @@ TEST(insert_autopair_opener) {
 
   char buf[16] = "";
   size_t cur = 0;
-  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, "{", 1);
+  size_t total = edit_buffer_insert_text(&(FnEditBufferInsertTextSpec){.f_buf = buf, .f_cap = sizeof(buf), .f_cursor = &cur, .f_text = "{", .f_len = 1});
   ASSERT_EQ_INT(total, 2);
   ASSERT_EQ_STR(buf, "{}");
   ASSERT_EQ_INT(cur, 1);
 
   char b4[16] = "";
   size_t start = 0;
-  ASSERT_EQ_INT(edit_buffer_insert_text(b4, sizeof(b4), &start, "\"", 1), 2);
+  ASSERT_EQ_INT(edit_buffer_insert_text(&(FnEditBufferInsertTextSpec){.f_buf = b4, .f_cap = sizeof(b4), .f_cursor = &start, .f_text = "\"", .f_len = 1}), 2);
   ASSERT_EQ_STR(b4, "\"\"");
   ASSERT_EQ_INT(start, 1);
 
@@ -113,7 +113,7 @@ TEST(insert_quote_after_letter_is_not_paired) {
 
   char buf[16] = "ab";
   size_t cur = strlen(buf);
-  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, "\"", 1);
+  size_t total = edit_buffer_insert_text(&(FnEditBufferInsertTextSpec){.f_buf = buf, .f_cap = sizeof(buf), .f_cursor = &cur, .f_text = "\"", .f_len = 1});
   ASSERT_EQ_INT(total, 1);
   ASSERT_EQ_STR(buf, "ab\"");
   ASSERT_EQ_INT(cur, 3);
@@ -126,7 +126,7 @@ TEST(insert_skips_over_closer) {
 
   char buf[16] = "()";
   size_t cur = 1;
-  size_t total = edit_buffer_insert_text(buf, sizeof(buf), &cur, ")", 1);
+  size_t total = edit_buffer_insert_text(&(FnEditBufferInsertTextSpec){.f_buf = buf, .f_cap = sizeof(buf), .f_cursor = &cur, .f_text = ")", .f_len = 1});
   ASSERT_EQ_INT(total, 0);
   ASSERT_EQ_STR(buf, "()");
   ASSERT_EQ_INT(cur, 2);
@@ -139,7 +139,7 @@ TEST(insert_closer_at_end_appends) {
 
   char buf[16] = "ab";
   size_t cur = strlen(buf);
-  edit_buffer_insert_text(buf, sizeof(buf), &cur, "}", 1);
+  edit_buffer_insert_text(&(FnEditBufferInsertTextSpec){.f_buf = buf, .f_cap = sizeof(buf), .f_cursor = &cur, .f_text = "}", .f_len = 1});
   ASSERT_EQ_STR(buf, "ab}");
   ASSERT_EQ_INT(cur, 3);
 

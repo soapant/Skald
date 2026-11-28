@@ -390,8 +390,7 @@ bool slider_place(const SliderSpec *spec) {
   sl->on_hover = spec->on_hover;
   sl->render = spec->render;
 
-  focus_register(spec->name, FOCUS_KIND_SLIDER, x, y, w, h, sl,
-                 slider_focus_activate, slider_focus_step);
+  focus_register(&(FnFocusRegisterSpec){.f_name = spec->name, .f_kind = FOCUS_KIND_SLIDER, .f_x = x, .f_y = y, .f_w = w, .f_h = h, .f_owner = sl, .f_activate = slider_focus_activate, .f_adjust = slider_focus_step});
   sl->focused = focus_is(spec->name);
 
   if (fresh)

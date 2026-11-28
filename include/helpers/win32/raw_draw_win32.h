@@ -83,8 +83,15 @@ HFONT win32_symbol_font(int size, const wchar_t *wide, int len);
 bool win32_text_is_symbolic(const wchar_t *wide, int len);
 bool win32_font_covers(HFONT f, const wchar_t *wide, int len);
 bool win32_text_needs_boost(const wchar_t *wide, int len);
-HFONT win32_font_for_text(const wchar_t *wide, int len, int font_size,
-                          HFONT *out_old, int *out_dy);
+typedef struct {
+  const wchar_t *f_wide;
+  int f_len;
+  int f_font_size;
+  HFONT *f_out_old;
+  int *f_out_dy;
+} FnWin32FontForTextSpec;
+
+HFONT win32_font_for_text(FnWin32FontForTextSpec *argspec);
 COLORREF win32_colorref(unsigned long hex);
 COLORREF win32_resolve_color(unsigned long hex, bool opaque);
 
@@ -94,15 +101,41 @@ void win32_gdip_dispose(void *img);
 HDC win32_screen_dc(void);
 void win32_img_cache_lock(void);
 void win32_img_cache_unlock(void);
-void *win32_img_cache_get(const char *path, HDC screen, int w, int h,
-                          HDC *out_dc, bool *out_opaque);
-void win32_img_cache_put(const char *path, HDC screen, int w, int h, void *img,
-                         HBITMAP dib, HDC dc, bool opaque);
+typedef struct {
+  const char *f_path;
+  HDC f_screen;
+  int f_w;
+  int f_h;
+  HDC *f_out_dc;
+  bool *f_out_opaque;
+} FnWin32ImgCacheGetSpec;
+
+void *win32_img_cache_get(FnWin32ImgCacheGetSpec *argspec);
+typedef struct {
+  const char *f_path;
+  HDC f_screen;
+  int f_w;
+  int f_h;
+  void *f_img;
+  HBITMAP f_dib;
+  HDC f_dc;
+  bool f_opaque;
+} FnWin32ImgCachePutSpec;
+
+void win32_img_cache_put(FnWin32ImgCachePutSpec *argspec);
 void *win32_src_cache_get(const char *path);
 void win32_src_cache_put(const char *path, void *src);
 void win32_img_cache_free_all(void);
-void *win32_load_scaled_bitmap(const char *path, int w, int h, HBITMAP *out_dib,
-                               HDC *out_dc, bool *out_opaque);
+typedef struct {
+  const char *f_path;
+  int f_w;
+  int f_h;
+  HBITMAP *f_out_dib;
+  HDC *f_out_dc;
+  bool *f_out_opaque;
+} FnWin32LoadScaledBitmapSpec;
+
+void *win32_load_scaled_bitmap(FnWin32LoadScaledBitmapSpec *argspec);
 void *win32_load_shell_icon_bitmap(const char *path);
 void *win32_load_shell_icon_ex(const char *path, bool use_file_attributes);
 void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max);

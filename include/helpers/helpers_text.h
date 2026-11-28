@@ -26,9 +26,19 @@ typedef struct {
 const char *text_resolve(const char *text, char tmp[2]);
 bool capture_text(const char *text);
 int text_segment_width(const void *seg, int font_size);
-void wrapped_word_push(WrappedWord **words, int *count, int *cap, const char *s,
-                       size_t len, unsigned long color, int lead, int breaks,
-                       int font_size);
+typedef struct {
+  WrappedWord **f_words;
+  int *f_count;
+  int *f_cap;
+  const char *f_s;
+  size_t f_len;
+  unsigned long f_color;
+  int f_lead;
+  int f_breaks;
+  int f_font_size;
+} FnWrappedWordPushSpec;
+
+void wrapped_word_push(FnWrappedWordPushSpec *argspec);
 
 typedef struct {
   unsigned long color;
@@ -37,9 +47,19 @@ typedef struct {
 
 int wrap_measure_thunk(void *ctx, const char *s, int n);
 
-int text_wrap_layout(const char *text, int x0, int y0, int max_width,
-                     int line_height, TextWrapMeasureFn measure, void *ctx,
-                     Pos *out, int maxout);
+typedef struct {
+  const char *f_text;
+  int f_x0;
+  int f_y0;
+  int f_max_width;
+  int f_line_height;
+  TextWrapMeasureFn f_measure;
+  void *f_ctx;
+  Pos *f_out;
+  int f_maxout;
+} FnTextWrapLayoutSpec;
+
+int text_wrap_layout(FnTextWrapLayoutSpec *argspec);
 
 typedef struct {
   char **items;
@@ -56,11 +76,16 @@ StringList File_ReadLines(const char *path);
 void url_build_search_url(const char *engine, const char *query, char *out,
                           size_t cap);
 
-bool file_walk_all_files_from_dir(const char *dir_path,
-                                  char **list_of_allowed_extensions,
-                                  ListOfFiles *list_of_files,
-                                  char **list_of_names_to_ignore,
-                                  bool strip_extension, int max_depth);
+typedef struct {
+  const char *f_dir_path;
+  char **f_list_of_allowed_extensions;
+  ListOfFiles *f_list_of_files;
+  char **f_list_of_names_to_ignore;
+  bool f_strip_extension;
+  int f_max_depth;
+} FnFileWalkAllFilesFromDirSpec;
+
+bool file_walk_all_files_from_dir(FnFileWalkAllFilesFromDirSpec *argspec);
 
 char *string_cut_at(const char *str, char delim);
 char *string_cut_before(const char *str, char delim);

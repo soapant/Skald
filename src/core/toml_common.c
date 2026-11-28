@@ -232,19 +232,17 @@ bool toml_color_ref(const char *body, ColorRef *out) {
   return true;
 }
 
-TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len, char *key,
-                                        size_t key_cap, char *value,
-                                        size_t value_cap) {
-  if (!line || !key || !value || !key_cap || !value_cap)
+TomlKeyValueStatus toml_parse_key_value(FnTomlParseKeyValueSpec *argspec) {
+  if (!argspec->f_line || !argspec->f_key || !argspec->f_value || !argspec->f_key_cap || !argspec->f_value_cap)
     return TOML_KV_INVALID_VALUE;
 
   TomlKeyValueStatus st = TOML_KV_INVALID_VALUE;
-  char *stripped = (char *)malloc(len + 1);
+  char *stripped = (char *)malloc(argspec->f_len + 1);
   if (!stripped)
     return TOML_KV_INVALID_VALUE;
-  memcpy(stripped, line, len);
-  stripped[len] = '\0';
-  toml_strip_comment(stripped, stripped, len + 1);
+  memcpy(stripped, argspec->f_line, argspec->f_len);
+  stripped[argspec->f_len] = '\0';
+  toml_strip_comment(stripped, stripped, argspec->f_len + 1);
 
   const char *s = toml_trim_left(stripped);
   size_t s_len = toml_trim_right_len(s, strlen(s));
@@ -264,7 +262,7 @@ TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len, char *key,
         closed = true;
         break;
       }
-      if (o + 1 >= key_cap) {
+      if (o + 1 >= argspec->f_key_cap) {
         st = TOML_KV_KEY_TOO_LONG;
         goto done;
       }
@@ -272,26 +270,26 @@ TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len, char *key,
         char e = s[++i];
         switch (e) {
         case 'n':
-          key[o++] = '\n';
+          argspec->f_key[o++] = '\n';
           break;
         case 't':
-          key[o++] = '\t';
+          argspec->f_key[o++] = '\t';
           break;
         case 'r':
-          key[o++] = '\r';
+          argspec->f_key[o++] = '\r';
           break;
         case '"':
-          key[o++] = '"';
+          argspec->f_key[o++] = '"';
           break;
         case '\\':
-          key[o++] = '\\';
+          argspec->f_key[o++] = '\\';
           break;
         default:
           st = TOML_KV_BAD_ESCAPE;
           goto done;
         }
       } else {
-        key[o++] = c;
+        argspec->f_key[o++] = c;
       }
       i++;
     }
@@ -299,7 +297,7 @@ TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len, char *key,
       st = TOML_KV_UNTERMINATED_KEY;
       goto done;
     }
-    key[o] = '\0';
+    argspec->f_key[o] = '\0';
     size_t key_end = i + 1;
     cur = s + key_end;
     rem = s_len - key_end;
@@ -310,13 +308,13 @@ TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len, char *key,
       goto done;
     }
     size_t klen = toml_trim_right_len(s, (size_t)(eq0 - s));
-    if (klen == 0 || klen >= key_cap) {
+    if (klen == 0 || klen >= argspec->f_key_cap) {
       st = TOML_KV_INVALID_KEY;
       goto done;
     }
-    memcpy(key, s, klen);
-    key[klen] = '\0';
-    if (!toml_is_bare_key(key)) {
+    memcpy(argspec->f_key, s, klen);
+    argspec->f_key[klen] = '\0';
+    if (!toml_is_bare_key(argspec->f_key)) {
       st = TOML_KV_INVALID_KEY;
       goto done;
     }
@@ -337,12 +335,12 @@ TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len, char *key,
   }
   const char *vs = toml_trim_left(eq + 1);
   size_t vlen = toml_trim_right_len(vs, strlen(vs));
-  if (vlen == 0 || vlen >= value_cap) {
+  if (vlen == 0 || vlen >= argspec->f_value_cap) {
     st = TOML_KV_INVALID_VALUE;
     goto done;
   }
-  memcpy(value, vs, vlen);
-  value[vlen] = '\0';
+  memcpy(argspec->f_value, vs, vlen);
+  argspec->f_value[vlen] = '\0';
   st = TOML_KV_OK;
 
 done:

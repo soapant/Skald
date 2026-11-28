@@ -237,7 +237,7 @@ TEST(set_overlong_section_name_is_rejected) {
   section[sizeof(section) - 1] = '\0';
   file_remove_path(PATH);
   ConfigTomlError err;
-  ASSERT_EQ_INT((int)config_section_set_ex(PATH, section, "Key", "value", &err),
+  ASSERT_EQ_INT((int)config_section_set_ex(&(FnConfigSectionSetExSpec){.f_path = PATH, .f_section = section, .f_name = "Key", .f_value = "value", .f_err = &err}),
                 (int)CONFIG_TOML_ERR_PARSE);
   char *s = slurp();
   ASSERT_TRUE(s == NULL);

@@ -75,26 +75,24 @@ static void snippet_owner_set(OwnerTag *tag, void (*func)(void), void *caller) {
   owner_strfree(&owner);
 }
 
-bool snippet_register_internal(const char *trigger, const char *text,
-                               void (*func)(void), bool whitelist,
-                               const char *const *windows, void *caller) {
-  if (!trigger || !trigger[0])
+bool snippet_register_internal(FnSnippetRegisterInternalSpec *argspec) {
+  if (!argspec->f_trigger || !argspec->f_trigger[0])
     return false;
-  if (!text && !func)
+  if (!argspec->f_text && !argspec->f_func)
     return false;
 
   for (size_t i = 0; i < snippet_count; i++) {
-    if (snippets[i].trigger && strcmp(snippets[i].trigger, trigger) == 0) {
+    if (snippets[i].trigger && strcmp(snippets[i].trigger, argspec->f_trigger) == 0) {
       int nwin = 0;
-      if (windows) {
-        while (windows[nwin])
+      if (argspec->f_windows) {
+        while (argspec->f_windows[nwin])
           nwin++;
       }
-      char *nt = strdup(trigger);
+      char *nt = strdup(argspec->f_trigger);
       if (!nt)
         return false;
-      char *ntext = text ? strdup(text) : NULL;
-      if (text && !ntext) {
+      char *ntext = argspec->f_text ? strdup(argspec->f_text) : NULL;
+      if (argspec->f_text && !ntext) {
         free(nt);
         return false;
       }
@@ -107,7 +105,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
           return false;
         }
         for (int j = 0; j < nwin; j++) {
-          nwindows[j] = strdup(windows[j] ? windows[j] : "");
+          nwindows[j] = strdup(argspec->f_windows[j] ? argspec->f_windows[j] : "");
           if (!nwindows[j]) {
             for (int k = 0; k < j; k++)
               free(nwindows[k]);
@@ -121,11 +119,11 @@ bool snippet_register_internal(const char *trigger, const char *text,
       snippet_free_binding(&snippets[i]);
       snippets[i].trigger = nt;
       snippets[i].text = ntext;
-      snippets[i].func = func;
-      snippets[i].whitelist = whitelist;
+      snippets[i].func = argspec->f_func;
+      snippets[i].whitelist = argspec->f_whitelist;
       snippets[i].windows = nwindows;
       snippets[i].window_count = nwindows ? nwin : 0;
-      snippet_owner_set(&snippets[i].tag, func, caller);
+      snippet_owner_set(&snippets[i].tag, argspec->f_func, argspec->f_caller);
       snippet_reset_buffer();
       return true;
     }
@@ -133,21 +131,21 @@ bool snippet_register_internal(const char *trigger, const char *text,
   SnippetBinding nb;
   SnippetBinding *b = &nb;
   memset(b, 0, sizeof(*b));
-  b->trigger = strdup(trigger);
+  b->trigger = strdup(argspec->f_trigger);
   if (!b->trigger)
     return false;
-  b->text = text ? strdup(text) : NULL;
-  if (text && !b->text) {
+  b->text = argspec->f_text ? strdup(argspec->f_text) : NULL;
+  if (argspec->f_text && !b->text) {
     free(b->trigger);
     return false;
   }
-  b->func = func;
-  b->whitelist = whitelist;
+  b->func = argspec->f_func;
+  b->whitelist = argspec->f_whitelist;
   b->windows = NULL;
   b->window_count = 0;
-  if (windows) {
+  if (argspec->f_windows) {
     int n = 0;
-    while (windows[n])
+    while (argspec->f_windows[n])
       n++;
     if (n > 0) {
       b->windows = malloc((size_t)n * sizeof(char *));
@@ -157,7 +155,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
         return false;
       }
       for (int j = 0; j < n; j++) {
-        b->windows[j] = strdup(windows[j] ? windows[j] : "");
+        b->windows[j] = strdup(argspec->f_windows[j] ? argspec->f_windows[j] : "");
         if (!b->windows[j]) {
           for (int k = 0; k < j; k++)
             free(b->windows[k]);
@@ -170,7 +168,7 @@ bool snippet_register_internal(const char *trigger, const char *text,
       b->window_count = n;
     }
   }
-  snippet_owner_set(&b->tag, func, caller);
+  snippet_owner_set(&b->tag, argspec->f_func, argspec->f_caller);
   arrput(snippets, nb);
   snippet_reset_buffer();
   return true;

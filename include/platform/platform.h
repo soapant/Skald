@@ -206,8 +206,15 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 FontHandle Platform_CreateFont(int size, const char *face_name);
 void Platform_DestroyFont(FontHandle font);
 int Platform_EditboxPlaceholderOffset(void);
-void Platform_GetTextExtents(FontHandle font, const char *text, int max_width,
-                             int *outWidth, int *outHeight);
+typedef struct {
+  FontHandle f_font;
+  const char *f_text;
+  int f_max_width;
+  int *f_outWidth;
+  int *f_outHeight;
+} FnPlatformGetTextExtentsSpec;
+
+void Platform_GetTextExtents(FnPlatformGetTextExtentsSpec *argspec);
 int Platform_InitializeTrayIcon(void);
 void Platform_PrewarmBackgroundPixmap(void);
 void Platform_InitUI(void);
@@ -222,8 +229,17 @@ typedef struct {
 
 bool Platform_ListboxBackendBegin(int item_height_override,
                                   ListboxBackendInit *out);
-void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
-                                          int fw, int frame_h, bool sel);
+typedef struct {
+  int f_bx;
+  int f_bw;
+  int f_y;
+  int f_item_h;
+  int f_fw;
+  int f_frame_h;
+  bool f_sel;
+} FnPlatformListboxBackendDrawSelectionSpec;
+
+void Platform_ListboxBackendDrawSelection(FnPlatformListboxBackendDrawSelectionSpec *argspec);
 void Platform_ListboxBackendEnd(void);
 PromptState *Platform_ListboxBackendPromptState(const ListBox *lb);
 

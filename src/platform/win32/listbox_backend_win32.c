@@ -29,28 +29,27 @@ bool Platform_ListboxBackendBegin(int item_height_override,
   return true;
 }
 
-void Platform_ListboxBackendDrawSelection(int bx, int bw, int y, int item_h,
-                                          int fw, int frame_h, bool sel) {
-  (void)frame_h;
-  (void)fw;
+void Platform_ListboxBackendDrawSelection(FnPlatformListboxBackendDrawSelectionSpec *argspec) {
+  (void)argspec->f_frame_h;
+  (void)argspec->f_fw;
   if (RoundedCorners && CornerRadius > 0) {
     int R = PROMPT_SEL_RADIUS;
     if (R > CornerRadius)
       R = CornerRadius;
     int t = PROMPT_SEL_INSET;
-    RECT inner = {bx + t, y + PROMPT_SEL_TOP_INSET + t, bx + bw - t,
-                  y + item_h - 1 - t};
+    RECT inner = {argspec->f_bx + t, argspec->f_y + PROMPT_SEL_TOP_INSET + t, argspec->f_bx + argspec->f_bw - t,
+                  argspec->f_y + argspec->f_item_h - 1 - t};
     int innerR = R - 1;
     if (innerR < 0)
       innerR = 0;
     if (inner.right <= inner.left || inner.bottom <= inner.top) {
-      inner = (RECT){bx, y, bx + bw, y + item_h};
+      inner = (RECT){argspec->f_bx, argspec->f_y, argspec->f_bx + argspec->f_bw, argspec->f_y + argspec->f_item_h};
       innerR = R;
     }
-    if (sel)
+    if (argspec->f_sel)
       win32_fill_rounded_rect(b_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
-  } else if (sel) {
-    RECT rc = {bx, y, bx + bw, y + item_h};
+  } else if (argspec->f_sel) {
+    RECT rc = {argspec->f_bx, argspec->f_y, argspec->f_bx + argspec->f_bw, argspec->f_y + argspec->f_item_h};
     HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
     FillRect(b_hdc, &rc, br);
     DeleteObject(br);

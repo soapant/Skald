@@ -140,7 +140,17 @@ bool widget_base_resize(PlatformWidgetBase *base, int w, int h);
 bool widget_base_set_no_bg(PlatformWidgetBase *base, bool no_bg);
 bool widget_base_set_bg_color(PlatformWidgetBase *base, ColorRef bg_color);
 
-void widget_init_base(PlatformWidgetBase *base, int x, int y, int w, int h,
-                      int fps, bool no_bg, void (*on_click)(void),
-                      const char *name);
+typedef struct {
+  PlatformWidgetBase *f_base;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+  int f_fps;
+  bool f_no_bg;
+  void (*f_on_click)(void);
+  const char *f_name;
+} FnWidgetInitBaseSpec;
+
+void widget_init_base(FnWidgetInitBaseSpec *argspec);
 #endif

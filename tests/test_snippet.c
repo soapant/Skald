@@ -27,8 +27,8 @@ static int count_of(const char *t) {
 
 TEST(register_then_reregister_same_trigger_survives_match) {
   snippet_reset_buffer();
-  ASSERT_TRUE(snippet_register_internal("jq", NULL, dummy, false, NULL, NULL));
-  ASSERT_TRUE(snippet_register_internal("jq", NULL, dummy, false, NULL, NULL));
+  ASSERT_TRUE(snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "jq", .f_text = NULL, .f_func = dummy, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL}));
+  ASSERT_TRUE(snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "jq", .f_text = NULL, .f_func = dummy, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL}));
   ASSERT_EQ_INT(count_of("jq"), 1);
   const SnippetBinding *b = find_by_trigger("jq");
   ASSERT_TRUE(b != NULL);
@@ -40,7 +40,7 @@ TEST(register_then_reregister_same_trigger_survives_match) {
 TEST(repeated_reregister_does_not_leak_null_trigger) {
   snippet_reset_buffer();
   for (int i = 0; i < 50; i++) {
-    snippet_register_internal("zz", "text", NULL, false, NULL, NULL);
+    snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "zz", .f_text = "text", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL});
   }
   ASSERT_EQ_INT(count_of("zz"), 1);
   const SnippetBinding *b = find_by_trigger("zz");
@@ -52,9 +52,9 @@ TEST(repeated_reregister_does_not_leak_null_trigger) {
 
 TEST(reregister_can_switch_text_to_func) {
   snippet_reset_buffer();
-  snippet_register_internal("sw", "hello", NULL, false, NULL, NULL);
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "sw", .f_text = "hello", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL});
   ASSERT_EQ_INT(count_of("sw"), 1);
-  snippet_register_internal("sw", NULL, dummy, false, NULL, NULL);
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "sw", .f_text = NULL, .f_func = dummy, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL});
   ASSERT_EQ_INT(count_of("sw"), 1);
   const SnippetBinding *b = find_by_trigger("sw");
   ASSERT_TRUE(b != NULL);
@@ -68,9 +68,9 @@ TEST(reregister_can_switch_text_to_func) {
 
 TEST(reregister_can_switch_func_to_text) {
   snippet_reset_buffer();
-  snippet_register_internal("sf", NULL, dummy, false, NULL, NULL);
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "sf", .f_text = NULL, .f_func = dummy, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL});
   ASSERT_EQ_INT(count_of("sf"), 1);
-  snippet_register_internal("sf", "hello", NULL, false, NULL, NULL);
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "sf", .f_text = "hello", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL});
   ASSERT_EQ_INT(count_of("sf"), 1);
   const SnippetBinding *b = find_by_trigger("sf");
   ASSERT_TRUE(b != NULL);
@@ -86,9 +86,9 @@ TEST(reregister_can_switch_func_to_text) {
 
 TEST(distinct_triggers_do_not_collapse) {
   snippet_reset_buffer();
-  snippet_register_internal("aa", "1", NULL, false, NULL, NULL);
-  snippet_register_internal("bb", "2", NULL, false, NULL, NULL);
-  snippet_register_internal("cc", "3", NULL, false, NULL, NULL);
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "aa", .f_text = "1", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL});
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "bb", .f_text = "2", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL});
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "cc", .f_text = "3", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL});
   ASSERT_EQ_INT(count_of("aa"), 1);
   ASSERT_EQ_INT(count_of("bb"), 1);
   ASSERT_EQ_INT(count_of("cc"), 1);
@@ -97,7 +97,7 @@ TEST(distinct_triggers_do_not_collapse) {
 TEST(reregister_preserves_window_whitelist) {
   snippet_reset_buffer();
   const char *wins[] = {"feh", NULL};
-  snippet_register_internal("ww", "1", NULL, true, wins, NULL);
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "ww", .f_text = "1", .f_func = NULL, .f_whitelist = true, .f_windows = wins, .f_caller = NULL});
   const SnippetBinding *b = find_by_trigger("ww");
   ASSERT_TRUE(b != NULL);
   if (!b)
@@ -111,8 +111,8 @@ TEST(reregister_replaces_window_list_without_leaking) {
   snippet_reset_buffer();
   const char *w1[] = {"feh", NULL};
   const char *w2[] = {"kitty", NULL};
-  snippet_register_internal("wx", "1", NULL, false, w1, NULL);
-  snippet_register_internal("wx", "1", NULL, false, w2, NULL);
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "wx", .f_text = "1", .f_func = NULL, .f_whitelist = false, .f_windows = w1, .f_caller = NULL});
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "wx", .f_text = "1", .f_func = NULL, .f_whitelist = false, .f_windows = w2, .f_caller = NULL});
   const SnippetBinding *b = find_by_trigger("wx");
   ASSERT_TRUE(b != NULL);
   if (!b)
@@ -129,14 +129,14 @@ TEST(get_binding_rejects_out_of_range) {
 }
 
 TEST(rejects_invalid_registration) {
-  ASSERT_FALSE(snippet_register_internal(NULL, "x", NULL, false, NULL, NULL));
-  ASSERT_FALSE(snippet_register_internal("", "x", NULL, false, NULL, NULL));
-  ASSERT_FALSE(snippet_register_internal("tt", NULL, NULL, false, NULL, NULL));
+  ASSERT_FALSE(snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = NULL, .f_text = "x", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL}));
+  ASSERT_FALSE(snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "", .f_text = "x", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL}));
+  ASSERT_FALSE(snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "tt", .f_text = NULL, .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = NULL}));
 }
 
 TEST(owner_falls_back_to_caller_when_no_func) {
   snippet_reset_buffer();
-  snippet_register_internal("own", "x", NULL, false, NULL, (void *)dummy);
+  snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = "own", .f_text = "x", .f_func = NULL, .f_whitelist = false, .f_windows = NULL, .f_caller = (void *)dummy});
   const SnippetBinding *b = find_by_trigger("own");
   ASSERT_TRUE(b != NULL);
   if (!b)

@@ -475,37 +475,36 @@ void Platform_DestroyFont(FontHandle font) {
   }
 }
 
-void Platform_GetTextExtents(FontHandle font, const char *text, int max_width,
-                             int *outWidth, int *outHeight) {
+void Platform_GetTextExtents(FnPlatformGetTextExtentsSpec *argspec) {
 
-  if (!FH_TO_HFONT(font) || !text) {
-    *outWidth = 0;
-    *outHeight = 0;
+  if (!FH_TO_HFONT(argspec->f_font) || !argspec->f_text) {
+    *argspec->f_outWidth = 0;
+    *argspec->f_outHeight = 0;
     return;
   }
   HDC hdc = CreateCompatibleDC(NULL);
-  HFONT hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(font));
+  HFONT hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(argspec->f_font));
   int width = 0;
   int height = 0;
-  if (max_width > 0) {
+  if (argspec->f_max_width > 0) {
     RECT measure = {0, 0, 0, 0};
-    DrawTextA(hdc, text, -1, &measure, DT_CALCRECT);
-    RECT wrapped = {0, 0, max_width, 0x7FFFFFFF};
-    DrawTextA(hdc, text, -1, &wrapped, DT_CALCRECT | DT_WORDBREAK);
+    DrawTextA(hdc, argspec->f_text, -1, &measure, DT_CALCRECT);
+    RECT wrapped = {0, 0, argspec->f_max_width, 0x7FFFFFFF};
+    DrawTextA(hdc, argspec->f_text, -1, &wrapped, DT_CALCRECT | DT_WORDBREAK);
     height = wrapped.bottom - wrapped.top;
     width = measure.right - measure.left;
-    if (width > max_width)
-      width = max_width;
+    if (width > argspec->f_max_width)
+      width = argspec->f_max_width;
   } else {
     RECT measure = {0, 0, 0, 0};
-    DrawTextA(hdc, text, -1, &measure, DT_CALCRECT);
+    DrawTextA(hdc, argspec->f_text, -1, &measure, DT_CALCRECT);
     width = measure.right - measure.left;
     height = measure.bottom - measure.top;
   }
   SelectObject(hdc, hOldFont);
   DeleteDC(hdc);
-  *outWidth = width;
-  *outHeight = height;
+  *argspec->f_outWidth = width;
+  *argspec->f_outHeight = height;
 }
 
 static HWND win32_find_window_by_title(const char *title) {
@@ -1867,8 +1866,7 @@ static char *win32_lookup_walk_programs(const char *name) {
     if (!win32_lookup_is_dir(roots[i]))
       continue;
     ListOfFiles found = {0};
-    if (file_walk_all_files_from_dir((char *)roots[i], allowed, &found, NULL,
-                                     true, 3)) {
+    if (file_walk_all_files_from_dir(&(FnFileWalkAllFilesFromDirSpec){.f_dir_path = (char *)roots[i], .f_list_of_allowed_extensions = allowed, .f_list_of_files = &found, .f_list_of_names_to_ignore = NULL, .f_strip_extension = true, .f_max_depth = 3})) {
       for (size_t j = 0; j < found.count; j++) {
         if (string_equals_ci(found.files[j].name, name)) {
           char *hit = _strdup(found.files[j].path);
@@ -1990,7 +1988,7 @@ bool Platform_SnapActiveWindow(SnapPreset preset) {
     ShowWindow(hwnd, SW_RESTORE);
   RECT w = mi.rcWork;
   SnapRect r =
-      wm_snap_rect(w.left, w.top, w.right - w.left, w.bottom - w.top, preset);
+      wm_snap_rect(&(FnWmSnapRectSpec){.f_mx = w.left, .f_my = w.top, .f_mw = w.right - w.left, .f_mh = w.bottom - w.top, .f_p = preset});
   SetWindowPos(hwnd, HWND_TOP, r.x, r.y, r.w, r.h,
                SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
   return true;
@@ -2295,12 +2293,11 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
                       .caret_y = spec->caret_y,
                       .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_spec_from_place(&eb, &place, state, &ui,
-                          &(EditboxMetrics){.text_w = text_w,
+  editbox_spec_from_place(&(FnEditboxSpecFromPlaceSpec){.f_out = &eb, .f_place = &place, .f_state = state, .f_ui = &ui, .f_metrics = &(EditboxMetrics){.text_w = text_w,
                                             .cursor_x = cursor_x,
                                             .ascent = ascent,
                                             .descent = descent,
-                                            .font = spec->font});
+                                            .font = spec->font}});
   eb.text_y += spec->text_y;
   eb.caret_y += spec->text_y;
 

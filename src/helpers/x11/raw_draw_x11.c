@@ -59,7 +59,7 @@ __thread int raw_map_pitch = 0;
 __thread XftDraw *raw_map_xd = NULL;
 
 static int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
-  return x11_measure_utf8_fallback(dpy, xf, s, n, 0);
+  return x11_measure_utf8_fallback(&(FnX11MeasureUtf8FallbackSpec){.f_dpy = dpy, .f_xf = xf, .f_s = s, .f_n = n, .f_px = 0});
 }
 
 static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf,
@@ -78,8 +78,7 @@ static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf,
       k++;
     if (k >= nu)
       k = 0;
-    x11_draw_utf8_fallback(dpy, xd, &xcols[k], cx, baseline, xf, raw_text + i,
-                           j - i, 0);
+    x11_draw_utf8_fallback(&(FnX11DrawUtf8FallbackSpec){.f_dpy = dpy, .f_xd = xd, .f_color = &xcols[k], .f_x = cx, .f_y = baseline, .f_xf = xf, .f_s = raw_text + i, .f_n = j - i, .f_px = 0});
     for (int m = i; m < j; m++) {
       raw_map_x[m] = cx;
       raw_map_top[m] = row_top;
@@ -129,7 +128,7 @@ void x11_raw_line_flush(void) {
   }
   XftColor xcols[64];
   for (int k = 0; k < nu; k++)
-    x11_xft_color_cached(dpy, vis, cmap, ucols[k], 0xFFFF, &xcols[k]);
+    x11_xft_color_cached(&(FnX11XftColorCachedSpec){.f_dpy = dpy, .f_vis = vis, .f_cmap = cmap, .f_hex = ucols[k], .f_alpha = 0xFFFF, .f_out = &xcols[k]});
   int row = 0;
   int p = 0;
   int ls = 0;
@@ -232,45 +231,44 @@ void x11_raw_line_flush(void) {
     Platform_DestroyFont(raw_font);
 }
 
-bool x11_raw_line_push(int x, int y, char ch, unsigned long color,
-                       FontHandle fh, bool owned, int font_size) {
+bool x11_raw_line_push(FnX11RawLinePushSpec *argspec) {
   if (raw_count > 0) {
     bool same =
-        (y == raw_y) && (font_size == raw_fontsize) && (raw_xd == g_draw_xd);
+        (argspec->f_y == raw_y) && (argspec->f_font_size == raw_fontsize) && (raw_xd == g_draw_xd);
     if (same && raw_count >= 2)
-      same = (x == raw_x0 + raw_count * raw_pitch);
+      same = (argspec->f_x == raw_x0 + raw_count * raw_pitch);
     if (same && raw_count == 1) {
-      int p = x - raw_x0;
+      int p = argspec->f_x - raw_x0;
       if (p <= 0)
         same = false;
       else
         raw_pitch = p;
     }
-    if (same && owned && !raw_font_owned)
+    if (same && argspec->f_owned && !raw_font_owned)
       same = false;
-    if (same && !owned)
-      same = (FH_TO_XFT(fh) == FH_TO_XFT(raw_font));
+    if (same && !argspec->f_owned)
+      same = (FH_TO_XFT(argspec->f_fh) == FH_TO_XFT(raw_font));
     if (!same)
       x11_raw_line_flush();
   }
   if (raw_count >= RAW_LINE_CAP)
     return false;
   if (raw_count == 0) {
-    raw_x0 = x;
-    raw_y = y;
+    raw_x0 = argspec->f_x;
+    raw_y = argspec->f_y;
     raw_pitch = 0;
-    raw_fontsize = font_size;
-    raw_font = fh;
-    raw_font_owned = owned;
+    raw_fontsize = argspec->f_font_size;
+    raw_font = argspec->f_fh;
+    raw_font_owned = argspec->f_owned;
     raw_dpy = g_draw_dpy;
     raw_xd = g_draw_xd;
     raw_vis = g_draw_vis;
     raw_cmap = g_draw_cmap;
-  } else if (owned) {
-    Platform_DestroyFont(fh);
+  } else if (argspec->f_owned) {
+    Platform_DestroyFont(argspec->f_fh);
   }
-  raw_cells[raw_count].ch = ch;
-  raw_cells[raw_count].color = color;
+  raw_cells[raw_count].ch = argspec->f_ch;
+  raw_cells[raw_count].color = argspec->f_color;
   raw_count++;
   return true;
 }
@@ -378,12 +376,9 @@ int x11_editbox_measure(const char *text, int len, void *user) {
   return ext.xOff;
 }
 
-void x11_draw_list_background(PromptState *state, Display *dpy, XftDraw *xd,
-                              Visual *vis, Colormap cmap, int y, int h,
-                              bool selected) {
-  if (selected) {
-    x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h,
-                                  rgb_to_hex(COLOR_SELECTED_TEXT));
+void x11_draw_list_background(FnX11DrawListBackgroundSpec *argspec) {
+  if (argspec->f_selected) {
+    x11_draw_selection_background(&(FnX11DrawSelectionBackgroundSpec){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_x = 0, .f_y = argspec->f_y, .f_w = argspec->f_state->width, .f_h = argspec->f_h, .f_baseHex = rgb_to_hex(COLOR_SELECTED_TEXT)});
   }
 }
 
@@ -441,42 +436,39 @@ GC x11_raw_prepare(unsigned long color, int thickness) {
   if (!gc)
     return NULL;
   XftColor col;
-  x11_xft_color_cached(g_draw_dpy, g_draw_vis, g_draw_cmap, color,
-                       opacity_alpha16(), &col);
+  x11_xft_color_cached(&(FnX11XftColorCachedSpec){.f_dpy = g_draw_dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = opacity_alpha16(), .f_out = &col});
   XSetForeground(g_draw_dpy, gc, col.pixel);
   XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid,
                      CapButt, JoinMiter);
   return gc;
 }
 
-void x11_draw_editbox(PromptState *state, Display *dpy, XftDraw *xd,
-                      Visual *vis, Colormap cmap) {
-  if (!state)
+void x11_draw_editbox(FnX11DrawEditboxSpec *argspec) {
+  if (!argspec->f_state)
     return;
   SkaldContext_Get()->window.editbox_placed = true;
-  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
-  x11_draw_edit_background(state, dpy, xd, vis, cmap, font);
-  x11_draw_edit_tint(state, dpy, xd, vis, cmap, font);
-  x11_draw_edit_text(state, dpy, xd, vis, cmap, font);
-  x11_draw_edit_cursor(state, dpy, xd, vis, cmap, font);
+  FontHandle font = x11_create_font_on_display(argspec->f_dpy, FontSize, UsedFont);
+  x11_draw_edit_background(&(FnX11DrawEditBackgroundSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
+  x11_draw_edit_tint(&(FnX11DrawEditTintSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
+  x11_draw_edit_text(&(FnX11DrawEditTextSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
+  x11_draw_edit_cursor(&(FnX11DrawEditCursorSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
   Platform_DestroyFont(font);
 }
 
-void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
-                      Visual *vis, Colormap cmap) {
+void x11_draw_listbox(FnX11DrawListboxSpec *argspec) {
 
-  if (!state || !state->lb)
+  if (!argspec->f_state || !argspec->f_state->lb)
     return;
   SkaldContext_Get()->window.listbox_placed = true;
-  FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
-  ListBox *lb = state->lb;
+  FontHandle font = x11_create_font_on_display(argspec->f_dpy, FontSize, UsedFont);
+  ListBox *lb = argspec->f_state->lb;
 
   int item_h = prompt_row_height();
   int y0 = prompt_list_top();
   draw_prompt_separator(
-      (DrawPromptSeparatorSpec){.y = y0, .width = state->width});
+      (DrawPromptSeparatorSpec){.y = y0, .width = argspec->f_state->width});
   int y_offset = PROMPT_LIST_BOTTOM_TITLE;
-  int visible = (state->height - y0 - y_offset) / item_h;
+  int visible = (argspec->f_state->height - y0 - y_offset) / item_h;
   if (visible < 1)
     visible = 1;
   if (visible > lb->item_count)
@@ -489,8 +481,7 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
   listbox_apply_pending_scroll(lb, visible);
 
   listbox_set_geometry(y0, item_h, visible);
-  listbox_hover_focus(lb, y0, item_h, lb->view_offset, visible, PROMPT_SEL_X,
-                      PROMPT_SEL_X + state->width - PROMPT_SEL_W_SHRINK);
+  listbox_hover_focus(&(FnListboxHoverFocusSpec){.f_lb = lb, .f_list_top = y0, .f_item_height = item_h, .f_top_index = lb->view_offset, .f_visible_count = visible, .f_left_x = PROMPT_SEL_X, .f_right_x = PROMPT_SEL_X + argspec->f_state->width - PROMPT_SEL_W_SHRINK});
 
   for (int i = 0; i < visible; i++) {
     int idx = lb->view_offset + i;
@@ -499,23 +490,19 @@ void x11_draw_listbox(PromptState *state, Display *dpy, XftDraw *xd,
     if (RoundedCorners && CornerRadius > 0) {
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
-      int bx = PROMPT_SEL_X, bw = state->width - PROMPT_SEL_W_SHRINK;
+      int bx = PROMPT_SEL_X, bw = argspec->f_state->width - PROMPT_SEL_W_SHRINK;
       if (sel) {
-        x11_fill_rounded_rect(dpy, xd, vis, cmap,
-                              rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx + t,
-                              y + PROMPT_SEL_TOP_INSET + t, bw - 2 * t,
-                              item_h - 2 - 2 * t, R - 1);
+        x11_fill_rounded_rect(&(FnX11FillRoundedRectSpec){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_hex = rgb_to_hex(COLOR_SELECTED_TEXT), .f_alpha16 = 0xFFFF, .f_x = bx + t, .f_y = y + PROMPT_SEL_TOP_INSET + t, .f_w = bw - 2 * t, .f_h = item_h - 2 - 2 * t, .f_radius = R - 1});
       }
     } else {
-      x11_draw_list_background(state, dpy, xd, vis, cmap, y, item_h, sel);
+      x11_draw_list_background(&(FnX11DrawListBackgroundSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_y = y, .f_h = item_h, .f_selected = sel});
     }
-    x11_draw_list_item(dpy, xd, vis, cmap, font, lb, idx, y, PROMPT_ITEM_TEXT_X,
-                       NULL);
+    x11_draw_list_item(&(FnX11DrawListItemSpec){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font, .f_lb = lb, .f_idx = idx, .f_y = y, .f_text_x = PROMPT_ITEM_TEXT_X, .f_icon_path = NULL});
   }
 
   if (prompt_list_bottom_margin() > 0) {
     draw_prompt_separator((DrawPromptSeparatorSpec){
-        .y = state->height - PROMPT_LIST_BOTTOM_TITLE, .width = state->width});
+        .y = argspec->f_state->height - PROMPT_LIST_BOTTOM_TITLE, .width = argspec->f_state->width});
   }
 
   Platform_DestroyFont(font);
@@ -664,7 +651,7 @@ bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec) {
     return false;
   Pixmap pm = 0;
   Picture pic = 0;
-  bool ok = x11_upload_argb(dpy, 0, buf, w, h, &pm, &pic);
+  bool ok = x11_upload_argb(&(FnX11UploadArgbSpec){.f_dpy = dpy, .f_ref = 0, .f_argb = buf, .f_w = w, .f_h = h, .f_out_pm = &pm, .f_out_pic = &pic});
   free(buf);
   if (!ok)
     return false;
@@ -705,7 +692,7 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
   }
   int font_size = spec->font_size > 0 ? spec->font_size : FontSize;
   int len = (int)strlen(spec->text);
-  int tw = x11_measure_utf8_fallback(dpy, xf, spec->text, len, font_size);
+  int tw = x11_measure_utf8_fallback(&(FnX11MeasureUtf8FallbackSpec){.f_dpy = dpy, .f_xf = xf, .f_s = spec->text, .f_n = len, .f_px = font_size});
   int lh = xf->ascent + xf->descent;
   if (tw <= 0 || lh <= 0) {
     if (need_destroy)
@@ -757,7 +744,7 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
   unsigned long color =
       spec->color == COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec->color;
   XftColor col;
-  x11_xft_color_cached(dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+  x11_xft_color_cached(&(FnX11XftColorCachedSpec){.f_dpy = dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = 0xFFFF, .f_out = &col});
   XftDrawStringUtf8(td, &col, xf, 0, xf->ascent, (FcChar8 *)spec->text, len);
   XftDrawDestroy(td);
 

@@ -25,28 +25,26 @@ void Platform_Widget_FlushDestruction(void) {
   win32_wdestroy_unlock();
 }
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
-                                       bool no_bg, void (*on_click)(void),
-                                       const char *name) {
+PlatformWidget *Platform_Widget_Create(FnPlatformWidgetCreateSpec *argspec) {
 
-  if (w <= 0 || h <= 0)
+  if (argspec->f_w <= 0 || argspec->f_h <= 0)
     return NULL;
-  if (!render_thread_ensure_started(fps))
+  if (!render_thread_ensure_started(argspec->f_fps))
     return NULL;
   win32_widget_register_class();
 
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
     return NULL;
-  widget_init_base(&widget->base, x, y, w, h, fps, no_bg, on_click, name);
+  widget_init_base(&(FnWidgetInitBaseSpec){.f_base = &widget->base, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_fps = argspec->f_fps, .f_no_bg = argspec->f_no_bg, .f_on_click = argspec->f_on_click, .f_name = argspec->f_name});
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exstyle =
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
-  if (!on_click)
+  if (!argspec->f_on_click)
     exstyle |= WS_EX_TRANSPARENT;
-  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP, x, y, w,
-                                 h, NULL, NULL, hInstance, widget);
+  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP, argspec->f_x, argspec->f_y, argspec->f_w,
+                                 argspec->f_h, NULL, NULL, hInstance, widget);
   if (!widget->hwnd) {
     log_warn("widget: CreateWindowExA failed err=%lu", GetLastError());
     free(widget);
@@ -54,7 +52,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
   }
 
   if (!widget->base.no_bg) {
-    win32_apply_rounded_corners(widget->hwnd, w, h);
+    win32_apply_rounded_corners(widget->hwnd, argspec->f_w, argspec->f_h);
   }
   SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);

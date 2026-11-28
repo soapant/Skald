@@ -56,14 +56,12 @@ static int focus_find(const char *name) {
   return -1;
 }
 
-void focus_frame_begin(bool include_listbox, int lb_x, int lb_y, int lb_w,
-                       int lb_h) {
+void focus_frame_begin(FnFocusFrameBeginSpec *argspec) {
   arrsetlen(s_entries, 0);
   s_current = -1;
   s_saved_seen = false;
-  if (include_listbox) {
-    focus_register(FOCUS_LISTBOX_NAME, FOCUS_KIND_LISTBOX, lb_x, lb_y, lb_w,
-                   lb_h, NULL, NULL, NULL);
+  if (argspec->f_include_listbox) {
+    focus_register(&(FnFocusRegisterSpec){.f_name = FOCUS_LISTBOX_NAME, .f_kind = FOCUS_KIND_LISTBOX, .f_x = argspec->f_lb_x, .f_y = argspec->f_lb_y, .f_w = argspec->f_lb_w, .f_h = argspec->f_lb_h, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
     if (!s_saved_name[0] && s_saved_kind != FOCUS_KIND_EDITBOX)
       focus_select(FOCUS_LISTBOX_NAME);
   }
@@ -96,12 +94,10 @@ void focus_frame_end(void) {
   }
 }
 
-void focus_register(const char *name, FocusKind kind, int x, int y, int w,
-                    int h, void *owner, FocusActivateFn activate,
-                    FocusAdjustFn adjust) {
-  if (!name || !name[0])
+void focus_register(FnFocusRegisterSpec *argspec) {
+  if (!argspec->f_name || !argspec->f_name[0])
     return;
-  int idx = focus_find(name);
+  int idx = focus_find(argspec->f_name);
   FocusEntry *e;
   if (idx >= 0) {
     e = &s_entries[idx];
@@ -109,17 +105,17 @@ void focus_register(const char *name, FocusKind kind, int x, int y, int w,
     e = arraddnptr(s_entries, 1);
     idx = s_count - 1;
   }
-  snprintf(e->name, sizeof(e->name), "%s", name);
-  e->kind = kind;
-  e->x = x;
-  e->y = y;
-  e->w = w;
-  e->h = h;
-  e->owner = owner;
-  e->activate = activate;
-  e->adjust = adjust;
-  if (s_saved_name[0] && strcmp(s_saved_name, name) == 0 &&
-      s_saved_kind == kind) {
+  snprintf(e->name, sizeof(e->name), "%s", argspec->f_name);
+  e->kind = argspec->f_kind;
+  e->x = argspec->f_x;
+  e->y = argspec->f_y;
+  e->w = argspec->f_w;
+  e->h = argspec->f_h;
+  e->owner = argspec->f_owner;
+  e->activate = argspec->f_activate;
+  e->adjust = argspec->f_adjust;
+  if (s_saved_name[0] && strcmp(s_saved_name, argspec->f_name) == 0 &&
+      s_saved_kind == argspec->f_kind) {
     s_current = idx;
     s_saved_seen = true;
   }

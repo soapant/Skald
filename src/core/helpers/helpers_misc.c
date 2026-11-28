@@ -144,19 +144,19 @@ int monitor_count(void) {
   return monitor_fill(mon, 16);
 }
 
-bool monitor_geometry_at(int index, int *x, int *y, int *w, int *h) {
+bool monitor_geometry_at(FnMonitorGeometryAtSpec *argspec) {
   MonitorEntry mon[16];
   int n = monitor_fill(mon, 16);
-  if (n <= 0 || index < 0 || index >= n || !mon[index].w)
+  if (n <= 0 || argspec->f_index < 0 || argspec->f_index >= n || !mon[argspec->f_index].w)
     return false;
-  if (x)
-    *x = mon[index].x;
-  if (y)
-    *y = mon[index].y;
-  if (w)
-    *w = mon[index].w;
-  if (h)
-    *h = mon[index].h;
+  if (argspec->f_x)
+    *argspec->f_x = mon[argspec->f_index].x;
+  if (argspec->f_y)
+    *argspec->f_y = mon[argspec->f_index].y;
+  if (argspec->f_w)
+    *argspec->f_w = mon[argspec->f_index].w;
+  if (argspec->f_h)
+    *argspec->f_h = mon[argspec->f_index].h;
   return true;
 }
 
@@ -572,14 +572,13 @@ bool setting_parse_int(const char *v, int *out) {
   return true;
 }
 
-int config_index_of(const void *entries, size_t count, size_t elem_size,
-                    size_t key_off, size_t key_size, const char *key) {
-  (void)key_size;
-  if (!entries || !key)
+int config_index_of(FnConfigIndexOfSpec *argspec) {
+  (void)argspec->f_key_size;
+  if (!argspec->f_entries || !argspec->f_key)
     return -1;
-  for (size_t i = 0; i < count; i++) {
-    const char *field = (const char *)entries + i * elem_size + key_off;
-    if (lookup_ci_eq(field, key))
+  for (size_t i = 0; i < argspec->f_count; i++) {
+    const char *field = (const char *)argspec->f_entries + i * argspec->f_elem_size + argspec->f_key_off;
+    if (lookup_ci_eq(field, argspec->f_key))
       return (int)i;
   }
   return -1;
@@ -637,28 +636,26 @@ bool pixel_color_matches_tol(RgbColor c, RgbColor target, int tolerance) {
   return db <= tol;
 }
 
-bool feature_shortcut_parse(const char *target, char *feature,
-                            size_t feature_cap, char *filter,
-                            size_t filter_cap) {
-  if (!target || !feature || !filter)
+bool feature_shortcut_parse(FnFeatureShortcutParseSpec *argspec) {
+  if (!argspec->f_target || !argspec->f_feature || !argspec->f_filter)
     return false;
-  const char *first = strchr(target, '|');
+  const char *first = strchr(argspec->f_target, '|');
   if (!first)
     return false;
   const char *second = strchr(first + 1, '|');
-  const char *feature_start = second ? first + 1 : target;
+  const char *feature_start = second ? first + 1 : argspec->f_target;
   const char *filter_start = second ? second + 1 : first + 1;
   size_t feature_len =
-      second ? (size_t)(second - feature_start) : (size_t)(first - target);
+      second ? (size_t)(second - feature_start) : (size_t)(first - argspec->f_target);
   size_t filter_len = strlen(filter_start);
   if (!feature_len || !filter_len)
     return false;
-  if (feature_len >= feature_cap || filter_len >= filter_cap)
+  if (feature_len >= argspec->f_feature_cap || filter_len >= argspec->f_filter_cap)
     return false;
-  memcpy(feature, feature_start, feature_len);
-  feature[feature_len] = '\0';
-  memcpy(filter, filter_start, filter_len);
-  filter[filter_len] = '\0';
+  memcpy(argspec->f_feature, feature_start, feature_len);
+  argspec->f_feature[feature_len] = '\0';
+  memcpy(argspec->f_filter, filter_start, filter_len);
+  argspec->f_filter[filter_len] = '\0';
   return true;
 }
 
@@ -725,10 +722,9 @@ bool resolve_caller_path_silent(void *caller_ret, const char *name, char *full,
   return feature_path_resolve_data_path(caller_ret, name, full, cap);
 }
 
-bool resolve_caller_path(void *caller_ret, const char *name, char *full,
-                         size_t cap, const char *func) {
-  if (!resolve_caller_path_silent(caller_ret, name, full, cap)) {
-    log_warn("%s resolve failed name='%s' feature='%s'", func, name,
+bool resolve_caller_path(FnResolveCallerPathSpec *argspec) {
+  if (!resolve_caller_path_silent(argspec->f_caller_ret, argspec->f_name, argspec->f_full, argspec->f_cap)) {
+    log_warn("%s resolve failed name='%s' feature='%s'", argspec->f_func, argspec->f_name,
              SkaldContext_Get()->window.current_feature
                  ? SkaldContext_Get()->window.current_feature
                  : "(null)");
@@ -755,8 +751,7 @@ StringList load_file_list_from(void *caller, const char *filepath) {
   if (!filepath)
     return list;
   char full[MAX_PATH];
-  if (!resolve_caller_path(caller, filepath, full, sizeof(full),
-                           "sk_load_file_list"))
+  if (!resolve_caller_path(&(FnResolveCallerPathSpec){.f_caller_ret = caller, .f_name = filepath, .f_full = full, .f_cap = sizeof(full), .f_func = "sk_load_file_list"}))
     return list;
   list = File_ReadLines(full);
   return list;
@@ -841,20 +836,19 @@ ImageBuffer image_take(ImageBuffer *img) {
   return out;
 }
 
-bool draw_rect_raw(const DrawRect *spec, unsigned long color, float thickness,
-                   bool filled, bool transparent) {
+bool draw_rect_raw(FnDrawRectRawSpec *argspec) {
   return Platform_DrawRectRaw((DrawRectRawSpec){
-      .x = spec->x,
-      .y = spec->y,
-      .w = spec->w,
-      .h = spec->h,
-      .color = color,
-      .radius = spec->radius ? spec->radius : 0,
-      .rounded = spec->rounded ? spec->rounded : RoundedCorners,
-      .opaque = !transparent,
-      .thickness = thickness,
-      .filled = filled,
-      .angle = spec->angle});
+      .x = argspec->f_spec->x,
+      .y = argspec->f_spec->y,
+      .w = argspec->f_spec->w,
+      .h = argspec->f_spec->h,
+      .color = argspec->f_color,
+      .radius = argspec->f_spec->radius ? argspec->f_spec->radius : 0,
+      .rounded = argspec->f_spec->rounded ? argspec->f_spec->rounded : RoundedCorners,
+      .opaque = !argspec->f_transparent,
+      .thickness = argspec->f_thickness,
+      .filled = argspec->f_filled,
+      .angle = argspec->f_spec->angle});
 }
 
 bool place_editbox(const EditSpec *spec) {
@@ -866,8 +860,7 @@ bool place_editbox(const EditSpec *spec) {
                            ? spec->name
                            : PROMPT_PRIMARY_EDITBOX_NAME;
     if (strncmp(name, "settings-search:", 16) != 0)
-      search_index_add_text(NULL, spec->buffer, SEARCH_KIND_EDITBOX, name,
-                            NULL);
+      search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = NULL, .f_text = spec->buffer, .f_kind = SEARCH_KIND_EDITBOX, .f_widget_name = name, .f_value = NULL});
     return true;
   }
   SkaldContext_Get()->window.editbox_placed = true;
@@ -891,8 +884,7 @@ bool place_editbox(const EditSpec *spec) {
     int dx = 0, dy = 0;
     get_draw_offset(&dx, &dy);
     int idx =
-        editbox_registry_place(state, name, buffer, buffer_size, spec->x + dx,
-                               spec->y + dy, copy.w, spec->h);
+        editbox_registry_place(&(FnEditboxRegistryPlaceSpec){.f_state = state, .f_name = name, .f_buffer = buffer, .f_buffer_size = buffer_size, .f_x = spec->x + dx, .f_y = spec->y + dy, .f_w = copy.w, .f_h = spec->h});
     if (idx >= 0) {
       PromptEditbox *entry = &state->editboxes[idx];
       if (state->active_editbox < 0)

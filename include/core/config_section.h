@@ -73,9 +73,15 @@ bool config_section_set(const char *path, const char *section, const char *name,
 bool config_section_clear(const char *path, const char *section,
                           const char *name);
 
-ConfigTomlStatus config_section_set_ex(const char *path, const char *section,
-                                       const char *name, const char *value,
-                                       ConfigTomlError *err);
+typedef struct {
+  const char *f_path;
+  const char *f_section;
+  const char *f_name;
+  const char *f_value;
+  ConfigTomlError *f_err;
+} FnConfigSectionSetExSpec;
+
+ConfigTomlStatus config_section_set_ex(FnConfigSectionSetExSpec *argspec);
 ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
                                          const char *name,
                                          ConfigTomlError *err);

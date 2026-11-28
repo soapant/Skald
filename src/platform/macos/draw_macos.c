@@ -27,12 +27,12 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   return false;
 }
 
-bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
-  (void)path;
-  (void)x;
-  (void)y;
-  (void)w;
-  (void)h;
+bool Platform_DrawImageAt(FnPlatformDrawImageAtSpec *argspec) {
+  (void)argspec->f_path;
+  (void)argspec->f_x;
+  (void)argspec->f_y;
+  (void)argspec->f_w;
+  (void)argspec->f_h;
   return true;
 }
 

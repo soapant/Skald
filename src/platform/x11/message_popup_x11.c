@@ -34,13 +34,12 @@ void Platform_DisplayMessage(DisplayMessageSpec spec) {
       max_width = MSG_AUTO_WRAP_MAX_W;
     if (max_height <= 0)
       max_height = MSG_AUTO_WRAP_MAX_H;
-    x11_msg_measure(dpy, message, max_width, max_height, &win_w, &win_h);
+    x11_msg_measure(&(FnX11MsgMeasureSpec){.f_dpy = dpy, .f_message = message, .f_max_width = max_width, .f_max_height = max_height, .f_out_w = &win_w, .f_out_h = &win_h});
   }
 
   int x = abs(center_x - win_w / 2);
   int y = abs(center_y - win_h / 2);
-  x11_msg_present(dpy, message, x, y, win_w, win_h, timeout, color, no_bg,
-                  render, render_data, name, rounded, radius, fps);
+  x11_msg_present(&(FnX11MsgPresentSpec){.f_dpy = dpy, .f_message = message, .f_x = x, .f_y = y, .f_win_w = win_w, .f_win_h = win_h, .f_timeout = timeout, .f_color = color, .f_no_bg = no_bg, .f_render = render, .f_render_data = render_data, .f_name = name, .f_rounded = rounded, .f_radius = radius, .f_fps = fps});
 }
 
 void Platform_HoverMessage(HoverMessageSpec spec) {
@@ -60,10 +59,9 @@ void Platform_HoverMessage(HoverMessageSpec spec) {
     win_w = w;
     win_h = h;
   } else {
-    x11_msg_measure(dpy, message, max_width, max_height, &win_w, &win_h);
+    x11_msg_measure(&(FnX11MsgMeasureSpec){.f_dpy = dpy, .f_message = message, .f_max_width = max_width, .f_max_height = max_height, .f_out_w = &win_w, .f_out_h = &win_h});
   }
-  x11_msg_hover_present(dpy, key, message, center_x, center_y, win_w, win_h,
-                        color, no_bg);
+  x11_msg_hover_present(&(FnX11MsgHoverPresentSpec){.f_dpy = dpy, .f_key = key, .f_message = message, .f_center_x = center_x, .f_center_y = center_y, .f_win_w = win_w, .f_win_h = win_h, .f_color = color, .f_no_bg = no_bg});
 }
 
 void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
@@ -83,7 +81,7 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
     max_height = MSG_AUTO_WRAP_MAX_H;
   int win_w = 0;
   int win_h = 0;
-  x11_msg_measure(dpy, message, max_width, max_height, &win_w, &win_h);
+  x11_msg_measure(&(FnX11MsgMeasureSpec){.f_dpy = dpy, .f_message = message, .f_max_width = max_width, .f_max_height = max_height, .f_out_w = &win_w, .f_out_h = &win_h});
   if (render) {
     if (want_width > 0 && want_height > 0 && !outward) {
       win_w = want_width;
@@ -93,16 +91,15 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
       win_h = 48;
     }
   }
-  int center_x = msg_anchor_center(rect_x, rect_w, h_slot, gap, outward, win_w);
-  int center_y = msg_anchor_center(rect_y, rect_h, v_slot, gap, outward, win_h);
+  int center_x = msg_anchor_center(&(FnMsgAnchorCenterSpec){.f_rect = rect_x, .f_rect_size = rect_w, .f_slot = h_slot, .f_gap = gap, .f_outward = outward, .f_win_size = win_w});
+  int center_y = msg_anchor_center(&(FnMsgAnchorCenterSpec){.f_rect = rect_y, .f_rect_size = rect_h, .f_slot = v_slot, .f_gap = gap, .f_outward = outward, .f_win_size = win_h});
   int x = center_x - win_w / 2;
   int y = center_y - win_h / 2;
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
   int stack_dir = msg_stack_dir(v_slot, outward);
-  y = x11_msg_stack_adjust_y(x, y, win_w, win_h, stack_dir);
-  x11_msg_present(dpy, message, x - ax, y - ay, win_w, win_h, timeout, color,
-                  no_bg, render, render_data, name, rounded, radius, fps);
+  y = x11_msg_stack_adjust_y(&(FnX11MsgStackAdjustYSpec){.f_x = x, .f_y = y, .f_w = win_w, .f_h = win_h, .f_dir = stack_dir});
+  x11_msg_present(&(FnX11MsgPresentSpec){.f_dpy = dpy, .f_message = message, .f_x = x - ax, .f_y = y - ay, .f_win_w = win_w, .f_win_h = win_h, .f_timeout = timeout, .f_color = color, .f_no_bg = no_bg, .f_render = render, .f_render_data = render_data, .f_name = name, .f_rounded = rounded, .f_radius = radius, .f_fps = fps});
 }
 
 bool Platform_DismissMessage(const char *name) {

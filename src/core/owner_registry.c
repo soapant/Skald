@@ -56,73 +56,68 @@ bool owner_tag_should_purge(const OwnerTag *tag, const char *path_a,
   return owner_module_matches(tag->owner, path_a, path_b);
 }
 
-size_t owner_purge_array(void *arr, size_t elem_size, size_t tag_offset,
-                         const char *path_a, const char *path_b,
-                         unsigned max_gen, void (*destroy)(void *element)) {
-  if (!arr || !elem_size || owner_purge_inactive(path_a, path_b))
+size_t owner_purge_array(FnOwnerPurgeArraySpec *argspec) {
+  if (!argspec->f_arr || !argspec->f_elem_size || owner_purge_inactive(argspec->f_path_a, argspec->f_path_b))
     return 0;
-  char *a = owner_strdup(path_a);
-  char *b = owner_strdup(path_b);
-  size_t n = stbds_header(arr)->length;
+  char *a = owner_strdup(argspec->f_path_a);
+  char *b = owner_strdup(argspec->f_path_b);
+  size_t n = stbds_header(argspec->f_arr)->length;
   size_t write = 0;
   size_t removed = 0;
-  char *base = (char *)arr;
+  char *base = (char *)argspec->f_arr;
   for (size_t i = 0; i < n; i++) {
-    char *element = base + i * elem_size;
-    OwnerTag *tag = (OwnerTag *)(element + tag_offset);
-    if (owner_tag_should_purge(tag, a, b, max_gen)) {
-      if (destroy)
-        destroy(element);
+    char *element = base + i * argspec->f_elem_size;
+    OwnerTag *tag = (OwnerTag *)(element + argspec->f_tag_offset);
+    if (owner_tag_should_purge(tag, a, b, argspec->f_max_gen)) {
+      if (argspec->f_destroy)
+        argspec->f_destroy(element);
       removed++;
       continue;
     }
     if (write != i)
-      memmove(base + write * elem_size, element, elem_size);
+      memmove(base + write * argspec->f_elem_size, element, argspec->f_elem_size);
     write++;
   }
-  stbds_header(arr)->length = write;
+  stbds_header(argspec->f_arr)->length = write;
   owner_strfree(&a);
   owner_strfree(&b);
   return removed;
 }
 
-size_t owner_purge_pointers(void **arr, size_t tag_offset, const char *path_a,
-                            const char *path_b, unsigned max_gen,
-                            void (*destroy)(void *element)) {
-  if (!arr || owner_purge_inactive(path_a, path_b))
+size_t owner_purge_pointers(FnOwnerPurgePointersSpec *argspec) {
+  if (!argspec->f_arr || owner_purge_inactive(argspec->f_path_a, argspec->f_path_b))
     return 0;
-  char *a = owner_strdup(path_a);
-  char *b = owner_strdup(path_b);
-  size_t n = stbds_header(arr)->length;
+  char *a = owner_strdup(argspec->f_path_a);
+  char *b = owner_strdup(argspec->f_path_b);
+  size_t n = stbds_header(argspec->f_arr)->length;
   size_t write = 0;
   size_t removed = 0;
   for (size_t i = 0; i < n; i++) {
-    char *element = (char *)arr[i];
-    OwnerTag *tag = element ? (OwnerTag *)(element + tag_offset) : NULL;
-    if (owner_tag_should_purge(tag, a, b, max_gen)) {
-      if (destroy)
-        destroy(arr[i]);
+    char *element = (char *)argspec->f_arr[i];
+    OwnerTag *tag = element ? (OwnerTag *)(element + argspec->f_tag_offset) : NULL;
+    if (owner_tag_should_purge(tag, a, b, argspec->f_max_gen)) {
+      if (argspec->f_destroy)
+        argspec->f_destroy(argspec->f_arr[i]);
       removed++;
       continue;
     }
     if (write != i)
-      arr[write] = arr[i];
+      argspec->f_arr[write] = argspec->f_arr[i];
     write++;
   }
-  stbds_header(arr)->length = write;
+  stbds_header(argspec->f_arr)->length = write;
   owner_strfree(&a);
   owner_strfree(&b);
   return removed;
 }
 
-bool owner_array_has_active(const void *arr, size_t elem_size, size_t count,
-                            size_t tag_offset, const char *path) {
-  if (!arr || !path || !path[0])
+bool owner_array_has_active(FnOwnerArrayHasActiveSpec *argspec) {
+  if (!argspec->f_arr || !argspec->f_path || !argspec->f_path[0])
     return false;
-  const char *base = (const char *)arr;
-  for (size_t i = 0; i < count; i++) {
-    const OwnerTag *tag = (const OwnerTag *)(base + i * elem_size + tag_offset);
-    if (owner_tag_active(tag, path))
+  const char *base = (const char *)argspec->f_arr;
+  for (size_t i = 0; i < argspec->f_count; i++) {
+    const OwnerTag *tag = (const OwnerTag *)(base + i * argspec->f_elem_size + argspec->f_tag_offset);
+    if (owner_tag_active(tag, argspec->f_path))
       return true;
   }
   return false;

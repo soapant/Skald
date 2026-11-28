@@ -3,17 +3,15 @@
 #include "platform/widget.h"
 #include "core/types/color.h"
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps,
-                                       bool no_bg, void (*on_click)(void),
-                                       const char *name) {
-  (void)x;
-  (void)y;
-  (void)w;
-  (void)h;
-  (void)fps;
-  (void)no_bg;
-  (void)on_click;
-  (void)name;
+PlatformWidget *Platform_Widget_Create(FnPlatformWidgetCreateSpec *argspec) {
+  (void)argspec->f_x;
+  (void)argspec->f_y;
+  (void)argspec->f_w;
+  (void)argspec->f_h;
+  (void)argspec->f_fps;
+  (void)argspec->f_no_bg;
+  (void)argspec->f_on_click;
+  (void)argspec->f_name;
   return NULL;
 }
 

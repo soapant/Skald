@@ -60,34 +60,33 @@ char edit_buffer_pair_for(char c) {
   }
 }
 
-size_t edit_buffer_insert_text(char *buf, size_t cap, size_t *cursor,
-                               const char *text, size_t len) {
+size_t edit_buffer_insert_text(FnEditBufferInsertTextSpec *argspec) {
 
-  if (!buf || !cursor || !text || len == 0 || cap == 0)
+  if (!argspec->f_buf || !argspec->f_cursor || !argspec->f_text || argspec->f_len == 0 || argspec->f_cap == 0)
     return 0;
-  size_t n = strlen(buf);
-  if (*cursor > n)
-    *cursor = n;
+  size_t n = strlen(argspec->f_buf);
+  if (*argspec->f_cursor > n)
+    *argspec->f_cursor = n;
 
   char closer = 0;
-  if (EnableAutoPairing && len == 1) {
-    if (edit_is_closer(text[0]) && *cursor < n && buf[*cursor] == text[0]) {
-      (*cursor)++;
+  if (EnableAutoPairing && argspec->f_len == 1) {
+    if (edit_is_closer(argspec->f_text[0]) && *argspec->f_cursor < n && argspec->f_buf[*argspec->f_cursor] == argspec->f_text[0]) {
+      (*argspec->f_cursor)++;
       return 0;
     }
-    if (!edit_is_quote(text[0]) || edit_quote_at_word_start(buf, *cursor)) {
-      closer = edit_buffer_pair_for(text[0]);
+    if (!edit_is_quote(argspec->f_text[0]) || edit_quote_at_word_start(argspec->f_buf, *argspec->f_cursor)) {
+      closer = edit_buffer_pair_for(argspec->f_text[0]);
     }
   }
 
-  size_t total = len + (closer ? (size_t)1 : (size_t)0);
-  if (n + total >= cap)
+  size_t total = argspec->f_len + (closer ? (size_t)1 : (size_t)0);
+  if (n + total >= argspec->f_cap)
     return 0;
-  memmove(buf + *cursor + total, buf + *cursor, n - *cursor + 1);
-  memcpy(buf + *cursor, text, len);
+  memmove(argspec->f_buf + *argspec->f_cursor + total, argspec->f_buf + *argspec->f_cursor, n - *argspec->f_cursor + 1);
+  memcpy(argspec->f_buf + *argspec->f_cursor, argspec->f_text, argspec->f_len);
   if (closer)
-    buf[*cursor + len] = closer;
-  *cursor += len;
+    argspec->f_buf[*argspec->f_cursor + argspec->f_len] = closer;
+  *argspec->f_cursor += argspec->f_len;
   return total;
 }
 

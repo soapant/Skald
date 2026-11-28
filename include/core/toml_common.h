@@ -32,9 +32,16 @@ typedef enum {
   TOML_KV_INVALID_VALUE
 } TomlKeyValueStatus;
 
-TomlKeyValueStatus toml_parse_key_value(const char *line, size_t len, char *key,
-                                        size_t key_cap, char *value,
-                                        size_t value_cap);
+typedef struct {
+  const char *f_line;
+  size_t f_len;
+  char *f_key;
+  size_t f_key_cap;
+  char *f_value;
+  size_t f_value_cap;
+} FnTomlParseKeyValueSpec;
+
+TomlKeyValueStatus toml_parse_key_value(FnTomlParseKeyValueSpec *argspec);
 bool toml_next_line(const char **cursor, const char **line, size_t *len);
 
 #endif

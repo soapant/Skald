@@ -6,21 +6,72 @@
 #include <X11/Xft/Xft.h>
 #include <sys/types.h>
 
-Window x11_create_window_ex(Display *dpy, int x, int y, int w, int h,
-                            unsigned long bg_color, const char *res_name,
-                            const char *res_class, long event_mask);
-Window x11_create_prompt_window(Display *dpy, int x, int y, int w, int h);
-void x11_draw_window_border(Display *dpy, Drawable drw, Visual *vis, int w,
-                            int h, bool no_bg);
-Window x11_create_display_message_window(Display *dpy, int x, int y, int w,
-                                         int h, bool clickable);
-Window x11_create_display_message_window_ex(Display *dpy, int x, int y, int w,
-                                            int h, bool clickable, bool rounded,
-                                            int radius);
+typedef struct {
+  Display *f_dpy;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+  unsigned long f_bg_color;
+  const char *f_res_name;
+  const char *f_res_class;
+  long f_event_mask;
+} FnX11CreateWindowExSpec;
+
+Window x11_create_window_ex(FnX11CreateWindowExSpec *argspec);
+typedef struct {
+  Display *f_dpy;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+} FnX11CreatePromptWindowSpec;
+
+Window x11_create_prompt_window(FnX11CreatePromptWindowSpec *argspec);
+typedef struct {
+  Display *f_dpy;
+  Drawable f_drw;
+  Visual *f_vis;
+  int f_w;
+  int f_h;
+  bool f_no_bg;
+} FnX11DrawWindowBorderSpec;
+
+void x11_draw_window_border(FnX11DrawWindowBorderSpec *argspec);
+typedef struct {
+  Display *f_dpy;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+  bool f_clickable;
+} FnX11CreateDisplayMessageWindowSpec;
+
+Window x11_create_display_message_window(FnX11CreateDisplayMessageWindowSpec *argspec);
+typedef struct {
+  Display *f_dpy;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+  bool f_clickable;
+  bool f_rounded;
+  int f_radius;
+} FnX11CreateDisplayMessageWindowExSpec;
+
+Window x11_create_display_message_window_ex(FnX11CreateDisplayMessageWindowExSpec *argspec);
 void x11_apply_click_through(Display *dpy, Window win);
 void x11_set_fixed_size_hints(Display *dpy, Window win, int w, int h);
 void x11_apply_shape_rounded_window(Display *dpy, Window win, int w, int h);
-void x11_apply_shape(Display *dpy, Window win, int w, int h, bool rounded,
-                     int radius);
+typedef struct {
+  Display *f_dpy;
+  Window f_win;
+  int f_w;
+  int f_h;
+  bool f_rounded;
+  int f_radius;
+} FnX11ApplyShapeSpec;
+
+void x11_apply_shape(FnX11ApplyShapeSpec *argspec);
 XftDraw *x11_create_xft_draw(Display *dpy, Window win);
 #endif

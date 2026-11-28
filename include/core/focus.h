@@ -23,12 +23,29 @@ typedef enum {
   FOCUS_DOWN
 } FocusDirection;
 
-void focus_frame_begin(bool include_listbox, int lb_x, int lb_y, int lb_w,
-                       int lb_h);
+typedef struct {
+  bool f_include_listbox;
+  int f_lb_x;
+  int f_lb_y;
+  int f_lb_w;
+  int f_lb_h;
+} FnFocusFrameBeginSpec;
+
+void focus_frame_begin(FnFocusFrameBeginSpec *argspec);
 void focus_frame_end(void);
-void focus_register(const char *name, FocusKind kind, int x, int y, int w,
-                    int h, void *owner, FocusActivateFn activate,
-                    FocusAdjustFn adjust);
+typedef struct {
+  const char *f_name;
+  FocusKind f_kind;
+  int f_x;
+  int f_y;
+  int f_w;
+  int f_h;
+  void *f_owner;
+  FocusActivateFn f_activate;
+  FocusAdjustFn f_adjust;
+} FnFocusRegisterSpec;
+
+void focus_register(FnFocusRegisterSpec *argspec);
 bool focus_is(const char *name);
 bool focus_has_entries(void);
 FocusKind focus_kind(void);

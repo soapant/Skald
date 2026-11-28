@@ -385,9 +385,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
 
         listbox_set_geometry(list_top, item_h, visible);
 
-        listbox_hover_focus(
-            hlb, list_top, item_h, hlb->view_offset, visible, PROMPT_SEL_X,
-            PROMPT_SEL_X + (rect.right - rect.left) - PROMPT_SEL_W_SHRINK);
+        listbox_hover_focus(&(FnListboxHoverFocusSpec){.f_lb = hlb, .f_list_top = list_top, .f_item_height = item_h, .f_top_index = hlb->view_offset, .f_visible_count = visible, .f_left_x = PROMPT_SEL_X, .f_right_x = PROMPT_SEL_X + (rect.right - rect.left) - PROMPT_SEL_W_SHRINK});
       }
     }
     InvalidateRect(hwnd, NULL, FALSE);
@@ -593,8 +591,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           POINT lbOrigin2 = {0, 0};
           ClientToScreen(pdis->hwndItem, &lbOrigin2);
           ScreenToClient(hwnd, &lbOrigin2);
-          win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, win_w, win_h,
-                                    lbOrigin2.x, lbOrigin2.y);
+          win32_draw_bg_image_slice(&(FnWin32DrawBgImageSliceSpec){.f_hdc = pdis->hDC, .f_rc = &pdis->rcItem, .f_containerW = win_w, .f_containerH = win_h, .f_originX = lbOrigin2.x, .f_originY = lbOrigin2.y});
         }
         if (isSelected) {
           win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_SELECTED_TEXT,
@@ -611,8 +608,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             iwW = pdis->rcItem.right - pdis->rcItem.left;
           if (iwH <= 0)
             iwH = pdis->rcItem.bottom - pdis->rcItem.top + 600;
-          if (!win32_draw_bg_image_slice(pdis->hDC, &inner, iwW, iwH,
-                                         lbOriginI.x, lbOriginI.y)) {
+          if (!win32_draw_bg_image_slice(&(FnWin32DrawBgImageSliceSpec){.f_hdc = pdis->hDC, .f_rc = &inner, .f_containerW = iwW, .f_containerH = iwH, .f_originX = lbOriginI.x, .f_originY = lbOriginI.y})) {
             win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_BG, innerR);
           }
         }
@@ -638,8 +634,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
             if (win_h <= 0)
               win_h = pdis->rcItem.bottom - pdis->rcItem.top + 600;
           }
-          if (!win32_draw_bg_image_slice(pdis->hDC, &pdis->rcItem, win_w, win_h,
-                                         lbOrigin.x, lbOrigin.y)) {
+          if (!win32_draw_bg_image_slice(&(FnWin32DrawBgImageSliceSpec){.f_hdc = pdis->hDC, .f_rc = &pdis->rcItem, .f_containerW = win_w, .f_containerH = win_h, .f_originX = lbOrigin.x, .f_originY = lbOrigin.y})) {
             FillRect(pdis->hDC, &pdis->rcItem,
                      cached_brush(&s_bg_brush, &s_bg_color, COLOR_BG));
           }
@@ -732,8 +727,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       bool imgDrawn = false;
       if (haveVis && rect.right > 0 && rect.bottom > 0) {
         imgDrawn =
-            win32_draw_bg_image_slice(paintDC, &visRect, rect.right - rect.left,
-                                      rect.bottom - rect.top, 0, 0);
+            win32_draw_bg_image_slice(&(FnWin32DrawBgImageSliceSpec){.f_hdc = paintDC, .f_rc = &visRect, .f_containerW = rect.right - rect.left, .f_containerH = rect.bottom - rect.top, .f_originX = 0, .f_originY = 0});
       }
       if (!imgDrawn) {
         FillRect(paintDC, &rect,
@@ -756,9 +750,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         state->last_frame_ticks = now_ticks;
         checkbox_frame_begin();
         slider_frame_begin();
-        focus_frame_begin(state->lb != NULL, 0, prompt_list_top(), state->width,
-                          state->height - prompt_list_top() -
-                              prompt_list_bottom_margin());
+        focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = state->lb != NULL, .f_lb_x = 0, .f_lb_y = prompt_list_top(), .f_lb_w = state->width, .f_lb_h = state->height - prompt_list_top() -
+                              prompt_list_bottom_margin()});
         editbox_registry_register_focus(state);
         win32_set_draw_context(paintDC);
         draw_state_get()->win32_listbox_surface = true;
@@ -787,9 +780,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (eowner && !eowner->user_data)
         estate = NULL;
       if (estate && !resize_animating) {
-        focus_frame_begin(
-            estate->lb != NULL, 0, prompt_list_top(), estate->width,
-            estate->height - prompt_list_top() - prompt_list_bottom_margin());
+        focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = estate->lb != NULL, .f_lb_x = 0, .f_lb_y = prompt_list_top(), .f_lb_w = estate->width, .f_lb_h = estate->height - prompt_list_top() - prompt_list_bottom_margin()});
         editbox_registry_register_focus(estate);
         bool sep_prev = draw_state_get()->suppress_separators;
         draw_state_get()->suppress_separators = estate->no_separators;
@@ -890,7 +881,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       if (hMainFont)
         DeleteObject(hMainFont);
     }
-    win32_draw_window_border(paintDC, 0, 0, rect.right, rect.bottom, NULL);
+    win32_draw_window_border(&(FnWin32DrawWindowBorderSpec){.f_hdc = paintDC, .f_ox = 0, .f_oy = 0, .f_ww = rect.right, .f_wh = rect.bottom, .f_region = NULL});
     if (useRenderBuf) {
       BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
              ps.rcPaint.right - ps.rcPaint.left,
