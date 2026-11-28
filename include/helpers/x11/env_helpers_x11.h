@@ -25,9 +25,9 @@ typedef struct {
   char *f_xauth_env;
   char *f_runtime_env;
   char *f_wayland_env;
-} FnX11EnvBuildEnvStringsSpec;
+} X11EnvBuildEnvStrings;
 
-void x11_env_build_env_strings(FnX11EnvBuildEnvStringsSpec *argspec);
+void x11_env_build_env_strings(X11EnvBuildEnvStrings *argspec);
 void x11_env_apply_to_current_process(const X11SessionEnv *env);
 bool x11_env_is_running_as_root(void);
 
@@ -45,12 +45,13 @@ typedef struct {
   const char *f_workdir;
   char *f_out;
   size_t f_out_size;
-} FnX11ResolveDesktopExecSpec;
+} X11ResolveDesktopExec;
 
-bool x11_resolve_desktop_exec(FnX11ResolveDesktopExecSpec *argspec);
+bool x11_resolve_desktop_exec(X11ResolveDesktopExec *argspec);
 int x11_run_status(char *const argv[], const X11SessionEnv *env,
                    bool apply_env);
 
 char *x11_paste_wtype(const char *content);
 
 #endif
+

@@ -2,7 +2,17 @@
 
 #include <string.h>
 
-static __thread DrawCanvas draw_state;
+static __thread DrawCanvas draw_state = {.clip_y0 = -1, .clip_y1 = -1};
+
+void draw_state_set_clip(int y0, int y1) {
+  draw_state.clip_y0 = y0;
+  draw_state.clip_y1 = y1 > y0 ? y1 : y0;
+}
+
+void draw_state_clear_clip(void) {
+  draw_state.clip_y0 = -1;
+  draw_state.clip_y1 = -1;
+}
 
 DrawCanvas *draw_state_get(void) { return &draw_state; }
 

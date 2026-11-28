@@ -36,9 +36,9 @@ typedef struct {
   int f_lead;
   int f_breaks;
   int f_font_size;
-} FnWrappedWordPushSpec;
+} WrappedWordPush;
 
-void wrapped_word_push(FnWrappedWordPushSpec *argspec);
+void wrapped_word_push(WrappedWordPush *argspec);
 
 typedef struct {
   unsigned long color;
@@ -57,9 +57,9 @@ typedef struct {
   void *f_ctx;
   Pos *f_out;
   int f_maxout;
-} FnTextWrapLayoutSpec;
+} TextWrapLayout;
 
-int text_wrap_layout(FnTextWrapLayoutSpec *argspec);
+int text_wrap_layout(TextWrapLayout *argspec);
 
 typedef struct {
   char **items;
@@ -83,9 +83,9 @@ typedef struct {
   char **f_list_of_names_to_ignore;
   bool f_strip_extension;
   int f_max_depth;
-} FnFileWalkAllFilesFromDirSpec;
+} FileWalkAllFilesFromDir;
 
-bool file_walk_all_files_from_dir(FnFileWalkAllFilesFromDirSpec *argspec);
+bool file_walk_all_files_from_dir(FileWalkAllFilesFromDir *argspec);
 
 char *string_cut_at(const char *str, char delim);
 char *string_cut_before(const char *str, char delim);
@@ -111,3 +111,4 @@ bool list_append(WindowList *list, const char *item);
 bool window_list_allows(int window_count, bool whitelist, char *const *windows,
                         const char *title);
 #endif
+

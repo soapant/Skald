@@ -56,12 +56,12 @@ static int focus_find(const char *name) {
   return -1;
 }
 
-void focus_frame_begin(FnFocusFrameBeginSpec *argspec) {
+void focus_frame_begin(FocusFrameBegin *argspec) {
   arrsetlen(s_entries, 0);
   s_current = -1;
   s_saved_seen = false;
   if (argspec->f_include_listbox) {
-    focus_register(&(FnFocusRegisterSpec){.f_name = FOCUS_LISTBOX_NAME, .f_kind = FOCUS_KIND_LISTBOX, .f_x = argspec->f_lb_x, .f_y = argspec->f_lb_y, .f_w = argspec->f_lb_w, .f_h = argspec->f_lb_h, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
+    focus_register(&(FocusRegister){.f_name = FOCUS_LISTBOX_NAME, .f_kind = FOCUS_KIND_LISTBOX, .f_x = argspec->f_lb_x, .f_y = argspec->f_lb_y, .f_w = argspec->f_lb_w, .f_h = argspec->f_lb_h, .f_owner = NULL, .f_activate = NULL, .f_adjust = NULL});
     if (!s_saved_name[0] && s_saved_kind != FOCUS_KIND_EDITBOX)
       focus_select(FOCUS_LISTBOX_NAME);
   }
@@ -94,7 +94,7 @@ void focus_frame_end(void) {
   }
 }
 
-void focus_register(FnFocusRegisterSpec *argspec) {
+void focus_register(FocusRegister *argspec) {
   if (!argspec->f_name || !argspec->f_name[0])
     return;
   int idx = focus_find(argspec->f_name);
@@ -304,3 +304,4 @@ void focus_clear(void) {
   s_saved_kind = FOCUS_KIND_NONE;
   s_saved_seen = false;
 }
+

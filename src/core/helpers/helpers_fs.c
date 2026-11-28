@@ -57,7 +57,7 @@ static void path_fold_exe(char *out) {
 #endif
 }
 
-bool temp_file_write(FnTempFileWriteSpec *argspec) {
+bool temp_file_write(TempFileWrite *argspec) {
   if (!argspec->f_name || !argspec->f_name[0] || !argspec->f_out_path || argspec->f_out_len == 0)
     return false;
   if (!argspec->f_data && argspec->f_len > 0)
@@ -195,3 +195,4 @@ bool file_remove_path(const char *path) {
     return false;
   return remove(path) == 0;
 }
+

@@ -27,7 +27,7 @@ bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y) {
   return false;
 }
 
-bool Platform_DrawImageAt(FnPlatformDrawImageAtSpec *argspec) {
+bool Platform_DrawImageAt(PlatformDrawImageAt *argspec) {
   (void)argspec->f_path;
   (void)argspec->f_x;
   (void)argspec->f_y;
@@ -89,3 +89,4 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top) {
 int Platform_GetTextLineHeight(int font_size) {
   return font_size > 0 ? font_size : 16;
 }
+

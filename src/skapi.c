@@ -160,7 +160,7 @@ bool ski_dir_scan(const SkDirScanSpec *spec) {
   if (!expand_path(spec->dir_path, expanded_dir, sizeof(expanded_dir)))
     return false;
   const char *dir_path = expanded_dir;
-  return file_walk_all_files_from_dir(&(FnFileWalkAllFilesFromDirSpec){.f_dir_path = dir_path, .f_list_of_allowed_extensions = spec->allowed_extensions, .f_list_of_files = spec->out, .f_list_of_names_to_ignore = spec->names_to_ignore, .f_strip_extension = spec->strip_extension, .f_max_depth = spec->max_depth});
+  return file_walk_all_files_from_dir(&(FileWalkAllFilesFromDir){.f_dir_path = dir_path, .f_list_of_allowed_extensions = spec->allowed_extensions, .f_list_of_files = spec->out, .f_list_of_names_to_ignore = spec->names_to_ignore, .f_strip_extension = spec->strip_extension, .f_max_depth = spec->max_depth});
 }
 
 char *sk_search_file_in_dir(const char *directory, const char *search_string) {
@@ -229,7 +229,7 @@ char *sk_load_file(const char *filepath) {
   if (!filepath)
     return NULL;
   char full[MAX_PATH];
-  if (!resolve_caller_path(&(FnResolveCallerPathSpec){.f_caller_ret = __builtin_return_address(0), .f_name = filepath, .f_full = full, .f_cap = sizeof(full), .f_func = "sk_load_file"}))
+  if (!resolve_caller_path(&(ResolveCallerPath){.f_caller_ret = __builtin_return_address(0), .f_name = filepath, .f_full = full, .f_cap = sizeof(full), .f_func = "sk_load_file"}))
     return NULL;
   return file_read_all_alloc(full);
 }
@@ -374,7 +374,7 @@ bool ski_store_clear(const char *feature, const char *key) {
 
 char *sk_write_temp_file(const char *name, const void *data, size_t len) {
   char path[2048];
-  if (!temp_file_write(&(FnTempFileWriteSpec){.f_name = name, .f_data = data, .f_len = len, .f_out_path = path, .f_out_len = sizeof(path)}))
+  if (!temp_file_write(&(TempFileWrite){.f_name = name, .f_data = data, .f_len = len, .f_out_path = path, .f_out_len = sizeof(path)}))
     return NULL;
   return strdup(path);
 }
@@ -508,7 +508,7 @@ bool ski_register_remapping(const SkRemappingSpec *spec) {
   const char *const *windows;
   bool whitelist;
   resolve_window_list(wl, bl, &windows, &whitelist);
-  return remap_register_internal(&(FnRemapRegisterInternalSpec){.f_src = spec->src, .f_dst = spec->dst, .f_whitelist = whitelist, .f_windows = windows, .f_caller = (void *)__builtin_return_address(0)});
+  return remap_register_internal(&(RemapRegisterInternal){.f_src = spec->src, .f_dst = spec->dst, .f_whitelist = whitelist, .f_windows = windows, .f_caller = (void *)__builtin_return_address(0)});
 }
 
 bool ski_register_snippet(const SkSnippetSpec *spec) {
@@ -520,7 +520,7 @@ bool ski_register_snippet(const SkSnippetSpec *spec) {
   const char *const *windows;
   bool whitelist;
   resolve_window_list(wl, bl, &windows, &whitelist);
-  return snippet_register_internal(&(FnSnippetRegisterInternalSpec){.f_trigger = spec->trigger, .f_text = spec->text, .f_func = spec->fn, .f_whitelist = whitelist, .f_windows = windows, .f_caller = (void *)__builtin_return_address(0)});
+  return snippet_register_internal(&(SnippetRegisterInternal){.f_trigger = spec->trigger, .f_text = spec->text, .f_func = spec->fn, .f_whitelist = whitelist, .f_windows = windows, .f_caller = (void *)__builtin_return_address(0)});
 }
 
 bool sk_unregister_snippet(const char *trigger) {
@@ -551,7 +551,7 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   const char *const *bw;
   bool whitelist;
   resolve_window_list(wl, bl, &bw, &whitelist);
-  HotkeyBinding binding = hotkey_convert_into_binding(&(FnHotkeyConvertIntoBindingSpec){.f_hotkey_string = (char *)spec->hotkey, .f_on_hotkey_trigger = spec->cb, .f_optional_condition_for_hotkey = NULL, .f_optional_blacklistedwindows = bw, .f_whitelist = whitelist, .f_user_ud = spec->ud});
+  HotkeyBinding binding = hotkey_convert_into_binding(&(HotkeyConvertIntoBinding){.f_hotkey_string = (char *)spec->hotkey, .f_on_hotkey_trigger = spec->cb, .f_optional_condition_for_hotkey = NULL, .f_optional_blacklistedwindows = bw, .f_whitelist = whitelist, .f_user_ud = spec->ud});
   if (!binding.valid)
     return false;
   binding.hotkey_callback_ud = spec->cb_ud;
@@ -564,7 +564,7 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
 bool sk_unregister_hotkey(const char *hotkey) {
   if (!hotkey)
     return false;
-  HotkeyBinding binding = hotkey_convert_into_binding(&(FnHotkeyConvertIntoBindingSpec){.f_hotkey_string = (char *)hotkey, .f_on_hotkey_trigger = NULL, .f_optional_condition_for_hotkey = NULL, .f_optional_blacklistedwindows = NULL, .f_whitelist = false, .f_user_ud = NULL});
+  HotkeyBinding binding = hotkey_convert_into_binding(&(HotkeyConvertIntoBinding){.f_hotkey_string = (char *)hotkey, .f_on_hotkey_trigger = NULL, .f_optional_condition_for_hotkey = NULL, .f_optional_blacklistedwindows = NULL, .f_whitelist = false, .f_user_ud = NULL});
   if (!binding.valid)
     return false;
   return hotkey_unregister_internal(binding.vk, binding.modifiers);
@@ -775,7 +775,7 @@ void ski_populate_listbox(const SkPopulateListboxSpec *spec) {
     return;
   if (search_index_current())
     return;
-  populate_listbox_ranked(&(FnPopulateListboxRankedSpec){.f_lb = spec->lb, .f_filter = spec->filter, .f_items = spec->items, .f_item_count = spec->count, .f_filter_match = spec->filter_match, .f_item_rank = spec->item_rank});
+  populate_listbox_ranked(&(PopulateListboxRanked){.f_lb = spec->lb, .f_filter = spec->filter, .f_items = spec->items, .f_item_count = spec->count, .f_filter_match = spec->filter_match, .f_item_rank = spec->item_rank});
 }
 
 SkSearchIndex *sk_search_create(void) { return search_index_create(); }
@@ -792,7 +792,7 @@ void sk_search_pop_context(SkSearchIndex *idx) {
 }
 
 void ski_search_add_text(const SkSearchAddTextSpec *spec) {
-  search_index_add_text(&(FnSearchIndexAddTextSpec){
+  search_index_add_text(&(SearchIndexAddText){
       .f_idx = spec->idx, .f_text = spec->text, .f_kind = spec->kind,
       .f_widget_name = spec->widget_name, .f_value = spec->value});
 }
@@ -1021,7 +1021,7 @@ char *ski_edit_text_popup(const SkEditPopupSpec *spec) {
     return NULL;
   TextPromptRenderData render_data = {0};
   PromptSpec pspec =
-      text_prompt_spec(&(FnTextPromptSpecSpec){.f_render_data = &render_data, .f_placeholder = NULL, .f_initial_text = initial_text, .f_x = x, .f_y = y, .f_w = w, .f_h = h});
+      text_prompt_spec(&(TextPromptSpec){.f_render_data = &render_data, .f_placeholder = NULL, .f_initial_text = initial_text, .f_x = x, .f_y = y, .f_w = w, .f_h = h});
   {
     SkaldContext *ctx = SkaldContext_Get();
     if (ctx) {
@@ -1268,7 +1268,7 @@ char *ski_popup(const PopupSpec *spec) {
     placeholder = "Enter Password:";
   TextPromptRenderData render_data = {0};
   PromptSpec pspec =
-      text_prompt_spec(&(FnTextPromptSpecSpec){.f_render_data = &render_data, .f_placeholder = placeholder, .f_initial_text = NULL, .f_x = spec->x, .f_y = spec->y, .f_w = spec->w ? spec->w : 600, .f_h = spec->h ? spec->h : 70});
+      text_prompt_spec(&(TextPromptSpec){.f_render_data = &render_data, .f_placeholder = placeholder, .f_initial_text = NULL, .f_x = spec->x, .f_y = spec->y, .f_w = spec->w ? spec->w : 600, .f_h = spec->h ? spec->h : 70});
   pspec.password_mode = spec->password_mode;
   char *r = WindowManager_ShowPrompt(wm, &pspec);
   return r ? strdup(r) : NULL;
@@ -1349,10 +1349,10 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
       for (int i = 0; i < spec->count; i++) {
         const char *text = spec->segments[i].text;
         if (text && text[0])
-          search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = NULL, .f_text = text, .f_kind = SK_SEARCH_TEXT, .f_widget_name = NULL, .f_value = NULL});
+          search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = text, .f_kind = SK_SEARCH_TEXT, .f_widget_name = NULL, .f_value = NULL});
       }
     } else if (spec->text && spec->text[0]) {
-      search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = NULL, .f_text = spec->text, .f_kind = SK_SEARCH_TEXT, .f_widget_name = NULL, .f_value = NULL});
+      search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = spec->text, .f_kind = SK_SEARCH_TEXT, .f_widget_name = NULL, .f_value = NULL});
     }
     return spec->y;
   }
@@ -1376,7 +1376,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
       unsigned char ch = (unsigned char)*p;
       if (ch == '\n') {
         if (wn) {
-          wrapped_word_push(&(FnWrappedWordPushSpec){.f_words = &words, .f_count = &count, .f_cap = &cap, .f_s = word, .f_len = wn, .f_color = color, .f_lead = lead, .f_breaks = pending_breaks, .f_font_size = fs});
+          wrapped_word_push(&(WrappedWordPush){.f_words = &words, .f_count = &count, .f_cap = &cap, .f_s = word, .f_len = wn, .f_color = color, .f_lead = lead, .f_breaks = pending_breaks, .f_font_size = fs});
           wn = 0;
           pending_breaks = 0;
         }
@@ -1386,7 +1386,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
       }
       if (isspace(ch)) {
         if (wn) {
-          wrapped_word_push(&(FnWrappedWordPushSpec){.f_words = &words, .f_count = &count, .f_cap = &cap, .f_s = word, .f_len = wn, .f_color = color, .f_lead = lead, .f_breaks = pending_breaks, .f_font_size = fs});
+          wrapped_word_push(&(WrappedWordPush){.f_words = &words, .f_count = &count, .f_cap = &cap, .f_s = word, .f_len = wn, .f_color = color, .f_lead = lead, .f_breaks = pending_breaks, .f_font_size = fs});
           wn = 0;
           pending_breaks = 0;
           lead = 0;
@@ -1398,7 +1398,7 @@ int ski_draw_text_wrapped(const SkTextWrappedSpec *spec) {
         word[wn++] = (char)ch;
     }
     if (wn)
-      wrapped_word_push(&(FnWrappedWordPushSpec){.f_words = &words, .f_count = &count, .f_cap = &cap, .f_s = word, .f_len = wn, .f_color = color, .f_lead = lead, .f_breaks = pending_breaks, .f_font_size = fs});
+      wrapped_word_push(&(WrappedWordPush){.f_words = &words, .f_count = &count, .f_cap = &cap, .f_s = word, .f_len = wn, .f_color = color, .f_lead = lead, .f_breaks = pending_breaks, .f_font_size = fs});
   }
   int line = 0, cx = 0, max_line = 0;
   for (int i = 0; i < count; i++) {
@@ -1479,8 +1479,8 @@ bool ski_draw_text_centered(const SkTextCenteredSpec *spec) {
   return true;
 }
 
-int ski_text_wrap_layout(FnSkiTextWrapLayoutSpec *argspec) {
-  return text_wrap_layout(&(FnTextWrapLayoutSpec){.f_text = argspec->f_text, .f_x0 = argspec->f_pos.x, .f_y0 = argspec->f_pos.y, .f_max_width = argspec->f_max_width, .f_line_height = argspec->f_line_height, .f_measure = argspec->f_measure, .f_ctx = argspec->f_ctx, .f_out = argspec->f_out, .f_maxout = argspec->f_maxout});
+int ski_text_wrap_layout(SkiTextWrapLayout *argspec) {
+  return text_wrap_layout(&(TextWrapLayout){.f_text = argspec->f_text, .f_x0 = argspec->f_pos.x, .f_y0 = argspec->f_pos.y, .f_max_width = argspec->f_max_width, .f_line_height = argspec->f_line_height, .f_measure = argspec->f_measure, .f_ctx = argspec->f_ctx, .f_out = argspec->f_out, .f_maxout = argspec->f_maxout});
 }
 
 int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
@@ -1497,7 +1497,7 @@ int ski_measure_text_wrapped(const SkMeasureSpec *spec) {
   ctx.color = 0;
   ctx.font_size = font_size;
   int cap = (int)strlen(spec->text) + 1;
-  return text_wrap_layout(&(FnTextWrapLayoutSpec){.f_text = spec->text, .f_x0 = spec->x, .f_y0 = spec->y, .f_max_width = spec->max_width, .f_line_height = line_height, .f_measure = wrap_measure_thunk, .f_ctx = &ctx, .f_out = spec->out_positions, .f_maxout = cap});
+  return text_wrap_layout(&(TextWrapLayout){.f_text = spec->text, .f_x0 = spec->x, .f_y0 = spec->y, .f_max_width = spec->max_width, .f_line_height = line_height, .f_measure = wrap_measure_thunk, .f_ctx = &ctx, .f_out = spec->out_positions, .f_maxout = cap});
 }
 
 bool ski_place_editbox(const SkEditSpec *spec) {
@@ -1579,13 +1579,13 @@ bool ski_draw_image(const SkImageSpec *spec) {
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
   if (spec->image.pixels && spec->image.w > 0 && spec->image.h > 0)
-    return Platform_DrawImageBuffer(&(FnPlatformDrawImageBufferSpec){.f_image = &spec->image, .f_x = spec->x, .f_y = spec->y, .f_w = w, .f_h = h});
+    return Platform_DrawImageBuffer(&(PlatformDrawImageBuffer){.f_image = &spec->image, .f_x = spec->x, .f_y = spec->y, .f_w = w, .f_h = h});
   if (!spec->path || !spec->path[0])
     return false;
   char asset[MAX_PATH];
   const char *path = feature_path_resolve_asset_or_path(
       __builtin_return_address(0), spec->path, asset, sizeof(asset));
-  return Platform_DrawImageAt(&(FnPlatformDrawImageAtSpec){.f_path = path, .f_x = spec->x, .f_y = spec->y, .f_w = w, .f_h = h});
+  return Platform_DrawImageAt(&(PlatformDrawImageAt){.f_path = path, .f_x = spec->x, .f_y = spec->y, .f_w = w, .f_h = h});
 }
 
 SkSize ski_get_image_size(const char *path, int *w, int *h) {
@@ -1622,10 +1622,10 @@ bool ski_draw_rect(const DrawRect *spec) {
   if (search_index_current())
     return true;
   bool transparent = spec->transparent;
-  bool ok = draw_rect_raw(&(FnDrawRectRawSpec){.f_spec = spec, .f_color = draw_color(spec->color), .f_thickness = spec->thickness, .f_filled = spec->filled, .f_transparent = transparent});
+  bool ok = draw_rect_raw(&(DrawRectRaw){.f_spec = spec, .f_color = draw_color(spec->color), .f_thickness = spec->thickness, .f_filled = spec->filled, .f_transparent = transparent});
   if (!spec->border)
     return ok;
-  draw_rect_raw(&(FnDrawRectRawSpec){.f_spec = spec, .f_color = rgb_to_hex(COLOR_BORDER), .f_thickness = spec->thickness > 0.0f ? spec->thickness : 1.0f, .f_filled = false, .f_transparent = transparent});
+  draw_rect_raw(&(DrawRectRaw){.f_spec = spec, .f_color = rgb_to_hex(COLOR_BORDER), .f_thickness = spec->thickness > 0.0f ? spec->thickness : 1.0f, .f_filled = false, .f_transparent = transparent});
   return ok;
 }
 
@@ -1775,7 +1775,7 @@ bool ski_listbox_begin(const SkListSpec *spec) {
     return false;
   if (search_index_current()) {
     for (int i = 0; i < spec->count && spec->items; i++)
-      search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = NULL, .f_text = spec->items[i], .f_kind = SK_SEARCH_TEXT, .f_widget_name = NULL, .f_value = NULL});
+      search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = spec->items[i], .f_kind = SK_SEARCH_TEXT, .f_widget_name = NULL, .f_value = NULL});
     return false;
   }
   return listbox_begin_common(spec);
@@ -1837,7 +1837,7 @@ bool ski_place_checkbox(const SkCheckboxSpec *spec) {
   if (search_index_current()) {
     SkSearchKind kind = spec->button ? SK_SEARCH_BUTTON : SK_SEARCH_CHECKBOX;
     const char *text = (spec->text && spec->text[0]) ? spec->text : spec->name;
-    search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = NULL, .f_text = text, .f_kind = kind, .f_widget_name = spec->name, .f_value = NULL});
+    search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = text, .f_kind = kind, .f_widget_name = spec->name, .f_value = NULL});
     return true;
   }
   if (spec->name && settings_focus_ctx_has(spec->name) &&
@@ -1855,7 +1855,7 @@ bool ski_place_slider(const SkSliderSpec *spec) {
   if (search_index_current()) {
     char value[32];
     snprintf(value, sizeof(value), "%g", spec->value);
-    search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = NULL, .f_text = spec->name, .f_kind = SK_SEARCH_SLIDER, .f_widget_name = spec->name, .f_value = value});
+    search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = spec->name, .f_kind = SK_SEARCH_SLIDER, .f_widget_name = spec->name, .f_value = value});
     return true;
   }
   if (spec->name && settings_focus_ctx_has(spec->name) &&
@@ -2714,14 +2714,14 @@ bool ski_resize_window(const SkRect *rect) {
 bool ski_resize_window_animated(const SkRect *rect, int duration_ms) {
   if (!rect)
     return false;
-  return prompt_popup_resize_current_animated(&(FnPromptPopupResizeCurrentAnimatedSpec){.f_x = rect->x, .f_y = rect->y, .f_w = rect->w, .f_h = rect->h, .f_duration_ms = duration_ms});
+  return prompt_popup_resize_current_animated(&(PromptPopupResizeCurrentAnimated){.f_x = rect->x, .f_y = rect->y, .f_w = rect->w, .f_h = rect->h, .f_duration_ms = duration_ms});
 }
 
 SkRect sk_get_window_bounds(void) {
   SkRect rect = {0};
   WindowManager *wm = WindowManager_Get();
   Popup *popup = wm ? WindowManager_GetTopPopup(wm) : NULL;
-  if (!prompt_popup_get_bounds(&(FnPromptPopupGetBoundsSpec){.f_p = popup, .f_x = &rect.x, .f_y = &rect.y, .f_w = &rect.w, .f_h = &rect.h}))
+  if (!prompt_popup_get_bounds(&(PromptPopupGetBounds){.f_p = popup, .f_x = &rect.x, .f_y = &rect.y, .f_w = &rect.w, .f_h = &rect.h}))
     return (SkRect){0};
   return rect;
 }
@@ -2891,4 +2891,5 @@ bool sk_config_set_quicklink(const char *name, const char *target) {
 bool sk_config_set_feature_shortcut(const char *name, const char *target) {
   return config_feature_shortcut_set(name, target);
 }
+
 

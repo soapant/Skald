@@ -19,8 +19,9 @@ typedef struct {
   Visual *f_vis;
   int f_w;
   int f_h;
-} FnX11BgImageBlitSpec;
+} X11BgImageBlit;
 
-bool x11_bg_image_blit(FnX11BgImageBlitSpec *argspec);
+bool x11_bg_image_blit(X11BgImageBlit *argspec);
 
 #endif
+

@@ -147,7 +147,7 @@ bool listbox_client_mouse_pos(int *out_x, int *out_y) {
   return true;
 }
 
-int listbox_row_at_y(FnListboxRowAtYSpec *argspec) {
+int listbox_row_at_y(ListboxRowAtY *argspec) {
 
   if (!argspec->f_lb || argspec->f_item_height <= 0 || argspec->f_visible_count <= 0) {
     return -1;
@@ -164,7 +164,7 @@ int listbox_row_at_y(FnListboxRowAtYSpec *argspec) {
   return idx;
 }
 
-bool listbox_hover_focus(FnListboxHoverFocusSpec *argspec) {
+bool listbox_hover_focus(ListboxHoverFocus *argspec) {
 
   if (!argspec->f_lb || argspec->f_lb->item_count <= 0)
     return false;
@@ -188,7 +188,7 @@ bool listbox_hover_focus(FnListboxHoverFocusSpec *argspec) {
     return false;
   listbox_focus_by_mouse();
   focus_set_pseudo_passive(FOCUS_KIND_LISTBOX);
-  int idx = listbox_row_at_y(&(FnListboxRowAtYSpec){.f_lb = argspec->f_lb, .f_list_top = argspec->f_list_top, .f_item_height = argspec->f_item_height, .f_top_index = argspec->f_top_index, .f_visible_count = argspec->f_visible_count, .f_mouse_y = my});
+  int idx = listbox_row_at_y(&(ListboxRowAtY){.f_lb = argspec->f_lb, .f_list_top = argspec->f_list_top, .f_item_height = argspec->f_item_height, .f_top_index = argspec->f_top_index, .f_visible_count = argspec->f_visible_count, .f_mouse_y = my});
   if (idx < 0 || idx == argspec->f_lb->selected_index)
     return false;
   UI_SetSelection(argspec->f_lb, idx);
@@ -421,7 +421,7 @@ bool listbox_begin_common(const ListSpec *spec) {
   item_h = item_h > 0 ? item_h : bi.item_h;
   PromptState *st = Platform_ListboxBackendPromptState(lb);
   ListboxLayout lay;
-  listbox_compute_layout(&(FnListboxComputeLayoutSpec){.f_spec = spec, .f_default_y0 = bi.list_top, .f_item_h = item_h, .f_popup_w = st ? st->width : PromptW, .f_popup_h = st ? st->height : PromptH, .f_count = lb->item_count, .f_out = &lay});
+  listbox_compute_layout(&(ListboxComputeLayout){.f_spec = spec, .f_default_y0 = bi.list_top, .f_item_h = item_h, .f_popup_w = st ? st->width : PromptW, .f_popup_h = st ? st->height : PromptH, .f_count = lb->item_count, .f_out = &lay});
   common_spec = *spec;
   common_lb = lb;
   common_item_h = item_h;
@@ -437,8 +437,9 @@ bool listbox_begin_common(const ListSpec *spec) {
   UI_LB_SetVisibleCount(lay.visible);
   listbox_apply_pending_scroll(lb, lay.visible);
   listbox_set_geometry(common_y0, common_item_h, lay.visible);
-  listbox_hover_focus(&(FnListboxHoverFocusSpec){.f_lb = lb, .f_list_top = common_y0, .f_item_height = common_item_h, .f_top_index = lb->view_offset, .f_visible_count = lay.visible, .f_left_x = common_bx, .f_right_x = common_bx + common_bw});
+  listbox_hover_focus(&(ListboxHoverFocus){.f_lb = lb, .f_list_top = common_y0, .f_item_height = common_item_h, .f_top_index = lb->view_offset, .f_visible_count = lay.visible, .f_left_x = common_bx, .f_right_x = common_bx + common_bw});
   draw_state_get()->listbox_rows = true;
+  draw_state_set_clip(common_y0, common_y0 + common_h);
   SkaldContext_Get()->window.listbox_placed = true;
   return true;
 }
@@ -452,11 +453,17 @@ bool listbox_next_common(ListItemCtx *out) {
   if (idx < 0 || idx >= common_lb->item_count)
     return false;
   int y = common_y0 + common_cur * common_item_h;
+  int row_h = common_item_h;
+  int clip_bottom = common_y0 + common_h;
+  if (y + row_h > clip_bottom)
+    row_h = clip_bottom - y;
+  if (row_h < 1)
+    return false;
   if (common_separators && common_cur == 0)
     draw_prompt_separator(
         (DrawPromptSeparatorSpec){.y = common_y0, .width = common_fw});
   bool sel = (idx == common_lb->selected_index);
-  Platform_ListboxBackendDrawSelection(&(FnPlatformListboxBackendDrawSelectionSpec){.f_bx = common_bx, .f_bw = common_bw, .f_y = y, .f_item_h = common_item_h, .f_fw = common_fw, .f_frame_h = common_fh, .f_sel = sel});
+  Platform_ListboxBackendDrawSelection(&(ListboxBackendDrawSelection){.f_bx = common_bx, .f_bw = common_bw, .f_y = y, .f_item_h = row_h, .f_fw = common_fw, .f_frame_h = common_fh, .f_sel = sel});
   listbox_set_row_h_scroll(sel ? common_lb->text_hscroll : 0);
   out->idx = idx;
   out->selected = sel;
@@ -480,7 +487,9 @@ void listbox_common_end(void) {
   common_visible = 0;
   common_cur = 0;
   common_y0 = -1;
+  draw_state_clear_clip();
   draw_state_get()->listbox_rows = false;
 }
 
 int listbox_common_item_height(void) { return common_item_h; }
+

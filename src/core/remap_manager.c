@@ -186,7 +186,7 @@ static bool remap_register_internal_locked(const char *src, const char *dst,
   return true;
 }
 
-bool remap_register_internal(FnRemapRegisterInternalSpec *argspec) {
+bool remap_register_internal(RemapRegisterInternal *argspec) {
   remap_lock();
   bool ok =
       remap_register_internal_locked(argspec->f_src, argspec->f_dst, argspec->f_whitelist, argspec->f_windows, argspec->f_caller);
@@ -601,3 +601,4 @@ void remap_purge_owner(const char *path_a, const char *path_b) {
   OWNER_PURGE_STRUCT(remaps, RemapBinding, path_a, path_b, 0, remap_destroy_cb);
   remap_unlock();
 }
+

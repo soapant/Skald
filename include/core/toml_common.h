@@ -39,9 +39,10 @@ typedef struct {
   size_t f_key_cap;
   char *f_value;
   size_t f_value_cap;
-} FnTomlParseKeyValueSpec;
+} TomlParseKeyValue;
 
-TomlKeyValueStatus toml_parse_key_value(FnTomlParseKeyValueSpec *argspec);
+TomlKeyValueStatus toml_parse_key_value(TomlParseKeyValue *argspec);
 bool toml_next_line(const char **cursor, const char **line, size_t *len);
 
 #endif
+

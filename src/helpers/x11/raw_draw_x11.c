@@ -1,5 +1,6 @@
 #include "helpers/x11/raw_draw_x11.h"
 #include "config_values.h"
+#include "core/draw_state.h"
 
 #include <math.h>
 
@@ -59,7 +60,7 @@ __thread int raw_map_pitch = 0;
 __thread XftDraw *raw_map_xd = NULL;
 
 static int x11_raw_measure(Display *dpy, XftFont *xf, const char *s, int n) {
-  return x11_measure_utf8_fallback(&(FnX11MeasureUtf8FallbackSpec){.f_dpy = dpy, .f_xf = xf, .f_s = s, .f_n = n, .f_px = 0});
+  return x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){.f_dpy = dpy, .f_xf = xf, .f_s = s, .f_n = n, .f_px = 0});
 }
 
 static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf,
@@ -78,7 +79,7 @@ static void x11_raw_emit_line(Display *dpy, XftDraw *xd, XftFont *xf,
       k++;
     if (k >= nu)
       k = 0;
-    x11_draw_utf8_fallback(&(FnX11DrawUtf8FallbackSpec){.f_dpy = dpy, .f_xd = xd, .f_color = &xcols[k], .f_x = cx, .f_y = baseline, .f_xf = xf, .f_s = raw_text + i, .f_n = j - i, .f_px = 0});
+    x11_draw_utf8_fallback(&(X11DrawUtf8Fallback){.f_dpy = dpy, .f_xd = xd, .f_color = &xcols[k], .f_x = cx, .f_y = baseline, .f_xf = xf, .f_s = raw_text + i, .f_n = j - i, .f_px = 0});
     for (int m = i; m < j; m++) {
       raw_map_x[m] = cx;
       raw_map_top[m] = row_top;
@@ -128,7 +129,7 @@ void x11_raw_line_flush(void) {
   }
   XftColor xcols[64];
   for (int k = 0; k < nu; k++)
-    x11_xft_color_cached(&(FnX11XftColorCachedSpec){.f_dpy = dpy, .f_vis = vis, .f_cmap = cmap, .f_hex = ucols[k], .f_alpha = 0xFFFF, .f_out = &xcols[k]});
+    x11_xft_color_cached(&(X11XftColorCached){.f_dpy = dpy, .f_vis = vis, .f_cmap = cmap, .f_hex = ucols[k], .f_alpha = 0xFFFF, .f_out = &xcols[k]});
   int row = 0;
   int p = 0;
   int ls = 0;
@@ -231,7 +232,7 @@ void x11_raw_line_flush(void) {
     Platform_DestroyFont(raw_font);
 }
 
-bool x11_raw_line_push(FnX11RawLinePushSpec *argspec) {
+bool x11_raw_line_push(X11RawLinePush *argspec) {
   if (raw_count > 0) {
     bool same =
         (argspec->f_y == raw_y) && (argspec->f_font_size == raw_fontsize) && (raw_xd == g_draw_xd);
@@ -376,9 +377,9 @@ int x11_editbox_measure(const char *text, int len, void *user) {
   return ext.xOff;
 }
 
-void x11_draw_list_background(FnX11DrawListBackgroundSpec *argspec) {
+void x11_draw_list_background(X11DrawListBackground *argspec) {
   if (argspec->f_selected) {
-    x11_draw_selection_background(&(FnX11DrawSelectionBackgroundSpec){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_x = 0, .f_y = argspec->f_y, .f_w = argspec->f_state->width, .f_h = argspec->f_h, .f_baseHex = rgb_to_hex(COLOR_SELECTED_TEXT)});
+    x11_draw_selection_background(&(X11DrawSelectionBackground){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_x = 0, .f_y = argspec->f_y, .f_w = argspec->f_state->width, .f_h = argspec->f_h, .f_baseHex = rgb_to_hex(COLOR_SELECTED_TEXT)});
   }
 }
 
@@ -436,26 +437,26 @@ GC x11_raw_prepare(unsigned long color, int thickness) {
   if (!gc)
     return NULL;
   XftColor col;
-  x11_xft_color_cached(&(FnX11XftColorCachedSpec){.f_dpy = g_draw_dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = opacity_alpha16(), .f_out = &col});
+  x11_xft_color_cached(&(X11XftColorCached){.f_dpy = g_draw_dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = opacity_alpha16(), .f_out = &col});
   XSetForeground(g_draw_dpy, gc, col.pixel);
   XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid,
                      CapButt, JoinMiter);
   return gc;
 }
 
-void x11_draw_editbox(FnX11DrawEditboxSpec *argspec) {
+void x11_draw_editbox(X11DrawEditbox *argspec) {
   if (!argspec->f_state)
     return;
   SkaldContext_Get()->window.editbox_placed = true;
   FontHandle font = x11_create_font_on_display(argspec->f_dpy, FontSize, UsedFont);
-  x11_draw_edit_background(&(FnX11DrawEditBackgroundSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
-  x11_draw_edit_tint(&(FnX11DrawEditTintSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
-  x11_draw_edit_text(&(FnX11DrawEditTextSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
-  x11_draw_edit_cursor(&(FnX11DrawEditCursorSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
+  x11_draw_edit_background(&(X11DrawEditBackground){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
+  x11_draw_edit_tint(&(X11DrawEditTint){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
+  x11_draw_edit_text(&(X11DrawEditText){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
+  x11_draw_edit_cursor(&(X11DrawEditCursor){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font});
   Platform_DestroyFont(font);
 }
 
-void x11_draw_listbox(FnX11DrawListboxSpec *argspec) {
+void x11_draw_listbox(X11DrawListbox *argspec) {
 
   if (!argspec->f_state || !argspec->f_state->lb)
     return;
@@ -468,7 +469,8 @@ void x11_draw_listbox(FnX11DrawListboxSpec *argspec) {
   draw_prompt_separator(
       (DrawPromptSeparatorSpec){.y = y0, .width = argspec->f_state->width});
   int y_offset = PROMPT_LIST_BOTTOM_TITLE;
-  int visible = (argspec->f_state->height - y0 - y_offset) / item_h;
+  int visible = (argspec->f_state->height - y0 - y_offset + item_h - 1) /
+                item_h;
   if (visible < 1)
     visible = 1;
   if (visible > lb->item_count)
@@ -481,25 +483,32 @@ void x11_draw_listbox(FnX11DrawListboxSpec *argspec) {
   listbox_apply_pending_scroll(lb, visible);
 
   listbox_set_geometry(y0, item_h, visible);
-  listbox_hover_focus(&(FnListboxHoverFocusSpec){.f_lb = lb, .f_list_top = y0, .f_item_height = item_h, .f_top_index = lb->view_offset, .f_visible_count = visible, .f_left_x = PROMPT_SEL_X, .f_right_x = PROMPT_SEL_X + argspec->f_state->width - PROMPT_SEL_W_SHRINK});
+  listbox_hover_focus(&(ListboxHoverFocus){.f_lb = lb, .f_list_top = y0, .f_item_height = item_h, .f_top_index = lb->view_offset, .f_visible_count = visible, .f_left_x = PROMPT_SEL_X, .f_right_x = PROMPT_SEL_X + argspec->f_state->width - PROMPT_SEL_W_SHRINK});
+  draw_state_set_clip(y0, argspec->f_state->height - y_offset);
 
   for (int i = 0; i < visible; i++) {
     int idx = lb->view_offset + i;
     int y = y0 + i * item_h;
+    int row_h = item_h;
+    int clip_bottom = argspec->f_state->height - y_offset;
+    if (y + row_h > clip_bottom)
+      row_h = clip_bottom - y;
     bool sel = (idx == lb->selected_index);
     if (RoundedCorners && CornerRadius > 0) {
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
       int bx = PROMPT_SEL_X, bw = argspec->f_state->width - PROMPT_SEL_W_SHRINK;
       if (sel) {
-        x11_fill_rounded_rect(&(FnX11FillRoundedRectSpec){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_hex = rgb_to_hex(COLOR_SELECTED_TEXT), .f_alpha16 = 0xFFFF, .f_x = bx + t, .f_y = y + PROMPT_SEL_TOP_INSET + t, .f_w = bw - 2 * t, .f_h = item_h - 2 - 2 * t, .f_radius = R - 1});
+        x11_fill_rounded_rect(&(X11FillRoundedRect){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_hex = rgb_to_hex(COLOR_SELECTED_TEXT), .f_alpha16 = 0xFFFF, .f_x = bx + t, .f_y = y + PROMPT_SEL_TOP_INSET + t, .f_w = bw - 2 * t, .f_h = row_h - 2 - 2 * t, .f_radius = R - 1});
       }
     } else {
-      x11_draw_list_background(&(FnX11DrawListBackgroundSpec){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_y = y, .f_h = item_h, .f_selected = sel});
+      x11_draw_list_background(&(X11DrawListBackground){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_y = y, .f_h = row_h, .f_selected = sel});
     }
-    x11_draw_list_item(&(FnX11DrawListItemSpec){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font, .f_lb = lb, .f_idx = idx, .f_y = y, .f_text_x = PROMPT_ITEM_TEXT_X, .f_icon_path = NULL});
+    if (y < clip_bottom)
+      x11_draw_list_item(&(X11DrawListItem){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_font = font, .f_lb = lb, .f_idx = idx, .f_y = y, .f_text_x = PROMPT_ITEM_TEXT_X, .f_icon_path = NULL});
   }
 
+  draw_state_clear_clip();
   if (prompt_list_bottom_margin() > 0) {
     draw_prompt_separator((DrawPromptSeparatorSpec){
         .y = argspec->f_state->height - PROMPT_LIST_BOTTOM_TITLE, .width = argspec->f_state->width});
@@ -651,7 +660,7 @@ bool x11_raw_draw_rect_rotated(const DrawRectRawSpec *spec) {
     return false;
   Pixmap pm = 0;
   Picture pic = 0;
-  bool ok = x11_upload_argb(&(FnX11UploadArgbSpec){.f_dpy = dpy, .f_ref = 0, .f_argb = buf, .f_w = w, .f_h = h, .f_out_pm = &pm, .f_out_pic = &pic});
+  bool ok = x11_upload_argb(&(X11UploadArgb){.f_dpy = dpy, .f_ref = 0, .f_argb = buf, .f_w = w, .f_h = h, .f_out_pm = &pm, .f_out_pic = &pic});
   free(buf);
   if (!ok)
     return false;
@@ -692,7 +701,7 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
   }
   int font_size = spec->font_size > 0 ? spec->font_size : FontSize;
   int len = (int)strlen(spec->text);
-  int tw = x11_measure_utf8_fallback(&(FnX11MeasureUtf8FallbackSpec){.f_dpy = dpy, .f_xf = xf, .f_s = spec->text, .f_n = len, .f_px = font_size});
+  int tw = x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){.f_dpy = dpy, .f_xf = xf, .f_s = spec->text, .f_n = len, .f_px = font_size});
   int lh = xf->ascent + xf->descent;
   if (tw <= 0 || lh <= 0) {
     if (need_destroy)
@@ -744,7 +753,7 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
   unsigned long color =
       spec->color == COLOR_AUTO ? rgb_to_hex(COLOR_TEXT) : spec->color;
   XftColor col;
-  x11_xft_color_cached(&(FnX11XftColorCachedSpec){.f_dpy = dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = 0xFFFF, .f_out = &col});
+  x11_xft_color_cached(&(X11XftColorCached){.f_dpy = dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = 0xFFFF, .f_out = &col});
   XftDrawStringUtf8(td, &col, xf, 0, xf->ascent, (FcChar8 *)spec->text, len);
   XftDrawDestroy(td);
 
@@ -777,3 +786,4 @@ bool x11_raw_draw_text_rotated(const DrawTextRawSpec *spec) {
   XFlush(dpy);
   return ok;
 }
+

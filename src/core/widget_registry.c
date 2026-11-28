@@ -121,7 +121,7 @@ static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
                                     int *h) {
   int count = monitor_count();
   int idx = (monitor > 0 && monitor <= count) ? monitor : 0;
-  if (monitor_geometry_at(&(FnMonitorGeometryAtSpec){.f_index = idx, .f_x = x, .f_y = y, .f_w = w, .f_h = h}))
+  if (monitor_geometry_at(&(MonitorGeometryAt){.f_index = idx, .f_x = x, .f_y = y, .f_w = w, .f_h = h}))
     return;
   Platform_GetMonitorGeometry(x, y, w, h);
 }
@@ -499,7 +499,7 @@ static void widget_attach_window(void *ud) {
     void (*click_cb)(void) = widget->on_click;
     if (!click_cb && widget->capture_keys)
       click_cb = widget_capture_click;
-    widget->win = Platform_Widget_Create(&(FnPlatformWidgetCreateSpec){.f_x = widget->x, .f_y = widget->y, .f_w = widget->w, .f_h = widget->h, .f_fps = widget->fps, .f_no_bg = widget->no_bg, .f_on_click = click_cb, .f_name = widget->name});
+    widget->win = Platform_Widget_Create(&(PlatformWidgetCreate){.f_x = widget->x, .f_y = widget->y, .f_w = widget->w, .f_h = widget->h, .f_fps = widget->fps, .f_no_bg = widget->no_bg, .f_on_click = click_cb, .f_name = widget->name});
     set_draw_bg_color(0);
     created = (widget->win != NULL);
   } else {
@@ -587,7 +587,7 @@ static void widget_relayout(void) {
                                                                    : 0;
     MonSlot *st = &ms[it->slot][m];
     if (!st->known) {
-      if (!monitor_geometry_at(&(FnMonitorGeometryAtSpec){.f_index = m, .f_x = &st->x, .f_y = &st->y, .f_w = &st->w, .f_h = &st->h}))
+      if (!monitor_geometry_at(&(MonitorGeometryAt){.f_index = m, .f_x = &st->x, .f_y = &st->y, .f_w = &st->w, .f_h = &st->h}))
         Platform_GetMonitorGeometry(&st->x, &st->y, &st->w, &st->h);
       st->cursor = from_right ? st->x + st->w : st->x;
       st->known = true;
@@ -763,7 +763,7 @@ void widget_invalidate(PlatformWidget *widget) {
   render_thread_wake();
 }
 
-void widget_init_base(FnWidgetInitBaseSpec *argspec) {
+void widget_init_base(WidgetInitBase *argspec) {
   if (!argspec->f_base)
     return;
   argspec->f_base->x = argspec->f_x;
@@ -818,3 +818,4 @@ bool widget_base_set_bg_color(PlatformWidgetBase *base, ColorRef bg_color) {
   base->bg_color = bg_color;
   return true;
 }
+

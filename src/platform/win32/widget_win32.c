@@ -25,7 +25,7 @@ void Platform_Widget_FlushDestruction(void) {
   win32_wdestroy_unlock();
 }
 
-PlatformWidget *Platform_Widget_Create(FnPlatformWidgetCreateSpec *argspec) {
+PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
 
   if (argspec->f_w <= 0 || argspec->f_h <= 0)
     return NULL;
@@ -36,7 +36,7 @@ PlatformWidget *Platform_Widget_Create(FnPlatformWidgetCreateSpec *argspec) {
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
     return NULL;
-  widget_init_base(&(FnWidgetInitBaseSpec){.f_base = &widget->base, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_fps = argspec->f_fps, .f_no_bg = argspec->f_no_bg, .f_on_click = argspec->f_on_click, .f_name = argspec->f_name});
+  widget_init_base(&(WidgetInitBase){.f_base = &widget->base, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_fps = argspec->f_fps, .f_no_bg = argspec->f_no_bg, .f_on_click = argspec->f_on_click, .f_name = argspec->f_name});
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exstyle =
@@ -154,3 +154,4 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
                SWP_NOACTIVATE);
   widget_invalidate(widget);
 }
+

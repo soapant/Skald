@@ -27,7 +27,7 @@
 #include "helpers/helpers_input_state.h"
 #include "platform/wm_platform.h"
 
-bool cover_scale(FnCoverScaleSpec *argspec) {
+bool cover_scale(CoverScale *argspec) {
   double scale = (double)argspec->f_tw / (double)argspec->f_sw;
   double scale_y = (double)argspec->f_th / (double)argspec->f_sh;
   if (scale_y > scale)
@@ -393,13 +393,13 @@ static void populate_update_ui(ListBox *lb, int total_matches,
 }
 
 void populate_listbox(PopulateListboxSpec *argspec) {
-  populate_listbox_ranked(&(FnPopulateListboxRankedSpec){
+  populate_listbox_ranked(&(PopulateListboxRanked){
       .f_lb = argspec->f_lb, .f_filter = argspec->f_filter,
       .f_items = argspec->f_items, .f_item_count = argspec->f_item_count,
       .f_filter_match = argspec->f_filter_match, .f_item_rank = NULL});
 }
 
-void populate_listbox_ranked(FnPopulateListboxRankedSpec *argspec) {
+void populate_listbox_ranked(PopulateListboxRanked *argspec) {
   if (!argspec->f_lb)
     return;
 
@@ -514,7 +514,7 @@ void display_message_slot(const MessageSlotSpec *spec) {
                             .fps = spec->fps});
 }
 
-void listbox_compute_layout(FnListboxComputeLayoutSpec *argspec) {
+void listbox_compute_layout(ListboxComputeLayout *argspec) {
 
   if (!argspec->f_out) {
     return;
@@ -542,7 +542,8 @@ void listbox_compute_layout(FnListboxComputeLayoutSpec *argspec) {
     argspec->f_out->fw = argspec->f_spec->w ? argspec->f_spec->w : PromptW;
     argspec->f_out->fh = argspec->f_spec->h ? argspec->f_spec->h : PromptH;
   }
-  int visible = argspec->f_out->list_h / argspec->f_out->item_h;
+  int visible = (argspec->f_out->list_h + argspec->f_out->item_h - 1) /
+                argspec->f_out->item_h;
   if (visible < 1)
     visible = 1;
   if (argspec->f_count > 0 && visible > argspec->f_count)
@@ -730,7 +731,7 @@ void get_draw_offset(int *out_x, int *out_y) {
     *out_y = draw_state_get()->off_y;
 }
 
-int draw_line_prep(FnDrawLinePrepSpec *argspec) {
+int draw_line_prep(DrawLinePrep *argspec) {
   int t = draw_thickness_px(argspec->f_spec->thickness);
   if (t < 1)
     t = 1;
@@ -746,7 +747,7 @@ int draw_line_prep(FnDrawLinePrepSpec *argspec) {
   return t;
 }
 
-int draw_circle_prep(FnDrawCirclePrepSpec *argspec) {
+int draw_circle_prep(DrawCirclePrep *argspec) {
   int t = draw_thickness_px(argspec->f_spec->thickness);
   *argspec->f_cx = argspec->f_spec->cx + argspec->f_off_x;
   *argspec->f_cy = argspec->f_spec->cy + argspec->f_off_y;
@@ -755,7 +756,7 @@ int draw_circle_prep(FnDrawCirclePrepSpec *argspec) {
   return t;
 }
 
-int bg_tile_lru_pick(FnBgTileLruPickSpec *argspec) {
+int bg_tile_lru_pick(BgTileLruPick *argspec) {
   int i;
   for (i = 0; i < argspec->f_count; i++)
     if (argspec->f_is_empty((const char *)argspec->f_slots + (size_t)i * argspec->f_stride))
@@ -789,7 +790,7 @@ void draw_text_centered_impl(const DrawTextCenteredSpec *spec,
                                          .font_size = spec->font_size});
 }
 
-int msg_anchor_center(FnMsgAnchorCenterSpec *argspec) {
+int msg_anchor_center(MsgAnchorCenter *argspec) {
   if (argspec->f_slot == 0)
     return argspec->f_outward ? argspec->f_rect - argspec->f_gap - argspec->f_win_size / 2 : argspec->f_rect + argspec->f_gap + argspec->f_win_size / 2;
   if (argspec->f_slot == 2)
@@ -818,4 +819,5 @@ int prompt_list_bottom_margin(void) { return 40; }
 int64_t timer_now_ticks(void) { return Platform_TimerNowTicks(); }
 
 int64_t timer_tick_frequency(void) { return Platform_TimerTickFrequency(); }
+
 

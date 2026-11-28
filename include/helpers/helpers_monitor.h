@@ -25,9 +25,10 @@ typedef struct {
   int *f_y;
   int *f_w;
   int *f_h;
-} FnMonitorGeometryAtSpec;
+} MonitorGeometryAt;
 
-bool monitor_geometry_at(FnMonitorGeometryAtSpec *argspec);
+bool monitor_geometry_at(MonitorGeometryAt *argspec);
 bool monitor_info(int index, MonitorInfo *out);
 
 #endif
+

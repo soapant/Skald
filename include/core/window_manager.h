@@ -75,9 +75,9 @@ typedef struct {
   int *f_y;
   int *f_w;
   int *f_h;
-} FnPromptPopupGetBoundsSpec;
+} PromptPopupGetBounds;
 
-int prompt_popup_get_bounds(FnPromptPopupGetBoundsSpec *argspec);
+int prompt_popup_get_bounds(PromptPopupGetBounds *argspec);
 bool prompt_popup_resize_current(int x, int y, int w, int h);
 typedef struct {
   int f_x;
@@ -85,9 +85,9 @@ typedef struct {
   int f_w;
   int f_h;
   int f_duration_ms;
-} FnPromptPopupResizeCurrentAnimatedSpec;
+} PromptPopupResizeCurrentAnimated;
 
-bool prompt_popup_resize_current_animated(FnPromptPopupResizeCurrentAnimatedSpec *argspec);
+bool prompt_popup_resize_current_animated(PromptPopupResizeCurrentAnimated *argspec);
 bool prompt_popup_resize_animating(const Popup *p);
 void prompt_popup_tick_resize_animation_popup(Popup *p);
 void (*prompt_popup_take_on_close(Popup *p))(void);
@@ -101,3 +101,4 @@ void event_bus_purge_owner(const char *path_a, const char *path_b);
 void event_bus_trigger(Event event);
 
 #endif
+

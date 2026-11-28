@@ -8,21 +8,21 @@
 #include "wm/wm.h"
 
 TEST(snap_halves_and_quarters) {
-  SnapRect r = wm_snap_rect(&(FnWmSnapRectSpec){.f_mx = 10, .f_my = 20, .f_mw = 800, .f_mh = 600, .f_p = SNAP_LEFT});
+  SnapRect r = wm_snap_rect(&(WmSnapRect){.f_mx = 10, .f_my = 20, .f_mw = 800, .f_mh = 600, .f_p = SNAP_LEFT});
   ASSERT_EQ_INT(r.x, 10);
   ASSERT_EQ_INT(r.y, 20);
   ASSERT_EQ_INT(r.w, 400);
   ASSERT_EQ_INT(r.h, 600);
 
-  r = wm_snap_rect(&(FnWmSnapRectSpec){.f_mx = 10, .f_my = 20, .f_mw = 800, .f_mh = 600, .f_p = SNAP_RIGHT});
+  r = wm_snap_rect(&(WmSnapRect){.f_mx = 10, .f_my = 20, .f_mw = 800, .f_mh = 600, .f_p = SNAP_RIGHT});
   ASSERT_EQ_INT(r.x, 410);
   ASSERT_EQ_INT(r.w, 400);
 
-  r = wm_snap_rect(&(FnWmSnapRectSpec){.f_mx = 10, .f_my = 20, .f_mw = 800, .f_mh = 600, .f_p = SNAP_TOP});
+  r = wm_snap_rect(&(WmSnapRect){.f_mx = 10, .f_my = 20, .f_mw = 800, .f_mh = 600, .f_p = SNAP_TOP});
   ASSERT_EQ_INT(r.y, 20);
   ASSERT_EQ_INT(r.h, 300);
 
-  r = wm_snap_rect(&(FnWmSnapRectSpec){.f_mx = 10, .f_my = 20, .f_mw = 800, .f_mh = 600, .f_p = SNAP_BOTTOM_RIGHT});
+  r = wm_snap_rect(&(WmSnapRect){.f_mx = 10, .f_my = 20, .f_mw = 800, .f_mh = 600, .f_p = SNAP_BOTTOM_RIGHT});
   ASSERT_EQ_INT(r.x, 410);
   ASSERT_EQ_INT(r.y, 320);
   ASSERT_EQ_INT(r.w, 400);
@@ -73,3 +73,4 @@ int main(void) {
 int main(void) { return 0; }
 
 #endif
+

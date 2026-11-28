@@ -894,9 +894,9 @@ typedef struct {
   void *f_ctx;
   SkPos *f_out;
   int f_maxout;
-} FnSkiTextWrapLayoutSpec;
+} SkiTextWrapLayout;
 
-int ski_text_wrap_layout(FnSkiTextWrapLayoutSpec *argspec);
+int ski_text_wrap_layout(SkiTextWrapLayout *argspec);
 
 int ski_measure_text_wrapped(const SkMeasureSpec *spec);
 
@@ -1416,3 +1416,4 @@ bool ski_resize_window_animated(const SkRect *rect, int duration_ms);
 SkRect sk_get_window_bounds(void);
 
 #endif
+

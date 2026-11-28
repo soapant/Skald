@@ -22,9 +22,9 @@ typedef struct {
   int f_mw;
   int f_mh;
   SnapPreset f_p;
-} FnWmSnapRectSpec;
+} WmSnapRect;
 
-static inline SnapRect wm_snap_rect(FnWmSnapRectSpec *argspec) {
+static inline SnapRect wm_snap_rect(WmSnapRect *argspec) {
   SnapRect r = {argspec->f_mx, argspec->f_my, argspec->f_mw, argspec->f_mh};
   int hw = argspec->f_mw / 2, hh = argspec->f_mh / 2;
   switch (argspec->f_p) {
@@ -132,3 +132,4 @@ DrawRect wm_get_window_geometry(WindowHandle window);
 bool wm_set_window_geometry(WindowHandle window, DrawRect rect);
 
 #endif
+

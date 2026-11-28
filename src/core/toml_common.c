@@ -232,7 +232,7 @@ bool toml_color_ref(const char *body, ColorRef *out) {
   return true;
 }
 
-TomlKeyValueStatus toml_parse_key_value(FnTomlParseKeyValueSpec *argspec) {
+TomlKeyValueStatus toml_parse_key_value(TomlParseKeyValue *argspec) {
   if (!argspec->f_line || !argspec->f_key || !argspec->f_value || !argspec->f_key_cap || !argspec->f_value_cap)
     return TOML_KV_INVALID_VALUE;
 
@@ -363,3 +363,4 @@ bool toml_next_line(const char **cursor, const char **line, size_t *len) {
   *cursor = *p ? p + 1 : p;
   return true;
 }
+

@@ -17,20 +17,21 @@ typedef struct {
   int f_y;
   int f_w;
   int f_h;
-} FnPlatformPromptPopupShowWindowSpec;
+} PlatformPromptPopupShowWindow;
 
-bool Platform_PromptPopupShowWindow(FnPlatformPromptPopupShowWindowSpec *argspec);
+bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec);
 typedef struct {
   Popup *f_self;
   int f_x;
   int f_y;
   int f_w;
   int f_h;
-} FnPlatformPromptPopupResizeSpec;
+} PlatformPromptPopupResize;
 
-bool Platform_PromptPopupResize(FnPlatformPromptPopupResizeSpec *argspec);
+bool Platform_PromptPopupResize(PlatformPromptPopupResize *argspec);
 void Platform_PromptPopupHideWindow(Popup *self);
 void Platform_PromptPopupRender(Popup *self);
 void Platform_PromptPopupDestroyWindow(Popup *self);
 bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key);
 #endif
+

@@ -16,9 +16,9 @@ typedef struct {
   int f_ww;
   int f_wh;
   const RECT *f_region;
-} FnWin32DrawWindowBorderSpec;
+} Win32DrawWindowBorder;
 
-void win32_draw_window_border(FnWin32DrawWindowBorderSpec *argspec);
+void win32_draw_window_border(Win32DrawWindowBorder *argspec);
 void win32_apply_rounded_corners(HWND hwnd, int w, int h);
 typedef struct {
   HWND f_hwnd;
@@ -26,9 +26,10 @@ typedef struct {
   int f_h;
   bool f_rounded;
   int f_radius;
-} FnWin32ApplyRoundedSpec;
+} Win32ApplyRounded;
 
-void win32_apply_rounded(FnWin32ApplyRoundedSpec *argspec);
+void win32_apply_rounded(Win32ApplyRounded *argspec);
 void win32_fill_rounded_rect(HDC hdc, RECT *rc, COLORREF col, int radius);
 
 #endif
+

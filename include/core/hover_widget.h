@@ -54,8 +54,9 @@ typedef struct {
   int f_y;
   int f_w;
   int f_h;
-} FnTextPromptSpecSpec;
+} TextPromptSpec;
 
-PromptSpec text_prompt_spec(FnTextPromptSpecSpec *argspec);
+PromptSpec text_prompt_spec(TextPromptSpec *argspec);
 
 #endif
+

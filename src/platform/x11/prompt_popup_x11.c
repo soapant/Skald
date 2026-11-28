@@ -22,7 +22,7 @@
 #include "config_values.h"
 #include "core/types.h"
 
-bool Platform_PromptPopupShowWindow(FnPlatformPromptPopupShowWindowSpec *argspec) {
+bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
   WindowManager *wm = (WindowManager *)argspec->f_self->manager;
   Display *dpy = wm ? wm->display : NULL;
   if (!dpy)
@@ -30,7 +30,7 @@ bool Platform_PromptPopupShowWindow(FnPlatformPromptPopupShowWindowSpec *argspec
   struct timespec _t0, _t1, _t2, _t3;
   clock_gettime(CLOCK_MONOTONIC, &_t0);
   listbox_invalidate_mouse_pos();
-  argspec->f_self->handle.xid = x11_create_prompt_window(&(FnX11CreatePromptWindowSpec){.f_dpy = dpy, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h});
+  argspec->f_self->handle.xid = x11_create_prompt_window(&(X11CreatePromptWindow){.f_dpy = dpy, .f_x = argspec->f_x, .f_y = argspec->f_y, .f_w = argspec->f_w, .f_h = argspec->f_h});
   SkaldContext_Get()->window.hPopupWnd = WH_FROM_XID(argspec->f_self->handle.xid);
   XSelectInput(dpy, argspec->f_self->handle.xid,
                KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask |
@@ -87,7 +87,7 @@ bool Platform_PromptPopupShowWindow(FnPlatformPromptPopupShowWindowSpec *argspec
   return true;
 }
 
-bool Platform_PromptPopupResize(FnPlatformPromptPopupResizeSpec *argspec) {
+bool Platform_PromptPopupResize(PlatformPromptPopupResize *argspec) {
   if (argspec->f_w <= 0 || argspec->f_h <= 0 || !argspec->f_self)
     return false;
   WindowManager *wm = (WindowManager *)argspec->f_self->manager;
@@ -97,7 +97,7 @@ bool Platform_PromptPopupResize(FnPlatformPromptPopupResizeSpec *argspec) {
     return false;
   x11_set_fixed_size_hints(dpy, win, argspec->f_w, argspec->f_h);
   XMoveResizeWindow(dpy, win, argspec->f_x, argspec->f_y, (unsigned)argspec->f_w, (unsigned)argspec->f_h);
-  x11_apply_shape(&(FnX11ApplyShapeSpec){.f_dpy = dpy, .f_win = win, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_rounded = RoundedCorners, .f_radius = RoundedCorners ? CornerRadius : 0});
+  x11_apply_shape(&(X11ApplyShape){.f_dpy = dpy, .f_win = win, .f_w = argspec->f_w, .f_h = argspec->f_h, .f_rounded = RoundedCorners, .f_radius = RoundedCorners ? CornerRadius : 0});
   x11_release_prompt_buffer(dpy, win);
   XSync(dpy, False);
   return true;
@@ -163,3 +163,4 @@ bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   }
   return false;
 }
+

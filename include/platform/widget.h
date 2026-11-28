@@ -33,9 +33,9 @@ typedef struct {
   bool f_no_bg;
   void (*f_on_click)(void);
   const char *f_name;
-} FnPlatformWidgetCreateSpec;
+} PlatformWidgetCreate;
 
-PlatformWidget *Platform_Widget_Create(FnPlatformWidgetCreateSpec *argspec);
+PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec);
 void Platform_Widget_Destroy(PlatformWidget *widget);
 void Platform_Widget_Show(PlatformWidget *widget);
 void Platform_Widget_Hide(PlatformWidget *widget);
@@ -48,3 +48,4 @@ void Platform_Widget_DrainClicks(void);
 void Platform_Widget_FlushDestruction(void);
 
 #endif
+

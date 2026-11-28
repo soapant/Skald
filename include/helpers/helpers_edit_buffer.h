@@ -13,11 +13,12 @@ typedef struct {
   size_t *f_cursor;
   const char *f_text;
   size_t f_len;
-} FnEditBufferInsertTextSpec;
+} EditBufferInsertText;
 
-size_t edit_buffer_insert_text(FnEditBufferInsertTextSpec *argspec);
+size_t edit_buffer_insert_text(EditBufferInsertText *argspec);
 bool edit_buffer_backspace_pair(char *buf, size_t *cursor);
 bool cursor_back(size_t *cursor);
 bool cursor_forward(size_t *cursor, size_t text_len);
 
 #endif
+

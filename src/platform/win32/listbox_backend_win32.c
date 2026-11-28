@@ -29,7 +29,7 @@ bool Platform_ListboxBackendBegin(int item_height_override,
   return true;
 }
 
-void Platform_ListboxBackendDrawSelection(FnPlatformListboxBackendDrawSelectionSpec *argspec) {
+void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) {
   (void)argspec->f_frame_h;
   (void)argspec->f_fw;
   if (RoundedCorners && CornerRadius > 0) {

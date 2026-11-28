@@ -152,7 +152,8 @@ typedef struct {
   bool f_no_bg;
   void (*f_on_click)(void);
   const char *f_name;
-} FnWidgetInitBaseSpec;
+} WidgetInitBase;
 
-void widget_init_base(FnWidgetInitBaseSpec *argspec);
+void widget_init_base(WidgetInitBase *argspec);
 #endif
+

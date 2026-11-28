@@ -45,7 +45,7 @@ const char *win32_sm_lookup(int slot, const char *const possibilities[],
 
   if (!sm_scanned) {
     sm_scanned = true;
-    file_walk_all_files_from_dir(&(FnFileWalkAllFilesFromDirSpec){.f_dir_path = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", .f_list_of_allowed_extensions = NULL, .f_list_of_files = &sm_files, .f_list_of_names_to_ignore = NULL, .f_strip_extension = true, .f_max_depth = 0});
+    file_walk_all_files_from_dir(&(FileWalkAllFilesFromDir){.f_dir_path = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", .f_list_of_allowed_extensions = NULL, .f_list_of_files = &sm_files, .f_list_of_names_to_ignore = NULL, .f_strip_extension = true, .f_max_depth = 0});
   }
   for (size_t j = 0; j < count; j++) {
     for (size_t i = 0; i < sm_files.count; i++) {
@@ -133,3 +133,4 @@ bool win32_launch_default_browser_blank(void) {
   }
   return true;
 }
+

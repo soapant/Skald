@@ -76,7 +76,7 @@ static void snippet_owner_set(OwnerTag *tag, void (*func)(void), void *caller) {
   owner_strfree(&owner);
 }
 
-bool snippet_register_internal(FnSnippetRegisterInternalSpec *argspec) {
+bool snippet_register_internal(SnippetRegisterInternal *argspec) {
   if (!argspec->f_trigger || !argspec->f_trigger[0])
     return false;
   if (!argspec->f_text && !argspec->f_func)
@@ -324,3 +324,4 @@ bool snippet_feed_vk(int vk, int value, bool can_swallow) {
     fire_fn(idx, del);
   return true;
 }
+

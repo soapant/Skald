@@ -3,7 +3,7 @@
 #include "platform/widget.h"
 #include "core/types/color.h"
 
-PlatformWidget *Platform_Widget_Create(FnPlatformWidgetCreateSpec *argspec) {
+PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
   (void)argspec->f_x;
   (void)argspec->f_y;
   (void)argspec->f_w;
@@ -51,3 +51,4 @@ bool Platform_Widget_DispatchClick(long window_id) {
 void Platform_Widget_DrainClicks(void) {}
 
 void Platform_Widget_FlushDestruction(void) {}
+

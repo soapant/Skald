@@ -79,11 +79,12 @@ typedef struct {
   const char *f_name;
   const char *f_value;
   ConfigTomlError *f_err;
-} FnConfigSectionSetExSpec;
+} ConfigSectionSetEx;
 
-ConfigTomlStatus config_section_set_ex(FnConfigSectionSetExSpec *argspec);
+ConfigTomlStatus config_section_set_ex(ConfigSectionSetEx *argspec);
 ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
                                          const char *name,
                                          ConfigTomlError *err);
 
 #endif
+

@@ -57,7 +57,7 @@ bool safe_cat(char *dst, size_t cap, const char *src) {
 }
 
 HotkeyBinding
-hotkey_convert_into_binding(FnHotkeyConvertIntoBindingSpec *argspec) {
+hotkey_convert_into_binding(HotkeyConvertIntoBinding *argspec) {
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 
@@ -755,7 +755,7 @@ static bool file_walk_dir(const char *dir_path,
   return true;
 }
 
-bool file_walk_all_files_from_dir(FnFileWalkAllFilesFromDirSpec *argspec) {
+bool file_walk_all_files_from_dir(FileWalkAllFilesFromDir *argspec) {
   if (!argspec->f_dir_path || !argspec->f_list_of_files)
     return false;
   return file_walk_dir(argspec->f_dir_path, argspec->f_list_of_allowed_extensions, argspec->f_list_of_files,
@@ -928,7 +928,7 @@ static int text_wrap_place_word(TextWrapMeasureFn measure, void *ctx,
   return measure(ctx, text + ws, we - ws);
 }
 
-int text_wrap_layout(FnTextWrapLayoutSpec *argspec) {
+int text_wrap_layout(TextWrapLayout *argspec) {
   int count = 0;
   int len = (int)strlen(argspec->f_text);
   int avail = argspec->f_max_width < 40 ? 40 : argspec->f_max_width;
@@ -1085,7 +1085,7 @@ bool capture_text(const char *text) {
   if (!search_index_current())
     return false;
   if (text[0])
-    search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = NULL, .f_text = text, .f_kind = SEARCH_KIND_TEXT, .f_widget_name = NULL, .f_value = NULL});
+    search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = text, .f_kind = SEARCH_KIND_TEXT, .f_widget_name = NULL, .f_value = NULL});
   return true;
 }
 
@@ -1099,7 +1099,7 @@ int text_segment_width(const void *seg_ptr, int font_size) {
                              .font_size = font_size});
 }
 
-void wrapped_word_push(FnWrappedWordPushSpec *argspec) {
+void wrapped_word_push(WrappedWordPush *argspec) {
   if (!argspec->f_len)
     return;
   if (*argspec->f_count >= *argspec->f_cap) {
@@ -1129,3 +1129,4 @@ int wrap_measure_thunk(void *ctx, const char *s, int n) {
   return Platform_MeasureTextWidth(
       (MeasureTextWidthSpec){.text = s, .len = n, .font_size = c->font_size});
 }
+

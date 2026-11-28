@@ -51,7 +51,7 @@ void win32_set_prev_fg(HWND h) {
     g_prev_fg = h;
 }
 
-bool Platform_PromptPopupShowWindow(FnPlatformPromptPopupShowWindowSpec *argspec) {
+bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
   (void)argspec->f_self;
 
   listbox_invalidate_mouse_pos();
@@ -91,7 +91,7 @@ bool Platform_PromptPopupShowWindow(FnPlatformPromptPopupShowWindowSpec *argspec
   return true;
 }
 
-bool Platform_PromptPopupResize(FnPlatformPromptPopupResizeSpec *argspec) {
+bool Platform_PromptPopupResize(PlatformPromptPopupResize *argspec) {
   if (argspec->f_w <= 0 || argspec->f_h <= 0)
     return false;
   HWND hwnd = argspec->f_self ? WH_TO_HWND(argspec->f_self->handle) : NULL;
@@ -162,7 +162,7 @@ void Platform_PromptPopupRender(Popup *self) {
     prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    focus_frame_begin(&(FnFocusFrameBeginSpec){.f_include_listbox = state->lb != NULL, .f_lb_x = 0, .f_lb_y = prompt_list_top(), .f_lb_w = state->width, .f_lb_h = state->height - prompt_list_top() -
+    focus_frame_begin(&(FocusFrameBegin){.f_include_listbox = state->lb != NULL, .f_lb_x = 0, .f_lb_y = prompt_list_top(), .f_lb_w = state->width, .f_lb_h = state->height - prompt_list_top() -
                           prompt_list_bottom_margin()});
     editbox_registry_register_focus(state);
     editbox_registry_tick(state);
@@ -181,3 +181,4 @@ void Platform_PromptPopupDestroyWindow(Popup *self) {
 bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   return false;
 }
+

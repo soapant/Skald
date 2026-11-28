@@ -92,7 +92,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     X11SessionEnv env;
     x11_env_get_session_env(&env);
     char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-    x11_env_build_env_strings(&(FnX11EnvBuildEnvStringsSpec){.f_env = &env, .f_disp_env = disp_env, .f_xauth_env = xauth_env, .f_runtime_env = runtime_env, .f_wayland_env = wayland_env});
+    x11_env_build_env_strings(&(X11EnvBuildEnvStrings){.f_env = &env, .f_disp_env = disp_env, .f_xauth_env = xauth_env, .f_runtime_env = runtime_env, .f_wayland_env = wayland_env});
     bool as_root = x11_env_is_running_as_root();
     log_info("desktop '%s' exec='%s' workdir='%s' run_dir='%s' as_root=%d",
              expanded, exec_line, workdir, run_dir, as_root);
@@ -114,7 +114,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     }
 
     char cmd[4096];
-    if (!x11_resolve_desktop_exec(&(FnX11ResolveDesktopExecSpec){.f_exec_line = exec_line, .f_desktop_dir = desktop_dir, .f_workdir = workdir, .f_out = cmd, .f_out_size = sizeof(cmd)})) {
+    if (!x11_resolve_desktop_exec(&(X11ResolveDesktopExec){.f_exec_line = exec_line, .f_desktop_dir = desktop_dir, .f_workdir = workdir, .f_out = cmd, .f_out_size = sizeof(cmd)})) {
       log_warn(
           "desktop '%s': cannot resolve Exec '%s' via PATH or desktop dir '%s'",
           expanded, exec_line, desktop_dir);
@@ -145,7 +145,7 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     X11SessionEnv env;
     x11_env_get_session_env(&env);
     char disp_env[256], xauth_env[512], runtime_env[512];
-    x11_env_build_env_strings(&(FnX11EnvBuildEnvStringsSpec){.f_env = &env, .f_disp_env = disp_env, .f_xauth_env = xauth_env, .f_runtime_env = runtime_env, .f_wayland_env = NULL});
+    x11_env_build_env_strings(&(X11EnvBuildEnvStrings){.f_env = &env, .f_disp_env = disp_env, .f_xauth_env = xauth_env, .f_runtime_env = runtime_env, .f_wayland_env = NULL});
     struct stat pst;
     bool is_regular_file = (stat(path, &pst) == 0 && S_ISREG(pst.st_mode));
     bool is_executable = (access(path, X_OK) == 0);
@@ -364,3 +364,4 @@ bool sk_dismiss_message_platform(const char *name) {
 }
 
 int sk_get_pid_platform(void) { return (int)getpid(); }
+

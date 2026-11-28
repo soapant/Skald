@@ -21,9 +21,9 @@ typedef struct {
   char *f_centered_to;
   int f_x_offset;
   int f_box_width;
-} FnX11DrawWrappedTextSpec;
+} X11DrawWrappedText;
 
-void x11_draw_wrapped_text(FnX11DrawWrappedTextSpec *argspec);
+void x11_draw_wrapped_text(X11DrawWrappedText *argspec);
 typedef struct {
   Display *f_dpy;
   XftDraw *f_xd;
@@ -34,18 +34,18 @@ typedef struct {
   const char *f_s;
   int f_n;
   int f_px;
-} FnX11DrawUtf8FallbackSpec;
+} X11DrawUtf8Fallback;
 
-int x11_draw_utf8_fallback(FnX11DrawUtf8FallbackSpec *argspec);
+int x11_draw_utf8_fallback(X11DrawUtf8Fallback *argspec);
 typedef struct {
   Display *f_dpy;
   XftFont *f_xf;
   const char *f_s;
   int f_n;
   int f_px;
-} FnX11MeasureUtf8FallbackSpec;
+} X11MeasureUtf8Fallback;
 
-int x11_measure_utf8_fallback(FnX11MeasureUtf8FallbackSpec *argspec);
+int x11_measure_utf8_fallback(X11MeasureUtf8Fallback *argspec);
 void x11_bump_measure_epoch(void);
 typedef struct {
   Display *f_dpy;
@@ -54,9 +54,9 @@ typedef struct {
   unsigned long f_hex;
   unsigned short f_alpha;
   XftColor *f_out;
-} FnX11XftColorCachedSpec;
+} X11XftColorCached;
 
-bool x11_xft_color_cached(FnX11XftColorCachedSpec *argspec);
+bool x11_xft_color_cached(X11XftColorCached *argspec);
 typedef struct {
   Display *f_dpy;
   XImage *f_img;
@@ -66,9 +66,9 @@ typedef struct {
   unsigned long f_red_mask;
   unsigned long f_green_mask;
   unsigned long f_blue_mask;
-} FnX11InitArgbImageSpec;
+} X11InitArgbImage;
 
-void x11_init_argb_image(FnX11InitArgbImageSpec *argspec);
+void x11_init_argb_image(X11InitArgbImage *argspec);
 typedef struct {
   Display *f_dpy;
   Drawable f_ref;
@@ -77,9 +77,9 @@ typedef struct {
   int f_h;
   Pixmap *f_out_pm;
   Picture *f_out_pic;
-} FnX11UploadArgbSpec;
+} X11UploadArgb;
 
-bool x11_upload_argb(FnX11UploadArgbSpec *argspec);
+bool x11_upload_argb(X11UploadArgb *argspec);
 
 const char *x11_listbox_item_display_text(ListBox *lb, int idx, char *trunc,
                                           size_t trunc_size);
@@ -94,9 +94,9 @@ typedef struct {
   const char *f_icon_path;
   int f_idx;
   int f_y;
-} FnX11DrawListboxItemTextSpec;
+} X11DrawListboxItemText;
 
-void x11_draw_listbox_item_text(FnX11DrawListboxItemTextSpec *argspec);
+void x11_draw_listbox_item_text(X11DrawListboxItemText *argspec);
 typedef struct {
   Display *f_dpy;
   XftDraw *f_xd;
@@ -109,9 +109,9 @@ typedef struct {
   int f_w;
   int f_h;
   int f_radius;
-} FnX11FillRoundedRectSpec;
+} X11FillRoundedRect;
 
-void x11_fill_rounded_rect(FnX11FillRoundedRectSpec *argspec);
+void x11_fill_rounded_rect(X11FillRoundedRect *argspec);
 void x11_draw_background(Display *dpy, Window win, int w, int h);
 void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h);
 Pixmap x11_get_cached_background(Display *dpy, Window win, int w, int h);
@@ -123,9 +123,9 @@ typedef struct {
   Visual **f_vis_out;
   Colormap *f_cmap_out;
   int *f_depth_out;
-} FnX11GetDrawableVisualSpec;
+} X11GetDrawableVisual;
 
-bool x11_get_drawable_visual(FnX11GetDrawableVisualSpec *argspec);
+bool x11_get_drawable_visual(X11GetDrawableVisual *argspec);
 typedef struct {
   Display *f_dpy;
   XftDraw *f_xd;
@@ -136,9 +136,9 @@ typedef struct {
   int f_w;
   int f_h;
   unsigned long f_baseHex;
-} FnX11DrawSelectionBackgroundSpec;
+} X11DrawSelectionBackground;
 
-void x11_draw_selection_background(FnX11DrawSelectionBackgroundSpec *argspec);
+void x11_draw_selection_background(X11DrawSelectionBackground *argspec);
 void x11_release_prompt_buffer(Display *dpy, Window win);
 
 void x11_get_draw_context(Display **dpy, XftDraw **xd, Visual **vis,
@@ -151,9 +151,9 @@ typedef struct {
   XftDraw *f_xd;
   Visual *f_vis;
   Colormap f_cmap;
-} FnX11DrawListboxSpec;
+} X11DrawListbox;
 
-void x11_draw_listbox(FnX11DrawListboxSpec *argspec);
+void x11_draw_listbox(X11DrawListbox *argspec);
 typedef struct {
   PromptState *f_state;
   Display *f_dpy;
@@ -163,9 +163,9 @@ typedef struct {
   int f_y;
   int f_h;
   bool f_selected;
-} FnX11DrawListBackgroundSpec;
+} X11DrawListBackground;
 
-void x11_draw_list_background(FnX11DrawListBackgroundSpec *argspec);
+void x11_draw_list_background(X11DrawListBackground *argspec);
 typedef struct {
   Display *f_dpy;
   XftDraw *f_xd;
@@ -175,9 +175,9 @@ typedef struct {
   int f_y;
   int f_tw;
   int f_th;
-} FnX11DrawImageScaledSpec;
+} X11DrawImageScaled;
 
-bool x11_draw_image_scaled(FnX11DrawImageScaledSpec *argspec);
+bool x11_draw_image_scaled(X11DrawImageScaled *argspec);
 
 typedef struct {
   PromptState *f_state;
@@ -185,12 +185,13 @@ typedef struct {
   XftDraw *f_xd;
   Visual *f_vis;
   Colormap f_cmap;
-} FnX11DrawEditboxSpec;
+} X11DrawEditbox;
 
-void x11_draw_editbox(FnX11DrawEditboxSpec *argspec);
+void x11_draw_editbox(X11DrawEditbox *argspec);
 
 FontHandle x11_create_font_on_display(Display *dpy, int size,
                                       const char *face_name);
 
 int x11_editbox_measure(const char *text, int len, void *user);
 #endif
+

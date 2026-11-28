@@ -14,9 +14,9 @@ typedef struct {
   bool f_whitelist;
   const char *const *f_windows;
   void *f_caller;
-} FnRemapRegisterInternalSpec;
+} RemapRegisterInternal;
 
-bool remap_register_internal(FnRemapRegisterInternalSpec *argspec);
+bool remap_register_internal(RemapRegisterInternal *argspec);
 void remap_purge_owner(const char *path_a, const char *path_b);
 void remap_send_combo(const char *combo);
 bool remap_handle_vk(int vk, int value);
@@ -31,3 +31,4 @@ bool remap_is_virt_held(int vk);
 bool remap_check_strict_order(int trigger_vk, int mods);
 
 #endif
+

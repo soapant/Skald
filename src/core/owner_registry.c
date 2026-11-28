@@ -56,7 +56,7 @@ bool owner_tag_should_purge(const OwnerTag *tag, const char *path_a,
   return owner_module_matches(tag->owner, path_a, path_b);
 }
 
-size_t owner_purge_array(FnOwnerPurgeArraySpec *argspec) {
+size_t owner_purge_array(OwnerPurgeArray *argspec) {
   if (!argspec->f_arr || !argspec->f_elem_size || owner_purge_inactive(argspec->f_path_a, argspec->f_path_b))
     return 0;
   char *a = owner_strdup(argspec->f_path_a);
@@ -84,7 +84,7 @@ size_t owner_purge_array(FnOwnerPurgeArraySpec *argspec) {
   return removed;
 }
 
-size_t owner_purge_pointers(FnOwnerPurgePointersSpec *argspec) {
+size_t owner_purge_pointers(OwnerPurgePointers *argspec) {
   if (!argspec->f_arr || owner_purge_inactive(argspec->f_path_a, argspec->f_path_b))
     return 0;
   char *a = owner_strdup(argspec->f_path_a);
@@ -111,7 +111,7 @@ size_t owner_purge_pointers(FnOwnerPurgePointersSpec *argspec) {
   return removed;
 }
 
-bool owner_array_has_active(FnOwnerArrayHasActiveSpec *argspec) {
+bool owner_array_has_active(OwnerArrayHasActive *argspec) {
   if (!argspec->f_arr || !argspec->f_path || !argspec->f_path[0])
     return false;
   const char *base = (const char *)argspec->f_arr;
@@ -137,3 +137,4 @@ bool owner_pointers_have_active(void *const *arr, size_t count,
   }
   return false;
 }
+

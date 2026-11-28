@@ -159,7 +159,7 @@ ConfigTomlStatus config_toml_parse_ex(const char *path, ConfigTomlVisitFn visit,
 
     char keybuf[384];
     char raw[1024];
-    TomlKeyValueStatus kvs = toml_parse_key_value(&(FnTomlParseKeyValueSpec){.f_line = s, .f_len = s_len, .f_key = keybuf, .f_key_cap = sizeof(keybuf), .f_value = raw, .f_value_cap = sizeof(raw)});
+    TomlKeyValueStatus kvs = toml_parse_key_value(&(TomlParseKeyValue){.f_line = s, .f_len = s_len, .f_key = keybuf, .f_key_cap = sizeof(keybuf), .f_value = raw, .f_value_cap = sizeof(raw)});
     if (kvs != TOML_KV_OK) {
       const char *msg = "invalid key";
       switch (kvs) {
@@ -229,3 +229,4 @@ bool config_toml_encode_string(const char *src, char *out, size_t out_cap) {
 bool config_toml_color_ref(const char *body, ColorRef *out) {
   return toml_color_ref(body, out);
 }
+

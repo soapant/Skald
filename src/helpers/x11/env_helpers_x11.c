@@ -64,7 +64,7 @@ void x11_env_get_session_env(X11SessionEnv *out) {
   }
 }
 
-void x11_env_build_env_strings(FnX11EnvBuildEnvStringsSpec *argspec) {
+void x11_env_build_env_strings(X11EnvBuildEnvStrings *argspec) {
   if (argspec->f_disp_env)
     snprintf(argspec->f_disp_env, 256, "DISPLAY=%s",
              argspec->f_env && argspec->f_env->display ? argspec->f_env->display : "");
@@ -175,3 +175,4 @@ char *x11_paste_wtype(const char *content) {
     log_error("paste via wtype failed");
   return out;
 }
+

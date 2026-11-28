@@ -30,9 +30,9 @@ typedef struct {
   int f_y;
   int f_w;
   int f_h;
-} FnPlatformDrawImageAtSpec;
+} PlatformDrawImageAt;
 
-bool Platform_DrawImageAt(FnPlatformDrawImageAtSpec *argspec);
+bool Platform_DrawImageAt(PlatformDrawImageAt *argspec);
 bool Platform_GetImageSize(const char *path, int *w, int *h);
 ImageBuffer *Platform_CaptureWindowByTitle(const char *title);
 ImageBuffer *Platform_CaptureWindowById(const char *id);
@@ -43,9 +43,9 @@ typedef struct {
   int f_y;
   int f_w;
   int f_h;
-} FnPlatformDrawImageBufferSpec;
+} PlatformDrawImageBuffer;
 
-bool Platform_DrawImageBuffer(FnPlatformDrawImageBufferSpec *argspec);
+bool Platform_DrawImageBuffer(PlatformDrawImageBuffer *argspec);
 
 #define COLOR_AUTO (~0UL)
 
@@ -123,3 +123,4 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetTextLineHeight(int font_size);
 
 #endif
+

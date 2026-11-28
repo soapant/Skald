@@ -103,7 +103,7 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
     layer_fill(widget, 0xFF000000u);
   } else if (win32_bg_image_enabled()) {
     RECT full = {0, 0, widget->layer_w, widget->layer_h};
-    if (!win32_draw_bg_image_slice(&(FnWin32DrawBgImageSliceSpec){.f_hdc = widget->layer_dc, .f_rc = &full, .f_containerW = widget->layer_w, .f_containerH = widget->layer_h, .f_originX = 0, .f_originY = 0})) {
+    if (!win32_draw_bg_image_slice(&(Win32DrawBgImageSlice){.f_hdc = widget->layer_dc, .f_rc = &full, .f_containerW = widget->layer_w, .f_containerH = widget->layer_h, .f_originX = 0, .f_originY = 0})) {
       layer_fill(widget, widget_dib_color(
                              widget->base.has_bg ? widget->base.bg_color : 0u));
     }
@@ -125,7 +125,7 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg,
     ds->win32_widget_surface = false;
   }
   if (!widget->base.no_bg)
-    win32_draw_window_border(&(FnWin32DrawWindowBorderSpec){.f_hdc = widget->layer_dc, .f_ox = 0, .f_oy = 0, .f_ww = widget->layer_w, .f_wh = widget->layer_h, .f_region = NULL});
+    win32_draw_window_border(&(Win32DrawWindowBorder){.f_hdc = widget->layer_dc, .f_ox = 0, .f_oy = 0, .f_ww = widget->layer_w, .f_wh = widget->layer_h, .f_region = NULL});
   GdiFlush();
 
   {
@@ -339,3 +339,4 @@ void win32_widget_destroy_on_owner_thread(void *ud) {
   widget->hwnd = NULL;
   free(widget);
 }
+

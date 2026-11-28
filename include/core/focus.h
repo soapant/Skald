@@ -29,9 +29,9 @@ typedef struct {
   int f_lb_y;
   int f_lb_w;
   int f_lb_h;
-} FnFocusFrameBeginSpec;
+} FocusFrameBegin;
 
-void focus_frame_begin(FnFocusFrameBeginSpec *argspec);
+void focus_frame_begin(FocusFrameBegin *argspec);
 void focus_frame_end(void);
 typedef struct {
   const char *f_name;
@@ -43,9 +43,9 @@ typedef struct {
   void *f_owner;
   FocusActivateFn f_activate;
   FocusAdjustFn f_adjust;
-} FnFocusRegisterSpec;
+} FocusRegister;
 
-void focus_register(FnFocusRegisterSpec *argspec);
+void focus_register(FocusRegister *argspec);
 bool focus_is(const char *name);
 bool focus_has_entries(void);
 FocusKind focus_kind(void);
@@ -62,3 +62,4 @@ void focus_set_pseudo_passive(FocusKind kind);
 void focus_clear(void);
 
 #endif
+

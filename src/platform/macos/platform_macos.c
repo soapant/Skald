@@ -193,7 +193,7 @@ FontHandle Platform_CreateFont(int size, const char *face_name) {
 
 void Platform_DestroyFont(FontHandle font) { UNUSED(font); }
 
-void Platform_GetTextExtents(FnPlatformGetTextExtentsSpec *argspec) {
+void Platform_GetTextExtents(PlatformGetTextExtents *argspec) {
   UNUSED(argspec->f_font);
   UNUSED(argspec->f_text);
   UNUSED(argspec->f_max_width);
@@ -227,7 +227,7 @@ bool Platform_ListboxBackendBegin(int item_height_override,
   return false;
 }
 
-void Platform_ListboxBackendDrawSelection(FnPlatformListboxBackendDrawSelectionSpec *argspec) {
+void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) {
   UNUSED(argspec->f_bx);
   UNUSED(argspec->f_bw);
   UNUSED(argspec->f_y);
@@ -716,4 +716,5 @@ void Platform_SleepSeconds(double seconds) {
 }
 
 bool Platform_PlaceEditbox(const EditSpec *spec) { return false; }
+
 

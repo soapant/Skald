@@ -53,8 +53,8 @@ static void prompt_popup_on_show(Popup *self) {
            data->spec.title ? data->spec.title : "(null)", data->x, data->y,
            wm->popup_count);
 
-  Platform_PromptPopupShowWindow(&(FnPlatformPromptPopupShowWindowSpec){.f_self = self, .f_x = data->x, .f_y = data->y, .f_w = data->w, .f_h = data->h});
-  Platform_PromptPopupResize(&(FnPlatformPromptPopupResizeSpec){.f_self = self, .f_x = data->x, .f_y = data->y, .f_w = data->w, .f_h = data->h});
+  Platform_PromptPopupShowWindow(&(PlatformPromptPopupShowWindow){.f_self = self, .f_x = data->x, .f_y = data->y, .f_w = data->w, .f_h = data->h});
+  Platform_PromptPopupResize(&(PlatformPromptPopupResize){.f_self = self, .f_x = data->x, .f_y = data->y, .f_w = data->w, .f_h = data->h});
   {
     bool want_rounded =
         data->spec.rounded ? data->spec.rounded : RoundedCorners;
@@ -228,7 +228,7 @@ static const PopupVTable prompt_popup_vtable = {
     .on_key = prompt_popup_on_key,
     .destroy = prompt_popup_destroy};
 
-int prompt_popup_get_bounds(FnPromptPopupGetBoundsSpec *argspec) {
+int prompt_popup_get_bounds(PromptPopupGetBounds *argspec) {
   if (!argspec->f_p || argspec->f_p->type != POPUP_PROMPT)
     return 0;
   const PromptPopupData *d = (PromptPopupData *)argspec->f_p;
@@ -247,7 +247,7 @@ static bool prompt_popup_apply_bounds(Popup *p, int x, int y, int w, int h,
                                       bool from_animation) {
   if (w <= 0 || h <= 0)
     return false;
-  if (!Platform_PromptPopupResize(&(FnPlatformPromptPopupResizeSpec){.f_self = p, .f_x = x, .f_y = y, .f_w = w, .f_h = h}))
+  if (!Platform_PromptPopupResize(&(PlatformPromptPopupResize){.f_self = p, .f_x = x, .f_y = y, .f_w = w, .f_h = h}))
     return false;
   PromptPopupData *data = (PromptPopupData *)p;
   data->x = x;
@@ -279,7 +279,7 @@ bool prompt_popup_resize_current(int x, int y, int w, int h) {
   return prompt_popup_apply_bounds(p, x, y, w, h, false);
 }
 
-bool prompt_popup_resize_current_animated(FnPromptPopupResizeCurrentAnimatedSpec *argspec) {
+bool prompt_popup_resize_current_animated(PromptPopupResizeCurrentAnimated *argspec) {
   if (argspec->f_w <= 0 || argspec->f_h <= 0)
     return false;
   WindowManager *wm = WindowManager_Get();
@@ -520,3 +520,4 @@ PromptState *prompt_popup_get_top_prompt_state(void) {
     return (PromptState *)top->user_data;
   return NULL;
 }
+

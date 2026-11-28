@@ -12,9 +12,9 @@ typedef struct {
   int f_containerH;
   int f_originX;
   int f_originY;
-} FnWin32DrawBgImageSliceSpec;
+} Win32DrawBgImageSlice;
 
-bool win32_draw_bg_image_slice(FnWin32DrawBgImageSliceSpec *argspec);
+bool win32_draw_bg_image_slice(Win32DrawBgImageSlice *argspec);
 void win32_bg_image_purge(void);
 int win32_bg_image_prewarm(int containerW, int containerH);
 

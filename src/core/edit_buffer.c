@@ -60,7 +60,7 @@ char edit_buffer_pair_for(char c) {
   }
 }
 
-size_t edit_buffer_insert_text(FnEditBufferInsertTextSpec *argspec) {
+size_t edit_buffer_insert_text(EditBufferInsertText *argspec) {
 
   if (!argspec->f_buf || !argspec->f_cursor || !argspec->f_text || argspec->f_len == 0 || argspec->f_cap == 0)
     return 0;
@@ -120,3 +120,4 @@ bool cursor_forward(size_t *cursor, size_t text_len) {
   (*cursor)++;
   return true;
 }
+

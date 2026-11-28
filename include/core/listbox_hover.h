@@ -33,9 +33,9 @@ typedef struct {
   int f_top_index;
   int f_visible_count;
   int f_mouse_y;
-} FnListboxRowAtYSpec;
+} ListboxRowAtY;
 
-int listbox_row_at_y(FnListboxRowAtYSpec *argspec);
+int listbox_row_at_y(ListboxRowAtY *argspec);
 typedef struct {
   ListBox *f_lb;
   int f_list_top;
@@ -44,9 +44,9 @@ typedef struct {
   int f_visible_count;
   int f_left_x;
   int f_right_x;
-} FnListboxHoverFocusSpec;
+} ListboxHoverFocus;
 
-bool listbox_hover_focus(FnListboxHoverFocusSpec *argspec);
+bool listbox_hover_focus(ListboxHoverFocus *argspec);
 void listbox_focus_by_keyboard(void);
 void listbox_set_row_h_scroll(int px);
 int listbox_get_row_h_scroll(void);
@@ -64,3 +64,4 @@ void listbox_navigate_up(ListBox *lb);
 void listbox_navigate_down(ListBox *lb);
 
 #endif
+

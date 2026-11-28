@@ -76,7 +76,7 @@ void search_index_pop_context(SearchIndex *idx) {
   arrpop(idx->stack);
 }
 
-void search_index_add_text(FnSearchIndexAddTextSpec *argspec) {
+void search_index_add_text(SearchIndexAddText *argspec) {
   if (!argspec->f_idx)
     argspec->f_idx = g_capture_index;
   if (!argspec->f_idx)
@@ -279,3 +279,4 @@ void search_index_activate(SearchIndex *idx, int hit_i) {
   const SearchHit *h = &idx->hits[hit_i];
   idx->activate(idx->ud, h->source_id, h->kind, h->widget_name);
 }
+

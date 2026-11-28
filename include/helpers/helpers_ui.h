@@ -21,9 +21,9 @@ typedef struct {
   int f_th;
   int *f_dw;
   int *f_dh;
-} FnCoverScaleSpec;
+} CoverScale;
 
-bool cover_scale(FnCoverScaleSpec *argspec);
+bool cover_scale(CoverScale *argspec);
 
 int draw_thickness_px(float thickness);
 void draw_measure_track(int x, int y, int w, int h);
@@ -35,18 +35,18 @@ typedef struct {
   int *f_y1;
   int *f_x2;
   int *f_y2;
-} FnDrawLinePrepSpec;
+} DrawLinePrep;
 
-int draw_line_prep(FnDrawLinePrepSpec *argspec);
+int draw_line_prep(DrawLinePrep *argspec);
 typedef struct {
   const DrawCircleRawSpec *f_spec;
   int f_off_x;
   int f_off_y;
   int *f_cx;
   int *f_cy;
-} FnDrawCirclePrepSpec;
+} DrawCirclePrep;
 
-int draw_circle_prep(FnDrawCirclePrepSpec *argspec);
+int draw_circle_prep(DrawCirclePrep *argspec);
 typedef struct {
   ListBox *f_lb;
   const char *f_filter;
@@ -64,9 +64,9 @@ typedef struct {
   bool (*f_filter_match)(const char *item,
                                                   const char *filter);
   int (*f_item_rank)(int item_index);
-} FnPopulateListboxRankedSpec;
+} PopulateListboxRanked;
 
-void populate_listbox_ranked(FnPopulateListboxRankedSpec *argspec);
+void populate_listbox_ranked(PopulateListboxRanked *argspec);
 
 typedef enum {
   AUTO = 0,
@@ -125,9 +125,9 @@ typedef struct {
   int f_popup_h;
   int f_count;
   ListboxLayout *f_out;
-} FnListboxComputeLayoutSpec;
+} ListboxComputeLayout;
 
-void listbox_compute_layout(FnListboxComputeLayoutSpec *argspec);
+void listbox_compute_layout(ListboxComputeLayout *argspec);
 
 typedef struct {
   int x, y, w, h;
@@ -217,9 +217,9 @@ typedef struct {
   size_t f_stride;
   int (*f_is_empty)(const void *slot);
   unsigned long (*f_stamp)(const void *slot);
-} FnBgTileLruPickSpec;
+} BgTileLruPick;
 
-int bg_tile_lru_pick(FnBgTileLruPickSpec *argspec);
+int bg_tile_lru_pick(BgTileLruPick *argspec);
 
 void draw_text_centered_impl(const DrawTextCenteredSpec *spec, int line_height);
 typedef struct {
@@ -229,10 +229,11 @@ typedef struct {
   int f_gap;
   int f_outward;
   int f_win_size;
-} FnMsgAnchorCenterSpec;
+} MsgAnchorCenter;
 
-int msg_anchor_center(FnMsgAnchorCenterSpec *argspec);
+int msg_anchor_center(MsgAnchorCenter *argspec);
 int msg_stack_dir(int v_slot, bool outward);
 
 #endif
+
 

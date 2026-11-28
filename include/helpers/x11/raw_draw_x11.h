@@ -31,9 +31,9 @@ typedef struct {
   Visual *f_vis;
   Colormap f_cmap;
   FontHandle f_font;
-} FnX11DrawEditBackgroundSpec;
+} X11DrawEditBackground;
 
-void x11_draw_edit_background(FnX11DrawEditBackgroundSpec *argspec);
+void x11_draw_edit_background(X11DrawEditBackground *argspec);
 typedef struct {
   PromptState *f_state;
   Display *f_dpy;
@@ -41,9 +41,9 @@ typedef struct {
   Visual *f_vis;
   Colormap f_cmap;
   FontHandle f_font;
-} FnX11DrawEditTintSpec;
+} X11DrawEditTint;
 
-void x11_draw_edit_tint(FnX11DrawEditTintSpec *argspec);
+void x11_draw_edit_tint(X11DrawEditTint *argspec);
 typedef struct {
   PromptState *f_state;
   Display *f_dpy;
@@ -51,9 +51,9 @@ typedef struct {
   Visual *f_vis;
   Colormap f_cmap;
   FontHandle f_font;
-} FnX11DrawEditTextSpec;
+} X11DrawEditText;
 
-void x11_draw_edit_text(FnX11DrawEditTextSpec *argspec);
+void x11_draw_edit_text(X11DrawEditText *argspec);
 typedef struct {
   PromptState *f_state;
   Display *f_dpy;
@@ -61,9 +61,9 @@ typedef struct {
   Visual *f_vis;
   Colormap f_cmap;
   FontHandle f_font;
-} FnX11DrawEditCursorSpec;
+} X11DrawEditCursor;
 
-void x11_draw_edit_cursor(FnX11DrawEditCursorSpec *argspec);
+void x11_draw_edit_cursor(X11DrawEditCursor *argspec);
 typedef struct {
   Display *f_dpy;
   XftDraw *f_xd;
@@ -75,9 +75,9 @@ typedef struct {
   int f_y;
   int f_text_x;
   const char *f_icon_path;
-} FnX11DrawListItemSpec;
+} X11DrawListItem;
 
-void x11_draw_list_item(FnX11DrawListItemSpec *argspec);
+void x11_draw_list_item(X11DrawListItem *argspec);
 
 extern __thread Display *g_draw_dpy;
 extern __thread XftDraw *g_draw_xd;
@@ -93,9 +93,9 @@ typedef struct {
   FontHandle f_fh;
   bool f_owned;
   int f_font_size;
-} FnX11RawLinePushSpec;
+} X11RawLinePush;
 
-bool x11_raw_line_push(FnX11RawLinePushSpec *argspec);
+bool x11_raw_line_push(X11RawLinePush *argspec);
 XftFont *x11_line_font(Display *dpy, int size);
 void x11_line_font_cache_free_all(void);
 void x11_prompt_editbox_spec(PromptState *state, FontHandle font,
@@ -107,3 +107,4 @@ GC x11_raw_gc_for(Display *dpy, Drawable d);
 GC x11_raw_prepare(unsigned long color, int thickness);
 
 #endif
+

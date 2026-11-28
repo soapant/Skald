@@ -475,7 +475,7 @@ void Platform_DestroyFont(FontHandle font) {
   }
 }
 
-void Platform_GetTextExtents(FnPlatformGetTextExtentsSpec *argspec) {
+void Platform_GetTextExtents(PlatformGetTextExtents *argspec) {
 
   if (!FH_TO_HFONT(argspec->f_font) || !argspec->f_text) {
     *argspec->f_outWidth = 0;
@@ -1871,7 +1871,7 @@ static char *win32_lookup_walk_programs(const char *name) {
     if (!win32_lookup_is_dir(roots[i]))
       continue;
     ListOfFiles found = {0};
-    if (file_walk_all_files_from_dir(&(FnFileWalkAllFilesFromDirSpec){.f_dir_path = (char *)roots[i], .f_list_of_allowed_extensions = allowed, .f_list_of_files = &found, .f_list_of_names_to_ignore = NULL, .f_strip_extension = true, .f_max_depth = 3})) {
+    if (file_walk_all_files_from_dir(&(FileWalkAllFilesFromDir){.f_dir_path = (char *)roots[i], .f_list_of_allowed_extensions = allowed, .f_list_of_files = &found, .f_list_of_names_to_ignore = NULL, .f_strip_extension = true, .f_max_depth = 3})) {
       for (size_t j = 0; j < found.count; j++) {
         if (string_equals_ci(found.files[j].name, name)) {
           char *hit = _strdup(found.files[j].path);
@@ -1993,7 +1993,7 @@ bool Platform_SnapActiveWindow(SnapPreset preset) {
     ShowWindow(hwnd, SW_RESTORE);
   RECT w = mi.rcWork;
   SnapRect r =
-      wm_snap_rect(&(FnWmSnapRectSpec){.f_mx = w.left, .f_my = w.top, .f_mw = w.right - w.left, .f_mh = w.bottom - w.top, .f_p = preset});
+      wm_snap_rect(&(WmSnapRect){.f_mx = w.left, .f_my = w.top, .f_mw = w.right - w.left, .f_mh = w.bottom - w.top, .f_p = preset});
   SetWindowPos(hwnd, HWND_TOP, r.x, r.y, r.w, r.h,
                SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
   return true;
@@ -2299,7 +2299,7 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
                       .caret_y = spec->caret_y,
                       .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_spec_from_place(&(FnEditboxSpecFromPlaceSpec){.f_out = &eb, .f_place = &place, .f_state = state, .f_ui = &ui, .f_metrics = &(EditboxMetrics){.text_w = text_w,
+  editbox_spec_from_place(&(EditboxSpecFromPlace){.f_out = &eb, .f_place = &place, .f_state = state, .f_ui = &ui, .f_metrics = &(EditboxMetrics){.text_w = text_w,
                                             .cursor_x = cursor_x,
                                             .ascent = ascent,
                                             .descent = descent,
@@ -2324,4 +2324,5 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     DeleteObject(hfont_created);
   return true;
 }
+
 

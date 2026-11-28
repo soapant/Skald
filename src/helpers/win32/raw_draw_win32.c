@@ -252,7 +252,7 @@ bool win32_text_needs_boost(const wchar_t *wide, int len) {
   return win32_text_any(wide, len, win32_pred_boost);
 }
 
-HFONT win32_font_for_text(FnWin32FontForTextSpec *argspec) {
+HFONT win32_font_for_text(Win32FontForText *argspec) {
 
   HFONT prev = NULL;
   if (argspec->f_out_dy)
@@ -432,7 +432,7 @@ static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
   *size = fad.nFileSizeLow ^ (fad.nFileSizeHigh * 2654435761u);
 }
 
-void *win32_img_cache_get(FnWin32ImgCacheGetSpec *argspec) {
+void *win32_img_cache_get(Win32ImgCacheGet *argspec) {
   if (argspec->f_out_dc)
     *argspec->f_out_dc = NULL;
   if (argspec->f_out_opaque)
@@ -469,7 +469,7 @@ void *win32_img_cache_get(FnWin32ImgCacheGetSpec *argspec) {
   return found;
 }
 
-void win32_img_cache_put(FnWin32ImgCachePutSpec *argspec) {
+void win32_img_cache_put(Win32ImgCachePut *argspec) {
 
   FILETIME ft;
   DWORD size;
@@ -629,7 +629,7 @@ GpBitmap *win32_load_shell_icon_bitmap(const char *path) {
   return win32_load_shell_icon_ex(path, false);
 }
 
-void *win32_load_scaled_bitmap(FnWin32LoadScaledBitmapSpec *argspec) {
+void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec) {
   if (argspec->f_out_dib)
     *argspec->f_out_dib = NULL;
   if (argspec->f_out_dc)
@@ -751,3 +751,4 @@ void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
                                                   .descent = descent,
                                                   .font = font});
 }
+

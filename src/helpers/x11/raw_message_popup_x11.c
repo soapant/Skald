@@ -166,7 +166,7 @@ static bool x11_msg_push_line(MsgLine *lines, int *count, int max_lines,
   return true;
 }
 
-int x11_msg_wrap_text(FnX11MsgWrapTextSpec *argspec) {
+int x11_msg_wrap_text(X11MsgWrapText *argspec) {
 
   int count = 0;
   int space_w = x11_msg_text_width(argspec->f_dpy, argspec->f_xf, " ", 1);
@@ -285,10 +285,10 @@ static void x11_display_message_draw(Display *dpy, Window win,
   XftFont *xf = FH_TO_XFT(font);
   if (xf && message && message[0] != '\0') {
     XftColor col;
-    x11_xft_color_cached(&(FnX11XftColorCachedSpec){.f_dpy = dpy, .f_vis = attrs.visual, .f_cmap = attrs.colormap, .f_hex = rgb_to_hex(color), .f_alpha = 0xFFFF, .f_out = &col});
+    x11_xft_color_cached(&(X11XftColorCached){.f_dpy = dpy, .f_vis = attrs.visual, .f_cmap = attrs.colormap, .f_hex = rgb_to_hex(color), .f_alpha = 0xFFFF, .f_out = &col});
     MsgLine lines[MSG_MAX_LINES];
     int nlines =
-        x11_msg_wrap_text(&(FnX11MsgWrapTextSpec){.f_dpy = dpy, .f_xf = xf, .f_text = message, .f_max_w = w - 30, .f_out = lines, .f_maxLines = MSG_MAX_LINES});
+        x11_msg_wrap_text(&(X11MsgWrapText){.f_dpy = dpy, .f_xf = xf, .f_text = message, .f_max_w = w - 30, .f_out = lines, .f_maxLines = MSG_MAX_LINES});
     int line_h = xf->ascent + xf->descent;
     int y = (h - nlines * line_h) / 2 + xf->ascent;
     if (y < xf->ascent)
@@ -310,11 +310,11 @@ static void x11_display_message_draw(Display *dpy, Window win,
 
   x11_set_draw_context(NULL, NULL, NULL, 0);
   XftDrawDestroy(xd);
-  x11_draw_window_border(&(FnX11DrawWindowBorderSpec){.f_dpy = dpy, .f_drw = win, .f_vis = NULL, .f_w = w, .f_h = h, .f_no_bg = no_bg});
+  x11_draw_window_border(&(X11DrawWindowBorder){.f_dpy = dpy, .f_drw = win, .f_vis = NULL, .f_w = w, .f_h = h, .f_no_bg = no_bg});
   XFlush(dpy);
 }
 
-int x11_msg_stack_adjust_y(FnX11MsgStackAdjustYSpec *argspec) {
+int x11_msg_stack_adjust_y(X11MsgStackAdjustY *argspec) {
 
   pthread_mutex_lock(&g_msg_lock);
   for (;;) {
@@ -337,12 +337,12 @@ int x11_msg_stack_adjust_y(FnX11MsgStackAdjustYSpec *argspec) {
   return argspec->f_y;
 }
 
-void x11_msg_present(FnX11MsgPresentSpec *argspec) {
+void x11_msg_present(X11MsgPresent *argspec) {
 
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
   set_transparent_window(argspec->f_no_bg);
-  Window win = x11_create_display_message_window_ex(&(FnX11CreateDisplayMessageWindowExSpec){.f_dpy = argspec->f_dpy, .f_x = argspec->f_x + ax, .f_y = argspec->f_y + ay, .f_w = argspec->f_win_w, .f_h = argspec->f_win_h, .f_clickable = false, .f_rounded = argspec->f_rounded, .f_radius = argspec->f_radius});
+  Window win = x11_create_display_message_window_ex(&(X11CreateDisplayMessageWindowEx){.f_dpy = argspec->f_dpy, .f_x = argspec->f_x + ax, .f_y = argspec->f_y + ay, .f_w = argspec->f_win_w, .f_h = argspec->f_win_h, .f_clickable = false, .f_rounded = argspec->f_rounded, .f_radius = argspec->f_radius});
   set_transparent_window(false);
   if (!win) {
     return;
@@ -418,7 +418,7 @@ bool x11_msg_set_text(Display *dpy, const char *name, const char *text) {
   }
   MsgSlot *slot = &g_msg_slots[idx];
   int w = 0, h = 0;
-  x11_msg_measure(&(FnX11MsgMeasureSpec){.f_dpy = dpy, .f_message = copy,
+  x11_msg_measure(&(X11MsgMeasure){.f_dpy = dpy, .f_message = copy,
                                          .f_max_width = MSG_AUTO_WRAP_MAX_W,
                                          .f_max_height = MSG_AUTO_WRAP_MAX_H,
                                          .f_out_w = &w, .f_out_h = &h});
@@ -447,7 +447,7 @@ bool x11_msg_set_text(Display *dpy, const char *name, const char *text) {
   return true;
 }
 
-void x11_msg_hover_present(FnX11MsgHoverPresentSpec *argspec) {
+void x11_msg_hover_present(X11MsgHoverPresent *argspec) {
 
   if (!argspec->f_dpy || !argspec->f_key || !argspec->f_key[0] || !argspec->f_message || !argspec->f_message[0]) {
     return;
@@ -475,7 +475,7 @@ void x11_msg_hover_present(FnX11MsgHoverPresentSpec *argspec) {
   }
   pthread_mutex_unlock(&g_msg_lock);
 
-  Window win = x11_create_display_message_window(&(FnX11CreateDisplayMessageWindowSpec){.f_dpy = argspec->f_dpy, .f_x = argspec->f_center_x - argspec->f_win_w / 2, .f_y = argspec->f_center_y - argspec->f_win_h / 2, .f_w = argspec->f_win_w, .f_h = argspec->f_win_h, .f_clickable = false});
+  Window win = x11_create_display_message_window(&(X11CreateDisplayMessageWindow){.f_dpy = argspec->f_dpy, .f_x = argspec->f_center_x - argspec->f_win_w / 2, .f_y = argspec->f_center_y - argspec->f_win_h / 2, .f_w = argspec->f_win_w, .f_h = argspec->f_win_h, .f_clickable = false});
   if (win == None) {
     return;
   }
@@ -506,7 +506,7 @@ void x11_msg_hover_present(FnX11MsgHoverPresentSpec *argspec) {
   XFlush(argspec->f_dpy);
 }
 
-void x11_msg_measure(FnX11MsgMeasureSpec *argspec) {
+void x11_msg_measure(X11MsgMeasure *argspec) {
 
   *argspec->f_out_w = 0;
   *argspec->f_out_h = 0;
@@ -519,7 +519,7 @@ void x11_msg_measure(FnX11MsgMeasureSpec *argspec) {
     int wrap_w = argspec->f_max_width - 30;
     if (wrap_w > MSG_AUTO_WRAP_MAX_W)
       wrap_w = MSG_AUTO_WRAP_MAX_W;
-    nlines = x11_msg_wrap_text(&(FnX11MsgWrapTextSpec){.f_dpy = argspec->f_dpy, .f_xf = xf, .f_text = argspec->f_message, .f_max_w = wrap_w, .f_out = lines, .f_maxLines = MSG_MAX_LINES});
+    nlines = x11_msg_wrap_text(&(X11MsgWrapText){.f_dpy = argspec->f_dpy, .f_xf = xf, .f_text = argspec->f_message, .f_max_w = wrap_w, .f_out = lines, .f_maxLines = MSG_MAX_LINES});
     for (int i = 0; i < nlines; i++)
       if (lines[i].w > text_w)
         text_w = lines[i].w;
@@ -535,3 +535,4 @@ void x11_msg_measure(FnX11MsgMeasureSpec *argspec) {
   *argspec->f_out_w = win_w;
   *argspec->f_out_h = win_h;
 }
+

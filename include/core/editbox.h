@@ -191,9 +191,9 @@ typedef struct {
   PromptState *f_state;
   const EditboxUiSpec *f_ui;
   const EditboxMetrics *f_metrics;
-} FnEditboxSpecFromPlaceSpec;
+} EditboxSpecFromPlace;
 
-void editbox_spec_from_place(FnEditboxSpecFromPlaceSpec *argspec);
+void editbox_spec_from_place(EditboxSpecFromPlace *argspec);
 int editbox_caret_y(int box_top, int ascent, int descent, int font_size);
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                    int text_len, const EditboxMetrics *metrics);
@@ -204,9 +204,9 @@ typedef struct {
   int *f_out_start;
   int *f_out_end;
   bool *f_out_has;
-} FnEditboxResolveSelectionSpec;
+} EditboxResolveSelection;
 
-void editbox_resolve_selection(FnEditboxResolveSelectionSpec *argspec);
+void editbox_resolve_selection(EditboxResolveSelection *argspec);
 int editbox_scroll_offset(const EditboxSpec *spec);
 void editbox_layout(EditboxSpec *spec, EditboxLayout *out);
 void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
@@ -223,9 +223,9 @@ typedef struct {
   int f_y;
   int f_w;
   int f_h;
-} FnEditboxRegistryPlaceSpec;
+} EditboxRegistryPlace;
 
-int editbox_registry_place(FnEditboxRegistryPlaceSpec *argspec);
+int editbox_registry_place(EditboxRegistryPlace *argspec);
 PromptEditbox *editbox_registry_find(PromptState *state, const char *name);
 EditBox *editbox_registry_lookup(PromptState *state, const char *name);
 void editbox_registry_tick(PromptState *state);
@@ -236,9 +236,9 @@ typedef struct {
   int f_w;
   int f_h;
   int f_font_size;
-} FnEditboxLegacyTickSpec;
+} EditboxLegacyTick;
 
-void editbox_legacy_tick(FnEditboxLegacyTickSpec *argspec);
+void editbox_legacy_tick(EditboxLegacyTick *argspec);
 void editbox_registry_register_focus(PromptState *state);
 void editbox_registry_sync(PromptState *state);
 void editbox_registry_set_active(PromptState *state, const char *name);
@@ -247,3 +247,4 @@ const char *editbox_registry_active_name(const PromptState *state);
 bool editbox_wrap_move_vertical(PromptState *state, int dir);
 
 #endif
+

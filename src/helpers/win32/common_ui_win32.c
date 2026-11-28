@@ -11,7 +11,7 @@
 #include <commctrl.h>
 #include <string.h>
 
-void win32_apply_rounded(FnWin32ApplyRoundedSpec *argspec) {
+void win32_apply_rounded(Win32ApplyRounded *argspec) {
   if (!argspec->f_hwnd || !IsWindow(argspec->f_hwnd))
     return;
   if (argspec->f_w <= 0 || argspec->f_h <= 0) {
@@ -62,7 +62,7 @@ void win32_apply_rounded(FnWin32ApplyRoundedSpec *argspec) {
 }
 
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
-  win32_apply_rounded(&(FnWin32ApplyRoundedSpec){.f_hwnd = hwnd, .f_w = w, .f_h = h, .f_rounded = RoundedCorners, .f_radius = CornerRadius});
+  win32_apply_rounded(&(Win32ApplyRounded){.f_hwnd = hwnd, .f_w = w, .f_h = h, .f_rounded = RoundedCorners, .f_radius = CornerRadius});
 }
 
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1,
@@ -82,7 +82,7 @@ static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1,
   FillRect(hdc, &r, brush);
 }
 
-void win32_draw_window_border(FnWin32DrawWindowBorderSpec *argspec) {
+void win32_draw_window_border(Win32DrawWindowBorder *argspec) {
   if (!argspec->f_hdc || !EnableBorders || argspec->f_ww <= 0 || argspec->f_wh <= 0)
     return;
   int t = PROMPT_BORDER_W;
@@ -217,3 +217,4 @@ void win32_force_window_focus(WindowHandle hwndTarget) {
   if (targetThreadID != currentThreadID)
     AttachThreadInput(currentThreadID, targetThreadID, FALSE);
 }
+

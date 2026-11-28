@@ -33,12 +33,13 @@ typedef struct {
   const char *const *f_optional_blacklistedwindows;
   bool f_whitelist;
   void *f_user_ud;
-} FnHotkeyConvertIntoBindingSpec;
+} HotkeyConvertIntoBinding;
 
 HotkeyBinding
-hotkey_convert_into_binding(FnHotkeyConvertIntoBindingSpec *argspec);
+hotkey_convert_into_binding(HotkeyConvertIntoBinding *argspec);
 void hotkey_purge_owner(const char *path_a, const char *path_b);
 void hotkey_key_up(int vk);
 int hotkey_vk_to_name(int vk, char *out, int out_size);
 
 #endif
+

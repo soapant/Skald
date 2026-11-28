@@ -72,18 +72,18 @@ typedef struct {
   int f_max_w;
   MsgLine *f_out;
   int f_maxLines;
-} FnX11MsgWrapTextSpec;
+} X11MsgWrapText;
 
-int x11_msg_wrap_text(FnX11MsgWrapTextSpec *argspec);
+int x11_msg_wrap_text(X11MsgWrapText *argspec);
 typedef struct {
   int f_x;
   int f_y;
   int f_w;
   int f_h;
   int f_dir;
-} FnX11MsgStackAdjustYSpec;
+} X11MsgStackAdjustY;
 
-int x11_msg_stack_adjust_y(FnX11MsgStackAdjustYSpec *argspec);
+int x11_msg_stack_adjust_y(X11MsgStackAdjustY *argspec);
 typedef struct {
   Display *f_dpy;
   const char *f_message;
@@ -100,9 +100,9 @@ typedef struct {
   bool f_rounded;
   int f_radius;
   int f_fps;
-} FnX11MsgPresentSpec;
+} X11MsgPresent;
 
-void x11_msg_present(FnX11MsgPresentSpec *argspec);
+void x11_msg_present(X11MsgPresent *argspec);
 typedef struct {
   Display *f_dpy;
   const char *f_key;
@@ -113,9 +113,9 @@ typedef struct {
   int f_win_h;
   ColorRef f_color;
   bool f_no_bg;
-} FnX11MsgHoverPresentSpec;
+} X11MsgHoverPresent;
 
-void x11_msg_hover_present(FnX11MsgHoverPresentSpec *argspec);
+void x11_msg_hover_present(X11MsgHoverPresent *argspec);
 typedef struct {
   Display *f_dpy;
   const char *f_message;
@@ -123,9 +123,10 @@ typedef struct {
   int f_max_height;
   int *f_out_w;
   int *f_out_h;
-} FnX11MsgMeasureSpec;
+} X11MsgMeasure;
 
-void x11_msg_measure(FnX11MsgMeasureSpec *argspec);
+void x11_msg_measure(X11MsgMeasure *argspec);
 bool x11_msg_set_text(Display *dpy, const char *name, const char *text);
 
 #endif
+

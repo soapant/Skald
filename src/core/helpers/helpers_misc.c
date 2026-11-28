@@ -145,7 +145,7 @@ int monitor_count(void) {
   return monitor_fill(mon, 16);
 }
 
-bool monitor_geometry_at(FnMonitorGeometryAtSpec *argspec) {
+bool monitor_geometry_at(MonitorGeometryAt *argspec) {
   MonitorEntry mon[16];
   int n = monitor_fill(mon, 16);
   if (n <= 0 || argspec->f_index < 0 || argspec->f_index >= n || !mon[argspec->f_index].w)
@@ -575,7 +575,7 @@ bool setting_parse_int(const char *v, int *out) {
   return true;
 }
 
-int config_index_of(FnConfigIndexOfSpec *argspec) {
+int config_index_of(ConfigIndexOf *argspec) {
   (void)argspec->f_key_size;
   if (!argspec->f_entries || !argspec->f_key)
     return -1;
@@ -639,7 +639,7 @@ bool pixel_color_matches_tol(RgbColor c, RgbColor target, int tolerance) {
   return db <= tol;
 }
 
-bool feature_shortcut_parse(FnFeatureShortcutParseSpec *argspec) {
+bool feature_shortcut_parse(FeatureShortcutParse *argspec) {
   if (!argspec->f_target || !argspec->f_feature || !argspec->f_filter)
     return false;
   const char *first = strchr(argspec->f_target, '|');
@@ -725,7 +725,7 @@ bool resolve_caller_path_silent(void *caller_ret, const char *name, char *full,
   return feature_path_resolve_data_path(caller_ret, name, full, cap);
 }
 
-bool resolve_caller_path(FnResolveCallerPathSpec *argspec) {
+bool resolve_caller_path(ResolveCallerPath *argspec) {
   if (!resolve_caller_path_silent(argspec->f_caller_ret, argspec->f_name, argspec->f_full, argspec->f_cap)) {
     log_warn("%s resolve failed name='%s' feature='%s'", argspec->f_func, argspec->f_name,
              SkaldContext_Get()->window.current_feature
@@ -754,7 +754,7 @@ StringList load_file_list_from(void *caller, const char *filepath) {
   if (!filepath)
     return list;
   char full[MAX_PATH];
-  if (!resolve_caller_path(&(FnResolveCallerPathSpec){.f_caller_ret = caller, .f_name = filepath, .f_full = full, .f_cap = sizeof(full), .f_func = "sk_load_file_list"}))
+  if (!resolve_caller_path(&(ResolveCallerPath){.f_caller_ret = caller, .f_name = filepath, .f_full = full, .f_cap = sizeof(full), .f_func = "sk_load_file_list"}))
     return list;
   list = File_ReadLines(full);
   return list;
@@ -839,7 +839,7 @@ ImageBuffer image_take(ImageBuffer *img) {
   return out;
 }
 
-bool draw_rect_raw(FnDrawRectRawSpec *argspec) {
+bool draw_rect_raw(DrawRectRaw *argspec) {
   return Platform_DrawRectRaw((DrawRectRawSpec){
       .x = argspec->f_spec->x,
       .y = argspec->f_spec->y,
@@ -863,7 +863,7 @@ bool place_editbox(const EditSpec *spec) {
                            ? spec->name
                            : PROMPT_PRIMARY_EDITBOX_NAME;
     if (strncmp(name, "settings-search:", 16) != 0)
-      search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = NULL, .f_text = spec->buffer, .f_kind = SEARCH_KIND_EDITBOX, .f_widget_name = name, .f_value = NULL});
+      search_index_add_text(&(SearchIndexAddText){.f_idx = NULL, .f_text = spec->buffer, .f_kind = SEARCH_KIND_EDITBOX, .f_widget_name = name, .f_value = NULL});
     return true;
   }
   SkaldContext_Get()->window.editbox_placed = true;
@@ -887,7 +887,7 @@ bool place_editbox(const EditSpec *spec) {
     int dx = 0, dy = 0;
     get_draw_offset(&dx, &dy);
     int idx =
-        editbox_registry_place(&(FnEditboxRegistryPlaceSpec){.f_state = state, .f_name = name, .f_buffer = buffer, .f_buffer_size = buffer_size, .f_x = spec->x + dx, .f_y = spec->y + dy, .f_w = copy.w, .f_h = spec->h});
+        editbox_registry_place(&(EditboxRegistryPlace){.f_state = state, .f_name = name, .f_buffer = buffer, .f_buffer_size = buffer_size, .f_x = spec->x + dx, .f_y = spec->y + dy, .f_w = copy.w, .f_h = spec->h});
     if (idx >= 0) {
       PromptEditbox *entry = &state->editboxes[idx];
       if (state->active_editbox < 0)
@@ -947,3 +947,4 @@ bool place_editbox(const EditSpec *spec) {
   }
   return Platform_PlaceEditbox(&copy);
 }
+

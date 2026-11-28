@@ -18,17 +18,18 @@ typedef struct {
   Visual *f_vis;
   Colormap f_cmap;
   PromptState *f_state;
-} FnX11DrawPromptUserEditControlOnDrawSpec;
+} X11DrawPromptUserEditControlOnDraw;
 
-void x11_draw_prompt_user_edit_control_on_draw(FnX11DrawPromptUserEditControlOnDrawSpec *argspec);
+void x11_draw_prompt_user_edit_control_on_draw(X11DrawPromptUserEditControlOnDraw *argspec);
 typedef struct {
   Display *f_dpy;
   XftDraw *f_xd;
   Visual *f_vis;
   Colormap f_cmap;
   PromptState *f_state;
-} FnX11DrawPromptUserListboxOnDrawSpec;
+} X11DrawPromptUserListboxOnDraw;
 
-void x11_draw_prompt_user_listbox_on_draw(FnX11DrawPromptUserListboxOnDrawSpec *argspec);
+void x11_draw_prompt_user_listbox_on_draw(X11DrawPromptUserListboxOnDraw *argspec);
 
 #endif
+

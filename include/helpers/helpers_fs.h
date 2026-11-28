@@ -15,9 +15,9 @@ typedef struct {
   size_t f_len;
   char *f_out_path;
   size_t f_out_len;
-} FnTempFileWriteSpec;
+} TempFileWrite;
 
-bool temp_file_write(FnTempFileWriteSpec *argspec);
+bool temp_file_write(TempFileWrite *argspec);
 bool feature_path_get(const char *feature, const char *name, char *out,
                       size_t out_len);
 bool feature_path_data_dir_exists(const char *stem);
@@ -26,3 +26,4 @@ bool file_copy_path(const char *src, const char *dst);
 bool file_remove_path(const char *path);
 
 #endif
+

@@ -43,9 +43,9 @@ typedef struct {
   SearchKind f_kind;
   const char *f_widget_name;
   const char *f_value;
-} FnSearchIndexAddTextSpec;
+} SearchIndexAddText;
 
-void search_index_add_text(FnSearchIndexAddTextSpec *argspec);
+void search_index_add_text(SearchIndexAddText *argspec);
 void search_index_set_activate(SearchIndex *idx, SearchActivateFn activate,
                                void *ud);
 void search_index_reindex(SearchIndex *idx, SearchRenderFn render, void *ud);
@@ -56,3 +56,4 @@ const SearchHit *search_index_hit_at(const SearchIndex *idx, int i);
 void search_index_activate(SearchIndex *idx, int hit_i);
 
 #endif
+

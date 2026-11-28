@@ -123,6 +123,18 @@ TEST(ui_navigate_to_new_index_resets_hscroll) {
   ASSERT_EQ_INT(lb.selected_index, 0);
 }
 
+TEST(listbox_layout_includes_partial_last_row) {
+  ListBox lb = {0};
+  ListSpec spec = {0};
+  spec.y = 0;
+  spec.h = 25;
+  ListboxLayout lay = {0};
+  listbox_compute_layout(&(ListboxComputeLayout){
+      .f_spec = &spec, .f_default_y0 = 0, .f_item_h = 10, .f_popup_w = 100,
+      .f_popup_h = 100, .f_count = 10, .f_out = &lay});
+  ASSERT_EQ_INT(lay.visible, 3);
+}
+
 TEST(listbox_info_init_sets_hscroll_zero) {
   static ListBox lb;
   listbox_info_init(&lb);
@@ -184,6 +196,7 @@ int main(void) {
   RUN(ui_set_selection_new_index_resets_hscroll);
   RUN(ui_navigate_to_same_index_keeps_hscroll);
   RUN(ui_navigate_to_new_index_resets_hscroll);
+  RUN(listbox_layout_includes_partial_last_row);
   RUN(listbox_info_init_sets_hscroll_zero);
   RUN(listbox_scroll_top_keeps_rows_above_selection);
   RUN(populate_repairs_selected_text_after_row_rebuild);

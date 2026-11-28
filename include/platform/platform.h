@@ -220,9 +220,9 @@ typedef struct {
   int f_max_width;
   int *f_outWidth;
   int *f_outHeight;
-} FnPlatformGetTextExtentsSpec;
+} PlatformGetTextExtents;
 
-void Platform_GetTextExtents(FnPlatformGetTextExtentsSpec *argspec);
+void Platform_GetTextExtents(PlatformGetTextExtents *argspec);
 int Platform_InitializeTrayIcon(void);
 void Platform_PrewarmBackgroundPixmap(void);
 void Platform_InitUI(void);
@@ -245,9 +245,9 @@ typedef struct {
   int f_fw;
   int f_frame_h;
   bool f_sel;
-} FnPlatformListboxBackendDrawSelectionSpec;
+} ListboxBackendDrawSelection;
 
-void Platform_ListboxBackendDrawSelection(FnPlatformListboxBackendDrawSelectionSpec *argspec);
+void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec);
 void Platform_ListboxBackendEnd(void);
 PromptState *Platform_ListboxBackendPromptState(const ListBox *lb);
 
@@ -366,4 +366,5 @@ bool Platform_AtomicRename(const char *old_path, const char *new_path);
 
 void Platform_InvalidatePrompt(void);
 #endif
+
 

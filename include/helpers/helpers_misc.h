@@ -22,12 +22,12 @@ typedef struct {
   size_t f_key_off;
   size_t f_key_size;
   const char *f_key;
-} FnConfigIndexOfSpec;
+} ConfigIndexOf;
 
-int config_index_of(FnConfigIndexOfSpec *argspec);
+int config_index_of(ConfigIndexOf *argspec);
 
 #define CONFIG_INDEX_OF(entries, count, type, field, key)                      \
-  config_index_of(&(FnConfigIndexOfSpec){.f_entries = (entries), .f_count = (count), .f_elem_size = sizeof(type), .f_key_off = offsetof(type, field), .f_key_size = sizeof(((type *)0)->field), .f_key = (key)})
+  config_index_of(&(ConfigIndexOf){.f_entries = (entries), .f_count = (count), .f_elem_size = sizeof(type), .f_key_off = offsetof(type, field), .f_key_size = sizeof(((type *)0)->field), .f_key = (key)})
 
 bool canonical_path(const char *path, char *out, size_t cap);
 bool paths_equal(const char *a, const char *b);
@@ -39,9 +39,9 @@ typedef struct {
   size_t f_feature_cap;
   char *f_filter;
   size_t f_filter_cap;
-} FnFeatureShortcutParseSpec;
+} FeatureShortcutParse;
 
-bool feature_shortcut_parse(FnFeatureShortcutParseSpec *argspec);
+bool feature_shortcut_parse(FeatureShortcutParse *argspec);
 void feature_shortcut_select(ListBox *lb, const char *filter);
 PromptCallbacks feature_shortcut_make_callbacks(const PromptSpec *spec,
                                                 const PromptCallbacks *saved);
@@ -56,9 +56,9 @@ typedef struct {
   char *f_full;
   size_t f_cap;
   const char *f_func;
-} FnResolveCallerPathSpec;
+} ResolveCallerPath;
 
-bool resolve_caller_path(FnResolveCallerPathSpec *argspec);
+bool resolve_caller_path(ResolveCallerPath *argspec);
 bool resolve_icon_path(void *caller, const char *icon, char *out, size_t cap);
 StringList load_file_list_from(void *caller, const char *filepath);
 bool write_lines_from(void *caller, const char *filepath, const char *lines[],
@@ -73,9 +73,9 @@ typedef struct {
   float f_thickness;
   bool f_filled;
   bool f_transparent;
-} FnDrawRectRawSpec;
+} DrawRectRaw;
 
-bool draw_rect_raw(FnDrawRectRawSpec *argspec);
+bool draw_rect_raw(DrawRectRaw *argspec);
 
 typedef struct {
   const char *name;
@@ -117,3 +117,4 @@ void *lazy_mutex_get(void **slot);
 bool svg_file_size(const char *path, int *out_w, int *out_h);
 
 #endif
+

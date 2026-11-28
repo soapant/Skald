@@ -163,7 +163,7 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
     return false;
 
   int dw = 0, dh = 0;
-  if (!cover_scale(&(FnCoverScaleSpec){.f_sw = sw, .f_sh = sh, .f_tw = w, .f_th = h, .f_dw = &dw, .f_dh = &dh}))
+  if (!cover_scale(&(CoverScale){.f_sw = sw, .f_sh = sh, .f_tw = w, .f_th = h, .f_dw = &dw, .f_dh = &dh}))
     return false;
 
   int cw = dw, ch = dh;
@@ -191,7 +191,7 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
 
   Pixmap pm = 0;
   Picture pic = 0;
-  bool ok = x11_upload_argb(&(FnX11UploadArgbSpec){.f_dpy = dpy, .f_ref = DefaultRootWindow(dpy), .f_argb = crop, .f_w = w, .f_h = h, .f_out_pm = &pm, .f_out_pic = &pic});
+  bool ok = x11_upload_argb(&(X11UploadArgb){.f_dpy = dpy, .f_ref = DefaultRootWindow(dpy), .f_argb = crop, .f_w = w, .f_h = h, .f_out_pm = &pm, .f_out_pic = &pic});
   free(crop);
   if (!ok)
     return false;
@@ -259,7 +259,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
   BgTileSlot *slot = fresh;
   if (!slot) {
     slot =
-        &bg_tiles[bg_tile_lru_pick(&(FnBgTileLruPickSpec){.f_slots = bg_tiles, .f_count = BG_TILE_SLOTS, .f_stride = sizeof(bg_tiles[0]), .f_is_empty = bg_slot_empty, .f_stamp = bg_slot_stamp})];
+        &bg_tiles[bg_tile_lru_pick(&(BgTileLruPick){.f_slots = bg_tiles, .f_count = BG_TILE_SLOTS, .f_stride = sizeof(bg_tiles[0]), .f_is_empty = bg_slot_empty, .f_stamp = bg_slot_stamp})];
   }
 
   bg_slot_release(dpy, slot);
@@ -285,7 +285,7 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
   return result;
 }
 
-bool x11_bg_image_blit(FnX11BgImageBlitSpec *argspec) {
+bool x11_bg_image_blit(X11BgImageBlit *argspec) {
   if (!x11_bg_image_enabled() || !argspec->f_dpy || !argspec->f_dst || argspec->f_w <= 0 || argspec->f_h <= 0)
     return false;
   Pixmap pm = x11_bg_image_tile(argspec->f_dpy, argspec->f_w, argspec->f_h);
@@ -321,3 +321,4 @@ int x11_bg_image_prewarm(Display *dpy, int w, int h) {
     return 0;
   return x11_bg_image_tile(dpy, w, h) ? 1 : 0;
 }
+

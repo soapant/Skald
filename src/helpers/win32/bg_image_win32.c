@@ -397,7 +397,7 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
     int sw = s->src_w;
     int sh = s->src_h;
     int dw = 0, dh = 0;
-    if (!cover_scale(&(FnCoverScaleSpec){.f_sw = sw, .f_sh = sh, .f_tw = w, .f_th = h, .f_dw = &dw, .f_dh = &dh})) {
+    if (!cover_scale(&(CoverScale){.f_sw = sw, .f_sh = sh, .f_tw = w, .f_th = h, .f_dw = &dw, .f_dh = &dh})) {
       DeleteDC(dc);
       DeleteObject(bmp);
       return NULL;
@@ -424,7 +424,7 @@ static BgTileSlot *bg_tile_compose(HDC refDC, const char *native, int w, int h,
       bg_cache_store(cacheFile, w, h, bits, &ft, sz);
   }
 
-  int slot_idx = bg_tile_lru_pick(&(FnBgTileLruPickSpec){.f_slots = bg_tiles, .f_count = BG_TILE_SLOTS, .f_stride = sizeof(bg_tiles[0]), .f_is_empty = bg_slot_empty, .f_stamp = bg_slot_stamp});
+  int slot_idx = bg_tile_lru_pick(&(BgTileLruPick){.f_slots = bg_tiles, .f_count = BG_TILE_SLOTS, .f_stride = sizeof(bg_tiles[0]), .f_is_empty = bg_slot_empty, .f_stamp = bg_slot_stamp});
   BgTileSlot *slot = &bg_tiles[slot_idx];
   bg_tile_drop(slot);
   slot->bmp = bmp;
@@ -483,7 +483,7 @@ bool win32_bg_image_enabled(void) {
   return p && p[0];
 }
 
-bool win32_draw_bg_image_slice(FnWin32DrawBgImageSliceSpec *argspec) {
+bool win32_draw_bg_image_slice(Win32DrawBgImageSlice *argspec) {
 
   if (!argspec->f_hdc || !argspec->f_rc)
     return false;
@@ -546,3 +546,4 @@ int win32_bg_image_prewarm(int containerW, int containerH) {
     ReleaseDC(NULL, screen);
   return t ? 1 : 0;
 }
+
