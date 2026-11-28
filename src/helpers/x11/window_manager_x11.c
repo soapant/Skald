@@ -465,7 +465,11 @@ int WindowManager_Run(WindowManager *wm) {
       xfds[0].revents = 0;
       nfds = 1;
     }
-    int poll_res = poll(xfds, (nfds_t)nfds, 50);
+    int poll_ms = 50;
+    Popup *anim_popup = WindowManager_GetTopPopup(wm);
+    if (anim_popup && prompt_popup_resize_animating(anim_popup))
+      poll_ms = 16;
+    int poll_res = poll(xfds, (nfds_t)nfds, poll_ms);
     if (wake_idx >= 0 && (xfds[wake_idx].revents & POLLIN)) {
       unsigned long long v;
       read(hk_fd, &v, sizeof(v));
@@ -486,6 +490,9 @@ int WindowManager_Run(WindowManager *wm) {
         }
       }
     }
+    Popup *tick_popup = WindowManager_GetTopPopup(wm);
+    if (tick_popup)
+      prompt_popup_tick_resize_animation_popup(tick_popup);
     feature_loader_service_builds();
     hotkey_drain_pending();
   }
@@ -540,6 +547,9 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
       }
     }
   }
+  Popup *tick_popup = WindowManager_GetTopPopup(wm);
+  if (tick_popup)
+    prompt_popup_tick_resize_animation_popup(tick_popup);
   feature_loader_service_builds();
   hotkey_drain_pending();
 }
