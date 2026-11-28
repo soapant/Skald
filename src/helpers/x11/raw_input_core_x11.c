@@ -1007,31 +1007,6 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
       return true;
     }
   }
-  if (code == KEY_ESC) {
-    int vk = x11_convert_key_to_windows_vk(code);
-    if (input_key_is_window_escape(vk)) {
-      if (val == 1) {
-        WindowManager *wm = WindowManager_Get();
-        Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;
-        PromptState *state = top ? (PromptState *)top->user_data : NULL;
-        if (state) {
-          int mods = remap_current_mods();
-          PopupKeyEvent key;
-          memset(&key, 0, sizeof(key));
-          key.vk = vk;
-          key.ctrl = (mods & HOTKEY_MOD_CTRL) != 0;
-          key.shift = (mods & HOTKEY_MOD_SHIFT) != 0;
-          key.alt = (mods & HOTKEY_MOD_ALT) != 0;
-          prompt_handle_key(state, &key);
-          WindowManager_DrainSelectionComplete(wm);
-          UI_RequestPopupRepaint();
-        }
-      } else if (val == 0) {
-        hotkey_key_up(vk);
-      }
-      return true;
-    }
-  }
   if (ev->type == EV_KEY && code == KEY_ENTER && val == 1)
     g_enter_phys_down_ms = Platform_GetWallClockMs();
   if (ev->type == EV_KEY && val != 0)
