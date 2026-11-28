@@ -143,8 +143,8 @@ void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
   widget_invalidate(widget);
 }
 
-void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef color) {
-  if (!widget || !widget_base_set_bg_color(&widget->base, color)) {
+void Platform_Widget_SetBgColor(PlatformWidget *widget, ColorRef bg_color) {
+  if (!widget || !widget_base_set_bg_color(&widget->base, bg_color)) {
     return;
   }
   widget_invalidate(widget);

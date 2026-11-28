@@ -11,8 +11,8 @@ void Platform_DrawPromptEditText(PromptState *state) { (void)state; }
 
 void Platform_DrawPromptEditCursor(PromptState *state) { (void)state; }
 
-bool Platform_SetWindowRounded(WindowHandle h, bool rounded, int radius) {
-  (void)h;
+bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius) {
+  (void)win;
   (void)rounded;
   (void)radius;
   return false;
