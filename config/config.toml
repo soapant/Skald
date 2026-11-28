@@ -41,7 +41,7 @@
   AllowWindowOverride = false
 
 [color]
-  BG = "#0D0E11"
+  BG = "#0D0D11"
   TEXT = "#E2E6EC"
   SELECTION_HIGHLIGHT = "#0D0D0D"
   CURSOR = "#82AAFF"

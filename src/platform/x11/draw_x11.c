@@ -238,7 +238,7 @@ void x11_draw_edit_cursor(X11DrawEditCursor *argspec) {
 }
 
 static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by,
-                          bool owned) {
+                          bool owned, bool use_clip) {
   if (!buf || w <= 0 || h <= 0)
     return false;
   Pixmap pm = 0;
@@ -256,7 +256,7 @@ static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by,
   bool result = false;
   if (dst) {
     const DrawCanvas *ds = draw_state_get();
-    if (ds->clip_y1 > ds->clip_y0) {
+    if (use_clip && ds->clip_y1 > ds->clip_y0) {
       XRectangle clip = {0, (short)ds->clip_y0, 65535,
                          (unsigned short)(ds->clip_y1 - ds->clip_y0)};
       XRenderSetPictureClipRectangles(g_draw_dpy, dst, 0, 0, &clip, 1);
@@ -540,7 +540,7 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
     if (!buf)
       return false;
     return blit_argb_buf(buf, bw, bh, (int)x - (bw - (int)w) / 2,
-                         (int)y - (bh - (int)h) / 2, owned);
+                         (int)y - (bh - (int)h) / 2, owned, true);
   }
 }
 
@@ -641,7 +641,7 @@ bool Platform_DrawLineRaw(DrawLineRaw spec) {
   float alpha = 1.0f;
   unsigned char *buf = line_argb_buffer(x1 - bx, y1 - by, x2 - bx, y2 - by, w,
                                         h, spec.color, (float)thickness, alpha);
-  return blit_argb_buf(buf, w, h, bx, by, true);
+  return blit_argb_buf(buf, w, h, bx, by, true, false);
 }
 
 bool Platform_DrawCircleRaw(DrawCircleRaw spec) {
