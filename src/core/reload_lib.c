@@ -39,17 +39,11 @@ bool reload_lib_content_hash(const char *path, unsigned long long *out) {
 }
 
 bool reload_lib_is_fresh(const char *src, const char *out) {
-  long long src_mt = 0, out_mt = 0, src_size = 0, out_size = 0;
-  if (!Platform_FileInfo(src, &src_mt, &src_size) ||
-      !Platform_FileInfo(out, &out_mt, &out_size))
+  long long src_mt = 0, out_mt = 0;
+  if (!Platform_FileInfo(src, &src_mt, NULL) ||
+      !Platform_FileInfo(out, &out_mt, NULL))
     return false;
-  if (out_mt < src_mt || out_size != src_size)
-    return false;
-  unsigned long long src_hash = 0, out_hash = 0;
-  if (!reload_lib_content_hash(src, &src_hash) ||
-      !reload_lib_content_hash(out, &out_hash))
-    return false;
-  return src_hash == out_hash;
+  return out_mt >= src_mt;
 }
 
 bool reload_lib_compile(const char *src, const char *out, const char *log_tag) {

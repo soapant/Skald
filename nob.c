@@ -61,6 +61,9 @@
       "-MMD", "-MP", "-Wall", "-Wextra", "-Wno-sign-compare",                  \
       "-Wno-unused-parameter", "-Wno-override-init"
 
+#define WIN_FEATURE_LINK_FLAGS                                                 \
+  "-luser32", "-lgdi32", "-lgdiplus", "-lole32", "-ladvapi32", "-lshell32"
+
 static const char *cross_sysroot = NULL;
 
 static void discover_cross_sysroot(void) {
@@ -572,18 +575,19 @@ static bool write_compile_commands(void) {
     append_san_flags(&cmd);
 #if defined(_WIN32)
     nob_cmd_append(&cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-shared", src,
-                   main_implib, "-MF", feature_dep_path(src), LINK_FLAGS);
+                   main_implib, "-MF", feature_dep_path(src),
+                   WIN_FEATURE_LINK_FLAGS);
 #else
 #if defined(__APPLE__)
     nob_cmd_append(&cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-dynamiclib", src,
                    "-MF", feature_dep_path(src));
     append_dep_cflags(&cmd);
-    nob_cmd_append(&cmd, LINK_FLAGS);
+    nob_cmd_append(&cmd, "-Wl,-undefined,dynamic_lookup");
 #else
     nob_cmd_append(&cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-fPIC", "-shared", src,
                    "-MF", feature_dep_path(src));
     append_dep_cflags(&cmd);
-    nob_cmd_append(&cmd, "-lX11", LINK_FLAGS);
+    nob_cmd_append(&cmd, "-lX11");
 #endif
 #endif
     if (release)
@@ -760,8 +764,7 @@ static void append_plugin_build_cmd(Nob_Cmd *cmd, const char *src,
   if (target_win32) {
     nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS);
     append_cross_sysroot_include(cmd);
-    nob_cmd_append(cmd, "-I", sdk_dir, "-shared", "-o", so, src, main_implib,
-                   WIN_LINK_FLAGS);
+    nob_cmd_append(cmd, "-I", sdk_dir, "-shared", "-o", so, src, main_implib, WIN_FEATURE_LINK_FLAGS);
     if (release)
       nob_cmd_append(cmd, "-O3");
     else
@@ -772,13 +775,14 @@ static void append_plugin_build_cmd(Nob_Cmd *cmd, const char *src,
     append_san_flags(cmd);
 #if defined(_WIN32)
     nob_cmd_append(cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-shared", "-o", so, src,
-                   main_implib, "-MF", feature_dep_path(src), LINK_FLAGS);
+                   main_implib, "-MF", feature_dep_path(src),
+                   WIN_FEATURE_LINK_FLAGS);
 #else
 #if defined(__APPLE__)
     nob_cmd_append(cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-dynamiclib", "-o", so,
                    src, "-MF", feature_dep_path(src));
     append_dep_cflags(cmd);
-    nob_cmd_append(cmd, LINK_FLAGS);
+    nob_cmd_append(cmd, "-Wl,-undefined,dynamic_lookup");
 #else
     nob_cmd_append(cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-fPIC", "-shared", "-o",
                    so, src, "-MF", feature_dep_path(src));
@@ -2528,3 +2532,4 @@ int main(int argc, char **argv) {
 
   return 0;
 }
+
