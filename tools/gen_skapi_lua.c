@@ -435,6 +435,8 @@ static void parse_define_constants(const char *path) {
              (isalnum((unsigned char)*p) || *p == '_'))
         name[ni++] = *p++;
       name[ni] = '\0';
+      if (!strncmp(name, "sk_", 3) || !strncmp(name, "ski_", 4) || *p == '(')
+        continue;
       while (*p && isspace((unsigned char)*p))
         p++;
       char *end = p;
