@@ -145,6 +145,7 @@ typedef struct {
   bool rounded;
   int radius;
   int fps;
+  bool no_bg;
 } MessageSlotSpec;
 
 void display_message_slot(const MessageSlotSpec *spec);

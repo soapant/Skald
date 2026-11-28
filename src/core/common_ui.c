@@ -500,7 +500,7 @@ void display_message_slot(const MessageSlotSpec *spec) {
                             .max_height = spec->max_h,
                             .timeout = spec->timeout,
                             .color = spec->color,
-                            .no_bg = false,
+                            .no_bg = spec->no_bg,
                             .render = render,
                             .render_data = spec->render_data,
                             .width = spec->win_w,

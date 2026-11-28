@@ -167,6 +167,10 @@ void Platform_DisplayMessageAnchored(AnchoredMessageSpec spec) {
     winWidth = max_width;
   if (winHeight > max_height)
     winHeight = max_height;
+  if (render) {
+    max_width = winWidth;
+    max_height = winHeight;
+  }
 
   int center_x =
       msg_anchor_center(&(FnMsgAnchorCenterSpec){.f_rect = rect_x, .f_rect_size = rect_w, .f_slot = h_slot, .f_gap = gap, .f_outward = outward, .f_win_size = winWidth});

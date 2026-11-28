@@ -226,7 +226,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam,
         _gev.scancode = (int)_rk->scanCode;
         _gev.mods = win32_key_mods();
         _gev.down = _isDown;
-        _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
+        _gev.repeat = (_isDown && s_key_is_down[_vk & 0xFF]);
         if (_isDown)
           _freshDown = !s_key_is_down[_vk & 0xFF];
         static unsigned long long s_last_keydown_ms[256] = {0};

@@ -945,7 +945,8 @@ void ski_message(const SkMessageSpec *spec) {
                                           .win_h = spec->h,
                                           .rounded = spec->rounded,
                                           .radius = spec->radius,
-                                          .fps = spec->fps});
+                                          .fps = spec->fps,
+                                          .no_bg = spec->no_bg});
 }
 
 bool sk_launch_browser(const char *url) {
