@@ -8,7 +8,7 @@
 
 bool Platform_InitDisplay(WindowManager *wm);
 void Platform_OnPopEmpty(void);
-void Platform_GetMonitorGeometry(int *x, int *y, int *w, int *h);
+void Platform_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh);
 
 void Platform_PromptFlushDisplay(WindowManager *wm);
 

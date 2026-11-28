@@ -126,7 +126,6 @@ TEST(ui_navigate_to_new_index_resets_hscroll) {
 }
 
 TEST(listbox_layout_includes_partial_last_row) {
-  ListBox lb = {0};
   List spec = {0};
   spec.y = 0;
   spec.h = 25;

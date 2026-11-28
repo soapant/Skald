@@ -92,7 +92,7 @@ bool win32_cmdline_append_arg(char *cmd, size_t cap, size_t *off,
                               const char *arg);
 BOOL CALLBACK win32_enum_windows_proc_title(HWND hwnd, LPARAM lParam);
 HWND win32_foreground_target(void);
-BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lParam);
+BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp);
 BOOL CALLBACK win32_focus_enum(HWND hwnd, LPARAM lp);
 bool win32_move_active_window_direction(int dir);
 bool win32_activate_hwnd(HWND h);
