@@ -148,7 +148,7 @@ static void prompt_popup_on_show(Popup *self) {
   data->state_callbacks.help =
       data->spec.help ? data->spec.help : data->saved_callbacks->help;
   ctx2->window.prompt_callbacks = &data->state_callbacks;
-  ctx2->window.current_feature = (char *)title;
+  window_set_current_feature(title);
   ctx2->window.title = title;
   ctx2->window.editbox_placed = true;
   ctx2->window.listbox_placed = false;
@@ -167,7 +167,7 @@ static void prompt_popup_on_hide(Popup *self) {
   {
     SkaldContext *_c3 = SkaldContext_Get();
     if (_c3) {
-      _c3->window.current_feature = NULL;
+      window_set_current_feature(NULL);
       _c3->window.title = NULL;
       _c3->window.prompt_callbacks = data->saved_callbacks;
       _c3->window.hPopupWnd = data->prev_hPopupWnd;

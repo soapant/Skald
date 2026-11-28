@@ -491,6 +491,7 @@ int WindowManager_Run(WindowManager *wm) {
     if (tick_popup)
       prompt_popup_tick_resize_animation_popup(tick_popup);
     feature_loader_service_builds();
+    widget_hover_service();
     hotkey_drain_pending();
   }
 
@@ -548,6 +549,7 @@ void WindowManager_ProcessEvents(WindowManager *wm) {
   if (tick_popup)
     prompt_popup_tick_resize_animation_popup(tick_popup);
   feature_loader_service_builds();
+  widget_hover_service();
   hotkey_drain_pending();
 }
 

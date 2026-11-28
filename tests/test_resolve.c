@@ -7,11 +7,16 @@
 #include "helpers/helpers_fs.h"
 #include "platform/platform.h"
 
+#if defined(_WIN32)
+#define TEST_SEP "\\"
+#else
 #define TEST_SEP "/"
+#endif
 
 static char RESOLVE_TMP[512];
 
 static void resolve_cleanup(void) {
+  window_set_current_feature(NULL);
   test_tmp_remove_tree(RESOLVE_TMP);
   data_dir_set_override(NULL);
 }
@@ -28,7 +33,7 @@ TEST(existing_behavior_preserved) {
   char dir[512];
   test_stem_dir("todo", dir, sizeof(dir));
   test_tmp_make(dir);
-  SkaldContext_Get()->window.current_feature = (char *)"Todo";
+  window_set_current_feature("Todo");
   char out[512] = {0};
   bool ok = feature_path_resolve_data_path(__builtin_return_address(0),
                                            "todo.txt", out, sizeof(out));
@@ -38,7 +43,7 @@ TEST(existing_behavior_preserved) {
 }
 
 TEST(unknown_still_fails) {
-  SkaldContext_Get()->window.current_feature = NULL;
+  window_set_current_feature(NULL);
   char out[512] = {0};
   bool ok = feature_path_resolve_data_path(
       __builtin_return_address(0), "nosuchfeaturexyz.txt", out, sizeof(out));
@@ -49,7 +54,7 @@ TEST(foreground_first_save) {
   char dir[512];
   test_stem_dir("clipboard_history", dir, sizeof(dir));
   test_tmp_make(dir);
-  SkaldContext_Get()->window.current_feature = (char *)"Clipboard History";
+  window_set_current_feature("Clipboard History");
   char out[512] = {0};
   bool ok = feature_path_resolve_data_path(__builtin_return_address(0),
                                            "zzfirstsave.txt", out, sizeof(out));

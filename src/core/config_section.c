@@ -22,6 +22,7 @@
 #include "core/toml_common.h"
 #include "deps/log.h"
 #include "platform/platform.h"
+#include "core/owner_purge.h"
 
 #define CONFIG_SECTION_HEADER_MAX CONFIG_TOML_SECTION_MAX
 #define CONFIG_SECTION_NAME_MAX (CONFIG_SECTION_HEADER_MAX - 3)
@@ -1148,6 +1149,8 @@ void config_hotkey_bind_all(void) {
     config_hotkey_binding_bind(&config_hotkey_bindings[i]);
 }
 
+OWNER_PURGE_REGISTER2(config_hotkey_registry_purge_owner)
+
 void config_hotkey_registry_purge_owner(const char *path_a,
                                         const char *path_b) {
   OWNER_PURGE_STRUCT(config_hotkey_bindings, ConfigHotkeyBinding, path_a,
@@ -1360,7 +1363,7 @@ bool feature_shortcut_run(const char *name) {
   live->eb->cursor = strlen(live->eb->filter);
   if (live->callbacks)
     ctx->window.prompt_callbacks = live->callbacks;
-  ctx->window.current_feature = (char *)feature;
+  window_set_current_feature(feature);
   ctx->window.title = spec.title;
   headless->state = live;
   if (cb.refresh)

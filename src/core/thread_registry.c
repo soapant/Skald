@@ -224,6 +224,8 @@ void run_every_start(double seconds, void (*callback)(void)) {
   run_every_unlock();
 }
 
+OWNER_PURGE_REGISTER2(run_every_purge_owner)
+
 void run_every_purge_owner(const char *path_a, const char *path_b) {
   RunEveryEntry *mine = NULL;
   run_every_lock();

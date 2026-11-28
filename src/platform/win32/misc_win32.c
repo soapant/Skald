@@ -203,7 +203,10 @@ bool Platform_LaunchBrowserAtUrl(const char *url, bool new_window) {
   snprintf(command, sizeof(command), "start \"\" \"%s\"", full_url);
   log_info("Platform_LaunchBrowserAtUrl fallback url='%s' new_window=%d",
            full_url, new_window);
-  return Platform_RunTerminalCommand(command, false);
+  char *out = Platform_RunTerminalCommand(command, false);
+  bool ok = out != NULL;
+  free(out);
+  return ok;
 }
 
 bool Platform_QueryBrowser(const char *query) {
@@ -216,7 +219,10 @@ bool Platform_QueryBrowser(const char *query) {
   char command[4096];
   snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
   log_info("Platform_QueryBrowser query='%s'", query);
-  return Platform_RunTerminalCommand(command, false);
+  char *out = Platform_RunTerminalCommand(command, false);
+  bool ok = out != NULL;
+  free(out);
+  return ok;
 }
 
 char *Platform_GetClipboardEntry(void) {

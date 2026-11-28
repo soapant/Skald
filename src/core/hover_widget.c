@@ -18,6 +18,7 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_owner.h"
 #include "deps/stb_ds.h"
+#include "core/owner_purge.h"
 
 typedef struct {
   char key[64];
@@ -176,6 +177,8 @@ static void hover_widget_hide_apply(const char *key) {
   }
   hover_widget_destroy_slot(hover_widgets[idx]);
 }
+
+OWNER_PURGE_REGISTER2(hover_widget_purge_owner)
 
 void hover_widget_purge_owner(const char *path_a, const char *path_b) {
   if (owner_purge_inactive(path_a, path_b)) {

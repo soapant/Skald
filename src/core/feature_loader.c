@@ -75,6 +75,7 @@ typedef struct {
 } LoadedFeature;
 
 static int reload_seq = 0;
+static atomic_bool feature_load_in_progress = false;
 
 static LoadedFeature *features = NULL;
 static int feature_count = 0;
@@ -460,7 +461,9 @@ static bool load_single(const char *dir, const char *filename) {
     if (features[i].name && strcmp(features[i].name, name) == 0)
       return true;
 
+  atomic_store_explicit(&feature_load_in_progress, true, memory_order_release);
   LibHandle h = Platform_LoadLibrary(full);
+  atomic_store_explicit(&feature_load_in_progress, false, memory_order_release);
   if (!h) {
     log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
     return false;
@@ -637,43 +640,71 @@ bool feature_loader_load_all_from_dir(const char *dir) {
 
 typedef struct {
   char dir[256];
-  time_t src_mtime;
+  long long src_mtime;
+  long long src_size;
+  unsigned long long src_hash;
 } FailedFeature;
 
 static FailedFeature *s_failed;
 #define s_failed_count arrlenu(s_failed)
 
-static void feature_mark_failed(const char *dir, time_t mtime) {
+static void feature_mark_failed(const char *dir, long long mtime,
+                                const char *src_path) {
   FailedFeature *f = arraddnptr(s_failed, 1);
   safe_copy(f->dir, sizeof(f->dir), dir);
   f->src_mtime = mtime;
+  f->src_size = 0;
+  f->src_hash = 0;
+  if (src_path) {
+    Platform_FileInfo(src_path, NULL, &f->src_size);
+    reload_lib_content_hash(src_path, &f->src_hash);
+  }
 }
 
 typedef struct {
   char name[256];
   long long mtime;
+  long long size;
+  unsigned long long hash;
 } LuaReloadStamp;
 
 static LuaReloadStamp *g_lua_stamps;
 #define g_lua_stamp_count arrlenu(g_lua_stamps)
 
-static long long lua_reload_stamp(const char *name) {
+static LuaReloadStamp *lua_reload_stamp(const char *name) {
   for (size_t i = 0; i < g_lua_stamp_count; i++)
     if (strcmp(g_lua_stamps[i].name, name) == 0)
-      return g_lua_stamps[i].mtime;
-  return 0;
+      return &g_lua_stamps[i];
+  return NULL;
 }
 
-static void lua_reload_mark(const char *name, long long mtime) {
-  for (size_t i = 0; i < g_lua_stamp_count; i++) {
-    if (strcmp(g_lua_stamps[i].name, name) == 0) {
-      g_lua_stamps[i].mtime = mtime;
-      return;
-    }
+static bool lua_reload_changed(const char *name, long long mtime,
+                               const char *path) {
+  LuaReloadStamp *stamp = lua_reload_stamp(name);
+  if (!stamp || stamp->mtime != mtime)
+    return true;
+  long long size = 0;
+  unsigned long long hash = 0;
+  Platform_FileInfo(path, NULL, &size);
+  reload_lib_content_hash(path, &hash);
+  return stamp->size != size || stamp->hash != hash;
+}
+
+static void lua_reload_mark(const char *name, long long mtime,
+                            const char *path) {
+  LuaReloadStamp *stamp = lua_reload_stamp(name);
+  if (!stamp) {
+    stamp = arraddnptr(g_lua_stamps, 1);
+    memset(stamp, 0, sizeof(*stamp));
+    safe_copy(stamp->name, sizeof(stamp->name), name);
   }
-  LuaReloadStamp *stamp = arraddnptr(g_lua_stamps, 1);
-  safe_copy(stamp->name, sizeof(stamp->name), name);
   stamp->mtime = mtime;
+  stamp->size = 0;
+  stamp->hash = 0;
+  if (path) {
+    Platform_FileInfo(path, NULL, &stamp->size);
+    reload_lib_content_hash(path, &stamp->hash);
+  }
 }
 
 typedef struct {
@@ -734,8 +765,9 @@ static bool persist_hot_lib(const char *out, const char *dll) {
   return false;
 }
 
-static int finish_hot_build(const char *ent_name, const char *dll,
-                            const char *out, long long src_mtime, bool ok) {
+static int finish_hot_build(const char *ent_name, const char *src,
+                            const char *dll, const char *out,
+                            long long src_mtime, bool ok) {
   bool persisted = false;
   if (ok)
     ok = feature_loader_reload_from(ent_name, out);
@@ -743,7 +775,7 @@ static int finish_hot_build(const char *ent_name, const char *dll,
     persisted = persist_hot_lib(out, dll);
   remove(out);
   if (!ok) {
-    feature_mark_failed(ent_name, (time_t)src_mtime);
+    feature_mark_failed(ent_name, src_mtime, src);
     return 0;
   }
   if (persisted)
@@ -805,7 +837,8 @@ void feature_loader_service_builds(void) {
   B_UNLOCK();
   int ok_n = 0, fail_n = 0;
   for (size_t i = 0; i < arrlenu(done); i++) {
-    if (finish_hot_build(done[i].job.ent_name, done[i].job.dll, done[i].job.out,
+    if (finish_hot_build(done[i].job.ent_name, done[i].job.src,
+                         done[i].job.dll, done[i].job.out,
                          done[i].job.src_mtime, done[i].ok))
       ok_n++;
     else
@@ -827,7 +860,7 @@ void feature_loader_service_builds(void) {
   reload_session_fail = 0;
 }
 
-int feature_loader_build_stale_sources(bool hot_reload) {
+int feature_loader_build_stale_sources(bool hot_reload, bool synchronous) {
   const char *ext = Platform_LibExtension();
   if (!ext)
     return 0;
@@ -854,10 +887,10 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     snprintf(luasrc, sizeof(luasrc), "%.255s/%.255s.lua", subpath, ent_name);
     long long lua_mtime = 0;
     if (Platform_FileInfo(luasrc, &lua_mtime, NULL) &&
-        lua_mtime != lua_reload_stamp(ent_name)) {
+        lua_reload_changed(ent_name, lua_mtime, luasrc)) {
       if (hot_reload)
         feature_loader_reload_from(ent_name, luasrc);
-      lua_reload_mark(ent_name, lua_mtime);
+      lua_reload_mark(ent_name, lua_mtime, luasrc);
       if (hot_reload)
         done++;
       continue;
@@ -871,9 +904,15 @@ int feature_loader_build_stale_sources(bool hot_reload) {
       continue;
     if (reload_lib_is_fresh(src, dll))
       continue;
+    long long src_size = 0;
+    unsigned long long src_hash = 0;
+    Platform_FileInfo(src, NULL, &src_size);
+    reload_lib_content_hash(src, &src_hash);
     bool known_bad = false;
     for (size_t fi = 0; fi < s_failed_count; fi++) {
       if (s_failed[fi].src_mtime == src_mtime &&
+          s_failed[fi].src_size == src_size &&
+          s_failed[fi].src_hash == src_hash &&
           strncmp(s_failed[fi].dir, ent_name, sizeof(s_failed[fi].dir)) == 0) {
         known_bad = true;
         break;
@@ -881,6 +920,14 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     }
     if (known_bad)
       continue;
+    if (hot_reload && synchronous) {
+      char out_path[1024];
+      snprintf(out_path, sizeof(out_path), "%.1000s.tmp.%u", dll, ++build_seq);
+      bool ok = reload_lib_compile(src, out_path, "feature build");
+      finish_hot_build(ent_name, src, dll, out_path, src_mtime, ok);
+      done++;
+      continue;
+    }
     if (hot_reload) {
       FeatureBuildJob job;
       memset(&job, 0, sizeof(job));
@@ -892,7 +939,7 @@ int feature_loader_build_stale_sources(bool hot_reload) {
       if (!feature_build_enqueue(&job)) {
         log_warn("feature build queue full, skipping hot reload for %s",
                  ent_name);
-        feature_mark_failed(ent_name, src_mtime);
+        feature_mark_failed(ent_name, src_mtime, src);
         continue;
       }
       if (!reload_session_active) {
@@ -907,7 +954,7 @@ int feature_loader_build_stale_sources(bool hot_reload) {
     snprintf(out_path, sizeof(out_path), "%s", dll);
     bool ok = reload_lib_compile(src, out_path, "feature build");
     if (!ok) {
-      feature_mark_failed(ent_name, src_mtime);
+      feature_mark_failed(ent_name, src_mtime, src);
       continue;
     }
     note_feature_built(ent_name, dll, src_mtime);
@@ -919,7 +966,7 @@ int feature_loader_build_stale_sources(bool hot_reload) {
 }
 
 static int feature_build_stale_sources(void) {
-  return feature_loader_build_stale_sources(false);
+  return feature_loader_build_stale_sources(false, false);
 }
 
 bool feature_loader_init(void) {
@@ -1109,6 +1156,11 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
     feature_loader_reload_all();
     return true;
   }
+  if (atomic_load_explicit(&feature_load_in_progress, memory_order_acquire)) {
+    log_warn("reload of '%s' ignored while a feature library is initializing",
+             name);
+    return false;
+  }
   LOCK();
   sweep_retired_libs();
   for (int i = 0; i < feature_count; i++) {
@@ -1128,9 +1180,11 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
         UNLOCK();
         return false;
       }
+      atomic_store_explicit(&feature_load_in_progress, true,
+                            memory_order_release);
       LibHandle h = Platform_LoadLibrary(uniquepath);
-      if (h)
-        file_remove_path(uniquepath);
+      atomic_store_explicit(&feature_load_in_progress, false,
+                            memory_order_release);
       if (!h) {
         log_error("reload %s failed: %s (keeping old)", name,
                   Platform_GetLoadError());
@@ -1207,9 +1261,11 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       UNLOCK();
       return false;
     }
+    atomic_store_explicit(&feature_load_in_progress, true,
+                          memory_order_release);
     LibHandle h = Platform_LoadLibrary(uniquepath);
-    if (h)
-      file_remove_path(uniquepath);
+    atomic_store_explicit(&feature_load_in_progress, false,
+                          memory_order_release);
     if (!h) {
       log_error("reload %s failed: %s (new feature, not loaded)", name,
                 Platform_GetLoadError());

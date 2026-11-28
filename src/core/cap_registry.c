@@ -10,6 +10,7 @@
 #include "platform/platform.h"
 #include "deps/stb_ds.h"
 #include "helpers/helpers_misc.h"
+#include "core/owner_purge.h"
 
 typedef struct {
   char *key;
@@ -167,6 +168,8 @@ void cap_bind_declare(const char *key, void *consumer_fn) {
   cap_unlock();
   owner_strfree(&consumer);
 }
+
+OWNER_PURGE_REGISTER2(cap_purge_owner)
 
 void cap_purge_owner(const char *path_a, const char *path_b) {
   cap_lock();

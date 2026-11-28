@@ -11,6 +11,7 @@
 #include "helpers/helpers_misc.h"
 #include "deps/log.h"
 #include "deps/stb_ds.h"
+#include "core/owner_purge.h"
 
 #define SCROLL_STALE_LIMIT 256
 #define SCROLL_DEFAULT_WHEEL_PX 48
@@ -243,6 +244,8 @@ static void scroll_slot_destroy(void *element) {
   owner_tag_clear(&slot->tag);
   memset(slot, 0, sizeof(*slot));
 }
+
+OWNER_PURGE_REGISTER2(scroll_area_purge_owner)
 
 void scroll_area_purge_owner(const char *path_a, const char *path_b) {
   SCROLL_LOCK();

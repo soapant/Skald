@@ -34,6 +34,7 @@ typedef struct {
   bool band_active;
   char output_buffer[1024];
   char *current_feature;
+  bool current_feature_owned;
   const char *title;
   const PromptCallbacks *prompt_callbacks;
   HeadlessDispatch headless;
@@ -46,5 +47,7 @@ typedef struct {
 } SkaldContext;
 
 SkaldContext *SkaldContext_Get(void);
+
+void window_set_current_feature(const char *name);
 
 #endif

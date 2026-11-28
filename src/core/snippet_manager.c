@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "deps/stb_ds.h"
+#include "core/owner_purge.h"
 
 #define SNIPPET_BUF_CAP 128
 
@@ -194,6 +195,8 @@ static void snippet_destroy_cb(void *element) {
            b->trigger ? b->trigger : "?");
   snippet_free_binding(b);
 }
+
+OWNER_PURGE_REGISTER2(snippet_purge_owner)
 
 void snippet_purge_owner(const char *path_a, const char *path_b) {
   size_t dropped = OWNER_PURGE_STRUCT(snippets, SnippetBinding, path_a, path_b,

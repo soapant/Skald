@@ -197,7 +197,9 @@ bool Platform_TerminateProcessByName(const char *exe_name) {
            name, name);
 
   log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
-  bool ok = Platform_RunTerminalCommand(cmd, false);
+  char *out = Platform_RunTerminalCommand(cmd, false);
+  bool ok = out != NULL;
+  free(out);
   free(cmd);
   free(name);
   return ok;

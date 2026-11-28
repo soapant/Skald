@@ -122,6 +122,8 @@ bool widget_valid(const Widget *widget);
 Pos Widget_GetPos(const char *name);
 void widget_show(Widget *widget);
 void widget_hide(Widget *widget);
+void widget_hover_service(void);
+void widget_hover_clear(void);
 void widget_set_fps(PlatformWidget *window, int fps);
 
 bool widget_key_capture_active(void);

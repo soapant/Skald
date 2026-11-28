@@ -20,6 +20,8 @@
 #include "helpers/helpers_owner.h"
 #include "helpers/helpers_ui.h"
 #include "core/feature_loader.h"
+#include "core/widget_registry.h"
+#include "core/owner_purge.h"
 
 static WindowManager *window_manager = NULL;
 
@@ -55,6 +57,8 @@ void WindowManager_Destroy(WindowManager *wm) {
     }
   }
   free(wm->popups);
+  widget_hover_clear();
+  window_set_current_feature(NULL);
   if (window_manager == wm)
     window_manager = NULL;
   free(wm);
@@ -261,6 +265,8 @@ static void event_slot_destroy(void *element) {
   slot->cb = NULL;
   owner_tag_clear(&slot->tag);
 }
+
+OWNER_PURGE_REGISTER2(event_bus_purge_owner)
 
 void event_bus_purge_owner(const char *path_a, const char *path_b) {
   if (owner_purge_inactive(path_a, path_b))

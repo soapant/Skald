@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include "deps/log.h"
@@ -14,13 +15,41 @@
 #include "deps/stb_ds.h"
 #pragma GCC diagnostic pop
 
+bool reload_lib_content_hash(const char *path, unsigned long long *out) {
+  if (!path || !out)
+    return false;
+  FILE *f = fopen(path, "rb");
+  if (!f)
+    return false;
+  unsigned long long hash = 1469598103934665603ULL;
+  unsigned char buf[65536];
+  size_t n;
+  while ((n = fread(buf, 1, sizeof(buf), f)) > 0) {
+    for (size_t i = 0; i < n; i++) {
+      hash ^= buf[i];
+      hash *= 1099511628211ULL;
+    }
+  }
+  bool ok = !ferror(f);
+  fclose(f);
+  if (!ok)
+    return false;
+  *out = hash;
+  return true;
+}
+
 bool reload_lib_is_fresh(const char *src, const char *out) {
-  long long src_mt = 0, out_mt = 0;
-  if (!Platform_FileInfo(src, &src_mt, NULL))
+  long long src_mt = 0, out_mt = 0, src_size = 0, out_size = 0;
+  if (!Platform_FileInfo(src, &src_mt, &src_size) ||
+      !Platform_FileInfo(out, &out_mt, &out_size))
     return false;
-  if (!Platform_FileInfo(out, &out_mt, NULL))
+  if (out_mt < src_mt || out_size != src_size)
     return false;
-  return out_mt >= src_mt;
+  unsigned long long src_hash = 0, out_hash = 0;
+  if (!reload_lib_content_hash(src, &src_hash) ||
+      !reload_lib_content_hash(out, &out_hash))
+    return false;
+  return src_hash == out_hash;
 }
 
 bool reload_lib_compile(const char *src, const char *out, const char *log_tag) {
@@ -173,21 +202,74 @@ typedef struct {
 } LibraryTrack;
 
 static LibraryTrack *library_track;
+static void *library_track_mutex;
+
+static void *library_track_lock(void) {
+  library_track_mutex = lazy_mutex_get(&library_track_mutex);
+  if (library_track_mutex)
+    Platform_MutexLock(library_track_mutex);
+  return library_track_mutex;
+}
+
+static void library_track_unlock(void) {
+  if (library_track_mutex)
+    Platform_MutexUnlock(library_track_mutex);
+}
 
 void library_track_add(void *lib, const char *canon) {
+  library_track_lock();
   LibraryTrack *e = arraddnptr(library_track, 1);
   e->lib = lib;
   safe_copy(e->canon, sizeof(e->canon), canon);
+  library_track_unlock();
 }
 
-void library_track_remove(size_t idx) { arrdelswap(library_track, idx); }
+void library_track_remove(size_t idx) {
+  library_track_lock();
+  if (idx < arrlenu(library_track))
+    arrdelswap(library_track, idx);
+  library_track_unlock();
+}
 
-size_t library_track_count(void) { return arrlenu(library_track); }
+size_t library_track_count(void) {
+  library_track_lock();
+  size_t n = arrlenu(library_track);
+  library_track_unlock();
+  return n;
+}
 
 void *library_track_lib(size_t idx) {
-  return idx < arrlenu(library_track) ? library_track[idx].lib : NULL;
+  library_track_lock();
+  void *lib = idx < arrlenu(library_track) ? library_track[idx].lib : NULL;
+  library_track_unlock();
+  return lib;
 }
 
 const char *library_track_canon(size_t idx) {
-  return idx < arrlenu(library_track) ? library_track[idx].canon : NULL;
+  library_track_lock();
+  const char *canon =
+      idx < arrlenu(library_track) ? library_track[idx].canon : NULL;
+  library_track_unlock();
+  return canon;
+}
+
+LibraryTrackRemoveResult library_track_remove_checked(void *lib,
+                                                      const char *caller_canon) {
+  library_track_lock();
+  LibraryTrackRemoveResult result = LIB_TRACK_NOT_FOUND;
+  size_t found = arrlenu(library_track);
+  for (size_t i = 0; i < arrlenu(library_track); i++) {
+    if (library_track[i].lib != lib)
+      continue;
+    if (caller_canon && paths_equal(library_track[i].canon, caller_canon))
+      result = LIB_TRACK_SELF_CALLER;
+    else
+      result = LIB_TRACK_REMOVED;
+    found = i;
+    break;
+  }
+  if (result == LIB_TRACK_REMOVED && found < arrlenu(library_track))
+    arrdelswap(library_track, found);
+  library_track_unlock();
+  return result;
 }

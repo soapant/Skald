@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "core/owner_purge.h"
 
 #if defined(_WIN32)
 #define STORE_SEP "\\"
@@ -279,6 +280,8 @@ bool feature_list_add(const char *name, void (*cb)(void), const char *icon,
   owner_tag_set(&reg->tag, owner, 0);
   return true;
 }
+
+OWNER_PURGE_REGISTER2(feature_list_purge_owner)
 
 void feature_list_purge_owner(const char *path_a, const char *path_b) {
   if (owner_purge_inactive(path_a, path_b))

@@ -10,6 +10,7 @@
 #include "deps/stb_ds.h"
 #include <string.h>
 #include <stdlib.h>
+#include "core/owner_purge.h"
 
 #define MAX_SRC_VKS 8
 #define REMAP_MAX_WINDOWS 8
@@ -592,6 +593,8 @@ static void remap_destroy_cb(void *element) {
     free(b->windows[k]);
   owner_tag_clear(&b->tag);
 }
+
+OWNER_PURGE_REGISTER2(remap_purge_owner)
 
 void remap_purge_owner(const char *path_a, const char *path_b) {
   remap_lock();

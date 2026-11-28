@@ -19,6 +19,7 @@
 #include "core/types/keys.h"
 #include "deps/stb_ds.h"
 #include "helpers/helpers_misc.h"
+#include "core/owner_purge.h"
 
 static Widget **widgets;
 #define widget_count arrlenu(widgets)
@@ -157,26 +158,74 @@ static void widget_hover_poll(void) {
   hover_valid = true;
 }
 
-typedef struct {
+typedef struct HoverJob {
   Widget *w;
   int epoch;
+  struct HoverJob *next;
 } HoverJob;
 
-static void *widget_hover_worker(void *ud) {
-  HoverJob *job = (HoverJob *)ud;
-  if (!job)
-    return NULL;
-  Widget *w = job->w;
-  if (w && w->on_hover)
-    w->on_hover();
-  if (w) {
-    W_LOCK();
-    if (w->hover_epoch == job->epoch)
-      w->hover_running = false;
-    W_UNLOCK();
+static HoverJob *hover_head;
+static HoverJob *hover_tail;
+static void *hover_mutex;
+
+static void hover_queue_init(void) {
+  hover_mutex = lazy_mutex_get(&hover_mutex);
+}
+
+static void hover_queue_push(HoverJob *job) {
+  hover_queue_init();
+  if (!hover_mutex) {
+    free(job);
+    return;
   }
-  free(job);
-  return NULL;
+  Platform_MutexLock(hover_mutex);
+  if (hover_tail)
+    hover_tail->next = job;
+  else
+    hover_head = job;
+  hover_tail = job;
+  Platform_MutexUnlock(hover_mutex);
+}
+
+void widget_hover_service(void) {
+  hover_queue_init();
+  if (!hover_mutex)
+    return;
+  Platform_MutexLock(hover_mutex);
+  HoverJob *job = hover_head;
+  hover_head = NULL;
+  hover_tail = NULL;
+  Platform_MutexUnlock(hover_mutex);
+  while (job) {
+    HoverJob *next = job->next;
+    Widget *w = job->w;
+    if (w && widget_valid(w) && w->on_hover)
+      w->on_hover();
+    if (w) {
+      W_LOCK();
+      if (w->hover_epoch == job->epoch)
+        w->hover_running = false;
+      W_UNLOCK();
+    }
+    free(job);
+    job = next;
+  }
+}
+
+void widget_hover_clear(void) {
+  hover_queue_init();
+  if (!hover_mutex)
+    return;
+  Platform_MutexLock(hover_mutex);
+  HoverJob *job = hover_head;
+  hover_head = NULL;
+  hover_tail = NULL;
+  Platform_MutexUnlock(hover_mutex);
+  while (job) {
+    HoverJob *next = job->next;
+    free(job);
+    job = next;
+  }
 }
 
 static void widget_render_frame(void *ud) {
@@ -247,14 +296,7 @@ static void widget_render_frame(void *ud) {
         job->epoch = widget->hover_epoch;
         widget->hover_running = true;
         W_UNLOCK();
-        void *thread = Platform_ThreadCreate(widget_hover_worker, job);
-        W_LOCK();
-        widget->hover_thread = thread;
-        if (!thread)
-          widget->hover_running = false;
-        W_UNLOCK();
-        if (!thread)
-          free(job);
+        hover_queue_push(job);
       }
     }
     W_LOCK();
@@ -393,6 +435,8 @@ static void widget_purge_destroy(void *ud) {
               w->name ? w->name : "?");
   }
 }
+
+OWNER_PURGE_REGISTER3(widget_purge_owner)
 
 void widget_purge_owner(const char *path_a, const char *path_b,
                         unsigned generation) {

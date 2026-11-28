@@ -1490,8 +1490,9 @@ redirect_loop: {
       WideCharToMultiByte(CP_UTF8, 0, szLocation, -1, current_url,
                           sizeof(current_url), NULL, NULL);
       redirects_followed++;
-      if (status_code == 303 || ((status_code == 301 || status_code == 302) &&
-                                 strcmp(method, "POST") == 0)) {
+      if (status_code == 303 ||
+          ((status_code == 301 || status_code == 302) && method != NULL &&
+           strcmp(method, "POST") == 0)) {
         method = "GET";
         body = NULL;
       }
@@ -2067,9 +2068,10 @@ static BOOL CALLBACK win32_close_enum(HWND hwnd, LPARAM lp) {
     HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
     if (!h)
       return TRUE;
-    DWORD n = GetModuleFileNameA(h, buf, sizeof(buf));
+    DWORD n = (DWORD)sizeof(buf);
+    BOOL got = QueryFullProcessImageNameA(h, 0, buf, &n);
     CloseHandle(h);
-    if (!n)
+    if (!got || n == 0 || n >= sizeof(buf))
       return TRUE;
     char *base = strrchr(buf, '\\');
     base = base ? base + 1 : buf;

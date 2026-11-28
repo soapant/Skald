@@ -458,7 +458,8 @@ char *Platform_RunTerminalCommand(const char *command, bool open_terminal) {
       snprintf(chown_cmd, sizeof(chown_cmd),
                "chown %.255s:%.255s \"%.511s\" && chmod 755 \"%.511s\"",
                real_user, real_user, temp_file, temp_file);
-      Platform_RunTerminalCommand(chown_cmd, false);
+      char *chown_out = Platform_RunTerminalCommand(chown_cmd, false);
+      free(chown_out);
     } else {
       chmod(temp_file, 0755);
     }
@@ -1255,9 +1256,14 @@ static int singleton_lock_fd = -1;
 bool Platform_TryAcquireSingleInstance(void) {
   char lock_path[128];
   snprintf(lock_path, sizeof(lock_path), "/tmp/skald-%d.lock", (int)getuid());
-  singleton_lock_fd = open(lock_path, O_RDWR | O_CREAT, 0600);
+  singleton_lock_fd = open(lock_path, O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC,
+                           0600);
   if (singleton_lock_fd < 0) {
-    log_error("Cannot open singleton lock %s (%s)", lock_path, strerror(errno));
+    if (errno == ELOOP)
+      log_error("Singleton lock %s is a symlink; refusing to use it", lock_path);
+    else
+      log_error("Cannot open singleton lock %s (%s)", lock_path,
+                strerror(errno));
     return false;
   }
   if (flock(singleton_lock_fd, LOCK_EX | LOCK_NB) != 0) {

@@ -24,6 +24,7 @@
 #include "platform/platform.h"
 #include "platform/lib.h"
 #include "deps/log.h"
+#include "core/owner_purge.h"
 
 static atomic_flag lazy_mutex_flag = ATOMIC_FLAG_INIT;
 
@@ -229,6 +230,8 @@ void key_register_interceptor(KeyInterceptorFn fn) {
   if (fn)
     key_interceptor_owner = owner_resolve_for_func_alloc((void *)fn);
 }
+
+OWNER_PURGE_REGISTER2(key_purge_interceptor_owner)
 
 void key_purge_interceptor_owner(const char *path_a, const char *path_b) {
   if (key_interceptor &&

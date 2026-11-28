@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 
 #include "core/context.h"
 #include "core/types/prompt.h"
@@ -48,14 +49,16 @@ bool cover_scale(FnCoverScaleSpec *argspec) {
 
 Metrics *metrics_get(void) {
   static Metrics m = {0};
-  static int init = 0;
-  if (!init) {
+  static atomic_int cached_font_size = -1;
+  int font_size = FontSize;
+  if (atomic_load_explicit(&cached_font_size, memory_order_relaxed) !=
+      font_size) {
     m.edit_cursor_width = 0;
     m.edit_cursor_height = prompt_caret_height();
     m.editbox_padding = PROMPT_EDIT_INSET;
     m.listbox_padding = prompt_list_bottom_margin();
     m.listbox_item_height = prompt_row_height();
-    init = 1;
+    atomic_store_explicit(&cached_font_size, font_size, memory_order_relaxed);
   }
   return &m;
 }

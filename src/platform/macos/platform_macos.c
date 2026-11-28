@@ -612,8 +612,9 @@ Timer Platform_StartTimer(void) {
 
 double Platform_EndTimer(Timer t) {
   int64_t now = Platform_TimerNowTicks();
-  return (double)(now - (int64_t)t.ticks) /
-         (double)Platform_TimerTickFrequency();
+  double seconds = (double)(now - (int64_t)t.ticks) /
+                   (double)Platform_TimerTickFrequency();
+  return seconds * 1000.0;
 }
 
 int64_t Platform_TimerNowTicks(void) {

@@ -13,6 +13,7 @@
 #include "helpers/helpers_misc.h"
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_hotkey.h"
+#include "core/owner_purge.h"
 
 static bool down_map[256] = {0};
 static bool pressed[256] = {0};
@@ -132,6 +133,8 @@ void input_set_key_callback(void (*cb)(int vk, bool down, int mods, void *ud),
   if (key_cb)
     owner_tag_set_for_func(&cb_tag, (void *)(uintptr_t)key_cb, 0);
 }
+
+OWNER_PURGE_REGISTER2(key_callback_purge_owner)
 
 void key_callback_purge_owner(const char *path_a, const char *path_b) {
   if (key_cb && owner_tag_matches(&cb_tag, path_a, path_b)) {

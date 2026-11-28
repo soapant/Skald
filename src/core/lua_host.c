@@ -20,7 +20,9 @@
 #include "deps/log.h"
 #include "deps/stb_ds.h"
 #include "helpers/helpers_owner.h"
+#include "helpers/helpers_misc.h"
 #include "platform/lib.h"
+#include "platform/platform.h"
 
 typedef struct {
   char *name;
@@ -37,6 +39,20 @@ typedef struct {
 static LuaFeature *g_features;
 static int g_feature_count;
 static int g_feature_cap;
+
+static void *lua_mutex;
+static __thread unsigned lua_lock_depth;
+
+static void lua_lock(void) {
+  lua_mutex = lazy_mutex_get(&lua_mutex);
+  if (lua_lock_depth++ == 0 && lua_mutex)
+    Platform_MutexLock(lua_mutex);
+}
+
+static void lua_unlock(void) {
+  if (lua_lock_depth > 0 && --lua_lock_depth == 0 && lua_mutex)
+    Platform_MutexUnlock(lua_mutex);
+}
 
 static __thread char *tl_owner;
 
@@ -157,6 +173,7 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
   LuaFeature *f = cb_owners[slot];
   if (!f || !f->L)
     return;
+  lua_lock();
   cb_in_use[slot] = true;
   const char *saved = slua_current_owner();
   char *saved_copy = saved ? strdup(saved) : NULL;
@@ -191,6 +208,7 @@ static void cb_invoke(int slot, int nargs, bool want_bool, bool *out_bool,
     slua_owner_set(saved_copy);
     free(saved_copy);
   }
+  lua_unlock();
 }
 
 #define DEF_CB_V(N)                                                            \
@@ -1045,11 +1063,12 @@ static int l_call_fn(lua_State *L) {
 static int l_fmt_call(lua_State *L) {
   const char *kind = luaL_checkstring(L, 1);
   const char *name = luaL_checkstring(L, 2);
-  int n = lua_gettop(L) - 2;
+  int top = lua_gettop(L);
+  int n = top - 2;
   lua_getglobal(L, "string");
   lua_getfield(L, -1, "format");
   lua_remove(L, -2);
-  for (int i = 3; i <= lua_gettop(L); i++)
+  for (int i = 3; i <= top; i++)
     lua_pushvalue(L, i);
   lua_call(L, n, 1);
   const char *text = lua_tostring(L, -1);
@@ -1259,6 +1278,7 @@ static LuaFeature *find_feature(const char *name) {
 static void feature_shutdown(LuaFeature *f) {
   if (!f || !f->L)
     return;
+  lua_lock();
   lua_getglobal(f->L, "shutdown");
   if (lua_isfunction(f->L, -1)) {
     const char *saved = slua_current_owner();
@@ -1303,6 +1323,7 @@ static void feature_shutdown(LuaFeature *f) {
   f->name = NULL;
   free(f->owner);
   f->owner = NULL;
+  lua_unlock();
 }
 
 enum { CFG_LUA_BOOL, CFG_LUA_INT, CFG_LUA_FLOAT, CFG_LUA_STR, CFG_LUA_COLOR };
@@ -1362,11 +1383,14 @@ static void install_config_globals(lua_State *L) {
 }
 
 static bool feature_start(LuaFeature *f, const char *name, const char *path) {
+  lua_lock();
   f->name = strdup(name);
   f->owner = strdup(path);
   f->L = luaL_newstate();
-  if (!f->L)
+  if (!f->L) {
+    lua_unlock();
     return false;
+  }
   luaL_openlibs(f->L);
   install_config_globals(f->L);
   const char *pkg = "package.path";
@@ -1396,8 +1420,10 @@ static bool feature_start(LuaFeature *f, const char *name, const char *path) {
   if (status != 0) {
     log_error("lua feature %s failed: %s", name, lua_tostring(f->L, -1));
     feature_shutdown(f);
+    lua_unlock();
     return false;
   }
+  lua_unlock();
   return true;
 }
 

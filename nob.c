@@ -41,9 +41,9 @@
 
 #define WIN_CC_FLAGS                                                           \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
-      "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-I",              \
-      "include/deps/lua", "-MMD", "-MP", "-Wall", "-Wextra",                   \
-      "-Wno-sign-compare", "-Wno-unused-parameter", "-Wno-override-init"
+      "-I", "include", "-I", "include/deps/lua", "-MMD", "-MP", "-Wall",       \
+      "-Wextra", "-Wno-sign-compare", "-Wno-unused-parameter",                 \
+      "-Wno-override-init"
 
 #define WIN_LINK_FLAGS                                                         \
   "-static", "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32",   \
@@ -58,12 +58,85 @@
       "-Wno-unused-parameter", "-Wno-override-init"
 #define WIN_SDK_FLAGS                                                          \
   "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601",    \
-      "-I/usr/x86_64-w64-mingw32/include", "-MMD", "-MP", "-Wall", "-Wextra",  \
-      "-Wno-sign-compare", "-Wno-unused-parameter", "-Wno-override-init"
+      "-MMD", "-MP", "-Wall", "-Wextra", "-Wno-sign-compare",                  \
+      "-Wno-unused-parameter", "-Wno-override-init"
+
+static const char *cross_sysroot = NULL;
+
+static void discover_cross_sysroot(void) {
+  if (cross_sysroot)
+    return;
+
+  const char *over = getenv("SKALD_MINGW_SYSROOT");
+  if (over && over[0]) {
+    cross_sysroot = strdup(over);
+    return;
+  }
+
+  const char *probe_path = "build/mingw_sysroot.txt";
+  Nob_Cmd cmd = {0};
+  nob_cmd_append(&cmd, CROSS_CC, "-print-sysroot");
+  if (nob_cmd_run(&cmd, .stdout_path = probe_path)) {
+    Nob_String_Builder sb = {0};
+    if (nob_read_entire_file(probe_path, &sb)) {
+      size_t n = sb.count;
+      while (n > 0 && (sb.items[n - 1] == '\n' || sb.items[n - 1] == '\r' ||
+                       sb.items[n - 1] == ' ' || sb.items[n - 1] == '\t'))
+        --n;
+      if (n > 1 || (n == 1 && sb.items[0] != '/')) {
+        char *root = (char *)malloc(n + 1);
+        if (root) {
+          memcpy(root, sb.items, n);
+          root[n] = '\0';
+          cross_sysroot = root;
+        }
+      }
+      nob_sb_free(sb);
+    }
+  }
+  remove(probe_path);
+
+  if (!cross_sysroot)
+    cross_sysroot = "";
+  nob_log(NOB_INFO, "MinGW sysroot: %s",
+          cross_sysroot[0] ? cross_sysroot : "(compiler default)");
+}
+
+static void append_cross_sysroot_include(Nob_Cmd *cmd) {
+  discover_cross_sysroot();
+  if (cross_sysroot[0])
+    nob_cmd_append(cmd, "-I", nob_temp_sprintf("%s/include", cross_sysroot));
+}
 
 static bool sanitize = false;
 static const char *sanitize_cc = NULL;
 static const char *sanitize_bin = NULL;
+
+static const char *find_in_path(const char *name) {
+  const char *path = getenv("PATH");
+  if (!path)
+    return NULL;
+#if defined(_WIN32)
+  const char sep = ';';
+#else
+  const char sep = ':';
+#endif
+  static char candidate[2048];
+  size_t name_len = strlen(name);
+  for (const char *p = path;;) {
+    const char *end = strchr(p, sep);
+    size_t n = end ? (size_t)(end - p) : strlen(p);
+    if (n > 0 && n + name_len + 2 <= sizeof(candidate)) {
+      snprintf(candidate, sizeof(candidate), "%.*s/%s", (int)n, p, name);
+      if (nob_file_exists(candidate))
+        return candidate;
+    }
+    if (!end)
+      break;
+    p = end + 1;
+  }
+  return NULL;
+}
 
 static void pick_sanitize_cc(void) {
   const char *over = getenv("SKALD_SANITIZE_CC");
@@ -71,18 +144,15 @@ static void pick_sanitize_cc(void) {
     sanitize_cc = over;
   } else {
 #if defined(_WIN32)
-    static char buf[2048];
-    const char *up = getenv("USERPROFILE");
-    if (up && up[0]) {
-      snprintf(buf, sizeof(buf),
-               "%s/scoop/apps/msys2/current/clang64/bin/clang.exe", up);
-      if (nob_file_exists(buf))
-        sanitize_cc = buf;
-    }
+    sanitize_cc = find_in_path("clang.exe");
     if (!sanitize_cc)
-      sanitize_cc = "clang64/bin/clang.exe";
+      sanitize_cc = find_in_path("clang");
+    if (!sanitize_cc)
+      sanitize_cc = "clang.exe";
 #else
-    sanitize_cc = "clang";
+    sanitize_cc = find_in_path("clang");
+    if (!sanitize_cc)
+      sanitize_cc = "clang";
 #endif
   }
   const char *slash = strrchr(sanitize_cc, '/');
@@ -440,7 +510,33 @@ static void append_wayland_session_flags(Nob_Cmd *cmd) {
 
 static void nob_write_json_string(FILE *f, const char *s);
 
+static void write_compile_commands_entry(FILE *f, const char *cwd,
+                                         const char *src, const char *output,
+                                         Nob_Cmd *cmd, bool first) {
+  if (!first)
+    fprintf(f, ",\n");
+  nob_cmd_append(cmd, "-o", output);
+
+  fprintf(f, "  {\n");
+  fprintf(f, "    \"directory\": ");
+  nob_write_json_string(f, cwd);
+  fprintf(f, ",\n    \"file\": ");
+  nob_write_json_string(f, src);
+  fprintf(f, ",\n    \"arguments\": [\n");
+  for (size_t j = 0; j < cmd->count; ++j) {
+    fprintf(f, "      ");
+    nob_write_json_string(f, cmd->items[j]);
+    fprintf(f, "%s\n", j + 1 < cmd->count ? "," : "");
+  }
+  fprintf(f, "    ],\n    \"output\": ");
+  nob_write_json_string(f, output);
+  fprintf(f, "\n  }");
+}
+
 static bool write_compile_commands(void) {
+  if (target_win32)
+    return true;
+
   const char *cwd = nob_get_current_dir_temp();
   if (!cwd)
     return false;
@@ -450,44 +546,93 @@ static bool write_compile_commands(void) {
     return false;
 
   fprintf(f, "[\n");
+  bool first = true;
+
   for (size_t i = 0; i < sources.count; ++i) {
-    if (i > 0)
-      fprintf(f, ",\n");
-
+    const char *src = sources.items[i];
     Nob_Cmd cmd = {0};
-    if (target_win32) {
-      nob_cmd_append(&cmd, CROSS_CC);
-      nob_cmd_append(&cmd, WIN_CC_FLAGS, "-c", sources.items[i]);
-      if (release) {
-        nob_cmd_append(&cmd, "-O3");
-        nob_cmd_append(&cmd, "-mwindows");
-      } else {
-        nob_cmd_append(&cmd, "-ggdb");
-      }
-    } else {
-      append_cc(&cmd);
-      nob_cc_flags(&cmd);
-      append_wayland_session_flags(&cmd);
-      nob_cmd_append(&cmd, CC_FLAGS, "-c", sources.items[i]);
-      append_dep_cflags(&cmd);
-    }
-
-    fprintf(f, "  {\n");
-    fprintf(f, "    \"directory\": ");
-    nob_write_json_string(f, cwd);
-    fprintf(f, ",\n");
-    fprintf(f, "    \"file\": ");
-    nob_write_json_string(f, sources.items[i]);
-    fprintf(f, ",\n");
-    fprintf(f, "    \"arguments\": [\n");
-    for (size_t j = 0; j < cmd.count; ++j) {
-      fprintf(f, "      ");
-      nob_write_json_string(f, cmd.items[j]);
-      fprintf(f, "%s\n", j + 1 < cmd.count ? "," : "");
-    }
-    fprintf(f, "    ]\n");
-    fprintf(f, "  }");
+    append_cc(&cmd);
+    append_wayland_session_flags(&cmd);
+    nob_cmd_append(&cmd, CC_FLAGS, "-c", src);
+    if (release)
+      nob_cmd_append(&cmd, "-O3");
+    else
+      nob_cmd_append(&cmd, "-ggdb");
+    append_dep_cflags(&cmd);
+    append_san_flags(&cmd);
+    write_compile_commands_entry(f, cwd, src, obj_path(src), &cmd, first);
+    first = false;
+    nob_cmd_free(cmd);
   }
+
+  for (size_t i = 0; i < feature_sources.count; ++i) {
+    const char *src = feature_sources.items[i];
+    Nob_Cmd cmd = {0};
+    append_cc(&cmd);
+    append_san_flags(&cmd);
+#if defined(_WIN32)
+    nob_cmd_append(&cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-shared", src,
+                   main_implib, "-MF", feature_dep_path(src), LINK_FLAGS);
+#else
+#if defined(__APPLE__)
+    nob_cmd_append(&cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-dynamiclib", src,
+                   "-MF", feature_dep_path(src));
+    append_dep_cflags(&cmd);
+    nob_cmd_append(&cmd, LINK_FLAGS);
+#else
+    nob_cmd_append(&cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-fPIC", "-shared", src,
+                   "-MF", feature_dep_path(src));
+    append_dep_cflags(&cmd);
+    nob_cmd_append(&cmd, "-lX11", LINK_FLAGS);
+#endif
+#endif
+    if (release)
+      nob_cmd_append(&cmd, "-O3");
+    else
+      nob_cmd_append(&cmd, "-ggdb");
+    write_compile_commands_entry(f, cwd, src, feature_so_path(src), &cmd,
+                                 first);
+    first = false;
+    nob_cmd_free(cmd);
+  }
+
+  const char *test_build_folder = "build/tests";
+  for (size_t i = 0; i < test_sources.count; ++i) {
+    const char *src = test_sources.items[i];
+    const char *base = nob_path_name(src);
+    char name[128];
+    snprintf(name, sizeof(name), "%s", base);
+    char *dot = strrchr(name, '.');
+    if (dot)
+      *dot = '\0';
+    const char *test_obj =
+        nob_temp_sprintf("%s/%s.o", test_build_folder, name);
+    Nob_Cmd cmd = {0};
+    append_cc(&cmd);
+    nob_cmd_append(&cmd, "-I", "include", "-I", "tests", "-Wall", "-MMD",
+                   "-MP", "-MF",
+                   nob_temp_sprintf("%s/%s.d", test_build_folder, name), "-c",
+                   src,
+                   nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"",
+                                    test_build_folder));
+    append_san_flags(&cmd);
+    append_dep_cflags(&cmd);
+    write_compile_commands_entry(f, cwd, src, test_obj, &cmd, first);
+    first = false;
+    nob_cmd_free(cmd);
+  }
+
+  if (nob_file_exists("tools/gen_skapi_lua.c")) {
+    const char *src = "tools/gen_skapi_lua.c";
+    Nob_Cmd cmd = {0};
+    append_cc(&cmd);
+    nob_cmd_append(&cmd, CC_FLAGS, "-c", src);
+    write_compile_commands_entry(f, cwd, src,
+                                 BUILD_FOLDER "/gen_skapi_lua.o", &cmd, first);
+    first = false;
+    nob_cmd_free(cmd);
+  }
+
   fprintf(f, "\n]\n");
   fclose(f);
   return true;
@@ -613,8 +758,10 @@ static void append_plugin_build_cmd(Nob_Cmd *cmd, const char *src,
                                     const char *out) {
   const char *so = out;
   if (target_win32) {
-    nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS, "-I", sdk_dir, "-shared", "-o",
-                   so, src, main_implib, WIN_LINK_FLAGS);
+    nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS);
+    append_cross_sysroot_include(cmd);
+    nob_cmd_append(cmd, "-I", sdk_dir, "-shared", "-o", so, src, main_implib,
+                   WIN_LINK_FLAGS);
     if (release)
       nob_cmd_append(cmd, "-O3");
     else
@@ -790,7 +937,9 @@ static bool compile_all(bool *any_compiled) {
     Nob_Cmd cmd = {0};
     if (target_win32) {
       nob_cmd_append(&cmd, CROSS_CC);
-      nob_cmd_append(&cmd, WIN_CC_FLAGS, "-c", to_build.items[i], "-o",
+      nob_cmd_append(&cmd, WIN_CC_FLAGS);
+      append_cross_sysroot_include(&cmd);
+      nob_cmd_append(&cmd, "-c", to_build.items[i], "-o",
                      obj_path(to_build.items[i]));
       if (release)
         nob_cmd_append(&cmd, "-O3");
@@ -830,26 +979,6 @@ static bool compile_all(bool *any_compiled) {
     }
   }
   return ok;
-}
-
-static bool instance_running(void) {
-  const char *marker = "/tmp/skald_nob_check";
-  Nob_Cmd chk = {0};
-  nob_cmd_append(
-      &chk, "sh", "-c",
-      "if systemctl --user is-active --quiet skald.service 2>/dev/null "
-      "|| pgrep -f 'build/[s]kald' >/dev/null 2>&1; then echo running; fi; "
-      "exit 0");
-  if (!nob_cmd_run(&chk, .stdout_path = marker))
-    return false;
-  Nob_String_Builder sb = {0};
-  bool running = false;
-  if (nob_read_entire_file(marker, &sb)) {
-    running = sb.count > 0;
-  }
-  nob_sb_free(sb);
-  remove(marker);
-  return running;
 }
 
 static bool run_output(const char *output) {
@@ -1120,23 +1249,44 @@ static bool run_tests(void) {
 
 static void nob_write_json_string(FILE *f, const char *s) {
   fputc('"', f);
-  for (const char *p = s; *p; ++p) {
-    if (*p == '"') {
-      fputc('\\', f);
-      fputc('"', f);
-    } else if (*p == '\\') {
+  for (const unsigned char *p = (const unsigned char *)s; *p; ++p) {
+    unsigned char c = *p;
+    switch (c) {
+    case '"':
+      fputs("\\\"", f);
+      break;
+    case '\\':
       if (target_win32) {
         fputc('/', f);
       } else {
 #if defined(_WIN32)
         fputc('/', f);
 #else
-        fputc('\\', f);
-        fputc('\\', f);
+        fputs("\\\\", f);
 #endif
       }
-    } else {
-      fputc(*p, f);
+      break;
+    case '\b':
+      fputs("\\b", f);
+      break;
+    case '\f':
+      fputs("\\f", f);
+      break;
+    case '\n':
+      fputs("\\n", f);
+      break;
+    case '\r':
+      fputs("\\r", f);
+      break;
+    case '\t':
+      fputs("\\t", f);
+      break;
+    default:
+      if (c < 0x20)
+        fprintf(f, "\\u%04x", c);
+      else
+        fputc(c, f);
+      break;
     }
   }
   fputc('"', f);
@@ -2055,14 +2205,20 @@ int main(int argc, char **argv) {
       return 1;
     if (!nob_mkdir_if_not_exists("build/winlibs"))
       return 1;
-    Nob_Cmd sh = {0};
-    nob_cmd_append(&sh, "sh", "-c",
-                   "f=/usr/x86_64-w64-mingw32/lib/libmcfgthread.a; "
-                   "[ -f \"$f\" ] && ln -sf \"$f\" "
-                   "build/winlibs/libmcfgthread.a; "
-                   "exit 0");
-    if (!nob_cmd_run(&sh))
-      nob_log(NOB_ERROR, "Failed to stage libmcfgthread");
+    discover_cross_sysroot();
+    if (cross_sysroot[0]) {
+      const char *mcfg =
+          nob_temp_sprintf("%s/lib/libmcfgthread.a", cross_sysroot);
+      if (nob_file_exists(mcfg)) {
+        Nob_Cmd sh = {0};
+        nob_cmd_append(
+            &sh, "sh", "-c",
+            nob_temp_sprintf("ln -sf '%s' build/winlibs/libmcfgthread.a",
+                             mcfg));
+        if (!nob_cmd_run(&sh))
+          nob_log(NOB_ERROR, "Failed to stage libmcfgthread");
+      }
+    }
   } else {
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER))
       return 1;
@@ -2133,7 +2289,8 @@ int main(int argc, char **argv) {
   discover_dep_flags();
 #endif
 
-  write_compile_commands();
+  if (!target_win32)
+    write_compile_commands();
 
   for (size_t i = 0; i < sources.count; ++i) {
     const char *src = sources.items[i];

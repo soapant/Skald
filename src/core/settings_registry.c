@@ -1128,6 +1128,8 @@ static void settings_destroy_cb(void *element) {
   free(e);
 }
 
+OWNER_PURGE_REGISTER2(settings_registry_purge_owner)
+
 void settings_registry_purge_owner(const char *path_a, const char *path_b) {
   render_thread_sync();
   OWNER_PURGE_PTRS(settings_entries, SettingsEntry, path_a, path_b, 0,
@@ -1749,6 +1751,8 @@ const CcEntrySpec *cc_registry_at(int index) {
     return NULL;
   return &cc_entries[index].pub;
 }
+
+OWNER_PURGE_REGISTER2(cc_registry_purge_owner)
 
 void cc_registry_purge_owner(const char *path_a, const char *path_b) {
   if (!path_a && !path_b)

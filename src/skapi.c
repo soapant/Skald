@@ -2056,20 +2056,12 @@ void sk_library_close(SkLibrary lib) {
   char canon_caller[MAX_PATH];
   bool have_caller =
       caller && canonical_path(caller, canon_caller, sizeof(canon_caller));
-  for (size_t i = 0; i < library_track_count(); i++) {
-    if (library_track_lib(i) == lib && have_caller &&
-        paths_equal(library_track_canon(i), canon_caller)) {
-      log_error(
-          "sk_library_close: refusing to unload the caller's own library");
-      owner_strfree(&caller);
-      return;
-    }
-  }
-  for (size_t i = 0; i < library_track_count(); i++) {
-    if (library_track_lib(i) == lib) {
-      library_track_remove(i);
-      break;
-    }
+  LibraryTrackRemoveResult tracked =
+      library_track_remove_checked(lib, have_caller ? canon_caller : NULL);
+  if (tracked == LIB_TRACK_SELF_CALLER) {
+    log_error("sk_library_close: refusing to unload the caller's own library");
+    owner_strfree(&caller);
+    return;
   }
   Platform_UnloadLibrary((LibHandle)lib);
   owner_strfree(&caller);
@@ -2658,7 +2650,7 @@ void sk_reload_feature(const char *name) { feature_loader_reload(name); }
 int sk_get_pid(void) { return sk_get_pid_platform(); }
 
 int sk_reload_all_features(void) {
-  return feature_loader_build_stale_sources(true);
+  return feature_loader_build_stale_sources(true, true);
 }
 
 bool sk_hotkey_down(SkKey key) {
