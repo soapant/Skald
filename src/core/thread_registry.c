@@ -40,16 +40,17 @@ static void thread_reg_unlock(void) {
     Platform_MutexUnlock(thread_mtx);
 }
 
-void thread_registry_add(void *ctx, const char *owner_path) {
+bool thread_registry_add(void *ctx, const char *owner_path) {
   if (!ctx)
-    return;
+    return false;
   thread_reg_lock();
   if (thread_count >= thread_cap) {
     int cap = thread_cap > 0 ? thread_cap * 2 : 16;
     ThreadEntry *grown = realloc(threads, (size_t)cap * sizeof(*threads));
     if (!grown) {
       thread_reg_unlock();
-      return;
+      log_error("thread_registry: cannot track thread, refusing to start it");
+      return false;
     }
     threads = grown;
     thread_cap = cap;
@@ -59,6 +60,7 @@ void thread_registry_add(void *ctx, const char *owner_path) {
   owner_tag_set(&threads[thread_count].tag, owner_path, 0);
   thread_count++;
   thread_reg_unlock();
+  return true;
 }
 
 void thread_registry_finish(const void *ctx) {
@@ -123,7 +125,11 @@ void *thread_create_ex(ThreadFn fn, void *arg, void *owner_src) {
   memset(&ctx->tag, 0, sizeof(ctx->tag));
   owner_tag_set_for_func(&ctx->tag,
                          owner_src ? owner_src : (void *)(uintptr_t)fn, 0);
-  thread_registry_add(ctx, ctx->tag.owner ? ctx->tag.owner : "");
+  if (!thread_registry_add(ctx, ctx->tag.owner ? ctx->tag.owner : "")) {
+    owner_tag_clear(&ctx->tag);
+    free(ctx);
+    return NULL;
+  }
   void *thread = Platform_ThreadCreate(thread_trampoline, ctx);
   if (!thread) {
     thread_registry_finish(ctx);

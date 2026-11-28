@@ -32,7 +32,7 @@ typedef struct {
   Popup base;
   PromptSpec spec;
   PromptState *state;
-  PromptCallbacks saved_callbacks;
+  const PromptCallbacks *saved_callbacks;
   PromptCallbacks state_callbacks;
   WindowHandle prev_hPopupWnd;
   int x, y, w, h;
@@ -115,36 +115,39 @@ static void prompt_popup_on_show(Popup *self) {
   if (!wm->ctx)
     wm->ctx = ctx2;
   data->saved_callbacks = ctx2->window.prompt_callbacks;
-  data->state_callbacks = data->saved_callbacks;
+  if (data->saved_callbacks)
+    data->state_callbacks = *data->saved_callbacks;
+  else
+    memset(&data->state_callbacks, 0, sizeof(data->state_callbacks));
   data->state_callbacks.refresh =
-      data->spec.refresh ? data->spec.refresh : data->saved_callbacks.refresh;
+      data->spec.refresh ? data->spec.refresh : data->saved_callbacks->refresh;
   data->state_callbacks.enter =
-      data->spec.enter ? data->spec.enter : data->saved_callbacks.enter;
+      data->spec.enter ? data->spec.enter : data->saved_callbacks->enter;
   data->state_callbacks.ctrl_enter = data->spec.ctrl_enter
                                          ? data->spec.ctrl_enter
-                                         : data->saved_callbacks.ctrl_enter;
+                                         : data->saved_callbacks->ctrl_enter;
   data->state_callbacks.shift_enter = data->spec.shift_enter
                                           ? data->spec.shift_enter
-                                          : data->saved_callbacks.shift_enter;
+                                          : data->saved_callbacks->shift_enter;
   data->state_callbacks.ctrl_shift_enter =
       data->spec.ctrl_shift_enter ? data->spec.ctrl_shift_enter
-                                  : data->saved_callbacks.ctrl_shift_enter;
+                                  : data->saved_callbacks->ctrl_shift_enter;
   data->state_callbacks.ctrl_alt_enter =
       data->spec.ctrl_alt_enter ? data->spec.ctrl_alt_enter
-                                : data->saved_callbacks.ctrl_alt_enter;
+                                : data->saved_callbacks->ctrl_alt_enter;
   data->state_callbacks.shift_alt_enter =
       data->spec.shift_alt_enter ? data->spec.shift_alt_enter
-                                 : data->saved_callbacks.shift_alt_enter;
+                                 : data->saved_callbacks->shift_alt_enter;
   data->state_callbacks.render =
-      data->spec.render ? data->spec.render : data->saved_callbacks.render;
+      data->spec.render ? data->spec.render : data->saved_callbacks->render;
   data->state->callbacks = &data->state_callbacks;
   data->state_callbacks.edit =
-      data->spec.edit ? data->spec.edit : data->saved_callbacks.edit;
+      data->spec.edit ? data->spec.edit : data->saved_callbacks->edit;
   data->state_callbacks.filter =
-      data->spec.filter ? data->spec.filter : data->saved_callbacks.filter;
+      data->spec.filter ? data->spec.filter : data->saved_callbacks->filter;
   data->state_callbacks.help =
-      data->spec.help ? data->spec.help : data->saved_callbacks.help;
-  ctx2->window.prompt_callbacks = data->state_callbacks;
+      data->spec.help ? data->spec.help : data->saved_callbacks->help;
+  ctx2->window.prompt_callbacks = &data->state_callbacks;
   ctx2->window.current_feature = (char *)title;
   ctx2->window.title = title;
   ctx2->window.editbox_placed = true;

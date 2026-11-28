@@ -24,15 +24,15 @@ static void auto_apps_init(void) {
   auto_apps_ready = true;
   auto_apps[0].var = &UsedBrowser;
   auto_apps[0].kind = DEFAULT_BROWSER;
-  auto_apps[0].name = "UsedBrowser";
+  auto_apps[0].name = CONFIG_NAME_STRING(UsedBrowser);
   auto_apps[0].auto_resolved = false;
   auto_apps[1].var = &UsedTerminal;
   auto_apps[1].kind = DEFAULT_TERMINAL;
-  auto_apps[1].name = "UsedTerminal";
+  auto_apps[1].name = CONFIG_NAME_STRING(UsedTerminal);
   auto_apps[1].auto_resolved = false;
   auto_apps[2].var = &UsedShell;
   auto_apps[2].kind = DEFAULT_SHELL;
-  auto_apps[2].name = "UsedShell";
+  auto_apps[2].name = CONFIG_NAME_STRING(UsedShell);
   auto_apps[2].auto_resolved = false;
 }
 
@@ -47,7 +47,7 @@ static void config_resolve_one(AutoApp *app) {
   if (!id || !id[0])
     return;
   size_t n = strlen(id);
-  const char *copy = NULL;
+  char *copy = NULL;
   if (n > 8 && strcmp(id + n - 8, ".desktop") == 0) {
     char exe[512];
     if (!Platform_ResolveDesktopExec(id, exe, sizeof(exe)) || !exe[0])

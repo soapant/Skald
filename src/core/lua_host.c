@@ -635,6 +635,19 @@ static void call_s(lua_State *L) {
     lua_pushnil(L);
 }
 
+static void call_p(lua_State *L) {
+  const char *name = luaL_checkstring(L, 1);
+  void *sym = Platform_GetMainSymbol(name);
+  if (!sym)
+    luaL_error(L, "unknown skapi function '%s'", name);
+  uintptr_t a[6] = {0};
+  for (int i = 0; i < 6; i++)
+    a[i] = arg_value(L, 2 + i);
+  void *r = ((void *(*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
+                        uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
+  lua_pushlightuserdata(L, r);
+}
+
 static void call_f(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol(name);
@@ -670,6 +683,11 @@ static int l_s(lua_State *L) {
 
 static int l_f(lua_State *L) {
   with_owner(L, call_f);
+  return 1;
+}
+
+static int l_p(lua_State *L) {
+  with_owner(L, call_p);
   return 1;
 }
 
@@ -997,7 +1015,9 @@ static int l_struct_call(lua_State *L) {
     double d = 0;
     memcpy(&d, &r, sizeof(d));
     lua_pushnumber(L, d);
-  } else
+  } else if (strcmp(ret, "p") == 0)
+    lua_pushlightuserdata(L, (void *)r);
+  else
     lua_pushboolean(L, 1);
   return 1;
 }
@@ -1080,6 +1100,7 @@ static const luaL_Reg native_funcs[] = {
     {"i", l_i},
     {"s", l_s},
     {"f", l_f},
+    {"p", l_p},
     {"feature", l_feature},
     {"owner", l_owner},
     {"source", l_source},

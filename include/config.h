@@ -4,6 +4,14 @@
 #include "core/types.h"
 #include "config_values.h"
 
+#define CONFIG_SRC "config/config.toml"
+#define CONFIG_COLOR_PREFIX "COLOR_"
+#define CONFIG_NAME_STRING(x) #x
+
+static inline const char *config_color_short(const char *name) {
+  return name + sizeof(CONFIG_COLOR_PREFIX) - 1;
+}
+
 #define EDIT_TEXT_KEY 'E'
 #define HELP_SCREEN_KEY 'H'
 #define COPY_SELECTION_KEY 'Y'

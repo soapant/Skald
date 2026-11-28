@@ -24,7 +24,6 @@
 CONFIG_VALUES(X)
 #undef X
 
-#define CONFIG_SRC "config/config.toml"
 #define CONFIG_START_MARK "# <skald-config-generated>"
 #define CONFIG_END_MARK "# </skald-config-generated>"
 
@@ -74,7 +73,7 @@ static int config_find(const char *section, const char *key) {
     if (color_section) {
       if (e->kind != CONFIG_COLORREF)
         continue;
-      const char *short_name = e->name + 6;
+      const char *short_name = config_color_short(e->name);
       if (strcmp(short_name, key) == 0)
         return i;
     } else {
@@ -472,7 +471,7 @@ static ConfigBuf config_emit_region(void) {
     const ConfigEntry *e = &config_entries[i];
     if (e->kind != CONFIG_COLORREF)
       continue;
-    const char *short_name = e->name + 6;
+    const char *short_name = config_color_short(e->name);
     config_emit_color_line(
         &b, short_name,
         atomic_load_explicit((const _Atomic(ColorRef) *)e->slot,

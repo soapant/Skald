@@ -30,9 +30,9 @@ void prompt_refresh(PromptState *state) {
     return;
   }
   SkaldContext *ctx = SkaldContext_Get();
-  PromptCallbacks *cb = state->callbacks
-                            ? state->callbacks
-                            : (ctx ? &ctx->window.prompt_callbacks : NULL);
+  const PromptCallbacks *cb = state->callbacks
+                                  ? state->callbacks
+                                  : (ctx ? ctx->window.prompt_callbacks : NULL);
   if (cb && cb->refresh) {
     cb->refresh(state);
   }
@@ -164,8 +164,8 @@ void prompt_trigger_enter(PromptState *state, bool ctrl, bool shift, bool alt) {
     sel = filter_copy;
   }
   bool combo = false;
-  PromptCallbacks *cb =
-      state->callbacks ? state->callbacks : &ctx->window.prompt_callbacks;
+  const PromptCallbacks *cb =
+      state->callbacks ? state->callbacks : ctx->window.prompt_callbacks;
   PromptEnterFn fn = prompt_enter_callback_for(cb, ctrl, shift, alt, &combo);
   bool should_close = !combo;
   if (fn)
@@ -440,8 +440,8 @@ bool prompt_handle_key(PromptState *state, const PopupKeyEvent *key) {
     handled = true;
     goto done;
   }
-  PromptCallbacks *pcb =
-      state->callbacks ? state->callbacks : &ctx->window.prompt_callbacks;
+  const PromptCallbacks *pcb =
+      state->callbacks ? state->callbacks : ctx->window.prompt_callbacks;
   if (vk == HELP_SCREEN_KEY && ctrl) {
     if (pcb->help)
       pcb->help();

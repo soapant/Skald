@@ -24,6 +24,7 @@ char *config_entry_dup_key_at(ConfigEntryKind kind, int index);
 const char *config_entry_key_at(ConfigEntryKind kind, int index);
 
 bool config_setting_set(const char *key, const char *value);
+bool config_setting_remove(const char *key);
 char *config_setting_get(const char *key);
 bool config_setting_has(const char *key);
 bool config_setting_get_value(const char *key,

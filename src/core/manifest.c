@@ -12,8 +12,14 @@ void manifest_trim(char *s) { toml_trim(s); }
 
 void manifest_unquote(char *s) { toml_unquote(s); }
 
-bool manifest_parse_string(const char *name, const char *data,
-                           FeatureManifest *out) {
+static void manifest_mark_bad(bool *malformed, int *bad_line, int line_no) {
+  *malformed = true;
+  if (bad_line && *bad_line == 0)
+    *bad_line = line_no;
+}
+
+static bool manifest_parse_string_ex(const char *name, const char *data,
+                                     FeatureManifest *out, int *bad_line) {
   if (!out || !data)
     return false;
   memset(out, 0, sizeof(*out));
@@ -21,6 +27,7 @@ bool manifest_parse_string(const char *name, const char *data,
     safe_copy(out->name, sizeof(out->name), name);
 
   bool malformed = false;
+  int line_no = 0;
   int section = 0;
   const char *cursor = data;
   const char *line = NULL;
@@ -28,13 +35,14 @@ bool manifest_parse_string(const char *name, const char *data,
   char *work = NULL;
   size_t work_cap = 0;
   while (toml_next_line(&cursor, &line, &line_len)) {
+    line_no++;
     if (line_len + 1 > work_cap) {
       size_t cap = work_cap ? work_cap : 256;
       while (cap < line_len + 1)
         cap *= 2;
       char *grown = (char *)realloc(work, cap);
       if (!grown) {
-        malformed = true;
+        manifest_mark_bad(&malformed, bad_line, line_no);
         break;
       }
       work = grown;
@@ -44,7 +52,7 @@ bool manifest_parse_string(const char *name, const char *data,
     work[line_len] = '\0';
 
     if (toml_has_control_char(work))
-      malformed = true;
+      manifest_mark_bad(&malformed, bad_line, line_no);
 
     toml_trim(work);
     if (work[0] == '\0' || work[0] == '#')
@@ -53,7 +61,7 @@ bool manifest_parse_string(const char *name, const char *data,
     if (work[0] == '[') {
       toml_unquote(work);
       if (strchr(work, ']') == NULL) {
-        malformed = true;
+        manifest_mark_bad(&malformed, bad_line, line_no);
         section = 0;
         continue;
       }
@@ -76,7 +84,7 @@ bool manifest_parse_string(const char *name, const char *data,
       safe_copy(val, sizeof(val), eq + 1);
       toml_trim(val);
       if (key[0] == '\0' || !toml_quote_balanced(val))
-        malformed = true;
+        manifest_mark_bad(&malformed, bad_line, line_no);
       toml_unquote(val);
       if (strcmp(key, "name") == 0)
         safe_copy(out->name, sizeof(out->name), val);
@@ -86,7 +94,7 @@ bool manifest_parse_string(const char *name, const char *data,
     }
 
     if (!toml_quote_balanced(work))
-      malformed = true;
+      manifest_mark_bad(&malformed, bad_line, line_no);
     toml_unquote(work);
     if (work[0] == '\0')
       continue;
@@ -105,44 +113,73 @@ bool manifest_parse_string(const char *name, const char *data,
   return true;
 }
 
+bool manifest_parse_string(const char *name, const char *data,
+                           FeatureManifest *out) {
+  return manifest_parse_string_ex(name, data, out, NULL);
+}
+
 ConfigTomlStatus manifest_parse_file_ex(const char *path, const char *name,
                                         FeatureManifest *out,
                                         ConfigTomlError *err) {
+  ConfigTomlStatus status = CONFIG_TOML_OK;
+  int bad_line = 0;
   config_toml_error_clear(err);
   if (!out)
-    return CONFIG_TOML_ERR_ARG;
+    return config_toml_error_set(err, CONFIG_TOML_ERR_ARG, 0,
+                                 "manifest output is null");
   memset(out, 0, sizeof(*out));
   if (name)
     safe_copy(out->name, sizeof(out->name), name);
-  if (!path)
-    return CONFIG_TOML_ERR_IO;
+  if (!path) {
+    status = CONFIG_TOML_ERR_ARG;
+    goto done;
+  }
 
   FILE *f = fopen(path, "rb");
-  if (!f)
-    return CONFIG_TOML_ERR_IO;
+  if (!f) {
+    status = CONFIG_TOML_ERR_IO;
+    goto done;
+  }
   if (fseek(f, 0, SEEK_END) != 0) {
     fclose(f);
-    return CONFIG_TOML_ERR_IO;
+    status = CONFIG_TOML_ERR_IO;
+    goto done;
   }
   long sz = ftell(f);
   if (sz < 0) {
     fclose(f);
-    return CONFIG_TOML_ERR_IO;
+    status = CONFIG_TOML_ERR_IO;
+    goto done;
   }
   rewind(f);
   char *data = (char *)malloc((size_t)sz + 1);
   if (!data) {
     fclose(f);
-    return CONFIG_TOML_ERR_IO;
+    status = CONFIG_TOML_ERR_IO;
+    goto done;
   }
   size_t rd = fread(data, 1, (size_t)sz, f);
   fclose(f);
   data[rd] = '\0';
-  manifest_parse_string(name, data, out);
+  manifest_parse_string_ex(name, data, out, &bad_line);
   free(data);
 
   if (!out->valid)
-    return CONFIG_TOML_ERR_PARSE;
+    status = CONFIG_TOML_ERR_PARSE;
+
+done:
+  if (status != CONFIG_TOML_OK) {
+    char message[256];
+    if (status == CONFIG_TOML_ERR_PARSE)
+      snprintf(message, sizeof(message), "malformed manifest on line %d",
+               bad_line);
+    else if (status == CONFIG_TOML_ERR_IO)
+      snprintf(message, sizeof(message), "cannot read manifest '%s'",
+               path ? path : "(null)");
+    else
+      snprintf(message, sizeof(message), "invalid manifest arguments");
+    return config_toml_error_set(err, status, bad_line, message);
+  }
   return CONFIG_TOML_OK;
 }
 

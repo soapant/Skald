@@ -67,7 +67,7 @@ void win32_popup_request_repaint(HWND hPopup) {
 }
 
 static void popup_request_repaint(HWND hwnd) {
-  if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
+  if (SkaldContext_Get()->window.prompt_callbacks->render == NULL) {
     UI_LegacySyncRepaint();
     return;
   }
@@ -104,7 +104,7 @@ static bool win32_prompt_window_on_key(HWND hwnd, const PopupKeyEvent *key) {
     ShowWindow(popup_wnd_now, SW_SHOW);
     win32_force_window_focus(SkaldContext_Get()->window.hPopupWnd);
   }
-  if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
+  if (SkaldContext_Get()->window.prompt_callbacks->render != NULL) {
     HWND hPar = GetParent(hwnd);
     if (hPar && IsWindow(hPar)) {
       InvalidateRect(hPar, NULL, FALSE);
@@ -349,7 +349,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     RECT rect;
     GetClientRect(hwnd, &rect);
     PromptState *click_ps = win32_prompt_state_from_hwnd(hwnd);
-    if (SkaldContext_Get()->window.prompt_callbacks.render == NULL &&
+    if (SkaldContext_Get()->window.prompt_callbacks->render == NULL &&
         click_ps && click_ps->lb != NULL) {
       int list_top = prompt_list_top();
       int item_h = prompt_row_height();
@@ -374,7 +374,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       listbox_publish_mouse_pos(pt.x, pt.y);
     }
 
-    if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
+    if (SkaldContext_Get()->window.prompt_callbacks->render == NULL) {
       PromptState *hst = win32_prompt_state_from_hwnd(hwnd);
       if (hst && hst->lb != NULL) {
         ListBox *hlb = hst->lb;
@@ -428,8 +428,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     bool consumed = win32_prompt_window_on_key(hKey, &pkey);
     if (wParam == VK_BACK) {
       PromptState *ps = win32_prompt_state_from_hwnd(hwnd);
-      if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
-        SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
+      if (ps && SkaldContext_Get()->window.prompt_callbacks->refresh) {
+        SkaldContext_Get()->window.prompt_callbacks->refresh(ps);
       }
     }
     if (!consumed)
@@ -437,8 +437,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == VK_DELETE) {
       UI_DeleteForward();
       PromptState *ps = win32_prompt_state_from_hwnd(hwnd);
-      if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
-        SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
+      if (ps && SkaldContext_Get()->window.prompt_callbacks->refresh) {
+        SkaldContext_Get()->window.prompt_callbacks->refresh(ps);
       }
       UI_RequestPopupRepaint();
       InvalidateRect(hwnd, NULL, FALSE);
@@ -453,7 +453,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         !(GetKeyState(VK_MENU) & 0x8000) && !(GetKeyState(VK_LWIN) & 0x8000) &&
         !(GetKeyState(VK_RWIN) & 0x8000))
       break;
-    if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
+    if (SkaldContext_Get()->window.prompt_callbacks->render != NULL) {
       InvalidateRect(hwnd, NULL, FALSE);
       UpdateWindow(hwnd);
     } else {
@@ -478,8 +478,8 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       }
       if (UI_InsertChar((wchar_t)wParam) > 0) {
         ps = win32_prompt_state_from_hwnd(hwnd);
-        if (ps && SkaldContext_Get()->window.prompt_callbacks.refresh) {
-          SkaldContext_Get()->window.prompt_callbacks.refresh(ps);
+        if (ps && SkaldContext_Get()->window.prompt_callbacks->refresh) {
+          SkaldContext_Get()->window.prompt_callbacks->refresh(ps);
         }
         UI_RequestPopupRepaint();
         popup_request_repaint(hwnd);
@@ -539,7 +539,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == UI_DEBOUNCE_TIMER_ID) {
       KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
       UI_RequestPopupRepaint();
-      if (SkaldContext_Get()->window.prompt_callbacks.render != NULL)
+      if (SkaldContext_Get()->window.prompt_callbacks->render != NULL)
         InvalidateRect(hwnd, NULL, FALSE);
       else
         UI_LegacySyncRepaint();
@@ -548,7 +548,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (wParam == UI_TICK_TIMER_ID) {
       UI_RequestPopupRepaint();
     }
-    if (SkaldContext_Get()->window.prompt_callbacks.render != NULL)
+    if (SkaldContext_Get()->window.prompt_callbacks->render != NULL)
       InvalidateRect(hwnd, NULL, FALSE);
     return 0;
   } break;
@@ -670,7 +670,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
       RECT textRect = pdis->rcItem;
       textRect.left += PROMPT_ITEM_TEXT_X;
 
-      if (SkaldContext_Get()->window.prompt_callbacks.render != NULL) {
+      if (SkaldContext_Get()->window.prompt_callbacks->render != NULL) {
         return TRUE;
       }
       win32_set_draw_context(pdis->hDC);
@@ -690,7 +690,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
   }
   case WM_APP + 41: {
     s_repaint_queued = false;
-    if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
+    if (SkaldContext_Get()->window.prompt_callbacks->render == NULL) {
       UI_LegacySyncRepaint();
       return 0;
     }
@@ -742,7 +742,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
     }
     if (useRenderBuf)
       popup_snapshot_background(hwnd, rect.right, rect.bottom);
-    if (SkaldContext_Get()->window.prompt_callbacks.render) {
+    if (SkaldContext_Get()->window.prompt_callbacks->render) {
       PromptState *state = win32_prompt_state_from_hwnd(hwnd);
       Popup *owner = prompt_popup_find_popup_by_handle(WH_FROM_HWND(hwnd));
       if (owner && !owner->user_data)

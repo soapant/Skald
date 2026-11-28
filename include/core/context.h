@@ -35,7 +35,7 @@ typedef struct {
   char output_buffer[1024];
   char *current_feature;
   const char *title;
-  PromptCallbacks prompt_callbacks;
+  const PromptCallbacks *prompt_callbacks;
   HeadlessDispatch headless;
   SubwindowInfo subwindow;
   long long last_popup_pop_ms;

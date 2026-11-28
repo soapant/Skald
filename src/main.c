@@ -46,7 +46,8 @@ int main(void) {
   WindowManager_Destroy(wm);
 
   feature_loader_shutdown();
-  config_save();
+  if (!config_save())
+    log_warn("failed to save config on shutdown");
   config_unload();
   Platform_ShutdownUI();
   Platform_CleanupDisplaySafe();

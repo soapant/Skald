@@ -15,6 +15,14 @@
 static void clean(char *s);
 static const char *resolve_alias_base(const char *t);
 static bool is_scalar_type(const char *t);
+static bool is_builtin_scalar(const char *t);
+
+static int gen_errors;
+
+static void gen_error(const char *message) {
+  fprintf(stderr, "gen_skapi_lua: %s\n", message);
+  gen_errors++;
+}
 
 static const char *ret_kind(const char *line) {
   const char *b = resolve_alias_base(line);
@@ -27,10 +35,14 @@ static const char *ret_kind(const char *line) {
     return "i";
   if (strncmp(b, "float", 5) == 0 || strncmp(b, "double", 6) == 0)
     return "f";
-  if (strncmp(b, "void *", 6) == 0 || strncmp(b, "void*", 5) == 0)
-    return "i";
   if (strncmp(b, "void", 4) == 0)
-    return "v";
+    return strchr(b, '*') != NULL ? "p" : "v";
+  const char *space = strchr(b, ' ');
+  size_t n = space ? (size_t)(space - b) : strlen(b);
+  if (memchr(b, '*', n) != NULL)
+    return "p";
+  if (is_builtin_scalar(b))
+    return "i";
   return "i";
 }
 
@@ -79,6 +91,8 @@ static void collect_rets(char lines[][LINE_SZ], int line_count) {
     char *p = work;
     while (*p && isspace((unsigned char)*p))
       p++;
+    if (*p == '#')
+      continue;
     char *semi = strrchr(p, ';');
     if (!semi)
       continue;
@@ -226,6 +240,10 @@ typedef struct {
 
 static EnumConst enum_consts[2048];
 static int enum_count;
+static char define_names[2048][NAME_SZ];
+static char define_exprs[2048][256];
+static bool define_resolved[2048];
+static int define_count;
 
 static void parse_aliases(const char *path) {
   char *buf = read_all(path);
@@ -395,6 +413,95 @@ typedef struct {
 static BoolGlobal bool_globals[1024];
 static int bool_global_count;
 
+static void parse_define_constants(const char *path) {
+  char *buf = read_all(path);
+  if (!buf)
+    return;
+  char *line = strtok(buf, "\n");
+  while (line) {
+    char work[512];
+    snprintf(work, sizeof(work), "%s", line);
+    line = strtok(NULL, "\n");
+    if (enum_count >= 2048)
+      break;
+    char *p = work;
+    while (*p && isspace((unsigned char)*p))
+      p++;
+    if (strncmp(p, "#define ", 8) == 0) {
+      p += 8;
+      char name[NAME_SZ] = {0};
+      int ni = 0;
+      while (*p && ni < NAME_SZ - 1 &&
+             (isalnum((unsigned char)*p) || *p == '_'))
+        name[ni++] = *p++;
+      name[ni] = '\0';
+      while (*p && isspace((unsigned char)*p))
+        p++;
+      char *end = p;
+      while (*end && !isspace((unsigned char)*end))
+        end++;
+      char value[64] = {0};
+      size_t vn = (size_t)(end - p);
+      if (vn < sizeof(value)) {
+        memcpy(value, p, vn);
+        value[vn] = '\0';
+      }
+      if (!name[0] || !value[0] || define_count >= 2048)
+        continue;
+      bool duplicate = false;
+      for (int i = 0; i < define_count; i++)
+        if (strcmp(define_names[i], name) == 0)
+          duplicate = true;
+      if (duplicate)
+        continue;
+      snprintf(define_names[define_count], NAME_SZ, "%s", name);
+      snprintf(define_exprs[define_count], 256, "%s", value);
+      char num[64];
+      snprintf(num, sizeof(num), "%s", value);
+      size_t nn = strlen(num);
+      while (nn >= 2 && num[0] == '(' && num[nn - 1] == ')') {
+        num[nn - 1] = '\0';
+        nn -= 2;
+        memmove(num, num + 1, nn + 1);
+      }
+      char *tail = NULL;
+      long long v = strtoll(num, &tail, 0);
+      if (tail && *tail == '\0') {
+        define_resolved[define_count] = true;
+        add_enum_const(name, v);
+      }
+      define_count++;
+    }
+  }
+  free(buf);
+}
+
+static void resolve_define_constants(void) {
+  for (int pass = 0; pass < 8; pass++) {
+    bool progress = false;
+    for (int i = 0; i < define_count; i++) {
+      if (define_resolved[i])
+        continue;
+      for (int j = 0; j < define_count; j++) {
+        if (!define_resolved[j] ||
+            strcmp(define_exprs[i], define_names[j]) != 0)
+          continue;
+        for (int k = 0; k < enum_count; k++) {
+          if (strcmp(enum_consts[k].name, define_names[j]) == 0) {
+            add_enum_const(define_names[i], enum_consts[k].value);
+            define_resolved[i] = true;
+            progress = true;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    if (!progress)
+      break;
+  }
+}
+
 static void parse_bool_globals(const char *path) {
   char *buf = read_all(path);
   if (!buf)
@@ -542,13 +649,25 @@ static void lua_expr(char *out, size_t cap, const char *expr) {
   for (int i = 0; i < bool_global_count && !is_bool_global; i++)
     if (strcmp(v, bool_globals[i].name) == 0)
       is_bool_global = true;
-  if (is_bool_global)
+  if (is_bool_global) {
     snprintf(out, cap, "native.global_b(\"%s\")", v);
-  else if (strcmp(v, "true") == 0 || strcmp(v, "false") == 0 ||
-           (v[0] >= '0' && v[0] <= '9') || v[0] == '"')
+    return;
+  }
+  for (int i = 0; i < enum_count; i++) {
+    if (strcmp(v, enum_consts[i].name) == 0) {
+      snprintf(out, cap, "%lld", enum_consts[i].value);
+      return;
+    }
+  }
+  if (strcmp(v, "true") == 0 || strcmp(v, "false") == 0 ||
+      (v[0] >= '0' && v[0] <= '9') || v[0] == '"' || v[0] == '-') {
     snprintf(out, cap, "%s", v);
-  else
-    snprintf(out, cap, "nil");
+    return;
+  }
+  char message[512];
+  snprintf(message, sizeof(message), "unresolved default expression '%s'", v);
+  gen_error(message);
+  snprintf(out, cap, "nil");
 }
 
 static void emit_defaults(FILE *out, const char *rest) {
@@ -586,7 +705,7 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
   const char *kind = ret_for(raw);
   if (strcmp(kind, "v") != 0 && strcmp(kind, "i") != 0 &&
       strcmp(kind, "b") != 0 && strcmp(kind, "s") != 0 &&
-      strcmp(kind, "f") != 0)
+      strcmp(kind, "f") != 0 && strcmp(kind, "p") != 0)
     kind = "v";
 
   bool raw_thunk = can_thunk(func_for(raw));
@@ -660,7 +779,7 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
   if (strstr(name, "_fmt")) {
     const char *fk = ret_for(name);
     if (strcmp(fk, "v") != 0 && strcmp(fk, "i") != 0 && strcmp(fk, "b") != 0 &&
-        strcmp(fk, "s") != 0 && strcmp(fk, "f") != 0)
+        strcmp(fk, "s") != 0 && strcmp(fk, "f") != 0 && strcmp(fk, "p") != 0)
       fk = "v";
     fprintf(out,
             "M.%s = function(...) return native.fmt_call(\"%s\", \"%s\", "
@@ -697,13 +816,6 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
       stype[si++] = *st++;
     stype[si] = '\0';
 
-    fprintf(out,
-            "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
-            "v[k] = x end ",
-            name);
-    emit_defaults(out, rest);
-    fprintf(out, "return native.struct_call(\"%s\", \"%s\", v, \"%s\"", target,
-            stype, kind);
     char lead[NAME_SZ] = {0};
     if (params) {
       const char *pp = params;
@@ -720,22 +832,33 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
         pp++;
       }
     }
+    char lead_args[NAME_SZ] = {0};
     if (lead[0]) {
-      char lead_args[NAME_SZ];
       snprintf(lead_args, sizeof(lead_args), "%s", lead);
       size_t ln = strlen(lead_args);
       if (ln && lead_args[ln - 1] == ',')
         lead_args[ln - 1] = '\0';
-      fprintf(out, ",%s", lead_args);
     }
+
+    fprintf(out, "M.%s = function(t", name);
+    if (lead_args[0])
+      fprintf(out, ", %s", lead_args);
+    fprintf(out, ") local v = {} for k,x in pairs(t or {}) do "
+                 "v[k] = x end ");
+    emit_defaults(out, rest);
+    fprintf(out, "return native.struct_call(\"%s\", \"%s\", v, \"%s\"", target,
+            stype, kind);
+    if (lead_args[0])
+      fprintf(out, ",%s", lead_args);
     fprintf(out, ") end\n");
     return;
   }
 
-  fprintf(out,
-          "M.%s = M.%s or function(...) return native.%s(\"%s\", ...) "
-          "end\n",
-          name, target[0] ? target : name, kind, name);
+  if (target[0] && strcmp(target, name) != 0)
+    fprintf(out, "M.%s = function(...) return M.%s(...) end\n", name, target);
+  else
+    fprintf(out, "function M.%s(...) return native.%s(\"%s\", ...) end\n", name,
+            kind, name);
 }
 
 static char header_paths[2048][512];
@@ -976,12 +1099,14 @@ static const char *in_struct_ptr_type(const char *t, const char *name) {
 static bool can_thunk(const FuncDesc *fd) {
   if (!fd || fd->varargs)
     return false;
-  if (strchr(fd->ret, '*') || strstr(fd->params, "...") != NULL)
-    return false;
-  if (strcmp(fd->ret, "void") != 0 && !is_simple_type(fd->ret) &&
-      !is_struct_type(fd->ret))
+  if (strstr(fd->params, "...") != NULL)
     return false;
   const char *k = ret_kind(fd->ret);
+  if (strchr(fd->ret, '*') && strcmp(k, "p") != 0 && strcmp(k, "s") != 0)
+    return false;
+  if (strcmp(fd->ret, "void") != 0 && !is_simple_type(fd->ret) &&
+      !is_struct_type(fd->ret) && strcmp(k, "p") != 0)
+    return false;
   if (strcmp(k, "v") != 0 && strcmp(k, "b") != 0 && strcmp(k, "i") != 0 &&
       strcmp(k, "s") != 0 && strcmp(k, "f") != 0)
     return false;
@@ -1210,7 +1335,9 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
     fprintf(out, "  uintptr_t rv = 0; memcpy(&rv, &r, sizeof(rv) < sizeof(r) "
                  "? sizeof(rv) : sizeof(r)); lua_pushinteger(L, "
                  "(lua_Integer)rv);\n");
-  } else if (strcmp(k, "b") == 0)
+  } else if (strcmp(k, "p") == 0)
+    fprintf(out, "  lua_pushlightuserdata(L, (void *)(uintptr_t)r);\n");
+  else if (strcmp(k, "b") == 0)
     fprintf(out, "  lua_pushboolean(L, r != 0);\n");
   else if (strcmp(k, "i") == 0)
     fprintf(out, "  lua_pushinteger(L, (lua_Integer)r);\n");
@@ -1356,8 +1483,10 @@ static int gen_struct_header(void) {
     parse_callback_typedefs(header_paths[i]);
     parse_enum_typedefs(header_paths[i]);
     parse_enum_values(header_paths[i]);
+    parse_define_constants(header_paths[i]);
     parse_bool_globals(header_paths[i]);
   }
+  resolve_define_constants();
   FILE *out = fopen("include/core/skapi_lua_generated.h.tmp", "w");
   if (!out) {
     fprintf(stderr,
@@ -1782,6 +1911,21 @@ static int gen_struct_header(void) {
   return 0;
 }
 
+static void validate_ret_kinds(void) {
+  for (int i = 0; i < func_count; i++) {
+    const char *t = funcs[i].ret;
+    if (!t[0] || strcmp(t, "void") == 0 || is_simple_type(t) ||
+        is_struct_type(t) || is_handle_type(t) || strchr(t, '*') ||
+        strstr(t, "Handle") || strcmp(t, "SkLibrary") == 0 ||
+        strcmp(t, "SkThread") == 0 || strcmp(t, "SkMutex") == 0)
+      continue;
+    char message[256];
+    snprintf(message, sizeof(message), "unsupported return type '%s' for '%s'",
+             t, funcs[i].name);
+    gen_error(message);
+  }
+}
+
 int main(void) {
   FILE *in = fopen("include/core/skapi.h", "r");
   if (!in) {
@@ -1832,6 +1976,7 @@ int main(void) {
   fclose(in);
   collect_rets(lines, line_count);
   int gen_rc = gen_struct_header();
+  validate_ret_kinds();
 
   fprintf(
       out,
@@ -1907,21 +2052,18 @@ int main(void) {
       continue;
     }
     if (strcmp(fname, "sk_cap_resolve_abi") == 0) {
-      fprintf(out,
-              "M.cap_resolve_abi = function(key, abi) return "
-              "native.cap_resolve(key, abi) end\n");
+      fprintf(out, "M.cap_resolve_abi = function(key, abi) return "
+                   "native.cap_resolve(key, abi) end\n");
       continue;
     }
     if (strcmp(fname, "sk_cap_register_abi") == 0) {
-      fprintf(out,
-              "M.cap_register_abi = function(key, abi, fn) "
-              "native.cap_register(key, fn, abi) end\n");
+      fprintf(out, "M.cap_register_abi = function(key, abi, fn) "
+                   "native.cap_register(key, fn, abi) end\n");
       continue;
     }
     if (strcmp(fname, "sk_cap_bind_declare") == 0) {
-      fprintf(out,
-              "M.cap_bind_declare = function(key) "
-              "native.cap_bind_declare(key) end\n");
+      fprintf(out, "M.cap_bind_declare = function(key) "
+                   "native.cap_bind_declare(key) end\n");
       continue;
     }
     if (strstr(fname, "_fmt")) {
@@ -1966,5 +2108,5 @@ int main(void) {
     fclose(dst);
   remove("src/skapi.lua.tmp");
   write_if_changed("src/skapi.lua", "src/skapi.lua.new");
-  return gen_rc;
+  return gen_rc != 0 || gen_errors != 0 ? 1 : 0;
 }

@@ -42,6 +42,12 @@ static ConfigTomlStatus toml_fail(ConfigTomlError *err, ConfigTomlStatus status,
   return status;
 }
 
+ConfigTomlStatus config_toml_error_set(ConfigTomlError *err,
+                                       ConfigTomlStatus status, int line,
+                                       const char *message) {
+  return toml_fail(err, status, line, message);
+}
+
 static bool config_number_shape(const char *raw, size_t raw_len,
                                 bool *out_is_float) {
   size_t i = 0;
@@ -109,7 +115,7 @@ ConfigTomlStatus config_toml_parse_ex(const char *path, ConfigTomlVisitFn visit,
   if (!f)
     return toml_fail(err, CONFIG_TOML_ERR_IO, 0, "could not open file");
 
-  char section[32] = "";
+  char section[CONFIG_TOML_SECTION_MAX] = "";
   char line_buf[CONFIG_TOML_LINE_MAX];
   int line_no = 0;
 
@@ -139,7 +145,7 @@ ConfigTomlStatus config_toml_parse_ex(const char *path, ConfigTomlVisitFn visit,
         return toml_fail(err, CONFIG_TOML_ERR_PARSE, line_no,
                          "section name too long");
       }
-      char tbuf[32];
+      char tbuf[CONFIG_TOML_SECTION_MAX];
       memcpy(tbuf, s + 1, tlen);
       tbuf[tlen] = '\0';
       if (!toml_is_bare_key(tbuf)) {

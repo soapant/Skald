@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <string.h>
 
+static const PromptCallbacks zero_callbacks = {0};
+
 static SkaldContext ctx = {
     .window =
         {
@@ -12,7 +14,7 @@ static SkaldContext ctx = {
             .output_buffer = {0},
             .current_feature = NULL,
             .title = NULL,
-            .prompt_callbacks = {0},
+            .prompt_callbacks = &zero_callbacks,
             .last_popup_pop_ms = 0,
         },
 };

@@ -461,7 +461,8 @@ static bool load_single(const char *dir, const char *filename) {
     log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
     return false;
   }
-    void (*init)(void) = (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
+  void (*init)(void) =
+      (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
   if (!init)
     init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
   if (init) {
@@ -919,6 +920,9 @@ static int feature_build_stale_sources(void) {
 
 bool feature_loader_init(void) {
   LOCK();
+  if (feature_count > 0)
+    log_warn("feature_loader_init called with %d feature(s) already loaded",
+             feature_count);
   feature_count = 0;
   UNLOCK();
   feature_init_count = 0;
@@ -1012,14 +1016,15 @@ static void feature_loader_load_lua_all(void) {
 }
 
 static void call_feature_shutdown(LibHandle handle) {
-    void (*shut)(void) =
+  void (*shut)(void) =
       (void (*)(void))Platform_GetSymbol(handle, "skald_feature_shutdown");
   if (shut)
     shut();
 }
 
 static void purge_failed_library(LibHandle h, const char *path) {
-    void (*init)(void) = (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
+  void (*init)(void) =
+      (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
   if (!init)
     init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
   char *owner = init ? owner_resolve_for_func_alloc((void *)init) : NULL;
@@ -1131,7 +1136,8 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
         UNLOCK();
         return false;
       }
-            void (*init)(void) = (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
+      void (*init)(void) =
+          (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
       if (!init)
         init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
       if (!init) {
@@ -1159,7 +1165,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
         UNLOCK();
         return false;
       }
-            void (*shut)(void) =
+      void (*shut)(void) =
           (void (*)(void))Platform_GetSymbol(old, "skald_feature_shutdown");
       if (shut)
         shut();
@@ -1208,7 +1214,8 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       UNLOCK();
       return false;
     }
-        void (*init)(void) = (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
+    void (*init)(void) =
+        (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
     if (!init)
       init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
     if (!init) {
@@ -1255,6 +1262,7 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
 
 void feature_loader_reload_all(void) {
   LOCK();
+  int kept = 0;
   for (int i = 0; i < feature_count; i++) {
     if (features[i].lua) {
       char *name = owner_strdup(features[i].name);
@@ -1265,11 +1273,17 @@ void feature_loader_reload_all(void) {
       continue;
     }
     if (features[i].handle) {
-      call_feature_shutdown(features[i].handle);
       char *loaded = owner_strdup((features[i].uniq && features[i].uniq[0])
                                       ? features[i].uniq
                                       : features[i].path);
-      retire_old_lib(features[i].handle, features[i].uniq, loaded);
+      if (!retire_old_lib(features[i].handle, features[i].uniq, loaded)) {
+        log_error("reload_all: cannot retire '%s', keeping old library",
+                  loaded ? loaded : features[i].name);
+        owner_strfree(&loaded);
+        features[kept++] = features[i];
+        continue;
+      }
+      call_feature_shutdown(features[i].handle);
       owner_strfree(&loaded);
       features[i].handle = 0;
     }
@@ -1277,7 +1291,7 @@ void feature_loader_reload_all(void) {
     owner_strfree(&features[i].path);
     owner_strfree(&features[i].uniq);
   }
-  feature_count = 0;
+  feature_count = kept;
   sweep_retired_libs();
   UNLOCK();
   widget_bump_generation();

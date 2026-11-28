@@ -43,15 +43,6 @@
 #define SETTINGS_CONFIG_KEY_MAX 384
 #define SETTINGS_CONFIG_VALUE_MAX 1024
 
-typedef struct {
-  char *key;
-  char *value;
-} SettingsConfigEntry;
-
-static SettingsConfigEntry *settings_config_entries;
-#define settings_config_count arrlenu(settings_config_entries)
-static char settings_config_path[1024];
-static bool settings_config_loaded = false;
 static void (*settings_config_notify)(const char *key,
                                       const char *value) = NULL;
 
@@ -60,144 +51,44 @@ void settings_config_set_notify(void (*notify)(const char *key,
   settings_config_notify = notify;
 }
 
-static const char *settings_config_find(const char *key) {
-  if (!key)
-    return NULL;
-  for (size_t i = 0; i < settings_config_count; i++)
-    if (strcmp(settings_config_entries[i].key, key) == 0)
-      return settings_config_entries[i].value;
-  return NULL;
-}
-
-static bool settings_config_update_value(const char *key, const char *value) {
-  const char *existing = settings_config_find(key);
-  if (!existing)
-    return false;
-  for (size_t i = 0; i < settings_config_count; i++) {
-    if (settings_config_entries[i].value == existing) {
-      free(settings_config_entries[i].value);
-      settings_config_entries[i].value = strdup(value);
-      break;
-    }
-  }
-  return true;
-}
-
-static bool settings_config_apply(const ConfigTomlEntry *entry, void *ud) {
-  (void)ud;
-  if (!entry || strcmp(entry->section, "settings") != 0)
-    return true;
-  char value[SETTINGS_CONFIG_VALUE_MAX];
-  if (!config_toml_decode_string(entry->raw, value, sizeof(value)))
-    return true;
-  if (settings_config_update_value(entry->key, value))
-    return true;
-  SettingsConfigEntry *out = arraddnptr(settings_config_entries, 1);
-  out->key = strdup(entry->key);
-  out->value = strdup(value);
-  return true;
-}
-
-static void settings_config_init(void) {
-  if (settings_config_loaded)
-    return;
-  settings_config_loaded = true;
-  char dir[512];
-  if (!data_dir(dir, sizeof(dir)))
-    return;
-  Platform_MkdirIfNotExists(dir);
-  char sep = '/';
-#ifdef _WIN32
-  sep = '\\';
-#endif
-  snprintf(settings_config_path, sizeof(settings_config_path),
-           "%s%ccore%cskald.toml", dir, sep, sep);
-  ConfigTomlError err;
-  ConfigTomlStatus st = config_toml_parse_ex(settings_config_path,
-                                             settings_config_apply, NULL, &err);
-  if (st == CONFIG_TOML_ERR_PARSE || st == CONFIG_TOML_ERR_REJECTED)
-    log_warn("settings: config %s failed at line %d (%s): %s",
-             settings_config_path, err.line, config_toml_status_name(st),
-             err.message[0] ? err.message : "invalid config");
-}
-
 static bool settings_config_has(const char *key) {
-  settings_config_init();
-  return settings_config_find(key) != NULL;
+  return config_setting_has(key);
 }
 
 static bool settings_config_get_bool(const char *key) {
-  settings_config_init();
-  const char *value = settings_config_find(key);
-  if (!value)
-    return false;
-  return !strcmp(value, "true") || !strcmp(value, "TRUE") ||
-         !strcmp(value, "True") || !strcmp(value, "1") ||
-         !strcmp(value, "yes") || !strcmp(value, "on");
+  bool value = false;
+  config_setting_get_value(key, config_parse_bool_value, &value);
+  return value;
 }
 
 static float settings_config_get_float(const char *key) {
-  settings_config_init();
-  const char *value = settings_config_find(key);
-  if (!value || !*value)
-    return 0.0f;
-  char *end = NULL;
-  float out = strtof(value, &end);
-  return end && *end == '\0' ? out : 0.0f;
+  float value = 0.0f;
+  config_setting_get_value(key, config_parse_float_value, &value);
+  return value;
 }
 
 static char *settings_config_get(const char *key) {
-  settings_config_init();
-  const char *value = settings_config_find(key);
-  return value ? strdup(value) : NULL;
+  return config_setting_get(key);
 }
 
 static bool settings_config_set(const char *key, const char *value) {
-  if (!key || !key[0] || !value)
+  if (!config_setting_set(key, value))
     return false;
-  settings_config_init();
-  if (!settings_config_update_value(key, value)) {
-    SettingsConfigEntry *out = arraddnptr(settings_config_entries, 1);
-    out->key = strdup(key);
-    out->value = strdup(value);
-  }
   if (settings_config_notify)
     settings_config_notify(key, value);
-  if (!settings_config_path[0])
-    return true;
-  return config_section_set(settings_config_path, "settings", key, value);
+  return true;
 }
 
 static bool settings_config_remove(const char *key) {
-  if (!key || !key[0])
-    return false;
-  settings_config_init();
-  bool found = false;
-  for (size_t i = 0; i < settings_config_count; i++) {
-    if (strcmp(settings_config_entries[i].key, key) != 0)
-      continue;
-    free(settings_config_entries[i].key);
-    free(settings_config_entries[i].value);
-    arrdel(settings_config_entries, i);
-    found = true;
-    break;
-  }
-  if (!settings_config_path[0])
-    return found;
-  bool ok = config_section_clear(settings_config_path, "settings", key);
-  return found && ok;
+  return config_setting_remove(key);
 }
 
 static void settings_config_migrate(const char *from, const char *to) {
   if (!from || !to || !from[0] || !to[0] || strcmp(from, to) == 0)
     return;
-  settings_config_init();
-  if (settings_config_find(to))
+  if (config_setting_has(to))
     return;
-  const char *value = settings_config_find(from);
-  if (!value)
-    return;
-  char *copy = strdup(value);
+  char *copy = config_setting_get(from);
   if (!copy)
     return;
   settings_config_set(to, copy);

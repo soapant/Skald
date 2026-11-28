@@ -23,8 +23,10 @@
 #include "deps/log.h"
 #include "platform/platform.h"
 
-#define CONFIG_SECTION_HEADER_MAX 96
+#define CONFIG_SECTION_HEADER_MAX CONFIG_TOML_SECTION_MAX
 #define CONFIG_SECTION_NAME_MAX (CONFIG_SECTION_HEADER_MAX - 3)
+
+static bool config_ready(void);
 
 static ConfigTomlStatus section_fail(ConfigTomlError *err,
                                      ConfigTomlStatus status,
@@ -607,7 +609,12 @@ bool config_setting_get_value(const char *key,
     return false;
   config_lock();
   config_init_locked();
-  parse(config_setting_lookup_locked(key), out);
+  const char *stored = config_setting_lookup_locked(key);
+  if (!stored) {
+    config_unlock();
+    return false;
+  }
+  parse(stored, out);
   config_unlock();
   return true;
 }
@@ -622,10 +629,14 @@ bool config_setting_set(const char *key, const char *value) {
   }
   config_lock();
   config_init_locked();
+  bool saved =
+      config_ready() && config_section_set(config_path, "settings", key, value);
+  if (!saved) {
+    log_error("sk_config: failed to save setting '%s' to %s", key, config_path);
+    config_unlock();
+    return false;
+  }
   config_setting_entries_set(key, value);
-  if (!config_path[0] ||
-      !config_section_set(config_path, "settings", key, value))
-    log_error("sk_config: failed to save %s", config_path);
   config_unlock();
   return true;
 }
@@ -647,6 +658,25 @@ bool config_setting_has(const char *key) {
   bool out = key && config_setting_lookup_locked(key) != NULL;
   config_unlock();
   return out;
+}
+
+bool config_setting_remove(const char *key) {
+  if (!key || !key[0])
+    return false;
+  config_lock();
+  config_init_locked();
+  bool found = false;
+  for (size_t i = 0; i < config_setting_entry_count; i++) {
+    if (strcmp(config_setting_entries[i].key, key) == 0) {
+      arrdel(config_setting_entries, (int)i);
+      found = true;
+      break;
+    }
+  }
+  bool saved =
+      config_ready() && config_section_clear(config_path, "settings", key);
+  config_unlock();
+  return found && saved;
 }
 
 bool alias_register(const char *alias, const char *target) {
@@ -896,16 +926,17 @@ bool config_hotkey_set(const char *name, const char *hotkey, void (*cb)(void *),
     safe_copy(old_hotkey, sizeof(old_hotkey), hotkey_entries[i].hotkey);
 
   hotkey_entries_set(name, hotkey);
-  if (!config_ready() ||
-      !config_section_set(config_path, "hotkeys", name, hotkey))
-    log_error("sk_config: failed to save %s", config_path);
+  bool saved = config_ready() &&
+               config_section_set(config_path, "hotkeys", name, hotkey);
+  if (!saved)
+    log_error("sk_config: failed to save hotkey '%s' to %s", name, config_path);
 
   if (old_hotkey[0] && !string_equals_ci(old_hotkey, hotkey))
     unregister_hotkey_string(old_hotkey);
   if (cb)
     hotkey_bind_live(name, hotkey, cb, ud);
   config_unlock();
-  return true;
+  return saved;
 }
 
 char *config_hotkey_get(const char *name) {
@@ -932,11 +963,14 @@ bool config_hotkey_clear(const char *name) {
   char hk[CONFIG_HOTKEY_MAX];
   safe_copy(hk, sizeof(hk), hotkey_entries[i].hotkey);
   hotkey_entries_remove(i);
-  if (config_ready())
-    config_section_clear(config_path, "hotkeys", name);
+  bool saved =
+      config_ready() && config_section_clear(config_path, "hotkeys", name);
+  if (!saved)
+    log_error("sk_config: failed to clear hotkey '%s' in %s", name,
+              config_path);
   unregister_hotkey_string(hk);
   config_unlock();
-  return true;
+  return saved;
 }
 
 bool config_hotkey_bind(const char *name, void (*cb)(void *), void *ud) {
@@ -1140,22 +1174,28 @@ bool config_alias_set(const char *target, const char *alias) {
     if (cur)
       alias_remove(cur);
     int i = alias_index_of(target);
+    bool saved = true;
     if (i >= 0) {
       alias_entries_remove(i);
-      if (config_ready())
-        config_section_clear(config_path, "aliases", target);
+      saved = config_ready() &&
+              config_section_clear(config_path, "aliases", target);
     }
+    if (!saved)
+      log_error("sk_config: failed to clear alias '%s' in %s", target,
+                config_path);
     config_unlock();
-    return true;
+    return saved;
   }
 
   alias_entries_set(target, alias);
-  if (!config_ready() ||
-      !config_section_set(config_path, "aliases", target, alias))
-    log_error("sk_config: failed to save %s", config_path);
+  bool saved = config_ready() &&
+               config_section_set(config_path, "aliases", target, alias);
+  if (!saved)
+    log_error("sk_config: failed to save alias '%s' to %s", target,
+              config_path);
   alias_register(alias, target);
   config_unlock();
-  return true;
+  return saved;
 }
 
 char *config_alias_get(const char *target) {
@@ -1176,13 +1216,14 @@ bool config_quicklink_set(const char *name, const char *target) {
   config_init_locked();
   int i = quicklink_index_of(name);
   if (!target || !target[0]) {
+    bool saved = true;
     if (i >= 0) {
       quicklink_entries_remove(i);
-      if (config_ready())
-        config_section_clear(config_path, "quicklinks", name);
+      saved = config_ready() &&
+              config_section_clear(config_path, "quicklinks", name);
     }
     config_unlock();
-    return true;
+    return saved;
   }
   if (strlen(name) >= CONFIG_NAME_MAX ||
       strlen(target) >= CONFIG_QUICKLINK_TARGET_MAX) {
@@ -1190,11 +1231,13 @@ bool config_quicklink_set(const char *name, const char *target) {
     return false;
   }
   quicklink_entries_set(name, target);
-  if (!config_ready() ||
-      !config_section_set(config_path, "quicklinks", name, target))
-    log_error("sk_config: failed to save %s", config_path);
+  bool saved = config_ready() &&
+               config_section_set(config_path, "quicklinks", name, target);
+  if (!saved)
+    log_error("sk_config: failed to save quicklink '%s' to %s", name,
+              config_path);
   config_unlock();
-  return true;
+  return saved;
 }
 
 bool config_feature_shortcut_set(const char *name, const char *target) {
@@ -1204,13 +1247,14 @@ bool config_feature_shortcut_set(const char *name, const char *target) {
   config_init_locked();
   int i = feature_shortcut_index_of(name);
   if (!target || !target[0]) {
+    bool saved = true;
     if (i >= 0) {
       feature_shortcut_entries_remove(i);
-      if (config_ready())
-        config_section_clear(config_path, "feature_shortcuts", name);
+      saved = config_ready() &&
+              config_section_clear(config_path, "feature_shortcuts", name);
     }
     config_unlock();
-    return true;
+    return saved;
   }
   if (strlen(name) >= CONFIG_NAME_MAX ||
       strlen(target) >= CONFIG_FEATURE_SHORTCUT_TARGET_MAX) {
@@ -1225,11 +1269,14 @@ bool config_feature_shortcut_set(const char *name, const char *target) {
     return false;
   }
   feature_shortcut_entries_set(name, target);
-  if (!config_ready() ||
-      !config_section_set(config_path, "feature_shortcuts", name, target))
-    log_error("sk_config: failed to save %s", config_path);
+  bool saved =
+      config_ready() &&
+      config_section_set(config_path, "feature_shortcuts", name, target);
+  if (!saved)
+    log_error("sk_config: failed to save feature shortcut '%s' to %s", name,
+              config_path);
   config_unlock();
-  return true;
+  return saved;
 }
 
 bool feature_shortcut_run(const char *name) {
@@ -1253,11 +1300,15 @@ bool feature_shortcut_run(const char *name) {
   const CcEntrySpec *target = NULL;
   for (int i = 0; i < cc_registry_count(); i++) {
     const CcEntrySpec *entry = cc_registry_at(i);
-    if (entry && entry->display_name &&
-        strcmp(entry->display_name, feature) == 0) {
+    if (!entry)
+      continue;
+    if (entry->internal_name && strcmp(entry->internal_name, feature) == 0) {
       target = entry;
       break;
     }
+    if (!target && entry->display_name &&
+        strcmp(entry->display_name, feature) == 0)
+      target = entry;
   }
   if (!target || !target->on_action) {
     log_error("feature_shortcut: feature '%s' not found or has no action",
@@ -1267,8 +1318,9 @@ bool feature_shortcut_run(const char *name) {
   log_info("feature_shortcut: found feature '%s'", feature);
 
   SkaldContext *ctx = SkaldContext_Get();
-  PromptCallbacks base_callbacks =
-      ctx ? ctx->window.prompt_callbacks : (PromptCallbacks){0};
+  PromptCallbacks base_callbacks = {0};
+  if (ctx && ctx->window.prompt_callbacks)
+    base_callbacks = *ctx->window.prompt_callbacks;
 
   HeadlessDispatch *headless = ctx ? &ctx->window.headless : NULL;
   if (!headless)
@@ -1312,7 +1364,8 @@ bool feature_shortcut_run(const char *name) {
   live->window_title = (char *)spec.title;
   safe_copy(live->eb->filter, sizeof(live->eb->filter), filter);
   live->eb->cursor = strlen(live->eb->filter);
-  ctx->window.prompt_callbacks = cb;
+  if (live->callbacks)
+    ctx->window.prompt_callbacks = live->callbacks;
   ctx->window.current_feature = (char *)feature;
   ctx->window.title = spec.title;
   headless->state = live;

@@ -6,14 +6,11 @@
 #include <stdatomic.h>
 
 #include "deps/log.h"
+#include "config.h"
 #include "config_values.h"
 #include "core/types/color.h"
 #include "core/config_toml.h"
 #include "deps/stb_ds.h"
-
-#ifndef CONFIG_SRC
-#define CONFIG_SRC "config/config.toml"
-#endif
 
 static const struct {
   const char *name;
@@ -89,7 +86,7 @@ static bool theme_pin_visit(const ConfigTomlEntry *e, void *user) {
     return true;
   bool known = false;
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++)
-    if (strcmp(theme_slots[i].name + 6, e->key) == 0) {
+    if (strcmp(config_color_short(theme_slots[i].name), e->key) == 0) {
       known = true;
       break;
     }
@@ -102,9 +99,10 @@ static bool theme_pin_visit(const ConfigTomlEntry *e, void *user) {
   if (!config_toml_color_ref(body, &v))
     return true;
   char name[64];
-  const int prefix_len = (int)(sizeof("COLOR_") - 1);
+  const int prefix_len = (int)(sizeof(CONFIG_COLOR_PREFIX) - 1);
   const int key_cap = (int)sizeof(name) - prefix_len - 1;
-  int written = snprintf(name, sizeof(name), "COLOR_%.*s", key_cap, e->key);
+  int written =
+      snprintf(name, sizeof(name), CONFIG_COLOR_PREFIX "%.*s", key_cap, e->key);
   if (written < 0 || written >= (int)sizeof(name))
     return true;
   pin_add(name, v);
@@ -140,7 +138,8 @@ void theme_apply(void) {
     log_warn("unknown Theme \"%s\", keeping current colors", theme_name);
     return;
   }
-  theme_pin_scan_file(CONFIG_SRC);
+  if (!theme_pin_scan_file(CONFIG_SRC))
+    log_warn("could not read theme pins from %s", CONFIG_SRC);
   for (size_t i = 0; i < THEME_SLOT_COUNT; i++) {
     ColorRef theme_color =
         *(ColorRef *)((const char *)found + theme_slots[i].off);

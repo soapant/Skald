@@ -13,8 +13,10 @@ typedef enum {
   CONFIG_TOML_STRING,
 } ConfigTomlValueType;
 
+#define CONFIG_TOML_SECTION_MAX 96
+
 typedef struct {
-  char section[32];
+  char section[CONFIG_TOML_SECTION_MAX];
   char key[384];
   ConfigTomlValueType type;
   char raw[1024];
@@ -35,6 +37,9 @@ typedef struct {
 } ConfigTomlError;
 
 void config_toml_error_clear(ConfigTomlError *err);
+ConfigTomlStatus config_toml_error_set(ConfigTomlError *err,
+                                       ConfigTomlStatus status, int line,
+                                       const char *message);
 const char *config_toml_status_name(ConfigTomlStatus status);
 
 typedef bool (*ConfigTomlVisitFn)(const ConfigTomlEntry *entry, void *user);

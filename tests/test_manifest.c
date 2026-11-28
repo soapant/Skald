@@ -259,6 +259,24 @@ TEST(parse_file_missing_returns_false_and_invalid) {
   ASSERT_EQ_STR(m.name, "x");
 }
 
+TEST(parse_file_error_populates_config_toml_error) {
+  const char *path = "build/skald_test_manifest_error.toml";
+  FILE *f = fopen(path, "wb");
+  ASSERT_TRUE(f != NULL);
+  if (!f)
+    return;
+  fputs("name = \"x\"\n[provides\n", f);
+  fclose(f);
+
+  FeatureManifest m;
+  ConfigTomlError err;
+  ConfigTomlStatus st = manifest_parse_file_ex(path, "x", &m, &err);
+  ASSERT_EQ_INT((int)st, (int)CONFIG_TOML_ERR_PARSE);
+  ASSERT_EQ_INT(err.line, 2);
+  ASSERT_TRUE(err.message[0] != '\0');
+  file_remove_path(path);
+}
+
 TEST(parse_file_roundtrip) {
   const char *path = "build/skald_test_manifest_roundtrip.toml";
   FILE *f = fopen(path, "wb");
@@ -313,6 +331,7 @@ int main(void) {
   RUN(parse_null_data_returns_false);
   RUN(parse_full_baseline_file);
   RUN(parse_file_missing_returns_false_and_invalid);
+  RUN(parse_file_error_populates_config_toml_error);
   RUN(parse_file_roundtrip);
   RUN(parse_comment_inside_depends_would_strip_hash);
   return TEST_SUMMARY() != 0 ? 1 : 0;

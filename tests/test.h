@@ -69,7 +69,7 @@ static void (*skald_test_global_teardown)(void);
   do {                                                                         \
     const char *_a = (a);                                                      \
     const char *_b = (b);                                                      \
-    if (_a && _b && strcmp(_a, _b) == 0) {                                     \
+    if ((_a == NULL && _b == NULL) || (_a && _b && strcmp(_a, _b) == 0)) {                                     \
       skald_test_passes++;                                                     \
     } else {                                                                   \
       skald_test_fails++;                                                      \

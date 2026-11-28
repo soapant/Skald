@@ -97,7 +97,12 @@ void http_get_async(const char *url, PlatformHttpCallback cb, void *userdata) {
     return;
   }
   job->owner = owner_resolve_for_func_alloc((void *)cb);
-  thread_registry_add(job, job->owner ? job->owner : "");
+  if (!thread_registry_add(job, job->owner ? job->owner : "")) {
+    owner_strfree(&job->owner);
+    free(job->url);
+    free(job);
+    return;
+  }
   if (!Platform_HttpThreadStart(http_async_worker, job)) {
     thread_registry_finish(job);
     owner_strfree(&job->owner);

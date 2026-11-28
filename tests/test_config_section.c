@@ -219,6 +219,18 @@ TEST(set_long_section_name_without_trailing_newline) {
   file_remove_path(PATH);
 }
 
+TEST(long_section_roundtrips_through_parser) {
+  char section[93];
+  memset(section, 'a', sizeof(section) - 1);
+  section[sizeof(section) - 1] = '\0';
+  seed("[short]\nK = \"v\"\n");
+  ASSERT_TRUE(config_section_set(PATH, section, "Key", "value"));
+  ConfigTomlStatus st =
+      config_toml_parse(PATH, (ConfigTomlVisitFn)test_noop_visit, NULL);
+  ASSERT_EQ_INT((int)st, (int)CONFIG_TOML_OK);
+  file_remove_path(PATH);
+}
+
 TEST(set_overlong_section_name_is_rejected) {
   char section[128];
   memset(section, 'b', sizeof(section) - 1);
@@ -263,6 +275,7 @@ int main(void) {
   RUN(clear_missing_file_is_noop_true);
   RUN(set_then_parse_with_config_toml);
   RUN(set_long_section_name_without_trailing_newline);
+  RUN(long_section_roundtrips_through_parser);
   RUN(set_overlong_section_name_is_rejected);
   RUN(set_preserves_last_line_without_newline);
   return TEST_SUMMARY() != 0 ? 1 : 0;

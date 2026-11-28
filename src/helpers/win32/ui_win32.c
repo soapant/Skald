@@ -107,7 +107,7 @@ void UI_SetText(const char *text) {
   }
   safe_copy(t.text, t.capacity, text);
   UI_SetCursorPosition((int)strlen(t.text));
-  if (SkaldContext_Get()->window.prompt_callbacks.render == NULL) {
+  if (SkaldContext_Get()->window.prompt_callbacks->render == NULL) {
     UI_RequestPopupRepaint();
     return;
   }
@@ -240,7 +240,7 @@ ListBox *UI_GetPopupListBox(void) {
 void UI_SyncEditCursor(int pos) {
   UI_SetCursorPosition(pos);
   SkaldContext *c = SkaldContext_Get();
-  if (c && c->window.prompt_callbacks.render != NULL) {
+  if (c && c->window.prompt_callbacks->render != NULL) {
     HWND hPopup = WH_TO_HWND(c->window.hPopupWnd);
     if (hPopup && IsWindow(hPopup))
       UI_RequestPopupRepaint();

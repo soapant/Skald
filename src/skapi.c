@@ -2271,7 +2271,11 @@ void sk_run_after_time(double seconds, void (*callback)(void)) {
   payload->seconds = seconds;
   payload->callback = callback;
   payload->owner = owner_resolve_for_func_alloc((void *)callback);
-  thread_registry_add(payload, payload->owner ? payload->owner : "");
+  if (!thread_registry_add(payload, payload->owner ? payload->owner : "")) {
+    owner_strfree(&payload->owner);
+    free(payload);
+    return;
+  }
   if (!sk_run_after_time_arm_platform(payload)) {
     thread_registry_finish(payload);
     owner_strfree(&payload->owner);
