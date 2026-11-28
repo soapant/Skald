@@ -8,8 +8,6 @@
 
 bool win32_is_main_thread(void);
 WindowHandle win32_tray_window(void);
-bool win32_message_popup_any_open(void);
-
 void win32_popup_request_repaint(HWND hPopup);
 void win32_set_prev_fg(HWND h);
 

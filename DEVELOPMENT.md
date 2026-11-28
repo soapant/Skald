@@ -3,13 +3,13 @@
 **Note:** The `skapi.h` API is currently unstable and changing rapidly. If you write a feature today, be prepared to update it as the API matures.
 
 ## Cross-Platform by Default
-Every function in `skapi.h` is designed to be cross-platform. It currently works on **Linux** and **Windows**
+Every function in `skapi.h` is designed to be cross-platform. It works on **Linux** and **Windows**, with a macOS implementation that is still a work in progress
 
 It is highly recommended that you only use the API for basic system control. This way, you do not need to use `#ifdef` blocks in your feature code to handle different operating systems.
 
 ## Where `Platform_*` Code Lives
 
-`skapi_x11.c` and `skapi_win32.c` are **only** for `sk_*_platform` functions — the platform implementations of the public `skapi.h` API General `Platform_*` helpers live in `platform/` — never in `skapi_x11.c`/ `skapi_win32.c`.
+`skapi_x11.c`, `skapi_win32.c` and `skapi_macos.c` are **only** for `sk_*_platform` functions — the platform implementations of the public `skapi.h` API General `Platform_*` helpers live in `platform/` — never in those files.
 
 Along with that, the platform files must not `#include "core/skapi.h"`. The `sk_*_platform` hook declarations live in `core/types/skapi_types.h`. They use `platform.h` and the `core/types/*` headers instead. If removing an include breaks the build, treat it as a bug: the platform layer is not supposed to depend on the public feature API.
 

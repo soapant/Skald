@@ -49,7 +49,11 @@ jobs:
           test -f release/config/config.toml
           test -f release/build/sdk/core/skapi.h
           test -f release/build/features/control_center.so
+          test -f release/build/features/settings.so
+          test -f release/build/features/clipboard_history.so
           test -f release/features/control_center/manifest.toml
+          test -f release/features/settings/manifest.toml
+          test -f release/features/clipboard_history/manifest.toml
           test -f release/resources/Skald.ico
 
   linux-asan:

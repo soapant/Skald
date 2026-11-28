@@ -25,8 +25,9 @@ goal. It's early, so expect rough edges.
 > **Skald is an engine, not a finished setup.** It provides the pieces (global
 > hotkeys, key remapping, clipboard access, overlays, widget slots, a feature
 > loader), but a fresh install ships with **no widgets and no remaps**. You add
-> what you want as features. Out of the box you get the control center:
-> launcher, calculator, hotkey and alias registration.
+> what you want as features. Out of the box you get the control center
+> (launcher, calculator, hotkey and alias registration), clipboard history and
+> window management.
 > This is temporary: it's a result of early development and will be improved in the future.
 
 > **Looking for example features?** See [skald-features](https://github.com/soapant/skald-features),
@@ -35,9 +36,9 @@ goal. It's early, so expect rough edges.
 
 ## Why Skald?
 
-- **Modular by Design:** The core is tiny. Everything else is a feature: a compiled C module.
+- **Modular by Design:** The core is tiny. Everything else is a feature: a compiled C module or a Lua script.
 - **Window Manager Native:** Deep integration with X11, Wayland (Sway/Hyprland), and Windows.
-- **No Runtime Dependencies:** A release runs without installing anything. (For now, writing or installing features needs a C compiler.)
+- **No Runtime Dependencies:** A release runs without installing anything. (For now, building C features needs a C compiler.)
 
 > ⚠️ **Early Development Warning:**
 > Skald is evolving rapidly. The public API (`skapi.h`) is currently **unstable** and changes frequently. If you write your own features right now, be prepared to update your code often as the API matures. After the stable release, Skald will maintain backwards compatibility.
@@ -138,7 +139,7 @@ Skald is in active, early development. The following bugs are known and will be 
 ## 🗺️ Future Plans
 
 - **macOS Support:** Port the platform layer to fully support macOS.
-- **Polyglot Features:** Allow features to be written in languages other than C (e.g., Lua, C++, or Rust).
+- **Polyglot Features:** Allow features to be written in languages other than C or Lua (e.g., C++ or Rust).
 - **Feature Registry:** A centralized website where users can easily find and download community-made features (like a "Skald Extensions" store), alongside a built-in viewer as a feature inside Skald.
 
 ## License

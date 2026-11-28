@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#define _XOPEN_SOURCE 500
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -15,8 +17,6 @@
 #include "helpers/helpers_misc.h"
 #include "helpers/x11/clipboard_backend_x11.h"
 #include "core/window_manager.h"
-#define _GNU_SOURCE
-#define _XOPEN_SOURCE 500
 
 #if __has_include(<X11/extensions/XTest.h>)
 

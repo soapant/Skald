@@ -13,6 +13,7 @@
 #include "core/types/skapi_types.h"
 #include "config_values.h"
 #include "helpers/win32/win32_state.h"
+#include "helpers/win32/raw_message_popup_win32.h"
 #include "deps/log.h"
 #include "platform/platform.h"
 #include <mmdeviceapi.h>

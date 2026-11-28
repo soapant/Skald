@@ -925,7 +925,7 @@ void x11_clear_suppress(void) {
   }
 }
 
-static long x11_now_ms(void) {
+static long x11_suppress_now_ms(void) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return tv.tv_sec * 1000L + tv.tv_usec / 1000L;
@@ -936,7 +936,7 @@ bool x11_is_suppressed(int linux_code) {
     return false;
   if (!x11_suppress_release[linux_code])
     return false;
-  long now = x11_now_ms();
+  long now = x11_suppress_now_ms();
   if (now - x11_suppress_ms[linux_code] > 5000) {
     x11_suppress_release[linux_code] = false;
     x11_suppress_ms[linux_code] = 0;
@@ -949,7 +949,7 @@ void x11_set_suppress(int linux_code, bool v) {
   if (linux_code < 0 || linux_code > KEY_MAX)
     return;
   x11_suppress_release[linux_code] = v;
-  x11_suppress_ms[linux_code] = v ? x11_now_ms() : 0;
+  x11_suppress_ms[linux_code] = v ? x11_suppress_now_ms() : 0;
 }
 
 static void x11_forward_evdev(struct input_event *ev, bool grabbed) {
