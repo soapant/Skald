@@ -13,6 +13,19 @@ pthread_mutex_t g_msg_lock = PTHREAD_MUTEX_INITIALIZER;
 MsgSlot g_msg_slots[MSG_MAX_ACTIVE];
 int g_msg_slot_count = 0;
 
+typedef struct {
+  Window drawing_win;
+  Window pending_win;
+  bool pending;
+  char *pending_text;
+  unsigned long pending_color;
+  int pending_w;
+  int pending_h;
+  bool pending_no_bg;
+} MsgDrawState;
+
+static __thread MsgDrawState g_msg_draw;
+
 static void x11_msg_fps_frame(void *ud) {
   Window win = (Window)(uintptr_t)ud;
   pthread_mutex_lock(&g_msg_lock);
@@ -265,6 +278,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
   if (!XGetWindowAttributes(dpy, win, &attrs)) {
     return;
   }
+  char *owned_pending = NULL;
 
   if (!no_bg) {
     x11_draw_background(dpy, win, w, h);
@@ -279,7 +293,23 @@ static void x11_display_message_draw(Display *dpy, Window win,
 
   if (render != NULL) {
     x11_set_draw_context(dpy, xd, attrs.visual, attrs.colormap);
+    g_msg_draw.drawing_win = win;
     render(render_data);
+    g_msg_draw.drawing_win = None;
+    x11_set_draw_context(NULL, NULL, NULL, 0);
+    if (g_msg_draw.pending && g_msg_draw.pending_win == win) {
+      owned_pending = g_msg_draw.pending_text;
+      g_msg_draw.pending_text = NULL;
+      g_msg_draw.pending = false;
+      g_msg_draw.pending_win = None;
+      if (owned_pending) {
+        message = owned_pending;
+        color = g_msg_draw.pending_color;
+        w = g_msg_draw.pending_w;
+        h = g_msg_draw.pending_h;
+        no_bg = g_msg_draw.pending_no_bg;
+      }
+    }
   }
   FontHandle font = x11_create_font_on_display(dpy, FontSize, UsedFont);
   XftFont *xf = FH_TO_XFT(font);
@@ -311,6 +341,7 @@ static void x11_display_message_draw(Display *dpy, Window win,
   x11_set_draw_context(NULL, NULL, NULL, 0);
   XftDrawDestroy(xd);
   x11_draw_window_border(&(X11DrawWindowBorder){.f_dpy = dpy, .f_drw = win, .f_vis = NULL, .f_w = w, .f_h = h, .f_no_bg = no_bg});
+  free(owned_pending);
   XFlush(dpy);
 }
 
@@ -372,6 +403,8 @@ void x11_msg_present(X11MsgPresent *argspec) {
   slot->fps = argspec->f_fps;
   slot->color = (unsigned long)argspec->f_color;
   slot->no_bg = argspec->f_no_bg;
+  slot->rounded = argspec->f_rounded ? argspec->f_rounded : RoundedCorners;
+  slot->radius = argspec->f_radius > 0 ? argspec->f_radius : CornerRadius;
   slot->message = strdup(argspec->f_message ? argspec->f_message : "");
   slot->render = argspec->f_render;
   slot->render_data = argspec->f_render_data;
@@ -401,6 +434,12 @@ void x11_msg_present(X11MsgPresent *argspec) {
 bool x11_msg_set_text(Display *dpy, const char *name, const char *text) {
   if (!dpy || !name || !name[0])
     return false;
+  if (g_msg_draw.pending) {
+    free(g_msg_draw.pending_text);
+    g_msg_draw.pending_text = NULL;
+    g_msg_draw.pending = false;
+    g_msg_draw.pending_win = None;
+  }
   char *copy = strdup(text ? text : "");
   if (!copy)
     return false;
@@ -417,20 +456,29 @@ bool x11_msg_set_text(Display *dpy, const char *name, const char *text) {
     return false;
   }
   MsgSlot *slot = &g_msg_slots[idx];
+  Window win = slot->win;
+  Display *use_dpy = dpy;
+  bool in_draw = g_msg_draw.drawing_win == win;
+  if (in_draw) {
+    Display *rdpy = (Display *)render_thread_display();
+    if (rdpy)
+      use_dpy = rdpy;
+  }
   int w = 0, h = 0;
-  x11_msg_measure(&(X11MsgMeasure){.f_dpy = dpy, .f_message = copy,
-                                         .f_max_width = MSG_AUTO_WRAP_MAX_W,
-                                         .f_max_height = MSG_AUTO_WRAP_MAX_H,
-                                         .f_out_w = &w, .f_out_h = &h});
+  x11_msg_measure(&(X11MsgMeasure){.f_dpy = use_dpy, .f_message = copy,
+                                          .f_max_width = MSG_AUTO_WRAP_MAX_W,
+                                          .f_max_height = MSG_AUTO_WRAP_MAX_H,
+                                          .f_out_w = &w, .f_out_h = &h});
   if (w <= 0)
     w = 32;
   if (h <= 0)
     h = 24;
   int nx = slot->x + slot->w / 2 - w / 2;
   int ny = slot->y + slot->h / 2 - h / 2;
-  Window win = slot->win;
   unsigned long color = slot->color;
   bool no_bg = slot->no_bg;
+  bool rounded = slot->rounded ? slot->rounded : RoundedCorners;
+  int radius = slot->radius > 0 ? slot->radius : CornerRadius;
   void (*render)(void *ud) = slot->render;
   void *render_data = slot->render_data;
   free(slot->message);
@@ -440,10 +488,25 @@ bool x11_msg_set_text(Display *dpy, const char *name, const char *text) {
   slot->x = nx;
   slot->y = ny;
   pthread_mutex_unlock(&g_msg_lock);
-  XMoveResizeWindow(dpy, win, nx, ny, (unsigned int)w, (unsigned int)h);
-  x11_display_message_draw(dpy, win, copy, color, w, h, no_bg, render,
-                           render_data);
-  XFlush(dpy);
+  XMoveResizeWindow(use_dpy, win, nx, ny, (unsigned int)w, (unsigned int)h);
+  x11_apply_shape(&(X11ApplyShape){.f_dpy = use_dpy, .f_win = win, .f_w = w,
+                                   .f_h = h, .f_rounded = rounded,
+                                   .f_radius = radius});
+  if (in_draw) {
+    g_msg_draw.pending_text = strdup(copy);
+    if (g_msg_draw.pending_text) {
+      g_msg_draw.pending_win = win;
+      g_msg_draw.pending_color = color;
+      g_msg_draw.pending_w = w;
+      g_msg_draw.pending_h = h;
+      g_msg_draw.pending_no_bg = no_bg;
+      g_msg_draw.pending = true;
+    }
+  } else {
+    x11_display_message_draw(use_dpy, win, copy, color, w, h, no_bg, render,
+                             render_data);
+  }
+  XFlush(use_dpy);
   return true;
 }
 

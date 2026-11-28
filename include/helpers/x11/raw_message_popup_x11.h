@@ -47,6 +47,8 @@ typedef struct {
   int last_frame_ms;
   unsigned long color;
   bool no_bg;
+  bool rounded;
+  int radius;
   char *message;
   void (*render)(void *ud);
   void *render_data;
