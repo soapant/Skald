@@ -105,6 +105,58 @@ bool Platform_MessageActive(const char *name) {
   return false;
 }
 
+bool Platform_MessageSetText(const char *name, const char *text) {
+  if (!name || !name[0])
+    return false;
+  HWND hwnd = NULL;
+  for (int i = 0; i < g_msg_slot_count; i++) {
+    HWND h = g_msg_slots[i];
+    FadeWindowData *fd = (FadeWindowData *)GetWindowLongPtrA(h, GWLP_USERDATA);
+    if (fd && strcmp(fd->name, name) == 0) {
+      hwnd = h;
+      break;
+    }
+  }
+  if (!hwnd || !IsWindow(hwnd))
+    return false;
+  FadeWindowData *fd = (FadeWindowData *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+  if (!fd)
+    return false;
+  char *copy = _strdup(text ? text : "");
+  if (!copy)
+    return false;
+  free((void *)fd->message);
+  fd->message = copy;
+
+  FontHandle font = Platform_CreateFont(FontSize, UsedFont);
+  int tw = 0, th = 0;
+  Platform_GetTextExtents(&(FnPlatformGetTextExtentsSpec){
+      .f_font = font, .f_text = copy, .f_max_width = MSG_AUTO_WRAP_MAX_W - 30,
+      .f_outWidth = &tw, .f_outHeight = &th});
+  Platform_DestroyFont(font);
+  int w = tw + 30, h = th + 30;
+  if (w > MSG_AUTO_WRAP_MAX_W)
+    w = MSG_AUTO_WRAP_MAX_W;
+  if (h > MSG_AUTO_WRAP_MAX_H)
+    h = MSG_AUTO_WRAP_MAX_H;
+  if (w < 32)
+    w = 32;
+  if (h < 24)
+    h = 24;
+
+  RECT r;
+  GetWindowRect(hwnd, &r);
+  int cx = (r.left + r.right) / 2;
+  int cy = (r.top + r.bottom) / 2;
+  SetWindowPos(hwnd, HWND_TOPMOST, cx - w / 2, cy - h / 2, w, h,
+               SWP_NOACTIVATE | SWP_NOZORDER);
+  win32_apply_rounded(&(FnWin32ApplyRoundedSpec){
+      .f_hwnd = hwnd, .f_w = w, .f_h = h, .f_rounded = s_msg_rounded,
+      .f_radius = s_msg_radius});
+  InvalidateRect(hwnd, NULL, TRUE);
+  return true;
+}
+
 void Platform_HoverMessageRelease(const char *key) {
   win32_msg_hover_release(key);
 }

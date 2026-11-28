@@ -194,6 +194,7 @@ long long Platform_GetWallClockMs(void);
 void Platform_DismissDisplayMessage(void);
 bool Platform_DismissMessage(const char *name);
 bool Platform_MessageActive(const char *name);
+bool Platform_MessageSetText(const char *name, const char *text);
 void Platform_DismissIndefiniteMessage(void);
 
 void Platform_DisplayMessage(DisplayMessageSpec spec);

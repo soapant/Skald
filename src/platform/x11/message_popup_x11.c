@@ -145,6 +145,13 @@ bool Platform_MessageActive(const char *name) {
   return found;
 }
 
+bool Platform_MessageSetText(const char *name, const char *text) {
+  Display *dpy = x11_get_display();
+  if (!dpy)
+    return false;
+  return x11_msg_set_text(dpy, name, text);
+}
+
 void Platform_DismissIndefiniteMessage(void) {
   Display *dpy = x11_get_display();
   if (!dpy) {

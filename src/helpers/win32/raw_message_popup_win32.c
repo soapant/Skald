@@ -148,7 +148,7 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
       win32_set_draw_context(NULL);
     }
 
-    if (data) {
+    if (data && IsWindow(hwnd)) {
       SetBkMode(dc, TRANSPARENT);
       SetTextColor(dc, data->color ? data->color : COLOR_TEXT);
 

@@ -860,6 +860,9 @@ void ski_message(const SkMessageSpec *spec) {
     return;
   if (!spec)
     return;
+  if (spec->name && spec->name[0] && sk_message_active(spec->name) &&
+      Platform_MessageSetText(spec->name, spec->message))
+    return;
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
   int mw = spec->mw > 0 ? spec->mw : 0;

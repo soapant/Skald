@@ -398,6 +398,55 @@ void x11_msg_present(FnX11MsgPresentSpec *argspec) {
   }
 }
 
+bool x11_msg_set_text(Display *dpy, const char *name, const char *text) {
+  if (!dpy || !name || !name[0])
+    return false;
+  char *copy = strdup(text ? text : "");
+  if (!copy)
+    return false;
+  pthread_mutex_lock(&g_msg_lock);
+  int idx = -1;
+  for (int i = 0; i < g_msg_slot_count; i++)
+    if (strcmp(g_msg_slots[i].name, name) == 0) {
+      idx = i;
+      break;
+    }
+  if (idx < 0) {
+    pthread_mutex_unlock(&g_msg_lock);
+    free(copy);
+    return false;
+  }
+  MsgSlot *slot = &g_msg_slots[idx];
+  int w = 0, h = 0;
+  x11_msg_measure(&(FnX11MsgMeasureSpec){.f_dpy = dpy, .f_message = copy,
+                                         .f_max_width = MSG_AUTO_WRAP_MAX_W,
+                                         .f_max_height = MSG_AUTO_WRAP_MAX_H,
+                                         .f_out_w = &w, .f_out_h = &h});
+  if (w <= 0)
+    w = 32;
+  if (h <= 0)
+    h = 24;
+  int nx = slot->x + slot->w / 2 - w / 2;
+  int ny = slot->y + slot->h / 2 - h / 2;
+  Window win = slot->win;
+  unsigned long color = slot->color;
+  bool no_bg = slot->no_bg;
+  void (*render)(void *ud) = slot->render;
+  void *render_data = slot->render_data;
+  free(slot->message);
+  slot->message = copy;
+  slot->w = w;
+  slot->h = h;
+  slot->x = nx;
+  slot->y = ny;
+  pthread_mutex_unlock(&g_msg_lock);
+  XMoveResizeWindow(dpy, win, nx, ny, (unsigned int)w, (unsigned int)h);
+  x11_display_message_draw(dpy, win, copy, color, w, h, no_bg, render,
+                           render_data);
+  XFlush(dpy);
+  return true;
+}
+
 void x11_msg_hover_present(FnX11MsgHoverPresentSpec *argspec) {
 
   if (!argspec->f_dpy || !argspec->f_key || !argspec->f_key[0] || !argspec->f_message || !argspec->f_message[0]) {

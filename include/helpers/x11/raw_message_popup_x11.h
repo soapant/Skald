@@ -126,5 +126,6 @@ typedef struct {
 } FnX11MsgMeasureSpec;
 
 void x11_msg_measure(FnX11MsgMeasureSpec *argspec);
+bool x11_msg_set_text(Display *dpy, const char *name, const char *text);
 
 #endif
