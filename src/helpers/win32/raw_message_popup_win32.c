@@ -106,39 +106,55 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
   case WM_PAINT: {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
-    log_info("MSG WM_PAINT hwnd=%p data=%p render=%p no_bg=%d", (void *)hwnd,
-             (void *)data, (void *)(data ? data->render : NULL),
-             (data && data->no_bg) ? 1 : 0);
 
     RECT rect;
     GetClientRect(hwnd, &rect);
+    int width = rect.right - rect.left;
+    int height = rect.bottom - rect.top;
+
+    HDC memdc = NULL;
+    HBITMAP membmp = NULL;
+    HBITMAP oldbmp = NULL;
+    if (width > 0 && height > 0) {
+      memdc = CreateCompatibleDC(hdc);
+      if (memdc) {
+        membmp = CreateCompatibleBitmap(hdc, width, height);
+        if (membmp)
+          oldbmp = (HBITMAP)SelectObject(memdc, membmp);
+        else {
+          DeleteDC(memdc);
+          memdc = NULL;
+        }
+      }
+    }
+    HDC dc = memdc ? memdc : hdc;
 
     if (data && data->no_bg) {
-      win32_fill_rounded_rect(hdc, &rect, RGB(0, 0, 0), 0);
+      win32_fill_rounded_rect(dc, &rect, RGB(0, 0, 0), 0);
     } else if (win32_bg_image_enabled() &&
-               win32_draw_bg_image_slice(&(FnWin32DrawBgImageSliceSpec){.f_hdc = hdc, .f_rc = &rect, .f_containerW = rect.right, .f_containerH = rect.bottom, .f_originX = 0, .f_originY = 0})) {
+               win32_draw_bg_image_slice(&(FnWin32DrawBgImageSliceSpec){.f_hdc = dc, .f_rc = &rect, .f_containerW = rect.right, .f_containerH = rect.bottom, .f_originX = 0, .f_originY = 0})) {
     } else {
       HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG);
-      FillRect(hdc, &rect, hBackgroundBrush);
+      FillRect(dc, &rect, hBackgroundBrush);
       DeleteObject(hBackgroundBrush);
     }
     if (!(data && data->no_bg)) {
-      win32_draw_window_border(&(FnWin32DrawWindowBorderSpec){.f_hdc = hdc, .f_ox = 0, .f_oy = 0, .f_ww = rect.right, .f_wh = rect.bottom, .f_region = NULL});
+      win32_draw_window_border(&(FnWin32DrawWindowBorderSpec){.f_hdc = dc, .f_ox = 0, .f_oy = 0, .f_ww = rect.right, .f_wh = rect.bottom, .f_region = NULL});
     }
 
     if (data && data->render) {
-      win32_set_draw_context(hdc);
+      win32_set_draw_context(dc);
       data->render(data->render_data);
       win32_set_draw_context(NULL);
     }
 
     if (data) {
-      SetBkMode(hdc, TRANSPARENT);
-      SetTextColor(hdc, data->color ? data->color : COLOR_TEXT);
+      SetBkMode(dc, TRANSPARENT);
+      SetTextColor(dc, data->color ? data->color : COLOR_TEXT);
 
       HFONT hOldFont = NULL;
       if (FH_TO_HFONT(data->hFont)) {
-        hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(data->hFont));
+        hOldFont = (HFONT)SelectObject(dc, FH_TO_HFONT(data->hFont));
       }
 
       if (data->message) {
@@ -152,7 +168,7 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
         wchar_t *wide = msg_widen(data->message, &wlen);
         if (wide) {
           RECT calcRect = textRect;
-          DrawTextW(hdc, wide, wlen, &calcRect,
+          DrawTextW(dc, wide, wlen, &calcRect,
                     DT_CENTER | DT_WORDBREAK | DT_CALCRECT);
 
           int textHeight = calcRect.bottom - calcRect.top;
@@ -162,13 +178,21 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
           if (textRect.bottom > rect.bottom - MSG_BOTTOM_CLIP)
             textRect.bottom = rect.bottom - MSG_BOTTOM_CLIP;
 
-          DrawTextW(hdc, wide, wlen, &textRect, DT_CENTER | DT_WORDBREAK);
+          DrawTextW(dc, wide, wlen, &textRect, DT_CENTER | DT_WORDBREAK);
           free(wide);
         }
       }
 
       if (hOldFont)
-        SelectObject(hdc, hOldFont);
+        SelectObject(dc, hOldFont);
+    }
+
+    if (memdc) {
+      BitBlt(hdc, 0, 0, width, height, memdc, 0, 0, SRCCOPY);
+      if (oldbmp)
+        SelectObject(memdc, oldbmp);
+      DeleteObject(membmp);
+      DeleteDC(memdc);
     }
     EndPaint(hwnd, &ps);
     return 0;
