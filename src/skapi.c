@@ -43,11 +43,9 @@
 #include "platform/lib.h"
 #include "core/clipboard_history.h"
 #include "core/skapi.h"
-#include "core/listbox_hover.h"
 
 #include "core/config_section.h"
 #include "core/listbox_hover.h"
-#include "helpers/helpers_monitor.h"
 #include "helpers/helpers_key.h"
 #include "core/prompt_geometry.h"
 #include "core/draw_state.h"

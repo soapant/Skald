@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define MAX_LINES 16384
 #define LINE_SZ 8192

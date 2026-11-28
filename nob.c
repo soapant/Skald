@@ -350,7 +350,8 @@ static const char *obj_file_path(const char *src, const char *ext) {
   for (char *p = flat; *p; p++)
     if (*p == '/' || *p == '\\')
       *p = '_';
-  const char *suffix = wayland_session_active() ? ".wl" : ".x11";
+  const char *suffix =
+      target_win32 ? "" : (wayland_session_active() ? ".wl" : ".x11");
   return nob_temp_sprintf("%s/%s%s%s", obj_dir, flat, suffix, ext);
 }
 
