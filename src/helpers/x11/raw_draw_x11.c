@@ -379,7 +379,7 @@ int x11_editbox_measure(const char *text, int len, void *user) {
 
 void x11_draw_list_background(X11DrawListBackground *argspec) {
   if (argspec->f_selected) {
-    x11_draw_selection_background(&(X11DrawSelectionBackground){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_x = 0, .f_y = argspec->f_y, .f_w = argspec->f_state->width, .f_h = argspec->f_h, .f_baseHex = rgb_to_hex(COLOR_SELECTED_TEXT)});
+    x11_draw_selection_background(&(X11DrawSelectionBackground){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_x = 0, .f_y = argspec->f_y, .f_w = argspec->f_state->width, .f_h = argspec->f_h, .f_baseHex = rgb_to_hex(COLOR_SELECTION_HIGHLIGHT)});
   }
 }
 
@@ -499,7 +499,7 @@ void x11_draw_listbox(X11DrawListbox *argspec) {
       int t = PROMPT_SEL_INSET;
       int bx = PROMPT_SEL_X, bw = argspec->f_state->width - PROMPT_SEL_W_SHRINK;
       if (sel) {
-        x11_fill_rounded_rect(&(X11FillRoundedRect){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_hex = rgb_to_hex(COLOR_SELECTED_TEXT), .f_alpha16 = 0xFFFF, .f_x = bx + t, .f_y = y + PROMPT_SEL_TOP_INSET + t, .f_w = bw - 2 * t, .f_h = row_h - 2 - 2 * t, .f_radius = R - 1});
+        x11_fill_rounded_rect(&(X11FillRoundedRect){.f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_hex = rgb_to_hex(COLOR_SELECTION_HIGHLIGHT), .f_alpha16 = 0xFFFF, .f_x = bx + t, .f_y = y + PROMPT_SEL_TOP_INSET + t, .f_w = bw - 2 * t, .f_h = row_h - 2 - 2 * t, .f_radius = R - 1});
       }
     } else {
       x11_draw_list_background(&(X11DrawListBackground){.f_state = argspec->f_state, .f_dpy = argspec->f_dpy, .f_xd = argspec->f_xd, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_y = y, .f_h = row_h, .f_selected = sel});
@@ -614,6 +614,12 @@ static void x11_rot_composite(Display *dpy, XftDraw *xd, Visual *vis,
   Picture dst =
       dfmt ? XRenderCreatePicture(dpy, XftDrawDrawable(xd), dfmt, 0, NULL) : 0;
   if (dst) {
+    const DrawCanvas *ds = draw_state_get();
+    if (ds->clip_y1 > ds->clip_y0) {
+      XRectangle clip = {0, (short)ds->clip_y0, 65535,
+                         (unsigned short)(ds->clip_y1 - ds->clip_y0)};
+      XRenderSetPictureClipRectangles(dpy, dst, 0, 0, &clip, 1);
+    }
     XRenderComposite(dpy, PictOpOver, src, None, dst, dst_x, dst_y, 0, 0, dst_x,
                      dst_y, (unsigned int)bw, (unsigned int)bh);
     XRenderFreePicture(dpy, dst);

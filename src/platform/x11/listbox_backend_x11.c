@@ -40,7 +40,7 @@ void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) 
     if (argspec->f_sel) {
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
-      x11_fill_rounded_rect(&(X11FillRoundedRect){.f_dpy = b_dpy, .f_xd = b_xd, .f_vis = b_vis, .f_cmap = b_cmap, .f_hex = rgb_to_hex(COLOR_SELECTED_TEXT), .f_alpha16 = 0xFFFF, .f_x = argspec->f_bx + t, .f_y = argspec->f_y + PROMPT_SEL_TOP_INSET + t, .f_w = argspec->f_bw - 2 * t, .f_h = argspec->f_item_h - 2 - 2 * t, .f_radius = R - 1});
+      x11_fill_rounded_rect(&(X11FillRoundedRect){.f_dpy = b_dpy, .f_xd = b_xd, .f_vis = b_vis, .f_cmap = b_cmap, .f_hex = rgb_to_hex(COLOR_SELECTION_HIGHLIGHT), .f_alpha16 = 0xFFFF, .f_x = argspec->f_bx + t, .f_y = argspec->f_y + PROMPT_SEL_TOP_INSET + t, .f_w = argspec->f_bw - 2 * t, .f_h = argspec->f_item_h - 2 - 2 * t, .f_radius = R - 1});
     }
   } else {
     PromptState tmp = {0};

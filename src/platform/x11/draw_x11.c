@@ -255,6 +255,12 @@ static bool blit_argb_buf(unsigned char *buf, int w, int h, int bx, int by,
            : 0;
   bool result = false;
   if (dst) {
+    const DrawCanvas *ds = draw_state_get();
+    if (ds->clip_y1 > ds->clip_y0) {
+      XRectangle clip = {0, (short)ds->clip_y0, 65535,
+                         (unsigned short)(ds->clip_y1 - ds->clip_y0)};
+      XRenderSetPictureClipRectangles(g_draw_dpy, dst, 0, 0, &clip, 1);
+    }
     XRenderComposite(g_draw_dpy, PictOpOver, pic, None, dst, 0, 0, 0, 0, bx, by,
                      (unsigned int)w, (unsigned int)h);
     result = true;
@@ -509,7 +515,17 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
     } else {
       XftColor col;
       x11_xft_color_cached(&(X11XftColorCached){.f_dpy = g_draw_dpy, .f_vis = g_draw_vis, .f_cmap = g_draw_cmap, .f_hex = color, .f_alpha = target_alpha, .f_out = &col});
+      const DrawCanvas *ds = draw_state_get();
+      bool clipped = ds->clip_y1 > ds->clip_y0;
+      if (clipped) {
+        int clip_h = ds->clip_y1 - ds->clip_y0;
+        XRectangle clip = {0, (short)ds->clip_y0, 65535,
+                           (unsigned short)(clip_h > 65535 ? 65535 : clip_h)};
+        XftDrawSetClipRectangles(g_draw_xd, 0, 0, &clip, 1);
+      }
       XftDrawRect(g_draw_xd, &col, x, y, w, h);
+      if (clipped)
+        XftDrawSetClip(g_draw_xd, None);
     }
     return true;
   }

@@ -283,15 +283,28 @@ bool Platform_DrawRectRaw(DrawRectRawSpec spec) {
     return false;
   }
 
+  const DrawCanvas *ds = draw_state_get();
+  int saved_clip = 0;
+  if (ds->clip_y1 > ds->clip_y0) {
+    saved_clip = SaveDC(g_draw_hdc);
+    if (saved_clip)
+      IntersectClipRect(g_draw_hdc, 0, ds->clip_y0, 65535, ds->clip_y1);
+  }
+
+  bool ok;
   if (angle != 0.0f) {
     int saved = win32_rotate_begin(g_draw_hdc, angle,
-                                   spec.x + draw_state_get()->off_x + w / 2.0f,
-                                   spec.y + draw_state_get()->off_y + h / 2.0f);
-    bool ok = draw_rect_raw_body(spec);
+                                   spec.x + ds->off_x + w / 2.0f,
+                                   spec.y + ds->off_y + h / 2.0f);
+    ok = draw_rect_raw_body(spec);
     win32_rotate_end(g_draw_hdc, saved);
-    return ok;
+  } else {
+    ok = draw_rect_raw_body(spec);
   }
-  return draw_rect_raw_body(spec);
+
+  if (saved_clip)
+    RestoreDC(g_draw_hdc, saved_clip);
+  return ok;
 }
 
 static bool draw_rect_raw_body(DrawRectRawSpec spec) {

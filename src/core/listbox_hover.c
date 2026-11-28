@@ -478,6 +478,7 @@ bool listbox_next_common(ListItemCtx *out) {
 
 void listbox_common_end(void) {
   listbox_set_row_h_scroll(0);
+  draw_state_clear_clip();
   if (common_separators && prompt_list_bottom_margin() > 0 && common_y0 >= 0) {
     draw_prompt_separator((DrawPromptSeparator){.y = common_y0 + common_h,
                                                     .width = common_fw});
@@ -487,7 +488,6 @@ void listbox_common_end(void) {
   common_visible = 0;
   common_cur = 0;
   common_y0 = -1;
-  draw_state_clear_clip();
   draw_state_get()->listbox_rows = false;
 }
 

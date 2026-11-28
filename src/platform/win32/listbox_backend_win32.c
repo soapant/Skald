@@ -47,10 +47,10 @@ void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) 
       innerR = R;
     }
     if (argspec->f_sel)
-      win32_fill_rounded_rect(b_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
+      win32_fill_rounded_rect(b_hdc, &inner, COLOR_SELECTION_HIGHLIGHT, innerR);
   } else if (argspec->f_sel) {
     RECT rc = {argspec->f_bx, argspec->f_y, argspec->f_bx + argspec->f_bw, argspec->f_y + argspec->f_item_h};
-    HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
+    HBRUSH br = CreateSolidBrush(COLOR_SELECTION_HIGHLIGHT);
     FillRect(b_hdc, &rc, br);
     DeleteObject(br);
   }

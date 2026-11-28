@@ -596,7 +596,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
           win32_draw_bg_image_slice(&(Win32DrawBgImageSlice){.f_hdc = pdis->hDC, .f_rc = &pdis->rcItem, .f_containerW = win_w, .f_containerH = win_h, .f_originX = lbOrigin2.x, .f_originY = lbOrigin2.y});
         }
         if (isSelected) {
-          win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_SELECTED_TEXT,
+          win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_SELECTION_HIGHLIGHT,
                                   innerR);
         } else {
           RECT winRcI;
@@ -618,7 +618,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
         if (isSelected) {
           FillRect(
               pdis->hDC, &pdis->rcItem,
-              cached_brush(&s_sel_brush, &s_sel_color, COLOR_SELECTED_TEXT));
+              cached_brush(&s_sel_brush, &s_sel_color, COLOR_SELECTION_HIGHLIGHT));
         } else {
           RECT winRc;
           GetClientRect(hwnd, &winRc);
@@ -827,7 +827,7 @@ LRESULT CALLBACK win32_popup_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
 
             if (list_idx == estate->lb->selected_index) {
               RECT itemRect = {10, y + 1, rect.right - 10, row_bottom - 1};
-              win32_fill_rounded_rect(paintDC, &itemRect, COLOR_SELECTED_TEXT,
+              win32_fill_rounded_rect(paintDC, &itemRect, COLOR_SELECTION_HIGHLIGHT,
                                       PROMPT_SEL_RADIUS);
             }
 

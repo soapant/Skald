@@ -1817,10 +1817,20 @@ static const unsigned char *x11_round_mask(int corner, int radius) {
 }
 
 void x11_fill_rounded_rect(X11FillRoundedRect *argspec) {
+  const DrawCanvas *ds = draw_state_get();
+  bool clipped = argspec->f_xd && ds->clip_y1 > ds->clip_y0;
+  if (clipped) {
+    int clip_h = ds->clip_y1 - ds->clip_y0;
+    XRectangle clip = {0, (short)ds->clip_y0, 65535,
+                       (unsigned short)(clip_h > 65535 ? 65535 : clip_h)};
+    XftDrawSetClipRectangles(argspec->f_xd, 0, 0, &clip, 1);
+  }
   if (!RoundedCorners || argspec->f_radius <= 0 || argspec->f_w <= 0 || argspec->f_h <= 0) {
     XftColor c;
     x11_xft_color_cached(&(X11XftColorCached){.f_dpy = argspec->f_dpy, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_hex = argspec->f_hex, .f_alpha = argspec->f_alpha16, .f_out = &c});
     XftDrawRect(argspec->f_xd, &c, argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
+    if (clipped)
+      XftDrawSetClip(argspec->f_xd, None);
     return;
   }
   if (argspec->f_radius > argspec->f_w / 2)
@@ -1880,6 +1890,8 @@ void x11_fill_rounded_rect(X11FillRoundedRect *argspec) {
     }
     free(local_mask);
   }
+  if (clipped)
+    XftDrawSetClip(argspec->f_xd, None);
 }
 
 static unsigned int x11_corner_alpha(int x, int y, int w, int h, int R,
@@ -2163,9 +2175,19 @@ void x11_draw_selection_background(X11DrawSelectionBackground *argspec) {
 
   if (argspec->f_w <= 0 || argspec->f_h <= 0)
     return;
+  const DrawCanvas *ds = draw_state_get();
+  bool clipped = argspec->f_xd && ds->clip_y1 > ds->clip_y0;
+  if (clipped) {
+    int clip_h = ds->clip_y1 - ds->clip_y0;
+    XRectangle clip = {0, (short)ds->clip_y0, 65535,
+                       (unsigned short)(clip_h > 65535 ? 65535 : clip_h)};
+    XftDrawSetClipRectangles(argspec->f_xd, 0, 0, &clip, 1);
+  }
   XftColor c;
   x11_xft_color_cached(&(X11XftColorCached){.f_dpy = argspec->f_dpy, .f_vis = argspec->f_vis, .f_cmap = argspec->f_cmap, .f_hex = argspec->f_baseHex, .f_alpha = opacity_alpha16(), .f_out = &c});
   XftDrawRect(argspec->f_xd, &c, argspec->f_x, argspec->f_y, argspec->f_w, argspec->f_h);
+  if (clipped)
+    XftDrawSetClip(argspec->f_xd, None);
 }
 
 #define BORDER_CACHE_SLOTS 4
