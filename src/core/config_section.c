@@ -1094,11 +1094,11 @@ static bool config_hotkey_binding_bind(ConfigHotkeyBinding *b) {
   binding.hotkey_callback_ud = b->cb_ud;
   binding.hold = false;
   binding.should_swallow = b->should_swallow;
-  bool ok = hotkey_register_internal(binding);
+  hotkey_register_internal(binding);
   arrfree(wl);
   arrfree(bl);
   free(hotkey);
-  return ok;
+  return true;
 }
 
 bool config_hotkey_register(const ConfigHotkeyRegisterSpec *spec) {

@@ -17,9 +17,17 @@ void UI_SetSelection(ListBox *lb, int index) {
   UI_LB_RequestRepaint();
 }
 
-static int lb_update_depth = 0;
-static int lb_visible_count = 0;
-static bool lb_repaint_pending = false;
+typedef struct {
+  int update_depth;
+  int visible_count;
+  bool repaint_pending;
+} UiNavRegistry;
+
+static UiNavRegistry g_ui_nav;
+
+#define lb_update_depth g_ui_nav.update_depth
+#define lb_visible_count g_ui_nav.visible_count
+#define lb_repaint_pending g_ui_nav.repaint_pending
 
 void UI_LB_BeginUpdate(void) { lb_update_depth++; }
 

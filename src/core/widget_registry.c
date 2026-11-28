@@ -192,10 +192,17 @@ static void widget_render_frame(void *ud) {
   void (*on_hover)(void) = widget->on_hover;
   bool hover_running = widget->hover_running;
   bool capture_keys = widget->capture_keys;
+  bool prev_click_down = widget->prev_click_down;
+  bool hovered = widget->hovered;
+  unsigned long frame = widget->frame;
+  int origin_x = widget->origin_x, origin_y = widget->origin_y;
   W_UNLOCK();
   if (dead || !render)
     return;
+  W_LOCK();
   widget->frame++;
+  W_UNLOCK();
+  frame++;
   bool hoverable = (on_hover != NULL);
   if (hoverable || capture_keys) {
     widget_hover_poll();
@@ -205,7 +212,7 @@ static void widget_render_frame(void *ud) {
                          hover_pos.y >= y && hover_pos.y < y + h);
     if (capture_keys) {
       bool click_down = input_mouse_state_down(MOUSE_BTN_LEFT);
-      bool click_edge = click_down && !widget->prev_click_down;
+      bool click_edge = click_down && !prev_click_down;
       KC_LOCK();
       if (!inside) {
         if (click_edge) {
@@ -226,10 +233,12 @@ static void widget_render_frame(void *ud) {
         key_capture_target = widget;
       }
       KC_UNLOCK();
+      W_LOCK();
       widget->key_hovered = inside;
       widget->prev_click_down = click_down;
+      W_UNLOCK();
     }
-    if (hoverable && inside && !widget->hovered && on_hover && !hover_running) {
+    if (hoverable && inside && !hovered && on_hover && !hover_running) {
       HoverJob *job = (HoverJob *)calloc(1, sizeof(*job));
       if (job) {
         W_LOCK();
@@ -238,16 +247,19 @@ static void widget_render_frame(void *ud) {
         job->epoch = widget->hover_epoch;
         widget->hover_running = true;
         W_UNLOCK();
-        widget->hover_thread = Platform_ThreadCreate(widget_hover_worker, job);
-        if (!widget->hover_thread) {
-          W_LOCK();
+        void *thread = Platform_ThreadCreate(widget_hover_worker, job);
+        W_LOCK();
+        widget->hover_thread = thread;
+        if (!thread)
           widget->hover_running = false;
-          W_UNLOCK();
+        W_UNLOCK();
+        if (!thread)
           free(job);
-        }
       }
     }
+    W_LOCK();
     widget->hovered = inside;
+    W_UNLOCK();
     if (!inside) {
       Platform_HoverMessageRelease(widget->name);
       hover_widget_hide(widget->name);
@@ -256,22 +268,24 @@ static void widget_render_frame(void *ud) {
   WidgetState st;
   st.width = w;
   st.height = h;
-  st.frame = widget->frame;
+  st.frame = frame;
   st.elapsed = Platform_EndTimer(widget->created_at);
-  st.hovered = widget->hovered;
+  st.hovered = hovered;
   st.widget = widget;
 
-  set_draw_offset(-widget->origin_x, 0);
+  set_draw_offset(-origin_x, 0);
   begin_measure();
   render(&st);
   int mw = 0, mh = 0, mx = 0, my = 0;
   end_measure(&mw, &mh);
   get_last_measure_origin(&mx, &my);
-  mx += widget->origin_x;
+  mx += origin_x;
 
-  if (widget->origin_x != mx || widget->origin_y != my) {
+  if (origin_x != mx || origin_y != my) {
+    W_LOCK();
     widget->origin_x = mx;
     widget->origin_y = my;
+    W_UNLOCK();
     widget_invalidate(widget->win);
   }
 
@@ -296,14 +310,18 @@ static void widget_destroy_window(void *ud) {
   Widget *widget = (Widget *)ud;
   if (!widget)
     return;
+  W_LOCK();
   widget->hovered = false;
-  Platform_HoverMessageRelease(widget->name);
-  hover_widget_hide(widget->name);
-  if (widget->hover_thread) {
-    Platform_ThreadJoin(widget->hover_thread);
+  void *hover_thread = widget->hover_thread;
+  if (hover_thread) {
     widget->hover_thread = NULL;
     widget->hover_running = false;
   }
+  W_UNLOCK();
+  Platform_HoverMessageRelease(widget->name);
+  hover_widget_hide(widget->name);
+  if (hover_thread)
+    Platform_ThreadJoin(hover_thread);
   if (widget_is_valid(widget->win)) {
     Platform_Widget_Destroy(widget->win);
   }
@@ -328,6 +346,11 @@ static void widget_reap(void *ud) {
   free(w);
 }
 
+static void widget_destroy_and_reap(void *ud) {
+  widget_destroy_window(ud);
+  widget_reap(ud);
+}
+
 void widget_destroy(Widget *widget) {
   if (!widget)
     return;
@@ -335,8 +358,7 @@ void widget_destroy(Widget *widget) {
   Platform_HoverMessageRelease(widget->name);
   hover_widget_hide(widget->name);
   render_thread_remove_frame_callback(widget_render_frame, widget);
-  bool posted = render_thread_post(widget_destroy_window, widget) &&
-                render_thread_post(widget_reap, widget);
+  bool posted = render_thread_post(widget_destroy_and_reap, widget);
   render_thread_sync();
 
   if (!posted) {
@@ -350,6 +372,8 @@ void widget_destroy(Widget *widget) {
       i++;
     }
     W_UNLOCK();
+    widget_key_capture_clear(widget);
+    free(widget);
   }
   if (widget_count > 0)
     widget_relayout();
@@ -364,12 +388,8 @@ static void widget_purge_destroy(void *ud) {
   widget_key_capture_clear(w);
   hover_widget_hide(w->name);
   render_thread_remove_frame_callback(widget_render_frame, w);
-  if (!render_thread_post(widget_destroy_window, w)) {
-    log_error("widget_purge_owner: failed to enqueue destroy for '%s'",
-              w->name ? w->name : "?");
-  }
-  if (!render_thread_post(widget_reap, w)) {
-    log_error("widget_purge_owner: failed to enqueue reap for '%s'",
+  if (!render_thread_post(widget_destroy_and_reap, w)) {
+    log_error("widget_purge_owner: failed to enqueue destroy/reap for '%s'",
               w->name ? w->name : "?");
   }
 }

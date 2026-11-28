@@ -15,7 +15,7 @@ extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
-bool hotkey_register_internal(HotkeyBinding binding);
+void hotkey_register_internal(HotkeyBinding binding);
 bool hotkey_unregister_internal(int vk, int modifiers);
 int hotkey_count(void);
 const HotkeyBinding *hotkey_get(int index);

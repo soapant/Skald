@@ -42,8 +42,9 @@ static bool manifest_parse_string_ex(const char *name, const char *data,
         cap *= 2;
       char *grown = (char *)realloc(work, cap);
       if (!grown) {
-        manifest_mark_bad(&malformed, bad_line, line_no);
-        break;
+        free(work);
+        out->valid = false;
+        return false;
       }
       work = grown;
       work_cap = cap;
@@ -123,6 +124,7 @@ ConfigTomlStatus manifest_parse_file_ex(const char *path, const char *name,
                                         ConfigTomlError *err) {
   ConfigTomlStatus status = CONFIG_TOML_OK;
   int bad_line = 0;
+  bool alloc_failed = false;
   config_toml_error_clear(err);
   if (!out)
     return config_toml_error_set(err, CONFIG_TOML_ERR_ARG, 0,
@@ -161,11 +163,15 @@ ConfigTomlStatus manifest_parse_file_ex(const char *path, const char *name,
   size_t rd = fread(data, 1, (size_t)sz, f);
   fclose(f);
   data[rd] = '\0';
-  manifest_parse_string_ex(name, data, out, &bad_line);
+  bool parsed = manifest_parse_string_ex(name, data, out, &bad_line);
   free(data);
 
-  if (!out->valid)
+  if (!parsed) {
+    alloc_failed = true;
+    status = CONFIG_TOML_ERR_IO;
+  } else if (!out->valid) {
     status = CONFIG_TOML_ERR_PARSE;
+  }
 
 done:
   if (status != CONFIG_TOML_OK) {
@@ -173,6 +179,9 @@ done:
     if (status == CONFIG_TOML_ERR_PARSE)
       snprintf(message, sizeof(message), "malformed manifest on line %d",
                bad_line);
+    else if (status == CONFIG_TOML_ERR_IO && alloc_failed)
+      snprintf(message, sizeof(message),
+               "out of memory parsing manifest '%s'", path ? path : "(null)");
     else if (status == CONFIG_TOML_ERR_IO)
       snprintf(message, sizeof(message), "cannot read manifest '%s'",
                path ? path : "(null)");

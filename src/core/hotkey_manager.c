@@ -86,13 +86,20 @@ static unsigned long pending_dropped = 0;
 
 #if defined(__linux__)
 static int wake_fd = -1;
+static void *wake_fd_mutex = NULL;
 #endif
 
 int hotkey_wake_fd(void) {
 #if defined(__linux__)
+  void *mutex = lazy_mutex_get(&wake_fd_mutex);
+  if (mutex)
+    Platform_MutexLock(mutex);
   if (wake_fd < 0)
     wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-  return wake_fd;
+  int fd = wake_fd;
+  if (mutex)
+    Platform_MutexUnlock(mutex);
+  return fd;
 #else
   return -1;
 #endif
@@ -100,10 +107,11 @@ int hotkey_wake_fd(void) {
 
 static void hotkey_wake(void) {
 #if defined(__linux__)
-  if (wake_fd < 0)
+  int fd = hotkey_wake_fd();
+  if (fd < 0)
     return;
   unsigned long long one = 1;
-  ssize_t wr = write(wake_fd, &one, sizeof(one));
+  ssize_t wr = write(fd, &one, sizeof(one));
   (void)wr;
 #endif
 }
@@ -400,7 +408,7 @@ bool hotkey_is_taken(int vk, int modifiers) {
   return false;
 }
 
-bool hotkey_register_internal(HotkeyBinding binding) {
+void hotkey_register_internal(HotkeyBinding binding) {
   owner_tag_set_for_func(&binding.tag,
                          (void *)(uintptr_t)binding.hotkey_callback, 0);
   if (!binding.tag.owner)
@@ -416,11 +424,10 @@ bool hotkey_register_internal(HotkeyBinding binding) {
       hotkey_binding_free_window_list(&hotkeys[i]);
       owner_tag_clear(&hotkeys[i].tag);
       hotkeys[i] = binding;
-      return true;
+      return;
     }
   }
   arrput(hotkeys, binding);
-  return true;
 }
 
 bool hotkey_unregister_internal(int vk, int modifiers) {

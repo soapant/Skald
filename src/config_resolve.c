@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdatomic.h>
@@ -5,6 +6,7 @@
 #include "config.h"
 #include "platform/platform.h"
 #include "config_values.h"
+#include "helpers/helpers_misc.h"
 
 typedef struct {
   _Atomic(const char *) *var;
@@ -15,13 +17,23 @@ typedef struct {
 
 #define AUTO_APP_SLOTS 3
 
-static AutoApp auto_apps[AUTO_APP_SLOTS];
-static bool auto_apps_ready = false;
+typedef struct {
+  AutoApp apps[AUTO_APP_SLOTS];
+  void *mutex;
+} AutoAppRegistry;
+
+static AutoAppRegistry g_auto_apps;
 
 static void auto_apps_init(void) {
-  if (auto_apps_ready)
+  void *mutex = lazy_mutex_get(&g_auto_apps.mutex);
+  if (mutex)
+    Platform_MutexLock(mutex);
+  if (g_auto_apps.apps[0].var) {
+    if (mutex)
+      Platform_MutexUnlock(mutex);
     return;
-  auto_apps_ready = true;
+  }
+  AutoApp *auto_apps = g_auto_apps.apps;
   auto_apps[0].var = &UsedBrowser;
   auto_apps[0].kind = DEFAULT_BROWSER;
   auto_apps[0].name = CONFIG_NAME_STRING(UsedBrowser);
@@ -34,6 +46,8 @@ static void auto_apps_init(void) {
   auto_apps[2].kind = DEFAULT_SHELL;
   auto_apps[2].name = CONFIG_NAME_STRING(UsedShell);
   auto_apps[2].auto_resolved = false;
+  if (mutex)
+    Platform_MutexUnlock(mutex);
 }
 
 static void config_resolve_one(AutoApp *app) {
@@ -58,15 +72,18 @@ static void config_resolve_one(AutoApp *app) {
   }
   if (!copy)
     return;
+  if (!config_own_string(app->name, copy)) {
+    free(copy);
+    return;
+  }
   atomic_store_explicit(app->var, copy, memory_order_release);
-  config_own_string(app->name, copy);
   app->auto_resolved = true;
 }
 
 void config_resolve_default_apps(void) {
   auto_apps_init();
-  for (size_t i = 0; i < ARRAY_LEN(auto_apps); i++) {
-    config_resolve_one(&auto_apps[i]);
+  for (size_t i = 0; i < ARRAY_LEN(g_auto_apps.apps); i++) {
+    config_resolve_one(&g_auto_apps.apps[i]);
   }
 }
 
@@ -74,11 +91,11 @@ bool config_is_auto_resolved_app(const char *name) {
   auto_apps_init();
   if (!name)
     return false;
-  for (size_t i = 0; i < ARRAY_LEN(auto_apps); i++) {
-    if (!auto_apps[i].name)
+  for (size_t i = 0; i < ARRAY_LEN(g_auto_apps.apps); i++) {
+    if (!g_auto_apps.apps[i].name)
       continue;
-    if (strcmp(auto_apps[i].name, name) == 0)
-      return auto_apps[i].auto_resolved;
+    if (strcmp(g_auto_apps.apps[i].name, name) == 0)
+      return g_auto_apps.apps[i].auto_resolved;
   }
   return false;
 }

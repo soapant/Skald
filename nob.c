@@ -1152,9 +1152,163 @@ typedef struct {
   int skapi_violations;
   int fn_violations;
   int struct_violations;
+  int spec_violations;
+  int hook_violations;
 } CheckState;
 
 static CheckState check_state;
+
+typedef struct {
+  const char *name;
+  unsigned impl_mask;
+} HookOverride;
+
+#define HOOK_OS_X11 1u
+#define HOOK_OS_WIN32 2u
+#define HOOK_OS_MACOS 4u
+#define HOOK_OS_BOTH (HOOK_OS_X11 | HOOK_OS_WIN32)
+
+static const HookOverride hook_platform_specific[] = {
+    {"Platform_CreateDisplayMessageWindow", HOOK_OS_WIN32 | HOOK_OS_MACOS},
+    {"Platform_DrawPromptEditbox", HOOK_OS_WIN32 | HOOK_OS_MACOS},
+    {"Platform_DrawPromptEditText", HOOK_OS_WIN32 | HOOK_OS_MACOS},
+    {"Platform_DrawPromptEditCursor", HOOK_OS_WIN32 | HOOK_OS_MACOS},
+    {"Platform_FlushDraw", HOOK_OS_X11 | HOOK_OS_MACOS},
+    {"Platform_InjectKey", HOOK_OS_X11 | HOOK_OS_MACOS},
+    {"Platform_Widget_DispatchClick", HOOK_OS_X11 | HOOK_OS_MACOS},
+    {"Platform_Widget_DrainClicks", HOOK_OS_WIN32 | HOOK_OS_MACOS},
+};
+
+static const char *const spec_legacy_ok[] = {
+    "focus_frame_begin",
+    "focus_register",
+    "text_prompt_spec",
+    "widget_init_base",
+    "Platform_DrawImageAt",
+    "Platform_DrawImageBuffer",
+    "Platform_GetTextExtents",
+    "Platform_HttpCollect",
+    "Platform_ListboxBackendDrawSelection",
+    "Platform_PromptPopupResize",
+    "Platform_PromptPopupShowWindow",
+    "Platform_Widget_Create",
+    "bg_tile_lru_pick",
+    "config_index_of",
+    "config_section_set_ex",
+    "cover_scale",
+    "draw_circle_prep",
+    "draw_line_prep",
+    "draw_rect_raw",
+    "edit_buffer_insert_text",
+    "editbox_legacy_tick",
+    "editbox_registry_place",
+    "editbox_resolve_selection",
+    "editbox_spec_from_place",
+    "feature_shortcut_parse",
+    "file_walk_all_files_from_dir",
+    "hotkey_convert_into_binding",
+    "listbox_compute_layout",
+    "listbox_hover_focus",
+    "listbox_row_at_y",
+    "monitor_geometry_at",
+    "msg_anchor_center",
+    "owner_array_has_active",
+    "owner_purge_array",
+    "owner_purge_pointers",
+    "populate_listbox",
+    "populate_listbox_ranked",
+    "prompt_popup_get_bounds",
+    "prompt_popup_resize_current_animated",
+    "remap_register_internal",
+    "resolve_caller_path",
+    "search_index_add_text",
+    "sk_search_add_text",
+    "ski_text_wrap_layout",
+    "snippet_register_internal",
+    "temp_file_write",
+    "text_wrap_layout",
+    "toml_parse_key_value",
+    "win32_apply_rounded",
+    "win32_draw_bg_image_slice",
+    "win32_draw_window_border",
+    "win32_font_for_text",
+    "win32_img_cache_get",
+    "win32_img_cache_put",
+    "win32_load_scaled_bitmap",
+    "wm_snap_rect",
+    "wrapped_word_push",
+    "x11_apply_shape",
+    "x11_bg_image_blit",
+    "x11_create_display_message_window",
+    "x11_create_display_message_window_ex",
+    "x11_create_prompt_window",
+    "x11_create_window_ex",
+    "x11_draw_edit_background",
+    "x11_draw_edit_cursor",
+    "x11_draw_edit_text",
+    "x11_draw_edit_tint",
+    "x11_draw_editbox",
+    "x11_draw_image_scaled",
+    "x11_draw_list_background",
+    "x11_draw_list_item",
+    "x11_draw_listbox",
+    "x11_draw_listbox_item_text",
+    "x11_draw_prompt_user_edit_control_on_draw",
+    "x11_draw_prompt_user_listbox_on_draw",
+    "x11_draw_selection_background",
+    "x11_draw_utf8_fallback",
+    "x11_draw_window_border",
+    "x11_draw_wrapped_text",
+    "x11_env_build_env_strings",
+    "x11_fill_rounded_rect",
+    "x11_get_drawable_visual",
+    "x11_init_argb_image",
+    "x11_measure_utf8_fallback",
+    "x11_msg_hover_present",
+    "x11_msg_measure",
+    "x11_msg_present",
+    "x11_msg_stack_adjust_y",
+    "x11_msg_wrap_text",
+    "x11_raw_line_push",
+    "x11_resolve_desktop_exec",
+    "x11_upload_argb",
+    "x11_xft_color_cached",
+};
+
+static Nob_File_Paths hook_decls;
+static Nob_File_Paths hook_impls[3];
+
+static void hook_remember(Nob_File_Paths *set, const char *name) {
+  for (size_t i = 0; i < set->count; i++)
+    if (strcmp(set->items[i], name) == 0)
+      return;
+  nob_da_append(set, strdup(name));
+}
+
+static bool hook_known(const Nob_File_Paths *set, const char *name) {
+  for (size_t i = 0; i < set->count; i++)
+    if (strcmp(set->items[i], name) == 0)
+      return true;
+  return false;
+}
+
+static unsigned hook_mask_for(const char *name) {
+  unsigned mask = 0;
+  if (hook_known(&hook_impls[0], name))
+    mask |= HOOK_OS_X11;
+  if (hook_known(&hook_impls[1], name))
+    mask |= HOOK_OS_WIN32;
+  if (hook_known(&hook_impls[2], name))
+    mask |= HOOK_OS_MACOS;
+  return mask;
+}
+
+static bool hook_is_skapi_spec_ok(const char *name) {
+  for (size_t i = 0; i < sizeof(spec_legacy_ok) / sizeof(spec_legacy_ok[0]); i++)
+    if (strcmp(spec_legacy_ok[i], name) == 0)
+      return true;
+  return false;
+}
 static char decl_buf[8192];
 static size_t decl_len;
 static bool decl_overflow;
@@ -1493,7 +1647,8 @@ static void chk_sk_ident_scan(const char *path, int lineno, const char *buf,
   }
 }
 
-static void chk_finish_decl(const char *path, int lineno, bool is_h) {
+static void chk_finish_decl(const char *path, int lineno, bool is_h,
+                            bool is_definition) {
   const char *buf = decl_buf;
   size_t len = decl_len;
   if (chk_tok_count == 0)
@@ -1553,6 +1708,62 @@ static void chk_finish_decl(const char *path, int lineno, bool is_h) {
 
   char norm[1024];
   check_norm_path(path, norm, sizeof(norm));
+
+  size_t open = (size_t)candidate + 1;
+  if (open < chk_tok_count && chk_toks[open].kind == CHK_LPAREN) {
+    int depth = 0;
+    int commas = 0;
+    for (size_t i = open; i < chk_tok_count; i++) {
+      if (chk_toks[i].kind == CHK_LPAREN) {
+        depth++;
+      } else if (chk_toks[i].kind == CHK_RPAREN) {
+        if (--depth == 0)
+          break;
+      } else if (chk_toks[i].kind == CHK_COMMA && depth == 1) {
+        commas++;
+      }
+    }
+    bool no_params =
+        open + 2 < chk_tok_count && chk_tok_is(open + 1, buf, "void") &&
+        chk_toks[open + 2].kind == CHK_RPAREN;
+    int params = no_params ? 0 : commas + 1;
+    bool vendored = strstr(norm, "include/deps/") || strstr(norm, "src/deps/");
+    if (params >= 5 && !vendored && !hook_is_skapi_spec_ok(name)) {
+      check_state.spec_violations++;
+      char msg[512];
+      snprintf(msg, sizeof(msg),
+               "function '%s' has %d arguments; use a spec struct instead of "
+               "5+ positional arguments",
+               name, params);
+      check_violation(path, lineno, msg);
+    }
+  }
+
+  bool platform_hook = strncmp(name, "Platform_", 9) == 0 ||
+                       (strncmp(name, "sk_", 3) == 0 &&
+                        check_ends_with(name, "_platform"));
+  if (platform_hook) {
+    bool static_inline = false;
+    for (size_t i = 0; i < (size_t)candidate; i++)
+      if (chk_tok_is(i, buf, "static") || chk_tok_is(i, buf, "inline"))
+        static_inline = true;
+    if (is_h && !static_inline &&
+        (strstr(norm, "include/platform/") ||
+         strstr(norm, "include/core/types/skapi_types.h"))) {
+      hook_remember(&hook_decls, name);
+    } else if (!is_h && is_definition) {
+      int os = -1;
+      if (strstr(norm, "src/platform/x11/"))
+        os = 0;
+      else if (strstr(norm, "src/platform/win32/"))
+        os = 1;
+      else if (strstr(norm, "src/platform/macos/"))
+        os = 2;
+      if (os >= 0)
+        hook_remember(&hook_impls[os], name);
+    }
+  }
+
   const char *prefix = check_fn_prefix(norm);
   if (is_h)
     decl_remember(name);
@@ -1802,7 +2013,7 @@ static bool check_walk(Nob_Walk_Entry entry) {
           if (c == '{') {
             decl_buf[decl_len] = '\0';
             chk_finish_decl(path, decl_start_line ? decl_start_line : lineno,
-                            check_ends_with(norm, ".h"));
+                            check_ends_with(norm, ".h"), true);
             if (!chk_ci_platform_layer(norm))
               chk_platform_func_scan(path,
                                      decl_start_line ? decl_start_line : lineno,
@@ -1814,7 +2025,7 @@ static bool check_walk(Nob_Walk_Entry entry) {
           } else if (c == ';') {
             decl_buf[decl_len] = '\0';
             chk_finish_decl(path, decl_start_line ? decl_start_line : lineno,
-                            check_ends_with(norm, ".h"));
+                            check_ends_with(norm, ".h"), false);
             if (!chk_ci_platform_layer(norm))
               chk_platform_func_scan(path,
                                      decl_start_line ? decl_start_line : lineno,
@@ -1836,6 +2047,8 @@ static bool check_walk(Nob_Walk_Entry entry) {
         }
         k++;
       }
+      if (brace_depth == 0 && decl_len > 0 && decl_len + 1 < sizeof(decl_buf))
+        decl_buf[decl_len++] = ' ';
     }
     lineno++;
   }
@@ -1849,6 +2062,9 @@ static bool check_layering(void) {
   decl_overflow = false;
   decl_start_line = 0;
   pending_fn_count = 0;
+  hook_decls.count = 0;
+  for (size_t i = 0; i < 3; i++)
+    hook_impls[i].count = 0;
   if (!nob_walk_dir(SRC_FOLDER, check_walk))
     return false;
   if (!nob_walk_dir("include", check_walk))
@@ -1869,12 +2085,52 @@ static bool check_layering(void) {
              p->name, p->prefix);
     check_violation(p->path, p->line, msg);
   }
+  for (size_t i = 0; i < hook_decls.count; i++) {
+    const char *name = hook_decls.items[i];
+    unsigned actual = hook_mask_for(name);
+    if (actual == 0) {
+      check_state.hook_violations++;
+      char msg[512];
+      snprintf(msg, sizeof(msg),
+               "platform hook '%s' is declared but has no implementation",
+               name);
+      check_violation("include/platform", 0, msg);
+      continue;
+    }
+    if ((actual & HOOK_OS_BOTH) != HOOK_OS_BOTH) {
+      bool allowlisted = false;
+      for (size_t j = 0;
+           j < sizeof(hook_platform_specific) / sizeof(hook_platform_specific[0]);
+           j++)
+        if (strcmp(hook_platform_specific[j].name, name) == 0)
+          allowlisted = true;
+      if (!allowlisted) {
+        check_state.hook_violations++;
+        char msg[512];
+        snprintf(msg, sizeof(msg),
+                 "platform hook '%s' is implemented on x11=%d win32=%d macos=%d "
+                 "but is not in the platform-specific allowlist",
+                 name, (actual & HOOK_OS_X11) != 0,
+                 (actual & HOOK_OS_WIN32) != 0,
+                 (actual & HOOK_OS_MACOS) != 0);
+        check_violation("src/platform", 0, msg);
+      }
+    }
+  }
+  size_t macos_missing = 0;
+  for (size_t i = 0; i < hook_decls.count; i++)
+    if (!(hook_mask_for(hook_decls.items[i]) & HOOK_OS_MACOS))
+      macos_missing++;
   printf("check: scanned %d files, %d skapi violation(s), %d function-name "
-         "violation(s), %d struct-name violation(s)\n",
+         "violation(s), %d struct-name violation(s), %d spec violation(s), "
+         "%d hook violation(s), %zu macOS hooks missing (informational)\n",
          check_state.files_scanned, check_state.skapi_violations,
-         check_state.fn_violations, check_state.struct_violations);
+         check_state.fn_violations, check_state.struct_violations,
+         check_state.spec_violations, check_state.hook_violations,
+         macos_missing);
   return check_state.skapi_violations + check_state.fn_violations +
-             check_state.struct_violations ==
+             check_state.struct_violations + check_state.spec_violations +
+             check_state.hook_violations ==
          0;
 }
 
@@ -1916,8 +2172,9 @@ int main(int argc, char **argv) {
           ".h;\n"
           "                 .c externs must match the directory prefix or be\n"
           "                 declared in a header; statics are exempt),\n"
-          "                 and sk_ / Sk namesquatting outside the skapi "
-          "layer\n"
+          "                 sk_ / Sk namesquatting outside the skapi layer,\n"
+          "                 5+ positional arguments (use a spec struct),\n"
+          "                 and per-OS Platform_ hook completeness\n"
           "                 (case insensitive)\n");
       printf("  -h, --help     Show this help\n");
       return 0;

@@ -308,19 +308,20 @@ bool config_reload(void) {
   return true;
 }
 
-void config_own_string(const char *name, char *s) {
+bool config_own_string(const char *name, char *s) {
   if (!name) {
     free(s);
-    return;
+    return false;
   }
   for (int i = 0; i < CONFIG_ENTRY_COUNT; i++) {
     if (strcmp(config_entries[i].name, name) != 0)
       continue;
     free(config_owned[i]);
     config_owned[i] = s;
-    return;
+    return true;
   }
   free(s);
+  return false;
 }
 
 void config_unload(void) {

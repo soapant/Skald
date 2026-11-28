@@ -19,13 +19,22 @@ typedef struct {
   FocusAdjustFn adjust;
 } FocusEntry;
 
-static FocusEntry *s_entries;
-#define s_count (int)arrlenu(s_entries)
-static int s_current = -1;
+typedef struct {
+  FocusEntry *entries;
+  int current;
+  char saved_name[FOCUS_NAME_MAX];
+  FocusKind saved_kind;
+  bool saved_seen;
+} FocusRegistry;
 
-static char s_saved_name[FOCUS_NAME_MAX];
-static FocusKind s_saved_kind = FOCUS_KIND_NONE;
-static bool s_saved_seen = false;
+static FocusRegistry g_focus;
+
+#define s_entries g_focus.entries
+#define s_count (int)arrlenu(g_focus.entries)
+#define s_current g_focus.current
+#define s_saved_name g_focus.saved_name
+#define s_saved_kind g_focus.saved_kind
+#define s_saved_seen g_focus.saved_seen
 
 static bool focus_is_widget_kind(FocusKind kind) {
   return kind == FOCUS_KIND_BUTTON || kind == FOCUS_KIND_CHECKBOX ||

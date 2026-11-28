@@ -564,7 +564,8 @@ bool ski_register_hotkey(const SkHotkeySpec *spec) {
   binding.hotkey_callback_ud = spec->cb_ud;
   binding.hold = false;
   binding.should_swallow = spec->should_swallow;
-  return hotkey_register_internal(binding);
+  hotkey_register_internal(binding);
+  return true;
 }
 
 bool sk_unregister_hotkey(const char *hotkey) {

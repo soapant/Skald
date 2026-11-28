@@ -868,6 +868,7 @@ int editbox_registry_place(PromptState *state, const char *name, char *buffer,
     entry->eb.sel_start = -1;
     entry->eb.sel_end = -1;
     entry->eb.scroll_offset = 0;
+    free(entry->eb.placeholder);
     entry->eb.placeholder = NULL;
   }
   if (w <= 0)

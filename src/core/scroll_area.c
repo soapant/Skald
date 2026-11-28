@@ -9,6 +9,7 @@
 #include "helpers/helpers_ui.h"
 #include "platform/platform.h"
 #include "helpers/helpers_misc.h"
+#include "deps/log.h"
 #include "deps/stb_ds.h"
 
 #define SCROLL_STALE_LIMIT 256
@@ -97,7 +98,12 @@ static int scroll_slot_alloc(void) {
       return (int)i;
   }
   if (g_slot_count == 0) {
-    arrput(g_slots, (ScrollSlot *)calloc(1, sizeof(ScrollSlot)));
+    ScrollSlot *slot = (ScrollSlot *)calloc(1, sizeof(ScrollSlot));
+    if (!slot) {
+      log_error("scroll area: out of memory allocating slot");
+      return -1;
+    }
+    arrput(g_slots, slot);
     return 0;
   }
   size_t oldest = 0;
@@ -145,6 +151,10 @@ bool scroll_area_begin(const ScrollAreaSpec *spec) {
   int index = scroll_slot_find(spec);
   if (index < 0)
     index = scroll_slot_alloc();
+  if (index < 0) {
+    SCROLL_UNLOCK();
+    return false;
+  }
   ScrollSlot *slot = g_slots[index];
 
   owner_tag_clear(&slot->tag);

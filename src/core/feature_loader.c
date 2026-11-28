@@ -343,7 +343,10 @@ static void manifest_write_baseline(const char *name) {
   FeatureManifest m;
   memset(&m, 0, sizeof(m));
   safe_copy(m.name, sizeof(m.name), name);
-  manifest_write_full(name, &m);
+  if (!manifest_write_full(name, &m)) {
+    log_error("manifest: failed to create baseline for feature '%s'", name);
+    return;
+  }
   log_info("manifest created for feature '%s'", name);
 }
 
@@ -402,7 +405,8 @@ static void manifest_add_entry(const char *name, const char *section,
     m.provide_count++;
   else
     m.dep_count++;
-  manifest_write_full(name, &m);
+  if (!manifest_write_full(name, &m))
+    log_error("manifest add: failed to persist '%s' in %s", path, section);
 }
 
 void feature_loader_manifest_add_provides(const char *owner_path,

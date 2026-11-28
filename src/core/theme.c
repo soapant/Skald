@@ -58,15 +58,14 @@ static bool matches_any_theme(size_t off, ColorRef value) {
   return false;
 }
 
-static bool pin_add(const char *name, ColorRef value) {
+static void pin_add(const char *name, ColorRef value) {
   for (size_t i = 0; i < theme_pinned_count; i++) {
     if (strcmp(theme_pinned[i].name, name) == 0)
-      return true;
+      return;
   }
   PinnedColor *p = arraddnptr(theme_pinned, 1);
   snprintf(p->name, sizeof(p->name), "%s", name);
   p->value = value;
-  return true;
 }
 
 static bool pin_lookup(const char *name, ColorRef *out) {

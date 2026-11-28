@@ -21,7 +21,7 @@ bool config_is_auto_resolved_app(const char *name);
 bool config_load(void);
 bool config_load_path(const char *path);
 bool config_reload(void);
-void config_own_string(const char *name, char *s);
+bool config_own_string(const char *name, char *s);
 void config_unload(void);
 bool config_save(void);
 bool config_save_path(const char *path);

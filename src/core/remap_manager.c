@@ -26,10 +26,25 @@ typedef struct {
   OwnerTag tag;
 } RemapBinding;
 
-static RemapBinding *remaps;
-#define remap_count arrlenu(remaps)
+typedef struct {
+  RemapBinding *bindings;
+  void *mutex;
+  int phys_vk[256];
+  int virt_vk[256];
+  unsigned long long key_seq[256];
+  unsigned long long seq_counter;
+  bool *scratch_before;
+  bool *scratch_after;
+  bool *scratch_allowed;
+  size_t scratch_cap;
+  bool (*emit_hook)(int vk, int down);
+} RemapRegistry;
 
-static void *remap_mutex = NULL;
+static RemapRegistry g_remap;
+
+#define remaps g_remap.bindings
+#define remap_count arrlenu(g_remap.bindings)
+#define remap_mutex g_remap.mutex
 
 static void remap_lock(void) {
   remap_mutex = lazy_mutex_get(&remap_mutex);
@@ -42,15 +57,15 @@ static void remap_unlock(void) {
     Platform_MutexUnlock(remap_mutex);
 }
 
-static int phys_vk[256] = {0};
-static int virt_vk[256] = {0};
-static unsigned long long key_seq[256] = {0};
-static unsigned long long seq_counter = 0;
+#define phys_vk g_remap.phys_vk
+#define virt_vk g_remap.virt_vk
+#define key_seq g_remap.key_seq
+#define seq_counter g_remap.seq_counter
 
-static bool *scratch_before;
-static bool *scratch_after;
-static bool *scratch_allowed;
-static size_t scratch_cap = 0;
+#define scratch_before g_remap.scratch_before
+#define scratch_after g_remap.scratch_after
+#define scratch_allowed g_remap.scratch_allowed
+#define scratch_cap g_remap.scratch_cap
 
 static bool remap_scratch_reserve(size_t n) {
   if (n <= scratch_cap)
@@ -179,7 +194,7 @@ bool remap_register_internal(const char *src, const char *dst, bool whitelist,
   return ok;
 }
 
-void remap_update_phys(int vk, int value) {
+static void remap_update_phys_locked(int vk, int value) {
   if (vk < 0 || vk >= 256)
     return;
   if (value == 2)
@@ -194,9 +209,19 @@ void remap_update_phys(int vk, int value) {
   }
 }
 
-static bool (*remap_emit_hook)(int vk, int down) = NULL;
+void remap_update_phys(int vk, int value) {
+  remap_lock();
+  remap_update_phys_locked(vk, value);
+  remap_unlock();
+}
 
-void remap_set_emit_hook(bool (*fn)(int vk, int down)) { remap_emit_hook = fn; }
+#define remap_emit_hook g_remap.emit_hook
+
+void remap_set_emit_hook(bool (*fn)(int vk, int down)) {
+  remap_lock();
+  remap_emit_hook = fn;
+  remap_unlock();
+}
 
 static void emit_tracked(int vk, int down) {
   bool (*emit)(int, int) = remap_emit_hook ? remap_emit_hook : Platform_EmitKey;
@@ -208,6 +233,7 @@ static void emit_tracked(int vk, int down) {
 }
 
 void remap_reset(void) {
+  remap_lock();
   for (int i = 0; i < 256; i++) {
     if (virt_vk[i])
       emit_tracked(i, 0);
@@ -215,9 +241,10 @@ void remap_reset(void) {
     key_seq[i] = 0;
   }
   seq_counter = 0;
+  remap_unlock();
 }
 
-bool remap_check_strict_order(int trigger_vk, int mods) {
+static bool remap_check_strict_order_locked(int trigger_vk, int mods) {
   if (trigger_vk < 0 || trigger_vk >= 256)
     return true;
   unsigned long long trig_seq = key_seq[trigger_vk];
@@ -263,7 +290,15 @@ bool remap_check_strict_order(int trigger_vk, int mods) {
   return true;
 }
 
+bool remap_check_strict_order(int trigger_vk, int mods) {
+  remap_lock();
+  bool ok = remap_check_strict_order_locked(trigger_vk, mods);
+  remap_unlock();
+  return ok;
+}
+
 int remap_current_mods(void) {
+  remap_lock();
   int m = 0;
   if (phys_vk[VK_LCONTROL] || phys_vk[VK_RCONTROL] || phys_vk[VK_CONTROL])
     m |= HOTKEY_MOD_CTRL;
@@ -273,13 +308,17 @@ int remap_current_mods(void) {
     m |= HOTKEY_MOD_SHIFT;
   if (phys_vk[VK_LWIN] || phys_vk[VK_RWIN])
     m |= HOTKEY_MOD_SUPER;
+  remap_unlock();
   return m;
 }
 
 bool remap_is_virt_held(int vk) {
   if (vk < 0 || vk >= 256)
     return false;
-  return virt_vk[vk];
+  remap_lock();
+  bool held = virt_vk[vk] != 0;
+  remap_unlock();
+  return held;
 }
 
 static bool binding_active(RemapBinding *b) {
@@ -452,7 +491,7 @@ static bool remap_handle_vk_locked(int vk, int value) {
   if (value == 2)
     return false;
   if (!remap_scratch_reserve(remap_count)) {
-    remap_update_phys(vk, value);
+    remap_update_phys_locked(vk, value);
     return false;
   }
   bool *active_before = scratch_before;
@@ -464,7 +503,7 @@ static bool remap_handle_vk_locked(int vk, int value) {
   for (size_t i = 0; i < remap_count; i++)
     active_before[i] = binding_active(&remaps[i]);
 
-  remap_update_phys(vk, value);
+  remap_update_phys_locked(vk, value);
 
   for (size_t i = 0; i < remap_count; i++)
     active_after[i] = binding_active(&remaps[i]);
