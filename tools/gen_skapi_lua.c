@@ -712,6 +712,33 @@ static void emit_defaults(FILE *out, const char *rest) {
   }
 }
 
+static bool is_pure_alias(const char *rest, const char *target) {
+  size_t n = strlen(target);
+  if (strncmp(rest, target, n) != 0)
+    return false;
+  const char *p = rest + n;
+  while (*p && isspace((unsigned char)*p))
+    p++;
+  if (*p == '\0')
+    return true;
+  if (*p != '(')
+    return false;
+  p++;
+  while (*p && isspace((unsigned char)*p))
+    p++;
+  if (strncmp(p, "__VA_ARGS__", 11) != 0)
+    return false;
+  p += 11;
+  while (*p && isspace((unsigned char)*p))
+    p++;
+  if (*p != ')')
+    return false;
+  p++;
+  while (*p && isspace((unsigned char)*p))
+    p++;
+  return *p == '\0';
+}
+
 static void gen_wrapper(FILE *out, const char *name, const char *rest,
                         const char *params) {
   char raw[NAME_SZ] = {0};
@@ -812,7 +839,7 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
   if (target[0] == 's' && target[1] == 'k' && target[2] == '_' &&
       target[3] != 'i') {
     FuncDesc *td = func_for(target);
-    if (td && can_thunk(td)) {
+    if (is_pure_alias(rest, target) || (td && can_thunk(td))) {
       fprintf(out, "M.%s = function(...) return M.%s(...) end\n", name, target);
       return;
     }
