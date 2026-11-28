@@ -585,15 +585,6 @@ int config_index_of(const void *entries, size_t count, size_t elem_size,
   return -1;
 }
 
-char *dup_substring(const char *s, size_t len) {
-  char *out = (char *)malloc(len + 1);
-  if (!out)
-    return NULL;
-  memcpy(out, s, len);
-  out[len] = '\0';
-  return out;
-}
-
 bool canonical_path(const char *path, char *out, size_t cap) {
   if (!path || !out || cap == 0)
     return false;

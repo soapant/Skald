@@ -22,7 +22,6 @@ int config_index_of(const void *entries, size_t count, size_t elem_size,
   config_index_of((entries), (count), sizeof(type), offsetof(type, field),     \
                   sizeof(((type *)0)->field), (key))
 
-char *dup_substring(const char *s, size_t len);
 bool canonical_path(const char *path, char *out, size_t cap);
 bool paths_equal(const char *a, const char *b);
 bool rel_to_abs(Pos pos, Pos *out);
