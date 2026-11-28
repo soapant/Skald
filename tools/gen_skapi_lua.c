@@ -921,6 +921,10 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
 static char header_paths[2048][512];
 static int header_count;
 
+static int compare_header_paths(const void *a, const void *b) {
+  return strcmp(*(const char (*)[512])a, *(const char (*)[512])b);
+}
+
 static void collect_headers(const char *dir) {
   DIR *d = opendir(dir);
   if (!d)
@@ -1557,6 +1561,8 @@ static void collect_rets_from_file(const char *path) {
 
 static int gen_struct_header(void) {
   collect_headers("include");
+  qsort(header_paths, (size_t)header_count, sizeof(header_paths[0]),
+        compare_header_paths);
   for (int i = 0; i < header_count; i++)
     collect_rets_from_file(header_paths[i]);
 

@@ -978,14 +978,6 @@ bool sk_listbox_next(SkListItemCtx *out);
 
 void sk_listbox_end(void);
 
-bool sk_draw_text_auto(const char *text);
-
-bool sk_place_editbox_auto(int w, int h, const char *buffer);
-
-bool sk_place_listbox_auto(int w, int h, const char **items, int count);
-
-bool sk_draw_image_auto(int w, int h, const char *path);
-
 SkWidget *sk_widget_create(const SkWidgetSpec *spec);
 
 int sk_monitor_count(void);

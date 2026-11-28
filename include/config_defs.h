@@ -42,10 +42,10 @@
   X(bool, WindowTitleText, false)                                              \
   X(bool, CloseOnLossOfFocus, false)                                           \
   X(bool, AllowWindowOverride, false)                                          \
-  X(ColorRef, COLOR_BG, RGB(15, 15, 15))                                       \
-  X(ColorRef, COLOR_TEXT, RGB(255, 255, 255))                                  \
-  X(ColorRef, COLOR_SELECTION_HIGHLIGHT, RGB(0, 0, 0))                         \
-  X(ColorRef, COLOR_CURSOR, RGB(255, 255, 255))                                \
-  X(ColorRef, COLOR_BORDER, RGB(128, 128, 128))
+  X(ColorRef, COLOR_BG, RGB(13, 13, 17))                                       \
+  X(ColorRef, COLOR_TEXT, RGB(226, 230, 236))                                  \
+  X(ColorRef, COLOR_SELECTION_HIGHLIGHT, RGB(13, 13, 13))                      \
+  X(ColorRef, COLOR_CURSOR, RGB(130, 170, 255))                                \
+  X(ColorRef, COLOR_BORDER, RGB(50, 55, 65))
 
 #endif
