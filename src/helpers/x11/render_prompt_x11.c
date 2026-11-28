@@ -297,8 +297,6 @@ static bool x11_render_prompt_user_locked(Display *dpy, Window *win,
   GC gc = XCreateGC(dpy, *win, 0, NULL);
   XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
   XFreeGC(dpy, gc);
-  log_debug("prompt blit win=%lu pm=%lu %dx%d suppress=%d", (unsigned long)*win,
-            (unsigned long)dbl, w, h, suppress_content ? 1 : 0);
   XFlush(dpy);
   return true;
 }

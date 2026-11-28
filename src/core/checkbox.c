@@ -23,12 +23,74 @@
 static CheckboxSpec **checkboxes;
 #define checkbox_count arrlenu(checkboxes)
 
+typedef struct {
+  CheckboxSpec *cb;
+  unsigned frame;
+  long long ms;
+} PendingClick;
+
 static WidgetMouseState cb_mouse;
+static PendingClick *pending_clicks;
+static unsigned cb_frame;
+static long long last_click_ms;
+
+static void checkbox_note_click(CheckboxSpec *cb) {
+  long long now_ms = Platform_GetWallClockMs();
+  long long dt = now_ms - last_click_ms;
+  if (dt < 200) {
+    log_info("button click ignored debounce name=%s dt=%lld",
+             cb->name ? cb->name : "?", dt);
+    return;
+  }
+  last_click_ms = now_ms;
+  for (size_t i = 0; i < arrlenu(pending_clicks); i++) {
+    if (pending_clicks[i].cb != cb)
+      continue;
+    pending_clicks[i].frame = cb_frame;
+    pending_clicks[i].ms = now_ms;
+    log_info("button click noted name=%s frame=%u", cb->name ? cb->name : "?",
+             cb_frame);
+    return;
+  }
+  PendingClick *e = arraddnptr(pending_clicks, 1);
+  e->cb = cb;
+  e->frame = cb_frame;
+  e->ms = now_ms;
+  log_info("button click noted name=%s frame=%u", cb->name ? cb->name : "?",
+           cb_frame);
+}
+
+static bool checkbox_take_click(CheckboxSpec *cb) {
+  for (size_t i = 0; i < arrlenu(pending_clicks);) {
+    if (pending_clicks[i].cb == cb) {
+      log_info("button click taken name=%s frame=%u age=%u",
+               cb->name ? cb->name : "?", pending_clicks[i].frame,
+               cb_frame - pending_clicks[i].frame);
+      arrdelswap(pending_clicks, (int)i);
+      cb->clicked = false;
+      return true;
+    }
+    i++;
+  }
+  cb->clicked = false;
+  return false;
+}
 
 void checkbox_frame_begin(void) {
+  cb_frame++;
   cb_mouse.valid = false;
   for (size_t i = 0; i < checkbox_count; i++)
     checkboxes[i]->clicked = false;
+  for (size_t i = 0; i < arrlenu(pending_clicks);) {
+    if (pending_clicks[i].frame + 1 < cb_frame) {
+      log_info("button click expired name=%s frame=%u",
+               pending_clicks[i].cb->name ? pending_clicks[i].cb->name : "?",
+               pending_clicks[i].frame);
+      arrdelswap(pending_clicks, (int)i);
+    } else {
+      i++;
+    }
+  }
 }
 
 static void checkbox_focus_activate(void *owner) {
@@ -36,10 +98,13 @@ static void checkbox_focus_activate(void *owner) {
   if (!cb)
     return;
   cb->clicked = true;
+  checkbox_note_click(cb);
   if (!cb->button)
     cb->checked = !cb->checked;
-  if (cb->on_click)
+  if (cb->on_click) {
     cb->on_click();
+    checkbox_take_click(cb);
+  }
 }
 
 static CheckboxSpec *checkbox_find(const char *name, int kind) {
@@ -93,10 +158,7 @@ bool checkbox_is_clicked(const char *name, int kind) {
 
 bool checkbox_take_clicked(const char *name, int kind) {
   CheckboxSpec *cb = name ? checkbox_find(name, kind) : NULL;
-  if (!cb || !cb->clicked)
-    return false;
-  cb->clicked = false;
-  return true;
+  return cb ? checkbox_take_click(cb) : false;
 }
 
 static void checkbox_fill_border(int x, int y, int w, int h, int thick,
@@ -283,6 +345,7 @@ bool checkbox_place(const CheckboxSpec *spec) {
     if (hovered) {
       cb->checked = !cb->checked;
       cb->clicked = true;
+      checkbox_note_click(cb);
       clicked = true;
       focus_select(spec->name);
     }
@@ -291,8 +354,10 @@ bool checkbox_place(const CheckboxSpec *spec) {
 
   checkbox_draw(cb);
 
-  if (clicked && cb->on_click)
+  if (clicked && cb->on_click) {
     cb->on_click();
+    checkbox_take_click(cb);
+  }
   if (hover_changed && cb->on_hover)
     cb->on_hover();
   return true;

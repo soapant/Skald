@@ -589,8 +589,10 @@ static void cc_prewarm_apps(void) {
   cc_load_apps();
   size_t total = cc_app_total();
   size_t n = total < 48 ? total : 48;
-  for (size_t i = 0; i < n; i++)
-    sk_prewarm_image(cc_apps[i].icon);
+  if (EnableIcons) {
+    for (size_t i = 0; i < n; i++)
+      sk_prewarm_image(cc_apps[i].icon);
+  }
 }
 
 static bool cc_launch_app(void) {

@@ -275,9 +275,6 @@ static void x11_process_xevent(Display *dpy, XEvent *ev, WindowManager *wm) {
     break;
   }
   case Expose:
-    log_debug("x11 expose win=%lu count=%d top=%lu -> render top",
-              (unsigned long)ev->xexpose.window, ev->xexpose.count,
-              top ? (unsigned long)top->handle.xid : 0UL);
     if (top->vtable && top->vtable->on_render) {
       top->vtable->on_render(top);
     }
