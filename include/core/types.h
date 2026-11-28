@@ -19,4 +19,16 @@ typedef struct {
 
 typedef void (*DirChangeCallback)(const char *full_path, int added);
 
+typedef struct {
+  const char *name;
+  const char *key;
+  const char *default_hotkey;
+  void (*cb)(void);
+  void (*cb_ud)(void *);
+  bool (*should_swallow)(void);
+  const char *whitelist[16];
+  const char *blacklist[16];
+  void *ud;
+} ConfigHotkeyRegister;
+
 #endif

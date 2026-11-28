@@ -2897,7 +2897,7 @@ char *sk_config_hotkey_display_name_at(int index) {
 }
 
 bool ski_register_config_hotkey(const SkConfigHotkeyRegister *spec) {
-  return config_hotkey_register((const ConfigHotkeyRegister *)spec);
+  return config_hotkey_register(spec);
 }
 
 void sk_init_all_hotkeys(void) { config_hotkey_bind_all(); }

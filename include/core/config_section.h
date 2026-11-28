@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include "core/config_toml.h"
+#include "core/types.h"
 
 typedef enum {
   CONFIG_ENTRY_HOTKEY = 0,
@@ -52,18 +53,6 @@ bool config_feature_shortcut_set(const char *name, const char *target);
 bool feature_shortcut_run(const char *name);
 
 typedef void (*ConfigHotkeyFn)(void *ud);
-
-typedef struct {
-  const char *name;
-  const char *key;
-  const char *default_hotkey;
-  void (*cb)(void);
-  void (*cb_ud)(void *);
-  bool (*should_swallow)(void);
-  const char *whitelist[16];
-  const char *blacklist[16];
-  void *ud;
-} ConfigHotkeyRegister;
 
 bool config_hotkey_register(const ConfigHotkeyRegister *spec);
 void config_hotkey_bind_all(void);

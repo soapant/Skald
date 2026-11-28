@@ -647,6 +647,46 @@ void editbox_layout(EditboxSpec *spec, EditboxLayout *out) {
     *out = layout;
 }
 
+static void editbox_draw_caret(const EditboxSpec *spec,
+                               const EditboxLayout *layout, unsigned long bg,
+                               int caret_y, int caret_text_y) {
+  Platform_DrawRectRaw((DrawRectRawSpec){.x = layout->caret_x,
+                                         .y = caret_y,
+                                         .w = layout->caret_w,
+                                         .h = spec->caret_h,
+                                         .color = rgb_to_hex(COLOR_CURSOR),
+                                         .opaque = true,
+                                         .thickness = 1,
+                                         .filled = true});
+  if (layout->caret_w <= 1)
+    return;
+  const char *src = spec->text;
+  int srclen = spec->text_len;
+  if ((!src || srclen <= 0) && spec->placeholder && spec->placeholder[0]) {
+    src = spec->placeholder;
+    srclen = (int)strlen(src);
+  }
+  if (!src || spec->cursor < 0 || spec->cursor >= srclen)
+    return;
+  int cl = 1;
+  while (spec->cursor + cl < srclen &&
+         ((unsigned char)src[spec->cursor + cl] & 0xC0) == 0x80)
+    cl++;
+  if (cl > 7)
+    cl = 7;
+  char ch[8];
+  memcpy(ch, src + spec->cursor, (size_t)cl);
+  ch[cl] = '\0';
+  Platform_DrawTextRaw((DrawTextRaw){.x = layout->caret_x,
+                                     .y = caret_text_y,
+                                     .text = ch,
+                                     .color = bg,
+                                     .font = spec->font,
+                                     .align = "",
+                                     .pad = 0,
+                                     .font_size = spec->font_size});
+}
+
 void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
                   int parts) {
 
@@ -677,47 +717,9 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
         editbox_wrap_draw_text(spec, layout->scroll_y, spec->placeholder, ph);
       }
     }
-    if ((parts & EDITBOX_PART_CARET) && !spec->password_mode) {
-      Platform_DrawRectRaw((DrawRectRawSpec){.x = layout->caret_x,
-                                             .y = layout->caret_y,
-                                             .w = layout->caret_w,
-                                             .h = spec->caret_h,
-                                             .color = rgb_to_hex(COLOR_CURSOR),
-                                             .opaque = true,
-                                             .thickness = 1,
-                                             .filled = true});
-      if (layout->caret_w > 1) {
-        const char *src = spec->text;
-        int srclen = spec->text_len;
-        bool is_placeholder = false;
-        if ((!src || srclen <= 0) && spec->placeholder &&
-            spec->placeholder[0]) {
-          src = spec->placeholder;
-          srclen = (int)strlen(src);
-          is_placeholder = true;
-        }
-        (void)is_placeholder;
-        if (src && spec->cursor >= 0 && spec->cursor < srclen) {
-          int cl = 1;
-          while (spec->cursor + cl < srclen &&
-                 ((unsigned char)src[spec->cursor + cl] & 0xC0) == 0x80)
-            cl++;
-          if (cl > 7)
-            cl = 7;
-          char ch[8];
-          memcpy(ch, src + spec->cursor, (size_t)cl);
-          ch[cl] = '\0';
-          Platform_DrawTextRaw((DrawTextRaw){.x = layout->caret_x,
-                                             .y = layout->caret_text_y,
-                                             .text = ch,
-                                             .color = bg,
-                                             .font = spec->font,
-                                             .align = "",
-                                             .pad = 0,
-                                             .font_size = spec->font_size});
-        }
-      }
-    }
+    if ((parts & EDITBOX_PART_CARET) && !spec->password_mode)
+      editbox_draw_caret(spec, layout, bg, layout->caret_y,
+                         layout->caret_text_y);
     return;
   }
 
@@ -767,45 +769,11 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
     if (spec->password_mode) {
       return;
     }
-    Platform_DrawRectRaw((DrawRectRawSpec){.x = layout->caret_x,
-                                           .y = spec->caret_y,
-                                           .w = layout->caret_w,
-                                           .h = spec->caret_h,
-                                           .color = rgb_to_hex(COLOR_CURSOR),
-                                           .opaque = true,
-                                           .thickness = 1,
-                                           .filled = true});
-    if (layout->caret_w > 1) {
-      const char *src = spec->password_mode ? NULL : spec->text;
-      int srclen = spec->text_len;
-      bool is_placeholder = false;
-      if ((!src || srclen <= 0) && spec->placeholder && spec->placeholder[0]) {
-        src = spec->placeholder;
-        srclen = (int)strlen(src);
-        is_placeholder = true;
-      }
-      if (src && spec->cursor >= 0 && spec->cursor < srclen) {
-        int cl = 1;
-        while (spec->cursor + cl < srclen &&
-               ((unsigned char)src[spec->cursor + cl] & 0xC0) == 0x80)
-          cl++;
-        if (cl > 7)
-          cl = 7;
-        char ch[8];
-        memcpy(ch, src + spec->cursor, (size_t)cl);
-        ch[cl] = '\0';
-        int ty =
-            is_placeholder ? spec->text_y + spec->placeholder_dy : spec->text_y;
-        Platform_DrawTextRaw((DrawTextRaw){.x = layout->caret_x,
-                                           .y = ty,
-                                           .text = ch,
-                                           .color = bg,
-                                           .font = spec->font,
-                                           .align = "",
-                                           .pad = 0,
-                                           .font_size = spec->font_size});
-      }
-    }
+    int caret_text_y = spec->text_y;
+    if ((!spec->text || spec->text_len <= 0) && spec->placeholder &&
+        spec->placeholder[0])
+      caret_text_y += spec->placeholder_dy;
+    editbox_draw_caret(spec, layout, bg, spec->caret_y, caret_text_y);
   }
 }
 

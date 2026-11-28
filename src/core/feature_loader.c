@@ -40,7 +40,10 @@
 static void (**deferred_inits)(void);
 #define deferred_count arrlenu(deferred_inits)
 
+typedef void (*FeatureInitFn)(void);
+
 static void feature_loader_load_lua_all(void);
+static FeatureInitFn feature_init_of(LibHandle h);
 
 void deferred_init_register(void (*cb)(void)) {
   if (!cb)
@@ -466,11 +469,7 @@ static bool load_single(const char *dir, const char *filename) {
     log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
     return false;
   }
-  void (*init)(void) =
-      (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
-  if (!init)
-    init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
-  if (!init)
+  if (!feature_init_of(h))
     log_warn("feature %s has no skald_feature_init/reload symbol", name);
 
   LoadedFeature *f = &features[feature_count++];
@@ -1052,10 +1051,7 @@ static void call_feature_shutdown(LibHandle handle) {
 }
 
 static void purge_failed_library(LibHandle h, const char *path) {
-  void (*init)(void) =
-      (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
-  if (!init)
-    init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
+  FeatureInitFn init = feature_init_of(h);
   char *owner = init ? owner_resolve_for_func_alloc((void *)init) : NULL;
   if (!owner || !owner[0]) {
     owner_strfree(&owner);
@@ -1129,6 +1125,44 @@ void feature_loader_shutdown(void) {
   log_info("feature_loader_shutdown completed");
 }
 
+static FeatureInitFn feature_init_of(LibHandle h) {
+  FeatureInitFn init =
+      (FeatureInitFn)Platform_GetSymbol(h, "skald_feature_init");
+  if (!init)
+    init = (FeatureInitFn)Platform_GetSymbol(h, "SkaldFeatureReload");
+  return init;
+}
+
+static bool feature_reload_prepare(const char *src, const char *base,
+                                   const char *name, const char *context,
+                                   char **out_uniq, LibHandle *out_h) {
+  char *uniquepath = reload_lib_unique_copy(src, base, ++reload_seq, NULL);
+  if (!uniquepath) {
+    log_error("reload %s: copy failed%s", name, context);
+    return false;
+  }
+  atomic_store_explicit(&feature_load_in_progress, true, memory_order_release);
+  LibHandle h = Platform_LoadLibrary(uniquepath);
+  atomic_store_explicit(&feature_load_in_progress, false, memory_order_release);
+  if (!h) {
+    log_error("reload %s failed: %s%s", name, Platform_GetLoadError(), context);
+    file_remove_path(uniquepath);
+    free(uniquepath);
+    return false;
+  }
+  if (!feature_init_of(h)) {
+    log_error("reload %s: no init symbol%s", name, context);
+    purge_failed_library(h, uniquepath);
+    Platform_UnloadLibrary(h);
+    file_remove_path(uniquepath);
+    free(uniquepath);
+    return false;
+  }
+  *out_uniq = uniquepath;
+  *out_h = h;
+  return true;
+}
+
 bool feature_loader_reload_from(const char *name, const char *src_path) {
   if (!name) {
     feature_loader_reload_all();
@@ -1151,37 +1185,10 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
       const char *base = path_copy ? path_copy : "";
       const char *src = (src_path && src_path[0]) ? src_path : base;
       LibHandle old = features[i].handle;
-      char *uniquepath = reload_lib_unique_copy(src, base, ++reload_seq, NULL);
-      if (!uniquepath) {
-        log_error("reload %s: copy failed (keeping old)", name);
-        owner_strfree(&path_copy);
-        UNLOCK();
-        return false;
-      }
-      atomic_store_explicit(&feature_load_in_progress, true,
-                            memory_order_release);
-      LibHandle h = Platform_LoadLibrary(uniquepath);
-      atomic_store_explicit(&feature_load_in_progress, false,
-                            memory_order_release);
-      if (!h) {
-        log_error("reload %s failed: %s (keeping old)", name,
-                  Platform_GetLoadError());
-        file_remove_path(uniquepath);
-        free(uniquepath);
-        owner_strfree(&path_copy);
-        UNLOCK();
-        return false;
-      }
-      void (*init)(void) =
-          (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
-      if (!init)
-        init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
-      if (!init) {
-        log_error("reload %s: no init symbol, keeping old", name);
-        purge_failed_library(h, uniquepath);
-        Platform_UnloadLibrary(h);
-        file_remove_path(uniquepath);
-        free(uniquepath);
+      char *uniquepath = NULL;
+      LibHandle h = NULL;
+      if (!feature_reload_prepare(src, base, name, " (keeping old)",
+                                  &uniquepath, &h)) {
         owner_strfree(&path_copy);
         UNLOCK();
         return false;
@@ -1232,36 +1239,11 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
     manifest_write_baseline(name);
     char new_src[512];
     fl_copy(new_src, sizeof(new_src), src_path);
-    char *uniquepath =
-        reload_lib_unique_copy(src_path, new_src, ++reload_seq, NULL);
-    if (!uniquepath) {
-      log_error("reload %s: copy of new build failed", name);
-      UNLOCK();
-      return false;
-    }
-    atomic_store_explicit(&feature_load_in_progress, true,
-                          memory_order_release);
-    LibHandle h = Platform_LoadLibrary(uniquepath);
-    atomic_store_explicit(&feature_load_in_progress, false,
-                          memory_order_release);
-    if (!h) {
-      log_error("reload %s failed: %s (new feature, not loaded)", name,
-                Platform_GetLoadError());
-      file_remove_path(uniquepath);
-      free(uniquepath);
-      UNLOCK();
-      return false;
-    }
-    void (*init)(void) =
-        (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
-    if (!init)
-      init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
-    if (!init) {
-      log_error("reload %s: no init symbol, new feature not loaded", name);
-      purge_failed_library(h, uniquepath);
-      Platform_UnloadLibrary(h);
-      file_remove_path(uniquepath);
-      free(uniquepath);
+    char *uniquepath = NULL;
+    LibHandle h = NULL;
+    if (!feature_reload_prepare(src_path, new_src, name,
+                                " (new feature, not loaded)", &uniquepath,
+                                &h)) {
       UNLOCK();
       return false;
     }

@@ -34,6 +34,7 @@ typedef WidgetSpec SkWidgetSpec;
 typedef WidgetKey SkWidgetKey;
 typedef WidgetState SkWidgetState;
 typedef WidgetRenderFn SkWidgetRenderFn;
+typedef ConfigHotkeyRegister SkConfigHotkeyRegister;
 typedef DrawRect SkRect;
 typedef Line SkLine;
 typedef Circle SkCircle;
@@ -325,18 +326,6 @@ typedef struct {
   bool swallow;
   void *ud;
 } SkHotkeySpec;
-
-typedef struct {
-  const char *name;
-  const char *key;
-  const char *default_hotkey;
-  void (*cb)(void);
-  void (*cb_ud)(void *);
-  bool (*should_swallow)(void);
-  const char *whitelist[16];
-  const char *blacklist[16];
-  void *ud;
-} SkConfigHotkeyRegister;
 
 typedef struct {
   const char *src;

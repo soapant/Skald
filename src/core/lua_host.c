@@ -601,53 +601,50 @@ static void with_owner(lua_State *L, void (*fn)(lua_State *L)) {
   }
 }
 
-static void call_v(lua_State *L) {
+static void *slua_native_fn(lua_State *L) {
   const char *name = luaL_checkstring(L, 1);
   void *sym = Platform_GetMainSymbol(name);
   if (!sym)
     luaL_error(L, "unknown skapi function '%s'", name);
-  uintptr_t a[6] = {0};
+  return sym;
+}
+
+static void slua_native_args(lua_State *L, uintptr_t a[6]) {
   for (int i = 0; i < 6; i++)
     a[i] = arg_value(L, 2 + i);
+}
+
+static void call_v(lua_State *L) {
+  void *sym = slua_native_fn(L);
+  uintptr_t a[6];
+  slua_native_args(L, a);
   ((void (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
              uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
   lua_pushboolean(L, 1);
 }
 
 static void call_b(lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol(name);
-  if (!sym)
-    luaL_error(L, "unknown skapi function '%s'", name);
-  uintptr_t a[6] = {0};
-  for (int i = 0; i < 6; i++)
-    a[i] = arg_value(L, 2 + i);
+  void *sym = slua_native_fn(L);
+  uintptr_t a[6];
+  slua_native_args(L, a);
   bool r = ((bool (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
                       uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
   lua_pushboolean(L, r);
 }
 
 static void call_i(lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol(name);
-  if (!sym)
-    luaL_error(L, "unknown skapi function '%s'", name);
-  uintptr_t a[6] = {0};
-  for (int i = 0; i < 6; i++)
-    a[i] = arg_value(L, 2 + i);
+  void *sym = slua_native_fn(L);
+  uintptr_t a[6];
+  slua_native_args(L, a);
   int r = ((int (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
                     uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
   lua_pushinteger(L, r);
 }
 
 static void call_s(lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol(name);
-  if (!sym)
-    luaL_error(L, "unknown skapi function '%s'", name);
-  uintptr_t a[6] = {0};
-  for (int i = 0; i < 6; i++)
-    a[i] = arg_value(L, 2 + i);
+  void *sym = slua_native_fn(L);
+  uintptr_t a[6];
+  slua_native_args(L, a);
   char *r = ((char *(*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
                         uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
   if (r)
@@ -657,23 +654,16 @@ static void call_s(lua_State *L) {
 }
 
 static void call_p(lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol(name);
-  if (!sym)
-    luaL_error(L, "unknown skapi function '%s'", name);
-  uintptr_t a[6] = {0};
-  for (int i = 0; i < 6; i++)
-    a[i] = arg_value(L, 2 + i);
+  void *sym = slua_native_fn(L);
+  uintptr_t a[6];
+  slua_native_args(L, a);
   void *r = ((void *(*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t,
                         uintptr_t))sym)(a[0], a[1], a[2], a[3], a[4], a[5]);
   lua_pushlightuserdata(L, r);
 }
 
 static void call_f(lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  void *sym = Platform_GetMainSymbol(name);
-  if (!sym)
-    luaL_error(L, "unknown skapi function '%s'", name);
+  void *sym = slua_native_fn(L);
   double a[6] = {0};
   for (int i = 0; i < 6; i++)
     a[i] = lua_tonumber(L, 2 + i);

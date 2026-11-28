@@ -425,19 +425,6 @@ static const LuaFieldDesc lf_ConfigTomlError[] = {
 };
 static const LuaStructDesc lsd_ConfigTomlError = {"ConfigTomlError", sizeof(ConfigTomlError), lf_ConfigTomlError, (int)(sizeof(lf_ConfigTomlError)/sizeof(lf_ConfigTomlError[0]))};
 #include "core/config_section.h"
-static const LuaFieldDesc lf_ConfigHotkeyRegister[] = {
-    {"name", LSF_STR, offsetof(ConfigHotkeyRegister, name), 0, 0, NULL},
-    {"key", LSF_STR, offsetof(ConfigHotkeyRegister, key), 0, 0, NULL},
-    {"default_hotkey", LSF_STR, offsetof(ConfigHotkeyRegister, default_hotkey), 0, 0, NULL},
-    {"cb", LSF_CB, offsetof(ConfigHotkeyRegister, cb), 0, 0, NULL},
-    {"cb_ud", LSF_CB, offsetof(ConfigHotkeyRegister, cb_ud), 0, 1, NULL},
-    {"should_swallow", LSF_CB, offsetof(ConfigHotkeyRegister, should_swallow), 0, 3, NULL},
-    {"whitelist", LSF_STR_ARRAY, offsetof(ConfigHotkeyRegister, whitelist), 16, 0, NULL},
-    {"blacklist", LSF_STR_ARRAY, offsetof(ConfigHotkeyRegister, blacklist), 16, 0, NULL},
-    {"ud", LSF_PTR, offsetof(ConfigHotkeyRegister, ud), 0, 0, NULL},
-};
-static const LuaStructDesc lsd_ConfigHotkeyRegister = {"ConfigHotkeyRegister", sizeof(ConfigHotkeyRegister), lf_ConfigHotkeyRegister, (int)(sizeof(lf_ConfigHotkeyRegister)/sizeof(lf_ConfigHotkeyRegister[0]))};
-#include "core/config_section.h"
 static const LuaFieldDesc lf_ConfigSectionSetEx[] = {
     {"path", LSF_STR, offsetof(ConfigSectionSetEx, path), 0, 0, NULL},
     {"section", LSF_STR, offsetof(ConfigSectionSetEx, section), 0, 0, NULL},
@@ -863,19 +850,6 @@ static const LuaFieldDesc lf_SkHotkeySpec[] = {
 };
 static const LuaStructDesc lsd_SkHotkeySpec = {"SkHotkeySpec", sizeof(SkHotkeySpec), lf_SkHotkeySpec, (int)(sizeof(lf_SkHotkeySpec)/sizeof(lf_SkHotkeySpec[0]))};
 #include "core/skapi.h"
-static const LuaFieldDesc lf_SkConfigHotkeyRegister[] = {
-    {"name", LSF_STR, offsetof(SkConfigHotkeyRegister, name), 0, 0, NULL},
-    {"key", LSF_STR, offsetof(SkConfigHotkeyRegister, key), 0, 0, NULL},
-    {"default_hotkey", LSF_STR, offsetof(SkConfigHotkeyRegister, default_hotkey), 0, 0, NULL},
-    {"cb", LSF_CB, offsetof(SkConfigHotkeyRegister, cb), 0, 0, NULL},
-    {"cb_ud", LSF_CB, offsetof(SkConfigHotkeyRegister, cb_ud), 0, 1, NULL},
-    {"should_swallow", LSF_CB, offsetof(SkConfigHotkeyRegister, should_swallow), 0, 3, NULL},
-    {"whitelist", LSF_STR_ARRAY, offsetof(SkConfigHotkeyRegister, whitelist), 16, 0, NULL},
-    {"blacklist", LSF_STR_ARRAY, offsetof(SkConfigHotkeyRegister, blacklist), 16, 0, NULL},
-    {"ud", LSF_PTR, offsetof(SkConfigHotkeyRegister, ud), 0, 0, NULL},
-};
-static const LuaStructDesc lsd_SkConfigHotkeyRegister = {"SkConfigHotkeyRegister", sizeof(SkConfigHotkeyRegister), lf_SkConfigHotkeyRegister, (int)(sizeof(lf_SkConfigHotkeyRegister)/sizeof(lf_SkConfigHotkeyRegister[0]))};
-#include "core/skapi.h"
 static const LuaFieldDesc lf_SkRemappingSpec[] = {
     {"src", LSF_STR, offsetof(SkRemappingSpec, src), 0, 0, NULL},
     {"dst", LSF_STR, offsetof(SkRemappingSpec, dst), 0, 0, NULL},
@@ -1005,6 +979,19 @@ static const LuaFieldDesc lf_ImageBuffer[] = {
     {"platform", LSF_PTR, offsetof(ImageBuffer, platform), 0, 0, NULL},
 };
 static const LuaStructDesc lsd_ImageBuffer = {"ImageBuffer", sizeof(ImageBuffer), lf_ImageBuffer, (int)(sizeof(lf_ImageBuffer)/sizeof(lf_ImageBuffer[0]))};
+#include "core/types.h"
+static const LuaFieldDesc lf_ConfigHotkeyRegister[] = {
+    {"name", LSF_STR, offsetof(ConfigHotkeyRegister, name), 0, 0, NULL},
+    {"key", LSF_STR, offsetof(ConfigHotkeyRegister, key), 0, 0, NULL},
+    {"default_hotkey", LSF_STR, offsetof(ConfigHotkeyRegister, default_hotkey), 0, 0, NULL},
+    {"cb", LSF_CB, offsetof(ConfigHotkeyRegister, cb), 0, 0, NULL},
+    {"cb_ud", LSF_CB, offsetof(ConfigHotkeyRegister, cb_ud), 0, 1, NULL},
+    {"should_swallow", LSF_CB, offsetof(ConfigHotkeyRegister, should_swallow), 0, 3, NULL},
+    {"whitelist", LSF_STR_ARRAY, offsetof(ConfigHotkeyRegister, whitelist), 16, 0, NULL},
+    {"blacklist", LSF_STR_ARRAY, offsetof(ConfigHotkeyRegister, blacklist), 16, 0, NULL},
+    {"ud", LSF_PTR, offsetof(ConfigHotkeyRegister, ud), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_ConfigHotkeyRegister = {"ConfigHotkeyRegister", sizeof(ConfigHotkeyRegister), lf_ConfigHotkeyRegister, (int)(sizeof(lf_ConfigHotkeyRegister)/sizeof(lf_ConfigHotkeyRegister[0]))};
 #include "core/context.h"
 static const LuaFieldDesc lf_SubwindowInfo[] = {
     {"in_enter", LSF_BOOL, offsetof(SubwindowInfo, in_enter), 0, 0, NULL},
@@ -1922,7 +1909,6 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_PromptPopupResizeCurrentAnimated,
     &lsd_ConfigTomlEntry,
     &lsd_ConfigTomlError,
-    &lsd_ConfigHotkeyRegister,
     &lsd_ConfigSectionSetEx,
     &lsd_SearchHit,
     &lsd_SearchIndexAddText,
@@ -1964,7 +1950,6 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_SkScrollEvent,
     &lsd_SkConfigHotkeySpec,
     &lsd_SkHotkeySpec,
-    &lsd_SkConfigHotkeyRegister,
     &lsd_SkRemappingSpec,
     &lsd_SkSnippetSpec,
     &lsd_SkSearchAddTextSpec,
@@ -1978,6 +1963,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_TextPromptRenderData,
     &lsd_TextPrompt,
     &lsd_ImageBuffer,
+    &lsd_ConfigHotkeyRegister,
     &lsd_SubwindowInfo,
     &lsd_HeadlessDispatch,
     &lsd_WindowContext,
@@ -2059,6 +2045,7 @@ static const char *lua_alias_from[] = {
     "SkWidgetKey",
     "SkWidgetState",
     "SkWidgetRenderFn",
+    "SkConfigHotkeyRegister",
     "SkRect",
     "SkLine",
     "SkCircle",
@@ -2107,6 +2094,7 @@ static const char *lua_alias_to[] = {
     "WidgetKey",
     "WidgetState",
     "WidgetRenderFn",
+    "ConfigHotkeyRegister",
     "DrawRect",
     "Line",
     "Circle",
@@ -5667,7 +5655,7 @@ static inline int lthunk_sk_unregister_hotkey(lua_State *L) {
 }
 static inline int lthunk_ski_register_config_hotkey(lua_State *L) {
   slua_owner_from_state(L);
-  SkConfigHotkeyRegister a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkConfigHotkeyRegister", 1, &a0);
+  ConfigHotkeyRegister a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "ConfigHotkeyRegister", 1, &a0);
   void *sym = Platform_GetMainSymbol("ski_register_config_hotkey");
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_register_config_hotkey"); }
   typedef bool (*fn_t)(const SkConfigHotkeyRegister *);
