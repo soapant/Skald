@@ -5,6 +5,7 @@
 #include <wchar.h>
 #include "core/types.h"
 #include "core/types/window.h"
+#include "core/draw_state.h"
 #include "platform/draw.h"
 #include "platform/platform.h"
 
@@ -26,7 +27,8 @@ typedef struct {
 bool cover_scale(CoverScale *argspec);
 
 int draw_thickness_px(float thickness);
-void draw_measure_track(int x, int y, int w, int h);
+#define draw_measure_track(x, y, w, h)                                         \
+  draw_state_track_measure((x), (y), (w), (h))
 
 typedef struct {
   const DrawLineRaw *spec;

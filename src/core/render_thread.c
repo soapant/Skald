@@ -140,8 +140,6 @@ bool render_thread_is_running(void) {
   return atomic_load_explicit(&g_running, memory_order_acquire);
 }
 
-void *render_thread_display(void) { return Platform_RenderThreadDisplay(); }
-
 bool render_thread_is_current_thread(void) { return is_thread; }
 
 bool render_thread_add_frame_callback(RenderFrameFn fn, void *ud) {

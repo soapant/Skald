@@ -2,6 +2,7 @@
 #define HELPERS_RENDER_THREAD_H
 
 #include <stdbool.h>
+#include "platform/platform.h"
 
 typedef void (*RenderFrameFn)(void *ud);
 
@@ -14,7 +15,7 @@ bool render_thread_post(RenderFrameFn fn, void *ud);
 void render_thread_wake(void);
 void render_thread_sync(void);
 bool render_thread_is_current_thread(void);
-void *render_thread_display(void);
+#define render_thread_display() Platform_RenderThreadDisplay()
 
 void render_thread_main(void);
 

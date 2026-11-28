@@ -695,10 +695,6 @@ int draw_thickness_px(float thickness) {
   return px;
 }
 
-void draw_measure_track(int x, int y, int w, int h) {
-  draw_state_track_measure(x, y, w, h);
-}
-
 void update_text_caret(void) {
   WindowManager *wm = WindowManager_Get();
   Popup *top = wm ? WindowManager_GetTopPopup(wm) : NULL;

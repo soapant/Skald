@@ -110,10 +110,6 @@ static unsigned long settings_color(unsigned long color) {
   return rgb_to_hex(color);
 }
 
-static ColorRef settings_color_lerp(ColorRef a, ColorRef b, float t) {
-  return color_lerp_bgr(a, b, t);
-}
-
 static int settings_text_width(const char *text, int font_size) {
   if (!text)
     return 0;
@@ -1339,7 +1335,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
 
   settings_draw_rect(.x = -7, .y = -10, .w = pane_w + 24, .h = 220,
                      .color =
-                         settings_color_lerp(COLOR_BG, RGB(0, 0, 0), 0.42f),
+                         color_lerp_bgr(COLOR_BG, RGB(0, 0, 0), 0.42f),
                      .filled = true, .rounded = false);
 
   if (entry->icon[0] && EnableIcons)
@@ -1351,7 +1347,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
                                 .color = color_lerp(COLOR_BG,
                                                     RGB(255, 255, 255), 0.48f));
   settings_draw_rect(.x = 5, .y = 218, .w = 200, .h = 28,
-                     .color = settings_color_lerp(COLOR_BG, RGB(0, 0, 0), 0.5f),
+                     .color = color_lerp_bgr(COLOR_BG, RGB(0, 0, 0), 0.5f),
                      .filled = true, .radius = 9);
   settings_place_editbox(.name = search_name, .x = 5, .y = 218, .w = 200,
                          .h = 28, .font_size = 14, .caret_h = 16,
@@ -1605,7 +1601,7 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
         if (i == open_block->selected)
           settings_draw_rect(.x = panel_x + 4, .y = y, .w = opt_w,
                              .h = SETTINGS_DROPDOWN_OPT_H,
-                             .color = settings_color_lerp(
+                             .color = color_lerp_bgr(
                                  COLOR_BG, RGB(255, 255, 255), 0.10f),
                              .filled = true, .radius = 4);
         s_dispatch_entry = open_entry;
