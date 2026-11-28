@@ -36,35 +36,35 @@ M.store_clear = function(feature, key)
   key = key or feature
   return native.ski_store_clear(feature, key)
 end
-M.send_key = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.send_hotkey(v) end
+M.send_key = function(...) return M.send_hotkey(...) end
 M.set_window_geometry = function(t, window) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_set_window_geometry", "SkRect", v, "b",window) end
 M.populate_listbox = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_populate_listbox", "SkPopulateListboxSpec", v, "v") end
 M.edit_text_popup = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_edit_text_popup", "SkEditPopupSpec", v, "s") end
 M.popup = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_popup", "PopupSpec", v, "s") end
 M.message = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_message", "SkMessageSpec", v, "v") end
 M.overlay = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.timeout == nil then v.timeout = 10000000.0 end return M.message(v) end
-M.dismiss_overlay = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.dismiss_message(v) end
-M.overlay_active = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.message_active(v) end
+M.dismiss_overlay = function(...) return M.dismiss_message(...) end
+M.overlay_active = function(...) return M.message_active(...) end
 M.subwindow = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.subwindow == nil then v.subwindow = true end return M.window(v) end
 M.window = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_window", "SkPromptSpec", v, "v") end
 M.measure_text_wrapped = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_measure_text_wrapped", "SkMeasureSpec", v, "i") end
-M.text_bounds = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_text_bounds", "SkTextBoundsSpec", v, "i") end
+M.text_bounds = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.ski_text_bounds(v) end
 M.draw_text_segments = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_text_segments", "SkTextSegmentsSpec", v, "b") end
 M.draw_text_wrapped = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_text_wrapped", "SkTextWrappedSpec", v, "i") end
 M.get_image_size = function(path) return native.image_size(path) end
-M.checkbox_hovered = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.checkbox_is_hovered(v) end
-M.checkbox_clicked = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.checkbox_is_clicked(v) end
-M.slider_hovered = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.slider_is_hovered(v) end
-M.slider_clicked = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.slider_is_clicked(v) end
-M.slider_dragging = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.slider_is_dragging(v) end
+M.checkbox_hovered = function(...) return M.checkbox_is_hovered(...) end
+M.checkbox_clicked = function(...) return M.checkbox_is_clicked(...) end
+M.slider_hovered = function(...) return M.slider_is_hovered(...) end
+M.slider_clicked = function(...) return M.slider_is_clicked(...) end
+M.slider_dragging = function(...) return M.slider_is_dragging(...) end
 M.place_button = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.border == nil then v.border = true end if v.button == nil then v.button = true end return native.struct_call("ski_place_checkbox", "SkCheckboxSpec", v, "v") end
 M.place_checkbox = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.border == nil then v.border = true end if v.checkbox == nil then v.checkbox = true end return native.struct_call("ski_place_checkbox", "SkCheckboxSpec", v, "b") end
 M.place_slider = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.border == nil then v.border = true end if v.orientation == nil then v.orientation = 0 end return native.struct_call("ski_place_slider", "SkSliderSpec", v, "b") end
 M.place_vslider = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.border == nil then v.border = true end if v.orientation == nil then v.orientation = 1 end return native.struct_call("ski_place_slider", "SkSliderSpec", v, "v") end
-M.checkbox_checked = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.checkbox_is_checked(v) end
-M.button_hovered = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.button_is_hovered(v) end
-M.button_clicked = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.button_is_clicked(v) end
-M.button_checked = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.button_is_checked(v) end
+M.checkbox_checked = function(...) return M.checkbox_is_checked(...) end
+M.button_hovered = function(...) return M.button_is_hovered(...) end
+M.button_clicked = function(...) return M.button_is_clicked(...) end
+M.button_checked = function(...) return M.button_is_checked(...) end
 M.draw_text = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_text", "SkTextSpec", v, "b") end
 M.draw_text_centered = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_text_centered", "SkTextCenteredSpec", v, "b") end
 M.draw_image = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_image", "SkImageSpec", v, "b") end
@@ -78,19 +78,19 @@ M.draw_line = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end
 M.draw_circle = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_draw_circle", "Circle", v, "b") end
 M.scroll_begin = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_scroll_begin", "SkScrollSpec", v, "b") end
 M.window_open = function(...) return M.is_window_open(...) end
-M.move_mouse = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.move_to_pos(v) end
-M.click = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.left_click(v) end
+M.move_mouse = function(...) return M.move_to_pos(...) end
+M.click = function(...) return M.left_click(...) end
 M.key_pressed = function(...) return M.is_key_pressed(...) end
 M.key_released = function(...) return M.is_key_released(...) end
-M.ctrl_down = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.ctrl_pressed(v) end
-M.shift_down = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.shift_pressed(v) end
-M.alt_down = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.alt_pressed(v) end
-M.super_down = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.super_pressed(v) end
-M.is_ctrl_pressed = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.ctrl_pressed(v) end
-M.is_shift_pressed = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.shift_pressed(v) end
-M.is_alt_pressed = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.alt_pressed(v) end
-M.is_super_pressed = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.super_pressed(v) end
-M.get_mouse_pos = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.get_cursor_pos(v) end
+M.ctrl_down = function(...) return M.ctrl_pressed(...) end
+M.shift_down = function(...) return M.shift_pressed(...) end
+M.alt_down = function(...) return M.alt_pressed(...) end
+M.super_down = function(...) return M.super_pressed(...) end
+M.is_ctrl_pressed = function(...) return M.ctrl_pressed(...) end
+M.is_shift_pressed = function(...) return M.shift_pressed(...) end
+M.is_alt_pressed = function(...) return M.alt_pressed(...) end
+M.is_super_pressed = function(...) return M.super_pressed(...) end
+M.get_mouse_pos = function(...) return M.get_cursor_pos(...) end
 M.add_to_cc = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_add_to_cc", "SkCcEntrySpec", v, "b") end
 M.add_feature = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end if v.type == nil then v.type = "Feature" end return M.add_to_cc(v) end
 M.add_settings_entry = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return M.settings_entry_add(v) end
@@ -114,7 +114,7 @@ function M.search_create(...) return native.i("sk_search_create", ...) end
 function M.search_destroy(...) return native.p("sk_search_destroy", ...) end
 function M.search_push_context(...) return native.p("sk_search_push_context", ...) end
 function M.search_pop_context(...) return native.p("sk_search_pop_context", ...) end
-function M.search_add_text(...) return native.p("sk_search_add_text", ...) end
+M.search_add_text = function(t) local v = {} for k,x in pairs(t or {}) do v[k] = x end return native.struct_call("ski_search_add_text", "SkSearchAddTextSpec", v, "v") end
 function M.search_set_activate(...) return native.p("sk_search_set_activate", ...) end
 function M.search_reindex(...) return native.p("sk_search_reindex", ...) end
 function M.search_query(...) return native.i("sk_search_query", ...) end

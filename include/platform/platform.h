@@ -124,9 +124,16 @@ typedef struct {
 #define HTTP_MAX_REDIRECTS 10
 #define HTTP_DEFAULT_LIMIT ((size_t)64 * 1024 * 1024)
 
-char *Platform_HttpCollect(const char *url, const char *method,
-                           const char *content_type, const char *body,
-                           size_t max_bytes, size_t *out_len);
+typedef struct {
+  const char *f_url;
+  const char *f_method;
+  const char *f_content_type;
+  const char *f_body;
+  size_t f_max_bytes;
+  size_t *f_out_len;
+} PlatformHttpCollectSpec;
+
+char *Platform_HttpCollect(PlatformHttpCollectSpec *argspec);
 bool Platform_HttpSaveToFile(const char *url, const char *path);
 bool Platform_HttpThreadStart(void *(*fn)(void *), void *ud);
 
@@ -359,3 +366,4 @@ bool Platform_AtomicRename(const char *old_path, const char *new_path);
 
 void Platform_InvalidatePrompt(void);
 #endif
+

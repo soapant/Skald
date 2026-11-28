@@ -119,36 +119,36 @@ void sk_array_free(void *arr) {
 }
 
 size_t sk_clipboard_history_count(void) {
-  return clipboard_history_count_platform();
+  return clipboard_history_count();
 }
 
 const SkClipboardEntry *sk_clipboard_history_get(size_t index) {
-  return clipboard_history_get_platform(index);
+  return clipboard_history_get(index);
 }
 
 const SkClipboardEntry *sk_clipboard_latest(void) {
 
-  size_t n = clipboard_history_count_platform();
+  size_t n = clipboard_history_count();
   if (n == 0)
     return NULL;
-  return clipboard_history_get_platform(n - 1);
+  return clipboard_history_get(n - 1);
 }
 
-void sk_clipboard_clear_history(void) { clipboard_clear_history_platform(); }
+void sk_clipboard_clear_history(void) { clipboard_clear_history(); }
 
 bool sk_copy_to_clipboard(const char *text) {
   if (text == NULL)
     return 0;
   bool ok = Platform_CopyToClipboard(text);
   if (ok)
-    clipboard_history_push_text_platform(text);
+    clipboard_history_push_text(text);
   return ok;
 }
 
 bool sk_copy_file_path(const char *path) {
   if (!path)
     return false;
-  return clipboard_set_path_platform(path);
+  return clipboard_set_path(path);
 }
 
 bool ski_dir_scan(const SkDirScanSpec *spec) {
@@ -791,9 +791,10 @@ void sk_search_pop_context(SkSearchIndex *idx) {
   search_index_pop_context(idx);
 }
 
-void sk_search_add_text(SkSearchIndex *idx, const char *text, SkSearchKind kind,
-                        const char *widget_name, const char *value) {
-  search_index_add_text(&(FnSearchIndexAddTextSpec){.f_idx = idx, .f_text = text, .f_kind = kind, .f_widget_name = widget_name, .f_value = value});
+void ski_search_add_text(const SkSearchAddTextSpec *spec) {
+  search_index_add_text(&(FnSearchIndexAddTextSpec){
+      .f_idx = spec->idx, .f_text = spec->text, .f_kind = spec->kind,
+      .f_widget_name = spec->widget_name, .f_value = spec->value});
 }
 
 void sk_search_set_activate(SkSearchIndex *idx, SkSearchActivateFn activate,
@@ -972,12 +973,12 @@ char *sk_get_last_clipboard_entry(void) {
       const SkClipboardEntry *latest = sk_clipboard_latest();
       if (!latest || latest->type != CLIPBOARD_TEXT || !latest->text ||
           strcmp(latest->text, current) != 0)
-        clipboard_history_push_text_platform(current);
+        clipboard_history_push_text(current);
     }
     free(current);
   }
-  for (size_t i = clipboard_history_count_platform(); i > 0; i--) {
-    const SkClipboardEntry *e = clipboard_history_get_platform(i - 1);
+  for (size_t i = clipboard_history_count(); i > 0; i--) {
+    const SkClipboardEntry *e = clipboard_history_get(i - 1);
     if (e->type == CLIPBOARD_TEXT && e->text)
       return strdup(e->text);
   }
@@ -2890,3 +2891,4 @@ bool sk_config_set_quicklink(const char *name, const char *target) {
 bool sk_config_set_feature_shortcut(const char *name, const char *target) {
   return config_feature_shortcut_set(name, target);
 }
+

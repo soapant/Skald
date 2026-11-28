@@ -47,10 +47,15 @@ typedef struct {
 } FnDrawCirclePrepSpec;
 
 int draw_circle_prep(FnDrawCirclePrepSpec *argspec);
-void populate_listbox(ListBox *lb, const char *filter, const char **items,
-                      int item_count,
-                      bool (*filter_match)(const char *item,
-                                           const char *filter));
+typedef struct {
+  ListBox *f_lb;
+  const char *f_filter;
+  const char **f_items;
+  int f_item_count;
+  bool (*f_filter_match)(const char *item, const char *filter);
+} PopulateListboxSpec;
+
+void populate_listbox(PopulateListboxSpec *argspec);
 typedef struct {
   ListBox *f_lb;
   const char *f_filter;
@@ -230,3 +235,4 @@ int msg_anchor_center(FnMsgAnchorCenterSpec *argspec);
 int msg_stack_dir(int v_slot, bool outward);
 
 #endif
+

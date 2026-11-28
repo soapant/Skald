@@ -18,18 +18,19 @@ static size_t LAST_LIMIT;
 static int COLLECT_CALLS;
 static bool SAVE_FAILS;
 
-static char *fake_collect(const char *url, const char *method,
-                          const char *content_type, const char *body,
-                          size_t max_bytes, size_t *out_len) {
+static char *fake_collect(PlatformHttpCollectSpec *argspec) {
   COLLECT_CALLS++;
-  snprintf(LAST_URL, sizeof(LAST_URL), "%s", url ? url : "");
-  snprintf(LAST_METHOD, sizeof(LAST_METHOD), "%s", method ? method : "");
+  snprintf(LAST_URL, sizeof(LAST_URL), "%s",
+           argspec->f_url ? argspec->f_url : "");
+  snprintf(LAST_METHOD, sizeof(LAST_METHOD), "%s",
+           argspec->f_method ? argspec->f_method : "");
   snprintf(LAST_CONTENT_TYPE, sizeof(LAST_CONTENT_TYPE), "%s",
-           content_type ? content_type : "");
-  snprintf(LAST_BODY, sizeof(LAST_BODY), "%s", body ? body : "");
-  LAST_LIMIT = max_bytes;
-  if (out_len)
-    *out_len = 7;
+           argspec->f_content_type ? argspec->f_content_type : "");
+  snprintf(LAST_BODY, sizeof(LAST_BODY), "%s",
+           argspec->f_body ? argspec->f_body : "");
+  LAST_LIMIT = argspec->f_max_bytes;
+  if (argspec->f_out_len)
+    *argspec->f_out_len = 7;
   return strdup("payload");
 }
 
@@ -188,3 +189,4 @@ int main(void) {
   RUN(async_get_delivers_transport_result);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
+

@@ -42,11 +42,12 @@ void clipboard_png_dims(const unsigned char *png, size_t len, uint32_t *out_w,
 void clipboard_image_dims(const unsigned char *buf, size_t len, uint32_t *out_w,
                           uint32_t *out_h);
 
-bool clipboard_history_push_text_platform(const char *text);
-bool clipboard_history_push_image_platform(const char *path);
-bool clipboard_set_path_platform(const char *path);
-size_t clipboard_history_count_platform(void);
-const ClipboardEntry *clipboard_history_get_platform(size_t index);
-void clipboard_clear_history_platform(void);
+bool clipboard_history_push_text(const char *text);
+bool clipboard_history_push_image(const char *path);
+bool clipboard_set_path(const char *path);
+size_t clipboard_history_count(void);
+const ClipboardEntry *clipboard_history_get(size_t index);
+void clipboard_clear_history(void);
 
 #endif
+

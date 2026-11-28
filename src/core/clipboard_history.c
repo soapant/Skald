@@ -220,7 +220,7 @@ char *clipboard_path_to_uri_list(const char *path) {
   return out;
 }
 
-bool clipboard_history_push_text_platform(const char *text) {
+bool clipboard_history_push_text(const char *text) {
   ClipboardEntry e = {0};
   e.type = CLIPBOARD_TEXT;
   e.timestamp = (uint64_t)time(NULL);
@@ -232,7 +232,7 @@ bool clipboard_history_push_text_platform(const char *text) {
   return true;
 }
 
-bool clipboard_history_push_image_platform(const char *path) {
+bool clipboard_history_push_image(const char *path) {
   ClipboardEntry e = {0};
   e.type = CLIPBOARD_IMAGE;
   e.timestamp = (uint64_t)time(NULL);
@@ -244,17 +244,17 @@ bool clipboard_history_push_image_platform(const char *path) {
   return true;
 }
 
-size_t clipboard_history_count_platform(void) {
+size_t clipboard_history_count(void) {
   return clipboard_history.count;
 }
 
-const ClipboardEntry *clipboard_history_get_platform(size_t index) {
+const ClipboardEntry *clipboard_history_get(size_t index) {
   if (index >= clipboard_history.count)
     return NULL;
   return &clipboard_history.entries[index];
 }
 
-void clipboard_clear_history_platform(void) {
+void clipboard_clear_history(void) {
   for (size_t i = 0; i < clipboard_history.count; i++)
     clipboard_entry_free(&clipboard_history.entries[i]);
   free(clipboard_history.entries);
@@ -263,7 +263,7 @@ void clipboard_clear_history_platform(void) {
   clipboard_history.capacity = 0;
 }
 
-bool clipboard_set_path_platform(const char *path) {
+bool clipboard_set_path(const char *path) {
   FILE *f = fopen(path, "rb");
   if (!f)
     return 0;
@@ -296,6 +296,7 @@ bool clipboard_set_path_platform(const char *path) {
   bool ok = Platform_CopyImageToClipboard(buf, (size_t)n);
   free(buf);
   if (ok)
-    clipboard_history_push_image_platform(path);
+    clipboard_history_push_image(path);
   return ok;
 }
+

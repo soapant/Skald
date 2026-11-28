@@ -1736,9 +1736,13 @@ static size_t x11_http_write_file_cb(char *ptr, size_t sz, size_t nm,
   return fwrite(ptr, sz, nm, (FILE *)userdata);
 }
 
-char *Platform_HttpCollect(const char *url, const char *method,
-                           const char *content_type, const char *body,
-                           size_t max_bytes, size_t *out_len) {
+char *Platform_HttpCollect(PlatformHttpCollectSpec *argspec) {
+  const char *url = argspec->f_url;
+  const char *method = argspec->f_method;
+  const char *content_type = argspec->f_content_type;
+  const char *body = argspec->f_body;
+  size_t max_bytes = argspec->f_max_bytes;
+  size_t *out_len = argspec->f_out_len;
   if (!url || !url[0]) {
     if (out_len)
       *out_len = 0;
@@ -2293,3 +2297,4 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     Platform_DestroyFont(fh);
   return true;
 }
+

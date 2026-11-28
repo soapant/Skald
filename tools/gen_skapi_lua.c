@@ -12,10 +12,22 @@
 #define LINE_SZ 8192
 #define NAME_SZ 128
 
+static char g_out_dir[768] = "";
+
+static char *out_path(const char *rel) {
+  static char bufs[4][1024];
+  static int slot;
+  slot = (slot + 1) % 4;
+  snprintf(bufs[slot], sizeof(bufs[slot]), "%s%s%s", g_out_dir,
+           g_out_dir[0] ? "/" : "", rel);
+  return bufs[slot];
+}
+
 static void clean(char *s);
 static const char *resolve_alias_base(const char *t);
 static bool is_scalar_type(const char *t);
 static bool is_builtin_scalar(const char *t);
+static bool is_struct_type(const char *t);
 
 static int gen_errors;
 
@@ -799,12 +811,27 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
 
   if (target[0] == 's' && target[1] == 'k' && target[2] == '_' &&
       target[3] != 'i') {
+    FuncDesc *td = func_for(target);
+    if (td && can_thunk(td)) {
+      fprintf(out, "M.%s = function(...) return M.%s(...) end\n", name, target);
+      return;
+    }
     fprintf(out,
             "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
             "v[k] = x end ",
             name);
     emit_defaults(out, rest);
     fprintf(out, "return M.%s(v) end\n", target);
+    return;
+  }
+
+  if (raw_thunk && strncmp(rest, "ski_", 4) == 0 &&
+      is_struct_type(func_for(raw)->ret)) {
+    fprintf(out, "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
+                 "v[k] = x end ",
+            name);
+    emit_defaults(out, rest);
+    fprintf(out, "return native.%s(v) end\n", raw);
     return;
   }
 
@@ -1092,8 +1119,7 @@ static bool is_out_struct_param(const char *t, const char *name) {
 }
 
 static const char *in_struct_ptr_type(const char *t, const char *name) {
-  if (is_out_struct_param(t, name) || !strchr(t, '*') ||
-      strstr(t, "const ") != NULL)
+  if (is_out_struct_param(t, name) || !strchr(t, '*'))
     return NULL;
   return struct_name_for_type(t);
 }
@@ -1134,14 +1160,21 @@ static bool can_thunk(const FuncDesc *fd) {
       memcpy(pname, pstart, nn);
       pname[nn] = '\0';
     }
-    snprintf(ptype, sizeof(ptype), "%.255s", p);
+    snprintf(ptype, sizeof(ptype), "%s", p);
     char *last_space = strrchr(ptype, ' ');
     if (last_space)
       *last_space = '\0';
     clean(ptype);
-    bool in_struct_ptr =
-        struct_name_for_type(ptype) != NULL && strchr(ptype, '*') != NULL &&
-        strstr(ptype, "const ") == NULL && !is_out_struct_param(ptype, pname);
+    bool in_struct_ptr = struct_name_for_type(ptype) != NULL &&
+                         strchr(ptype, '*') != NULL &&
+                         !is_out_struct_param(ptype, pname);
+    if (!in_struct_ptr && strncmp(p, "const ", 6) == 0 && strchr(p, '*')) {
+      char cp[256] = {0};
+      snprintf(cp, sizeof(cp), "%.*s", (int)(pstart - p), p);
+      clean(cp);
+      if (struct_name_for_type(cp) != NULL)
+        in_struct_ptr = true;
+    }
     if (!is_simple_type(ptype) && !is_struct_type(ptype) &&
         callback_kind_for_type(ptype) < 0 && !is_out_param(ptype) &&
         !out_struct_type(ptype) && !in_struct_ptr)
@@ -1250,8 +1283,13 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
       fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d));\n",
               out_struct_type(t), i, i, i);
     } else if (in_struct) {
-      fprintf(out, "  %s *a%d = (%s *)slua_raw_ptr(L, %d);\n", in_struct, i,
-              in_struct, idx);
+      if (strstr(t, "const ") != NULL)
+        fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d)); "
+                     "slua_fill_struct(L, \"%s\", %d, &a%d);\n",
+                in_struct, i, i, i, in_struct, idx, i);
+      else
+        fprintf(out, "  %s *a%d = (%s *)slua_raw_ptr(L, %d);\n", in_struct, i,
+                in_struct, idx);
     } else if (is_struct_type(t)) {
       fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d));\n", t, i, i, i);
       fprintf(out, "  slua_fill_struct(L, \"%s\", %d, &a%d);\n", t, idx, i);
@@ -1318,9 +1356,14 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
     const char *t = params[i].type;
     if (is_out_struct_param(t, params[i].name))
       fprintf(out, "&a%d", i);
-    else if (is_struct_type(t) || is_handle_type(t) ||
-             in_struct_ptr_type(t, params[i].name))
+    else if (is_struct_type(t) || is_handle_type(t))
       fprintf(out, "a%d", i);
+    else if (in_struct_ptr_type(t, params[i].name)) {
+      if (strstr(t, "const ") != NULL)
+        fprintf(out, "&a%d", i);
+      else
+        fprintf(out, "a%d", i);
+    }
     else if (callback_kind_for_type(t) >= 0) {
       char ct[512];
       callback_cast_type(t, ct, sizeof(ct));
@@ -1431,10 +1474,18 @@ static int count_field_bytes(const char *found, const char *body_start) {
 static const char *struct_name_for_type(const char *t) {
   char base[256] = {0};
   snprintf(base, sizeof(base), "%.255s", t);
-  char *sp = strrchr(base, ' ');
-  if (sp)
-    *sp = '\0';
   size_t n = strlen(base);
+  while (n && (base[n - 1] == '*' || base[n - 1] == ' '))
+    base[--n] = '\0';
+  char *star = strchr(base, '*');
+  if (star) {
+    const char *q = star + 1;
+    while (*q == ' ')
+      q++;
+    if (*q)
+      *star = '\0';
+  }
+  n = strlen(base);
   while (n && (base[n - 1] == '*' || base[n - 1] == ' '))
     base[--n] = '\0';
   if (strncmp(base, "const ", 6) == 0)
@@ -1489,7 +1540,7 @@ static int gen_struct_header(void) {
     parse_bool_globals(header_paths[i]);
   }
   resolve_define_constants();
-  FILE *out = fopen("include/core/skapi_lua_generated.h.tmp", "w");
+  FILE *out = fopen(out_path("include/core/skapi_lua_generated.h.tmp"), "w");
   if (!out) {
     fprintf(stderr,
             "gen_skapi_lua: cannot write generated struct header.tmp\n");
@@ -1908,8 +1959,8 @@ static int gen_struct_header(void) {
   gen_thunk_registry(out);
   fprintf(out, "\n#endif\n");
   fclose(out);
-  write_if_changed("include/core/skapi_lua_generated.h",
-                   "include/core/skapi_lua_generated.h.tmp");
+  write_if_changed(out_path("include/core/skapi_lua_generated.h"),
+                   out_path("include/core/skapi_lua_generated.h.tmp"));
   return 0;
 }
 
@@ -1928,13 +1979,15 @@ static void validate_ret_kinds(void) {
   }
 }
 
-int main(void) {
+int main(int argc, char **argv) {
+  if (argc > 1 && argv[1])
+    snprintf(g_out_dir, sizeof(g_out_dir), "%s", argv[1]);
   FILE *in = fopen("include/core/skapi.h", "r");
   if (!in) {
     fprintf(stderr, "gen_skapi_lua: cannot open include/core/skapi.h\n");
     return 1;
   }
-  FILE *out = fopen("src/skapi.lua.tmp", "w");
+  FILE *out = fopen(out_path("src/skapi.lua.tmp"), "w");
   if (!out) {
     fclose(in);
     fprintf(stderr, "gen_skapi_lua: cannot write src/skapi.lua.tmp\n");
@@ -2085,8 +2138,8 @@ int main(void) {
   fprintf(out, "\nreturn M\n");
   fclose(out);
 
-  FILE *in2 = fopen("src/skapi.lua.tmp", "rb");
-  FILE *dst = fopen("src/skapi.lua.new", "wb");
+  FILE *in2 = fopen(out_path("src/skapi.lua.tmp"), "rb");
+  FILE *dst = fopen(out_path("src/skapi.lua.new"), "wb");
   if (in2 && dst) {
     char line[LINE_SZ];
     while (fgets(line, sizeof(line), in2)) {
@@ -2108,7 +2161,7 @@ int main(void) {
     fclose(in2);
   if (dst)
     fclose(dst);
-  remove("src/skapi.lua.tmp");
-  write_if_changed("src/skapi.lua", "src/skapi.lua.new");
+  remove(out_path("src/skapi.lua.tmp"));
+  write_if_changed(out_path("src/skapi.lua"), out_path("src/skapi.lua.new"));
   return gen_rc != 0 || gen_errors != 0 ? 1 : 0;
 }

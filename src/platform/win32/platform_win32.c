@@ -1353,9 +1353,13 @@ static int win32_http_perform(const char *url, const char *method,
                               HttpBuf *resp_buf, FILE *file_out,
                               long max_redirects);
 
-char *Platform_HttpCollect(const char *url, const char *method,
-                           const char *content_type, const char *body,
-                           size_t max_bytes, size_t *out_len) {
+char *Platform_HttpCollect(PlatformHttpCollectSpec *argspec) {
+  const char *url = argspec->f_url;
+  const char *method = argspec->f_method;
+  const char *content_type = argspec->f_content_type;
+  const char *body = argspec->f_body;
+  size_t max_bytes = argspec->f_max_bytes;
+  size_t *out_len = argspec->f_out_len;
   HttpBuf buf;
   win32_http_buf_init(&buf, max_bytes ? max_bytes : HTTP_DEFAULT_LIMIT);
   int ok = win32_http_perform(url, method, content_type, body, &buf, NULL,
@@ -2320,3 +2324,4 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     DeleteObject(hfont_created);
   return true;
 }
+

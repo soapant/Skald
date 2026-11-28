@@ -30,6 +30,9 @@ jobs:
       - name: Check skapi layering
         run: ./nob --check
 
+      - name: Check generated artifacts are fresh
+        run: ./nob --check-generated
+
       - name: Run tests
         run: ./nob --test --dynamic
 

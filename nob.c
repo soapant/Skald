@@ -833,11 +833,11 @@ static bool build_features(void) {
 }
 
 static void emit_bool_toml(FILE *f, const char *name, bool v) {
-  fprintf(f, "%s = %s\n", name, v ? "true" : "false");
+  fprintf(f, "  %s = %s\n", name, v ? "true" : "false");
 }
 
 static void emit_int_toml(FILE *f, const char *name, int v) {
-  fprintf(f, "%s = %d\n", name, v);
+  fprintf(f, "  %s = %d\n", name, v);
 }
 
 static void emit_float_toml(FILE *f, const char *name, float v) {
@@ -848,11 +848,11 @@ static void emit_float_toml(FILE *f, const char *name, float v) {
     size_t n = strlen(tmp);
     snprintf(tmp + n, sizeof(tmp) - n, ".0");
   }
-  fprintf(f, "%s = %s\n", name, tmp);
+  fprintf(f, "  %s = %s\n", name, tmp);
 }
 
 static void emit_str_toml(FILE *f, const char *name, const char *v) {
-  fprintf(f, "%s = \"%s\"\n", name, v ? v : "");
+  fprintf(f, "  %s = \"%s\"\n", name, v ? v : "");
 }
 
 static void emit_skip_toml(FILE *f, const char *name, ...) {
@@ -862,7 +862,7 @@ static void emit_skip_toml(FILE *f, const char *name, ...) {
 
 static void emit_color_toml(FILE *f, const char *name, unsigned v) {
   unsigned r = v & 0xFFu, g = (v >> 8) & 0xFFu, b = (v >> 16) & 0xFFu;
-  fprintf(f, "%s = \"#%02X%02X%02X\"\n", name, r, g, b);
+  fprintf(f, "  %s = \"#%02X%02X%02X\"\n", name, r, g, b);
 }
 
 static bool emit_release_config(const char *dst_path) {
@@ -1379,14 +1379,11 @@ static bool check_ends_with(const char *s, const char *suffix) {
 
 static const char *check_fn_prefix(const char *path_norm) {
   if (check_ends_with(path_norm, "skapi_x11.c") ||
-      check_ends_with(path_norm, "skapi_win32.c"))
+      check_ends_with(path_norm, "skapi_win32.c") ||
+      check_ends_with(path_norm, "skapi_macos.c"))
     return NULL;
   if (strstr(path_norm, "src/platform/"))
     return "Platform_";
-  if (strstr(path_norm, "include/platform/x11/"))
-    return "x11_";
-  if (strstr(path_norm, "include/platform/win32/"))
-    return "win32_";
   if (strstr(path_norm, "include/platform/"))
     return "Platform_";
   if (strstr(path_norm, "src/helpers/x11/") ||
@@ -2066,12 +2063,94 @@ static bool check_layering(void) {
          0;
 }
 
+static bool bytes_equal_ignore_cr(const char *a, size_t an, const char *b,
+                                  size_t bn) {
+  size_t i = 0, j = 0;
+  while (i < an && j < bn) {
+    while (i < an && a[i] == '\r')
+      i++;
+    while (j < bn && b[j] == '\r')
+      j++;
+    if (i >= an || j >= bn)
+      break;
+    if (a[i] != b[j])
+      return false;
+    i++;
+    j++;
+  }
+  while (i < an && a[i] == '\r')
+    i++;
+  while (j < bn && b[j] == '\r')
+    j++;
+  return i == an && j == bn;
+}
+
+static bool generated_files_equal(const char *tracked, const char *fresh) {
+  Nob_String_Builder a = {0};
+  Nob_String_Builder b = {0};
+  bool read_ok = nob_read_entire_file(tracked, &a) &&
+                 nob_read_entire_file(fresh, &b);
+  bool equal =
+      read_ok && bytes_equal_ignore_cr(a.items, a.count, b.items, b.count);
+  nob_sb_free(a);
+  nob_sb_free(b);
+  return equal;
+}
+
+static bool check_generated(void) {
+  const char *tmp = BUILD_FOLDER "/check_generated";
+  char tmp_include_dir[512], tmp_hdr_dir[512], tmp_src_dir[512];
+  char fresh_hdr[512], fresh_lua[512], fresh_cfg[512];
+  snprintf(tmp_include_dir, sizeof(tmp_include_dir), "%s/include", tmp);
+  snprintf(tmp_hdr_dir, sizeof(tmp_hdr_dir), "%s/include/core", tmp);
+  snprintf(tmp_src_dir, sizeof(tmp_src_dir), "%s/src", tmp);
+  snprintf(fresh_hdr, sizeof(fresh_hdr), "%s/include/core/skapi_lua_generated.h",
+           tmp);
+  snprintf(fresh_lua, sizeof(fresh_lua), "%s/src/skapi.lua", tmp);
+  snprintf(fresh_cfg, sizeof(fresh_cfg), "%s/config.toml", tmp);
+  if (!nob_mkdir_if_not_exists(tmp) ||
+      !nob_mkdir_if_not_exists(tmp_include_dir) ||
+      !nob_mkdir_if_not_exists(tmp_hdr_dir) ||
+      !nob_mkdir_if_not_exists(tmp_src_dir))
+    return false;
+
+  const char *gen_bin = BUILD_FOLDER "/gen_skapi_lua";
+  Nob_Cmd build_gen = {0};
+  append_cc(&build_gen);
+  nob_cmd_append(&build_gen, CC_FLAGS, "-o", gen_bin, "tools/gen_skapi_lua.c");
+  if (!nob_cmd_run(&build_gen))
+    return false;
+  Nob_Cmd run_gen = {0};
+  nob_cmd_append(&run_gen, gen_bin, tmp);
+  if (!nob_cmd_run(&run_gen))
+    return false;
+
+  int stale = 0;
+  if (!generated_files_equal("include/core/skapi_lua_generated.h", fresh_hdr)) {
+    nob_log(NOB_ERROR, "generated artifact is stale: include/core/skapi_lua_generated.h");
+    stale++;
+  }
+  if (!generated_files_equal("src/skapi.lua", fresh_lua)) {
+    nob_log(NOB_ERROR, "generated artifact is stale: src/skapi.lua");
+    stale++;
+  }
+  if (!emit_release_config(fresh_cfg))
+    return false;
+  if (!generated_files_equal("config/config.toml", fresh_cfg)) {
+    nob_log(NOB_ERROR, "generated artifact is stale: config/config.toml");
+    stale++;
+  }
+  printf("check-generated: %d stale artifact(s)\n", stale);
+  return stale == 0;
+}
+
 int main(int argc, char **argv) {
   NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h", "include/config_defs.h");
 
   int do_run = 0;
   int do_test = 0;
   int do_check = 0;
+  int do_check_generated = 0;
   int do_all = 0;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -2126,14 +2205,20 @@ int main(int argc, char **argv) {
       sanitize = true;
     if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--check") == 0)
       do_check = 1;
+    if (strcmp(argv[i], "-g") == 0 ||
+        strcmp(argv[i], "--check-generated") == 0)
+      do_check_generated = 1;
     if (strcmp(argv[i], "--wayland") == 0)
       want_wayland = true;
     if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--all") == 0)
       do_all = 1;
   }
 
+  if (do_check_generated)
+    return check_generated() ? 0 : 1;
+
   if (do_all) {
-    const char *steps[] = {NULL, "-t", "-w", "-c"};
+    const char *steps[] = {NULL, "-t", "-w", "-c", "-g"};
     for (size_t st = 0; st < sizeof(steps) / sizeof(steps[0]); st++) {
       Nob_Cmd cmd = {0};
       if (steps[st])

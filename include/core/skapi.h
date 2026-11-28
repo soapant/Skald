@@ -562,8 +562,18 @@ void sk_search_push_context(SkSearchIndex *idx, int source_id,
 
 void sk_search_pop_context(SkSearchIndex *idx);
 
-void sk_search_add_text(SkSearchIndex *idx, const char *text, SkSearchKind kind,
-                        const char *widget_name, const char *value);
+typedef struct {
+  SkSearchIndex *idx;
+  const char *text;
+  SkSearchKind kind;
+  const char *widget_name;
+  const char *value;
+} SkSearchAddTextSpec;
+
+#define sk_search_add_text(...)                                                \
+  ski_search_add_text(&(SkSearchAddTextSpec){__VA_ARGS__})
+
+void ski_search_add_text(const SkSearchAddTextSpec *spec);
 
 void sk_search_set_activate(SkSearchIndex *idx, SkSearchActivateFn activate,
                             void *ud);

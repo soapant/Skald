@@ -13,16 +13,9 @@
 
 #define UNUSED(x) (void)(x)
 
-char *Platform_HttpCollect(const char *url, const char *method,
-                           const char *content_type, const char *body,
-                           size_t max_bytes, size_t *out_len) {
-  UNUSED(url);
-  UNUSED(method);
-  UNUSED(content_type);
-  UNUSED(body);
-  UNUSED(max_bytes);
-  if (out_len)
-    *out_len = 0;
+char *Platform_HttpCollect(PlatformHttpCollectSpec *argspec) {
+  if (argspec->f_out_len)
+    *argspec->f_out_len = 0;
   return NULL;
 }
 
@@ -723,3 +716,4 @@ void Platform_SleepSeconds(double seconds) {
 }
 
 bool Platform_PlaceEditbox(const EditSpec *spec) { return false; }
+

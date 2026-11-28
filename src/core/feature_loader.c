@@ -253,8 +253,6 @@ static bool ends_with(const char *str, const char *suffix) {
   return strcmp(str + sl - su, suffix) == 0;
 }
 
-static int feature_init_count = 0;
-
 static bool warned_no_featurepath = false;
 
 static bool feature_dir(const char *name, char *out, size_t n) {
@@ -472,11 +470,8 @@ static bool load_single(const char *dir, const char *filename) {
       (void (*)(void))Platform_GetSymbol(h, "skald_feature_init");
   if (!init)
     init = (void (*)(void))Platform_GetSymbol(h, "SkaldFeatureReload");
-  if (init) {
-    feature_init_count++;
-  } else {
+  if (!init)
     log_warn("feature %s has no skald_feature_init/reload symbol", name);
-  }
 
   LoadedFeature *f = &features[feature_count++];
   memset(f, 0, sizeof(*f));
@@ -727,8 +722,6 @@ static FeatureBuildDone *build_done;
 #define build_done_count arrlenu(build_done)
 static int builds_in_flight;
 static bool reload_session_active;
-static int reload_session_ok;
-static int reload_session_fail;
 static unsigned build_seq = 0;
 static void *build_worker;
 static bool build_worker_failed;
@@ -835,20 +828,13 @@ void feature_loader_service_builds(void) {
   done = build_done;
   build_done = NULL;
   B_UNLOCK();
-  int ok_n = 0, fail_n = 0;
   for (size_t i = 0; i < arrlenu(done); i++) {
-    if (finish_hot_build(done[i].job.ent_name, done[i].job.src,
-                         done[i].job.dll, done[i].job.out,
-                         done[i].job.src_mtime, done[i].ok))
-      ok_n++;
-    else
-      fail_n++;
+    finish_hot_build(done[i].job.ent_name, done[i].job.src, done[i].job.dll,
+                     done[i].job.out, done[i].job.src_mtime, done[i].ok);
   }
   arrfree(done);
   if (!reload_session_active)
     return;
-  reload_session_ok += ok_n;
-  reload_session_fail += fail_n;
   B_LOCK();
   bool still =
       builds_in_flight != 0 || build_queue_count != 0 || build_done_count != 0;
@@ -856,8 +842,6 @@ void feature_loader_service_builds(void) {
   if (still)
     return;
   reload_session_active = false;
-  reload_session_ok = 0;
-  reload_session_fail = 0;
 }
 
 int feature_loader_build_stale_sources(bool hot_reload, bool synchronous) {
@@ -942,11 +926,7 @@ int feature_loader_build_stale_sources(bool hot_reload, bool synchronous) {
         feature_mark_failed(ent_name, src_mtime, src);
         continue;
       }
-      if (!reload_session_active) {
-        reload_session_active = true;
-        reload_session_ok = 0;
-        reload_session_fail = 0;
-      }
+      reload_session_active = true;
       done++;
       continue;
     }
@@ -976,7 +956,6 @@ bool feature_loader_init(void) {
              feature_count);
   feature_count = 0;
   UNLOCK();
-  feature_init_count = 0;
   {
     int removed = reload_lib_sweep_stale_hot_libs("build/features",
                                                   Platform_LibExtension());
@@ -1046,7 +1025,6 @@ static bool load_lua_named(const char *name) {
   f->path = owner_strdup(path);
   f->handle = (LibHandle)1;
   f->lua = true;
-  feature_init_count++;
   return true;
 }
 
@@ -1300,7 +1278,6 @@ bool feature_loader_reload_from(const char *name, const char *src_path) {
     owner_strfree(&f->uniq);
     f->uniq = owner_strdup(uniquepath);
     f->handle = h;
-    feature_init_count++;
     if (!file_copy_path(uniquepath, dll))
       log_warn("reload %s: could not persist %s (will rebuild next start)",
                name, dll);

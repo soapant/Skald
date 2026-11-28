@@ -462,15 +462,20 @@ bool hotkey_string_format(HotkeyKey key, char *out, int out_size) {
     snprintf(key_name, sizeof(key_name), "%s", modifier_name);
 
   char mods_part[64];
-  mods_part[0] = '\0';
-  if (mods & HOTKEY_MOD_CTRL)
-    strcat(mods_part, "Ctrl+");
-  if (mods & HOTKEY_MOD_SHIFT)
-    strcat(mods_part, "Shift+");
-  if (mods & HOTKEY_MOD_ALT)
-    strcat(mods_part, "Alt+");
-  if (mods & HOTKEY_MOD_SUPER)
-    strcat(mods_part, "Super+");
+  static const char *const mod_names[] = {"Ctrl+", "Shift+", "Alt+", "Super+"};
+  static const unsigned mod_bits[] = {HOTKEY_MOD_CTRL, HOTKEY_MOD_SHIFT,
+                                      HOTKEY_MOD_ALT, HOTKEY_MOD_SUPER};
+  size_t mods_len = 0;
+  for (size_t i = 0; i < sizeof(mod_names) / sizeof(mod_names[0]); i++) {
+    if (!(mods & mod_bits[i]))
+      continue;
+    size_t n = strlen(mod_names[i]);
+    if (mods_len + n >= sizeof(mods_part))
+      break;
+    memcpy(mods_part + mods_len, mod_names[i], n);
+    mods_len += n;
+  }
+  mods_part[mods_len] = '\0';
 
   int written = snprintf(out, (size_t)out_size, "%s%s", mods_part, key_name);
   if (written < 0 || written >= out_size) {

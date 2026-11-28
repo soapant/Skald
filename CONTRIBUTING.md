@@ -13,7 +13,7 @@ Skald is a native C project. To keep the codebase fast, maintainable, and consis
   * Core files must **not** include `skapi.h`.
   * If core needs something that is also exposed to features, put the implementation in a core function and make the `skapi` function a thin wrapper around it.
   * This is enforced by `./nob --check`.
-* **Struct specs over booleans:** Do not add functions with 5+ boolean/integer arguments (e.g., `func(x, y, w, h, true, false, 1)`). Use designated initializer structs instead (e.g., `sk_draw_rect(.w = 10, .filled = true)`).
+* **Struct specs over booleans:** Do not add functions with 5+ positional arguments (e.g., `func(x, y, w, h, true, false)`). Use designated initializer structs instead (e.g., `sk_draw_rect(.w = 10, .filled = true)`). This is enforced by `./nob --check`.
 * **Public vs. internal:** If a function is only used by the core (not by features), keep it out of `skapi.h` unless a wrapper is needed.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for how the platform layer is organized.
@@ -26,7 +26,7 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for how the platform layer is organized.
 ## Before You Open a PR
 
 1. It builds with `./nob` on the platform you changed, and you say which one in the PR.
-2. `./nob --check` passes.
+2. `./nob --check` and `./nob --check-generated` pass.
 3. You ran it. For core or feature-loader changes, hot reload a few times in a row.
 4. **One change per PR.** No unrelated refactors, formatting-only changes, or mass renames. These will be closed.
 5. AI-assisted changes are fine if you understand, tested, and can explain every line. Unreviewed bulk AI changes will be closed.

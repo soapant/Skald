@@ -949,6 +949,15 @@ static const LuaFieldDesc lf_SkSnippetSpec[] = {
 };
 static const LuaStructDesc lsd_SkSnippetSpec = {"SkSnippetSpec", sizeof(SkSnippetSpec), lf_SkSnippetSpec, (int)(sizeof(lf_SkSnippetSpec)/sizeof(lf_SkSnippetSpec[0]))};
 #include "core/skapi.h"
+static const LuaFieldDesc lf_SkSearchAddTextSpec[] = {
+    {"idx", LSF_PTR, offsetof(SkSearchAddTextSpec, idx), 0, 0, NULL},
+    {"text", LSF_STR, offsetof(SkSearchAddTextSpec, text), 0, 0, NULL},
+    {"kind", LSF_INT, offsetof(SkSearchAddTextSpec, kind), 0, 0, NULL},
+    {"widget_name", LSF_STR, offsetof(SkSearchAddTextSpec, widget_name), 0, 0, NULL},
+    {"value", LSF_STR, offsetof(SkSearchAddTextSpec, value), 0, 0, NULL},
+};
+static const LuaStructDesc lsd_SkSearchAddTextSpec = {"SkSearchAddTextSpec", sizeof(SkSearchAddTextSpec), lf_SkSearchAddTextSpec, (int)(sizeof(lf_SkSearchAddTextSpec)/sizeof(lf_SkSearchAddTextSpec[0]))};
+#include "core/skapi.h"
 static const LuaFieldDesc lf_FnSkiTextWrapLayoutSpec[] = {
     {"f_text", LSF_STR, offsetof(FnSkiTextWrapLayoutSpec, f_text), 0, 0, NULL},
     {"f_max_width", LSF_INT, offsetof(FnSkiTextWrapLayoutSpec, f_max_width), 0, 0, NULL},
@@ -1756,6 +1765,15 @@ static const LuaFieldDesc lf_FnDrawCirclePrepSpec[] = {
 };
 static const LuaStructDesc lsd_FnDrawCirclePrepSpec = {"FnDrawCirclePrepSpec", sizeof(FnDrawCirclePrepSpec), lf_FnDrawCirclePrepSpec, (int)(sizeof(lf_FnDrawCirclePrepSpec)/sizeof(lf_FnDrawCirclePrepSpec[0]))};
 #include "helpers/helpers_ui.h"
+static const LuaFieldDesc lf_PopulateListboxSpec[] = {
+    {"f_lb", LSF_STRUCT_PTR, offsetof(PopulateListboxSpec, f_lb), 0, 0, "ListBox"},
+    {"f_filter", LSF_STR, offsetof(PopulateListboxSpec, f_filter), 0, 0, NULL},
+    {"f_items", LSF_STR, offsetof(PopulateListboxSpec, f_items), 0, 0, NULL},
+    {"f_item_count", LSF_INT, offsetof(PopulateListboxSpec, f_item_count), 0, 0, NULL},
+    {"f_filter_match", LSF_CB, offsetof(PopulateListboxSpec, f_filter_match), 0, 3, NULL},
+};
+static const LuaStructDesc lsd_PopulateListboxSpec = {"PopulateListboxSpec", sizeof(PopulateListboxSpec), lf_PopulateListboxSpec, (int)(sizeof(lf_PopulateListboxSpec)/sizeof(lf_PopulateListboxSpec[0]))};
+#include "helpers/helpers_ui.h"
 static const LuaFieldDesc lf_FnPopulateListboxRankedSpec[] = {
     {"f_lb", LSF_STRUCT_PTR, offsetof(FnPopulateListboxRankedSpec, f_lb), 0, 0, "ListBox"},
     {"f_filter", LSF_STR, offsetof(FnPopulateListboxRankedSpec, f_filter), 0, 0, NULL},
@@ -1944,6 +1962,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_SkConfigHotkeyRegisterSpec,
     &lsd_SkRemappingSpec,
     &lsd_SkSnippetSpec,
+    &lsd_SkSearchAddTextSpec,
     &lsd_FnSkiTextWrapLayoutSpec,
     &lsd_SliderState,
     &lsd_SliderSpec,
@@ -2013,6 +2032,7 @@ static const LuaStructDesc *lua_generated_structs[] = {
     &lsd_FnCoverScaleSpec,
     &lsd_FnDrawLinePrepSpec,
     &lsd_FnDrawCirclePrepSpec,
+    &lsd_PopulateListboxSpec,
     &lsd_FnPopulateListboxRankedSpec,
     &lsd_ListboxLayout,
     &lsd_FnListboxComputeLayoutSpec,
@@ -2170,6 +2190,16 @@ static inline int lthunk_sk_hex(lua_State *L) {
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
+static inline int lthunk_ski_search_add_text(lua_State *L) {
+  slua_owner_from_state(L);
+  SkSearchAddTextSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkSearchAddTextSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_search_add_text");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_search_add_text"); }
+  typedef void (*fn_t)(const SkSearchAddTextSpec *);
+  ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  return 0;
+}
 static inline int lthunk_sk_copy_to_clipboard(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -2283,6 +2313,17 @@ static inline int lthunk_sk_search_file_in_dir(lua_State *L) {
   char * r = ((fn_t)sym)((const char *)a0, (const char *)a1);
   slua_owner_clear();
   lua_pushstring(L, r ? r : "");
+  return 1;
+}
+static inline int lthunk_ski_dir_scan(lua_State *L) {
+  slua_owner_from_state(L);
+  SkDirScanSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkDirScanSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_dir_scan");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_dir_scan"); }
+  typedef bool (*fn_t)(const SkDirScanSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_load_file_list(lua_State *L) {
@@ -3396,6 +3437,16 @@ static inline int lthunk_sk_string_split(lua_State *L) {
   slua_push_struct(L, "SkStringList", &r);
   return 1;
 }
+static inline int lthunk_ski_populate_listbox(lua_State *L) {
+  slua_owner_from_state(L);
+  SkPopulateListboxSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkPopulateListboxSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_populate_listbox");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_populate_listbox"); }
+  typedef void (*fn_t)(const SkPopulateListboxSpec *);
+  ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  return 0;
+}
 static inline int lthunk_sk_is_selected(lua_State *L) {
   slua_owner_from_state(L);
   ListBox *a0 = (ListBox *)slua_raw_ptr(L, 1);
@@ -3447,6 +3498,17 @@ static inline int lthunk_sk_get_edit_text(lua_State *L) {
   lua_pushstring(L, r ? r : "");
   return 1;
 }
+static inline int lthunk_ski_edit_text_popup(lua_State *L) {
+  slua_owner_from_state(L);
+  SkEditPopupSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkEditPopupSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_edit_text_popup");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_edit_text_popup"); }
+  typedef char * (*fn_t)(const SkEditPopupSpec *);
+  char * r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushstring(L, r ? r : "");
+  return 1;
+}
 static inline int lthunk_sk_replace_line_in_file(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -3460,6 +3522,37 @@ static inline int lthunk_sk_replace_line_in_file(lua_State *L) {
   lua_pushboolean(L, r != 0);
   return 1;
 }
+static inline int lthunk_ski_popup(lua_State *L) {
+  slua_owner_from_state(L);
+  PopupSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "PopupSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_popup");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_popup"); }
+  typedef char * (*fn_t)(const PopupSpec *);
+  char * r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushstring(L, r ? r : "");
+  return 1;
+}
+static inline int lthunk_ski_message(lua_State *L) {
+  slua_owner_from_state(L);
+  SkMessageSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkMessageSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_message");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_message"); }
+  typedef void (*fn_t)(const SkMessageSpec *);
+  ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  return 0;
+}
+static inline int lthunk_ski_window(lua_State *L) {
+  slua_owner_from_state(L);
+  PromptSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "PromptSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_window");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_window"); }
+  typedef void (*fn_t)(const SkPromptSpec *);
+  ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  return 0;
+}
 static inline int lthunk_ski_text_wrap_layout(lua_State *L) {
   slua_owner_from_state(L);
   void *a0 = slua_callback(L, 1, 0);
@@ -3469,6 +3562,28 @@ static inline int lthunk_ski_text_wrap_layout(lua_State *L) {
   int r = ((fn_t)sym)(a0);
   slua_owner_clear();
   lua_pushinteger(L, (lua_Integer)r);
+  return 1;
+}
+static inline int lthunk_ski_measure_text_wrapped(lua_State *L) {
+  slua_owner_from_state(L);
+  SkMeasureSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkMeasureSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_measure_text_wrapped");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_measure_text_wrapped"); }
+  typedef int (*fn_t)(const SkMeasureSpec *);
+  int r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushinteger(L, (lua_Integer)r);
+  return 1;
+}
+static inline int lthunk_ski_text_bounds(lua_State *L) {
+  slua_owner_from_state(L);
+  SkTextBoundsSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkTextBoundsSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_text_bounds");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_text_bounds"); }
+  typedef SkRect (*fn_t)(const SkTextBoundsSpec *);
+  SkRect r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  slua_push_struct(L, "SkRect", &r);
   return 1;
 }
 static inline int lthunk_sk_image_from_window_title(lua_State *L) {
@@ -3504,6 +3619,61 @@ static inline int lthunk_sk_image_free(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static inline int lthunk_ski_draw_text(lua_State *L) {
+  slua_owner_from_state(L);
+  SkTextSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkTextSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_draw_text");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_draw_text"); }
+  typedef bool (*fn_t)(const SkTextSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_draw_text_centered(lua_State *L) {
+  slua_owner_from_state(L);
+  SkTextCenteredSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkTextCenteredSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_draw_text_centered");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_draw_text_centered"); }
+  typedef bool (*fn_t)(const SkTextCenteredSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_draw_text_segments(lua_State *L) {
+  slua_owner_from_state(L);
+  SkTextSegmentsSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkTextSegmentsSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_draw_text_segments");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_draw_text_segments"); }
+  typedef bool (*fn_t)(const SkTextSegmentsSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_draw_text_wrapped(lua_State *L) {
+  slua_owner_from_state(L);
+  SkTextWrappedSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkTextWrappedSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_draw_text_wrapped");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_draw_text_wrapped"); }
+  typedef int (*fn_t)(const SkTextWrappedSpec *);
+  int r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushinteger(L, (lua_Integer)r);
+  return 1;
+}
+static inline int lthunk_ski_draw_image(lua_State *L) {
+  slua_owner_from_state(L);
+  SkImageSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkImageSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_draw_image");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_draw_image"); }
+  typedef bool (*fn_t)(const SkImageSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_ski_get_image_size(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -3518,6 +3688,17 @@ static inline int lthunk_ski_get_image_size(lua_State *L) {
   lua_pushinteger(L, (lua_Integer)a1);
   lua_pushinteger(L, (lua_Integer)a2);
   return 3;
+}
+static inline int lthunk_ski_place_editbox(lua_State *L) {
+  slua_owner_from_state(L);
+  SkEditSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkEditSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_place_editbox");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_place_editbox"); }
+  typedef bool (*fn_t)(const SkEditSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
 }
 static inline int lthunk_sk_editbox_text(lua_State *L) {
   slua_owner_from_state(L);
@@ -3561,6 +3742,39 @@ static inline int lthunk_sk_editbox_set_active(lua_State *L) {
   ((fn_t)sym)((const char *)a0);
   slua_owner_clear();
   return 0;
+}
+static inline int lthunk_ski_place_listbox(lua_State *L) {
+  slua_owner_from_state(L);
+  ListSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "ListSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_place_listbox");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_place_listbox"); }
+  typedef bool (*fn_t)(const SkListSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_place_checkbox(lua_State *L) {
+  slua_owner_from_state(L);
+  CheckboxSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "CheckboxSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_place_checkbox");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_place_checkbox"); }
+  typedef bool (*fn_t)(const SkCheckboxSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_place_slider(lua_State *L) {
+  slua_owner_from_state(L);
+  SliderSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SliderSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_place_slider");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_place_slider"); }
+  typedef bool (*fn_t)(const SkSliderSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
 }
 static inline int lthunk_sk_checkbox_is_checked(lua_State *L) {
   slua_owner_from_state(L);
@@ -3819,6 +4033,17 @@ static inline int lthunk_sk_focus_clear(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static inline int lthunk_ski_listbox_begin(lua_State *L) {
+  slua_owner_from_state(L);
+  ListSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "ListSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_listbox_begin");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_listbox_begin"); }
+  typedef bool (*fn_t)(const SkListSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_listbox_next(lua_State *L) {
   slua_owner_from_state(L);
   SkListItemCtx a0; memset(&a0, 0, sizeof(a0));
@@ -3965,6 +4190,39 @@ static inline int lthunk_sk_widget_destroy(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static inline int lthunk_ski_draw_rect(lua_State *L) {
+  slua_owner_from_state(L);
+  DrawRect a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "DrawRect", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_draw_rect");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_draw_rect"); }
+  typedef bool (*fn_t)(const SkRect *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_draw_line(lua_State *L) {
+  slua_owner_from_state(L);
+  Line a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "Line", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_draw_line");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_draw_line"); }
+  typedef bool (*fn_t)(const SkLine *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_draw_circle(lua_State *L) {
+  slua_owner_from_state(L);
+  Circle a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "Circle", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_draw_circle");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_draw_circle"); }
+  typedef bool (*fn_t)(const SkCircle *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_rand_num_between(lua_State *L) {
   slua_owner_from_state(L);
   long a0 = lua_isnoneornil(L, 1) ? 0 : lua_tointeger(L, 1);
@@ -4032,6 +4290,17 @@ static inline int lthunk_sk_get_draw_offset(lua_State *L) {
   SkPos r = ((fn_t)sym)();
   slua_owner_clear();
   slua_push_struct(L, "SkPos", &r);
+  return 1;
+}
+static inline int lthunk_ski_scroll_begin(lua_State *L) {
+  slua_owner_from_state(L);
+  SkScrollSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkScrollSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_scroll_begin");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_scroll_begin"); }
+  typedef bool (*fn_t)(const SkScrollSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
   return 1;
 }
 static inline int lthunk_sk_scroll_end(lua_State *L) {
@@ -5021,6 +5290,17 @@ static inline int lthunk_sk_settings_editbox_right_offset(lua_State *L) {
   lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
+static inline int lthunk_ski_add_to_cc(lua_State *L) {
+  slua_owner_from_state(L);
+  CcEntrySpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "CcEntrySpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_add_to_cc");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_add_to_cc"); }
+  typedef bool (*fn_t)(const SkCcEntrySpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_register_alias(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -5063,6 +5343,17 @@ static inline int lthunk_sk_config_init(lua_State *L) {
   ((fn_t)sym)();
   slua_owner_clear();
   return 0;
+}
+static inline int lthunk_ski_config_set_hotkey(lua_State *L) {
+  slua_owner_from_state(L);
+  SkConfigHotkeySpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkConfigHotkeySpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_config_set_hotkey");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_config_set_hotkey"); }
+  typedef bool (*fn_t)(const SkConfigHotkeySpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
 }
 static inline int lthunk_sk_config_set_alias(lua_State *L) {
   slua_owner_from_state(L);
@@ -5350,6 +5641,17 @@ static inline int lthunk_ski_add_dep(lua_State *L) {
   lua_pushboolean(L, r != 0);
   return 1;
 }
+static inline int lthunk_ski_register_hotkey(lua_State *L) {
+  slua_owner_from_state(L);
+  SkHotkeySpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkHotkeySpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_register_hotkey");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_register_hotkey"); }
+  typedef bool (*fn_t)(const SkHotkeySpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_unregister_hotkey(lua_State *L) {
   slua_owner_from_state(L);
   const char *a0 = lua_isnoneornil(L, 1) ? "" : luaL_checkstring(L, 1);
@@ -5357,6 +5659,17 @@ static inline int lthunk_sk_unregister_hotkey(lua_State *L) {
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_unregister_hotkey"); }
   typedef bool (*fn_t)(const char *);
   bool r = ((fn_t)sym)((const char *)a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_register_config_hotkey(lua_State *L) {
+  slua_owner_from_state(L);
+  SkConfigHotkeyRegisterSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkConfigHotkeyRegisterSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_register_config_hotkey");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_register_config_hotkey"); }
+  typedef bool (*fn_t)(const SkConfigHotkeyRegisterSpec *);
+  bool r = ((fn_t)sym)(&a0);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
@@ -5501,6 +5814,17 @@ static inline int lthunk_sk_register_deferred_init(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static inline int lthunk_ski_register_remapping(lua_State *L) {
+  slua_owner_from_state(L);
+  SkRemappingSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkRemappingSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_register_remapping");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_register_remapping"); }
+  typedef bool (*fn_t)(const SkRemappingSpec *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_replay_hotkey(lua_State *L) {
   slua_owner_from_state(L);
   SkKey a0; memset(&a0, 0, sizeof(a0));
@@ -5521,6 +5845,17 @@ static inline int lthunk_sk_execute_hotkey(lua_State *L) {
   if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "sk_execute_hotkey"); }
   typedef bool (*fn_t)(SkKey);
   bool r = ((fn_t)sym)(a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_register_snippet(lua_State *L) {
+  slua_owner_from_state(L);
+  SkSnippetSpec a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "SkSnippetSpec", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_register_snippet");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_register_snippet"); }
+  typedef bool (*fn_t)(const SkSnippetSpec *);
+  bool r = ((fn_t)sym)(&a0);
   slua_owner_clear();
   lua_pushboolean(L, r != 0);
   return 1;
@@ -5649,6 +5984,29 @@ static inline int lthunk_sk_close_window(lua_State *L) {
   slua_owner_clear();
   return 0;
 }
+static inline int lthunk_ski_resize_window(lua_State *L) {
+  slua_owner_from_state(L);
+  DrawRect a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "DrawRect", 1, &a0);
+  void *sym = Platform_GetMainSymbol("ski_resize_window");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_resize_window"); }
+  typedef bool (*fn_t)(const SkRect *);
+  bool r = ((fn_t)sym)(&a0);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
+static inline int lthunk_ski_resize_window_animated(lua_State *L) {
+  slua_owner_from_state(L);
+  DrawRect a0; memset(&a0, 0, sizeof(a0)); slua_fill_struct(L, "DrawRect", 1, &a0);
+  long a1 = lua_isnoneornil(L, 2) ? 0 : lua_tointeger(L, 2);
+  void *sym = Platform_GetMainSymbol("ski_resize_window_animated");
+  if (!sym) { slua_owner_clear(); return luaL_error(L, "unknown skapi function '%s'", "ski_resize_window_animated"); }
+  typedef bool (*fn_t)(const SkRect *, int);
+  bool r = ((fn_t)sym)(&a0, (int)a1);
+  slua_owner_clear();
+  lua_pushboolean(L, r != 0);
+  return 1;
+}
 static inline int lthunk_sk_get_window_bounds(lua_State *L) {
   slua_owner_from_state(L);
   void *sym = Platform_GetMainSymbol("sk_get_window_bounds");
@@ -5663,6 +6021,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_State *L = (lua_State *)Lp;
   lua_pushcfunction(L, lthunk_sk_rgb); lua_setfield(L, -2, "sk_rgb");
   lua_pushcfunction(L, lthunk_sk_hex); lua_setfield(L, -2, "sk_hex");
+  lua_pushcfunction(L, lthunk_ski_search_add_text); lua_setfield(L, -2, "ski_search_add_text");
   lua_pushcfunction(L, lthunk_sk_copy_to_clipboard); lua_setfield(L, -2, "sk_copy_to_clipboard");
   lua_pushcfunction(L, lthunk_sk_copy_file_path); lua_setfield(L, -2, "sk_copy_file_path");
   lua_pushcfunction(L, lthunk_sk_paste_from_clipboard); lua_setfield(L, -2, "sk_paste_from_clipboard");
@@ -5674,6 +6033,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_net_rx_bytes); lua_setfield(L, -2, "sk_net_rx_bytes");
   lua_pushcfunction(L, lthunk_sk_net_rx_bytes_over); lua_setfield(L, -2, "sk_net_rx_bytes_over");
   lua_pushcfunction(L, lthunk_sk_search_file_in_dir); lua_setfield(L, -2, "sk_search_file_in_dir");
+  lua_pushcfunction(L, lthunk_ski_dir_scan); lua_setfield(L, -2, "ski_dir_scan");
   lua_pushcfunction(L, lthunk_sk_load_file_list); lua_setfield(L, -2, "sk_load_file_list");
   lua_pushcfunction(L, lthunk_sk_array_free); lua_setfield(L, -2, "sk_array_free");
   lua_pushcfunction(L, lthunk_sk_load_file); lua_setfield(L, -2, "sk_load_file");
@@ -5775,21 +6135,37 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_string_replace); lua_setfield(L, -2, "sk_string_replace");
   lua_pushcfunction(L, lthunk_sk_string_slice); lua_setfield(L, -2, "sk_string_slice");
   lua_pushcfunction(L, lthunk_sk_string_split); lua_setfield(L, -2, "sk_string_split");
+  lua_pushcfunction(L, lthunk_ski_populate_listbox); lua_setfield(L, -2, "ski_populate_listbox");
   lua_pushcfunction(L, lthunk_sk_is_selected); lua_setfield(L, -2, "sk_is_selected");
   lua_pushcfunction(L, lthunk_sk_set_edit_text); lua_setfield(L, -2, "sk_set_edit_text");
   lua_pushcfunction(L, lthunk_sk_set_edit_cursor); lua_setfield(L, -2, "sk_set_edit_cursor");
   lua_pushcfunction(L, lthunk_sk_get_edit_cursor); lua_setfield(L, -2, "sk_get_edit_cursor");
   lua_pushcfunction(L, lthunk_sk_get_edit_text); lua_setfield(L, -2, "sk_get_edit_text");
+  lua_pushcfunction(L, lthunk_ski_edit_text_popup); lua_setfield(L, -2, "ski_edit_text_popup");
   lua_pushcfunction(L, lthunk_sk_replace_line_in_file); lua_setfield(L, -2, "sk_replace_line_in_file");
+  lua_pushcfunction(L, lthunk_ski_popup); lua_setfield(L, -2, "ski_popup");
+  lua_pushcfunction(L, lthunk_ski_message); lua_setfield(L, -2, "ski_message");
+  lua_pushcfunction(L, lthunk_ski_window); lua_setfield(L, -2, "ski_window");
   lua_pushcfunction(L, lthunk_ski_text_wrap_layout); lua_setfield(L, -2, "ski_text_wrap_layout");
+  lua_pushcfunction(L, lthunk_ski_measure_text_wrapped); lua_setfield(L, -2, "ski_measure_text_wrapped");
+  lua_pushcfunction(L, lthunk_ski_text_bounds); lua_setfield(L, -2, "ski_text_bounds");
   lua_pushcfunction(L, lthunk_sk_image_from_window_title); lua_setfield(L, -2, "sk_image_from_window_title");
   lua_pushcfunction(L, lthunk_sk_image_from_window_id); lua_setfield(L, -2, "sk_image_from_window_id");
   lua_pushcfunction(L, lthunk_sk_image_free); lua_setfield(L, -2, "sk_image_free");
+  lua_pushcfunction(L, lthunk_ski_draw_text); lua_setfield(L, -2, "ski_draw_text");
+  lua_pushcfunction(L, lthunk_ski_draw_text_centered); lua_setfield(L, -2, "ski_draw_text_centered");
+  lua_pushcfunction(L, lthunk_ski_draw_text_segments); lua_setfield(L, -2, "ski_draw_text_segments");
+  lua_pushcfunction(L, lthunk_ski_draw_text_wrapped); lua_setfield(L, -2, "ski_draw_text_wrapped");
+  lua_pushcfunction(L, lthunk_ski_draw_image); lua_setfield(L, -2, "ski_draw_image");
   lua_pushcfunction(L, lthunk_ski_get_image_size); lua_setfield(L, -2, "ski_get_image_size");
+  lua_pushcfunction(L, lthunk_ski_place_editbox); lua_setfield(L, -2, "ski_place_editbox");
   lua_pushcfunction(L, lthunk_sk_editbox_text); lua_setfield(L, -2, "sk_editbox_text");
   lua_pushcfunction(L, lthunk_sk_editbox_set_text); lua_setfield(L, -2, "sk_editbox_set_text");
   lua_pushcfunction(L, lthunk_sk_editbox_active); lua_setfield(L, -2, "sk_editbox_active");
   lua_pushcfunction(L, lthunk_sk_editbox_set_active); lua_setfield(L, -2, "sk_editbox_set_active");
+  lua_pushcfunction(L, lthunk_ski_place_listbox); lua_setfield(L, -2, "ski_place_listbox");
+  lua_pushcfunction(L, lthunk_ski_place_checkbox); lua_setfield(L, -2, "ski_place_checkbox");
+  lua_pushcfunction(L, lthunk_ski_place_slider); lua_setfield(L, -2, "ski_place_slider");
   lua_pushcfunction(L, lthunk_sk_checkbox_is_checked); lua_setfield(L, -2, "sk_checkbox_is_checked");
   lua_pushcfunction(L, lthunk_sk_checkbox_is_hovered); lua_setfield(L, -2, "sk_checkbox_is_hovered");
   lua_pushcfunction(L, lthunk_sk_checkbox_is_clicked); lua_setfield(L, -2, "sk_checkbox_is_clicked");
@@ -5814,6 +6190,7 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_focus_adjust); lua_setfield(L, -2, "sk_focus_adjust");
   lua_pushcfunction(L, lthunk_sk_set_focus); lua_setfield(L, -2, "sk_set_focus");
   lua_pushcfunction(L, lthunk_sk_focus_clear); lua_setfield(L, -2, "sk_focus_clear");
+  lua_pushcfunction(L, lthunk_ski_listbox_begin); lua_setfield(L, -2, "ski_listbox_begin");
   lua_pushcfunction(L, lthunk_sk_listbox_next); lua_setfield(L, -2, "sk_listbox_next");
   lua_pushcfunction(L, lthunk_sk_listbox_end); lua_setfield(L, -2, "sk_listbox_end");
   lua_pushcfunction(L, lthunk_sk_draw_text_auto); lua_setfield(L, -2, "sk_draw_text_auto");
@@ -5827,12 +6204,16 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_widget_show); lua_setfield(L, -2, "sk_widget_show");
   lua_pushcfunction(L, lthunk_sk_widget_hide); lua_setfield(L, -2, "sk_widget_hide");
   lua_pushcfunction(L, lthunk_sk_widget_destroy); lua_setfield(L, -2, "sk_widget_destroy");
+  lua_pushcfunction(L, lthunk_ski_draw_rect); lua_setfield(L, -2, "ski_draw_rect");
+  lua_pushcfunction(L, lthunk_ski_draw_line); lua_setfield(L, -2, "ski_draw_line");
+  lua_pushcfunction(L, lthunk_ski_draw_circle); lua_setfield(L, -2, "ski_draw_circle");
   lua_pushcfunction(L, lthunk_sk_rand_num_between); lua_setfield(L, -2, "sk_rand_num_between");
   lua_pushcfunction(L, lthunk_sk_get_text_width); lua_setfield(L, -2, "sk_get_text_width");
   lua_pushcfunction(L, lthunk_sk_get_text_height); lua_setfield(L, -2, "sk_get_text_height");
   lua_pushcfunction(L, lthunk_sk_color_lerp); lua_setfield(L, -2, "sk_color_lerp");
   lua_pushcfunction(L, lthunk_sk_set_draw_offset); lua_setfield(L, -2, "sk_set_draw_offset");
   lua_pushcfunction(L, lthunk_sk_get_draw_offset); lua_setfield(L, -2, "sk_get_draw_offset");
+  lua_pushcfunction(L, lthunk_ski_scroll_begin); lua_setfield(L, -2, "ski_scroll_begin");
   lua_pushcfunction(L, lthunk_sk_scroll_end); lua_setfield(L, -2, "sk_scroll_end");
   lua_pushcfunction(L, lthunk_sk_http_get); lua_setfield(L, -2, "sk_http_get");
   lua_pushcfunction(L, lthunk_sk_http_get_limited); lua_setfield(L, -2, "sk_http_get_limited");
@@ -5921,10 +6302,12 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_settings_editbox_get); lua_setfield(L, -2, "sk_settings_editbox_get");
   lua_pushcfunction(L, lthunk_sk_settings_editbox_set); lua_setfield(L, -2, "sk_settings_editbox_set");
   lua_pushcfunction(L, lthunk_sk_settings_editbox_right_offset); lua_setfield(L, -2, "sk_settings_editbox_right_offset");
+  lua_pushcfunction(L, lthunk_ski_add_to_cc); lua_setfield(L, -2, "ski_add_to_cc");
   lua_pushcfunction(L, lthunk_sk_register_alias); lua_setfield(L, -2, "sk_register_alias");
   lua_pushcfunction(L, lthunk_sk_remove_alias); lua_setfield(L, -2, "sk_remove_alias");
   lua_pushcfunction(L, lthunk_sk_alias_for); lua_setfield(L, -2, "sk_alias_for");
   lua_pushcfunction(L, lthunk_sk_config_init); lua_setfield(L, -2, "sk_config_init");
+  lua_pushcfunction(L, lthunk_ski_config_set_hotkey); lua_setfield(L, -2, "ski_config_set_hotkey");
   lua_pushcfunction(L, lthunk_sk_config_set_alias); lua_setfield(L, -2, "sk_config_set_alias");
   lua_pushcfunction(L, lthunk_sk_config_get_hotkey); lua_setfield(L, -2, "sk_config_get_hotkey");
   lua_pushcfunction(L, lthunk_sk_config_clear_hotkey); lua_setfield(L, -2, "sk_config_clear_hotkey");
@@ -5951,7 +6334,9 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_settings_entry_count); lua_setfield(L, -2, "sk_settings_entry_count");
   lua_pushcfunction(L, lthunk_sk_settings_scroll_to_block); lua_setfield(L, -2, "sk_settings_scroll_to_block");
   lua_pushcfunction(L, lthunk_ski_add_dep); lua_setfield(L, -2, "ski_add_dep");
+  lua_pushcfunction(L, lthunk_ski_register_hotkey); lua_setfield(L, -2, "ski_register_hotkey");
   lua_pushcfunction(L, lthunk_sk_unregister_hotkey); lua_setfield(L, -2, "sk_unregister_hotkey");
+  lua_pushcfunction(L, lthunk_ski_register_config_hotkey); lua_setfield(L, -2, "ski_register_config_hotkey");
   lua_pushcfunction(L, lthunk_sk_disable_global_hotkeys); lua_setfield(L, -2, "sk_disable_global_hotkeys");
   lua_pushcfunction(L, lthunk_sk_enable_global_hotkeys); lua_setfield(L, -2, "sk_enable_global_hotkeys");
   lua_pushcfunction(L, lthunk_sk_hotkey_capture_begin); lua_setfield(L, -2, "sk_hotkey_capture_begin");
@@ -5966,8 +6351,10 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_hotkey_for_callback); lua_setfield(L, -2, "sk_hotkey_for_callback");
   lua_pushcfunction(L, lthunk_sk_hotkey_for_ud); lua_setfield(L, -2, "sk_hotkey_for_ud");
   lua_pushcfunction(L, lthunk_sk_register_deferred_init); lua_setfield(L, -2, "sk_register_deferred_init");
+  lua_pushcfunction(L, lthunk_ski_register_remapping); lua_setfield(L, -2, "ski_register_remapping");
   lua_pushcfunction(L, lthunk_sk_replay_hotkey); lua_setfield(L, -2, "sk_replay_hotkey");
   lua_pushcfunction(L, lthunk_sk_execute_hotkey); lua_setfield(L, -2, "sk_execute_hotkey");
+  lua_pushcfunction(L, lthunk_ski_register_snippet); lua_setfield(L, -2, "ski_register_snippet");
   lua_pushcfunction(L, lthunk_sk_unregister_snippet); lua_setfield(L, -2, "sk_unregister_snippet");
   lua_pushcfunction(L, lthunk_sk_reload_feature); lua_setfield(L, -2, "sk_reload_feature");
   lua_pushcfunction(L, lthunk_sk_reload_all_features); lua_setfield(L, -2, "sk_reload_all_features");
@@ -5980,6 +6367,8 @@ static inline void slua_register_thunks(void *Lp) {
   lua_pushcfunction(L, lthunk_sk_unregister_event); lua_setfield(L, -2, "sk_unregister_event");
   lua_pushcfunction(L, lthunk_sk_register_key_interceptor); lua_setfield(L, -2, "sk_register_key_interceptor");
   lua_pushcfunction(L, lthunk_sk_close_window); lua_setfield(L, -2, "sk_close_window");
+  lua_pushcfunction(L, lthunk_ski_resize_window); lua_setfield(L, -2, "ski_resize_window");
+  lua_pushcfunction(L, lthunk_ski_resize_window_animated); lua_setfield(L, -2, "ski_resize_window_animated");
   lua_pushcfunction(L, lthunk_sk_get_window_bounds); lua_setfield(L, -2, "sk_get_window_bounds");
 }
 

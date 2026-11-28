@@ -392,11 +392,11 @@ static void populate_update_ui(ListBox *lb, int total_matches,
   }
 }
 
-void populate_listbox(ListBox *lb, const char *filter, const char **items,
-                      int item_count,
-                      bool (*filter_match)(const char *item,
-                                           const char *filter)) {
-  populate_listbox_ranked(&(FnPopulateListboxRankedSpec){.f_lb = lb, .f_filter = filter, .f_items = items, .f_item_count = item_count, .f_filter_match = filter_match, .f_item_rank = NULL});
+void populate_listbox(PopulateListboxSpec *argspec) {
+  populate_listbox_ranked(&(FnPopulateListboxRankedSpec){
+      .f_lb = argspec->f_lb, .f_filter = argspec->f_filter,
+      .f_items = argspec->f_items, .f_item_count = argspec->f_item_count,
+      .f_filter_match = argspec->f_filter_match, .f_item_rank = NULL});
 }
 
 void populate_listbox_ranked(FnPopulateListboxRankedSpec *argspec) {
@@ -818,3 +818,4 @@ int prompt_list_bottom_margin(void) { return 40; }
 int64_t timer_now_ticks(void) { return Platform_TimerNowTicks(); }
 
 int64_t timer_tick_frequency(void) { return Platform_TimerTickFrequency(); }
+

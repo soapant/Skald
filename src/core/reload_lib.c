@@ -69,15 +69,15 @@ bool reload_lib_compile(const char *src, const char *out, const char *log_tag) {
   }
   int status = -1;
   char *output = Platform_RunArgvCapture(argv, NULL, &status);
-  bool ok = output != NULL && status == 0;
-  if (output) {
+  bool captured = output != NULL;
+  bool ok = captured && status == 0;
+  if (captured) {
     if (output[0])
       log_info("%s", output);
     free(output);
-    output = NULL;
   }
   if (!ok) {
-    if (output == NULL && status == -1)
+    if (!captured && status == -1)
       log_error("%s: could not run compiler for %s", tag, src);
     else
       log_error("%s: build failed for %s (exit %d)", tag, src, status);
