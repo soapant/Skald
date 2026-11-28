@@ -121,7 +121,8 @@ static void widget_monitor_geometry(int monitor, int *x, int *y, int *w,
                                     int *h) {
   int count = monitor_count();
   int idx = (monitor > 0 && monitor <= count) ? monitor : 0;
-  if (monitor_geometry_at(&(MonitorGeometryAt){.index = idx, .x = x, .y = y, .w = w, .h = h}))
+  if (monitor_geometry_at(
+          &(MonitorGeometryAt){.index = idx, .x = x, .y = y, .w = w, .h = h}))
     return;
   Platform_GetMonitorGeometry(x, y, w, h);
 }
@@ -499,7 +500,15 @@ static void widget_attach_window(void *ud) {
     void (*click_cb)(void) = widget->on_click;
     if (!click_cb && widget->capture_keys)
       click_cb = widget_capture_click;
-    widget->win = Platform_Widget_Create(&(PlatformWidgetCreate){.x = widget->x, .y = widget->y, .w = widget->w, .h = widget->h, .fps = widget->fps, .no_bg = widget->no_bg, .on_click = click_cb, .name = widget->name});
+    widget->win =
+        Platform_Widget_Create(&(PlatformWidgetCreate){.x = widget->x,
+                                                       .y = widget->y,
+                                                       .w = widget->w,
+                                                       .h = widget->h,
+                                                       .fps = widget->fps,
+                                                       .no_bg = widget->no_bg,
+                                                       .on_click = click_cb,
+                                                       .name = widget->name});
     set_draw_bg_color(0);
     created = (widget->win != NULL);
   } else {
@@ -587,7 +596,8 @@ static void widget_relayout(void) {
                                                                    : 0;
     MonSlot *st = &ms[it->slot][m];
     if (!st->known) {
-      if (!monitor_geometry_at(&(MonitorGeometryAt){.index = m, .x = &st->x, .y = &st->y, .w = &st->w, .h = &st->h}))
+      if (!monitor_geometry_at(&(MonitorGeometryAt){
+              .index = m, .x = &st->x, .y = &st->y, .w = &st->w, .h = &st->h}))
         Platform_GetMonitorGeometry(&st->x, &st->y, &st->w, &st->h);
       st->cursor = from_right ? st->x + st->w : st->x;
       st->known = true;
@@ -773,7 +783,8 @@ void widget_init_base(WidgetInitBase *argspec) {
   argspec->base->fps = argspec->fps;
   argspec->base->no_bg = argspec->no_bg;
   argspec->base->on_click = argspec->on_click;
-  snprintf(argspec->base->name, sizeof(argspec->base->name), "%s", argspec->name ? argspec->name : "?");
+  snprintf(argspec->base->name, sizeof(argspec->base->name), "%s",
+           argspec->name ? argspec->name : "?");
   argspec->base->dirty = true;
   argspec->base->last_draw_ms = 0;
 }
@@ -818,4 +829,3 @@ bool widget_base_set_bg_color(PlatformWidgetBase *base, ColorRef bg_color) {
   base->bg_color = bg_color;
   return true;
 }
-

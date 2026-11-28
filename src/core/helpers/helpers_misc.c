@@ -148,7 +148,8 @@ int monitor_count(void) {
 bool monitor_geometry_at(MonitorGeometryAt *argspec) {
   MonitorEntry mon[16];
   int n = monitor_fill(mon, 16);
-  if (n <= 0 || argspec->index < 0 || argspec->index >= n || !mon[argspec->index].w)
+  if (n <= 0 || argspec->index < 0 || argspec->index >= n ||
+      !mon[argspec->index].w)
     return false;
   if (argspec->x)
     *argspec->x = mon[argspec->index].x;
@@ -580,7 +581,8 @@ int config_index_of(ConfigIndexOf *argspec) {
   if (!argspec->entries || !argspec->key)
     return -1;
   for (size_t i = 0; i < argspec->count; i++) {
-    const char *field = (const char *)argspec->entries + i * argspec->elem_size + argspec->key_off;
+    const char *field = (const char *)argspec->entries +
+                        i * argspec->elem_size + argspec->key_off;
     if (lookup_ci_eq(field, argspec->key))
       return (int)i;
   }
@@ -648,8 +650,8 @@ bool feature_shortcut_parse(FeatureShortcutParse *argspec) {
   const char *second = strchr(first + 1, '|');
   const char *feature_start = second ? first + 1 : argspec->target;
   const char *filter_start = second ? second + 1 : first + 1;
-  size_t feature_len =
-      second ? (size_t)(second - feature_start) : (size_t)(first - argspec->target);
+  size_t feature_len = second ? (size_t)(second - feature_start)
+                              : (size_t)(first - argspec->target);
   size_t filter_len = strlen(filter_start);
   if (!feature_len || !filter_len)
     return false;
@@ -726,8 +728,10 @@ bool resolve_caller_path_silent(void *caller_ret, const char *name, char *full,
 }
 
 bool resolve_caller_path(ResolveCallerPath *argspec) {
-  if (!resolve_caller_path_silent(argspec->caller_ret, argspec->name, argspec->full, argspec->cap)) {
-    log_warn("%s resolve failed name='%s' feature='%s'", argspec->func, argspec->name,
+  if (!resolve_caller_path_silent(argspec->caller_ret, argspec->name,
+                                  argspec->full, argspec->cap)) {
+    log_warn("%s resolve failed name='%s' feature='%s'", argspec->func,
+             argspec->name,
              SkaldContext_Get()->window.current_feature
                  ? SkaldContext_Get()->window.current_feature
                  : "(null)");
@@ -754,7 +758,11 @@ StringList load_file_list_from(void *caller, const char *filepath) {
   if (!filepath)
     return list;
   char full[MAX_PATH];
-  if (!resolve_caller_path(&(ResolveCallerPath){.caller_ret = caller, .name = filepath, .full = full, .cap = sizeof(full), .func = "sk_load_file_list"}))
+  if (!resolve_caller_path(&(ResolveCallerPath){.caller_ret = caller,
+                                                .name = filepath,
+                                                .full = full,
+                                                .cap = sizeof(full),
+                                                .func = "sk_load_file_list"}))
     return list;
   list = File_ReadLines(full);
   return list;
@@ -847,7 +855,8 @@ bool draw_rect_raw(DrawRectRaw *argspec) {
       .h = argspec->spec->h,
       .color = argspec->color,
       .radius = argspec->spec->radius ? argspec->spec->radius : 0,
-      .rounded = argspec->spec->rounded ? argspec->spec->rounded : RoundedCorners,
+      .rounded =
+          argspec->spec->rounded ? argspec->spec->rounded : RoundedCorners,
       .opaque = !argspec->transparent,
       .thickness = argspec->thickness,
       .filled = argspec->filled,
@@ -863,7 +872,11 @@ bool place_editbox(const EditSpec *spec) {
                            ? spec->name
                            : PROMPT_PRIMARY_EDITBOX_NAME;
     if (strncmp(name, "settings-search:", 16) != 0)
-      search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = spec->buffer, .kind = SEARCH_KIND_EDITBOX, .widget_name = name, .value = NULL});
+      search_index_add_text(&(SearchIndexAddText){.idx = NULL,
+                                                  .text = spec->buffer,
+                                                  .kind = SEARCH_KIND_EDITBOX,
+                                                  .widget_name = name,
+                                                  .value = NULL});
     return true;
   }
   SkaldContext_Get()->window.editbox_placed = true;
@@ -886,8 +899,15 @@ bool place_editbox(const EditSpec *spec) {
   if (state && name && name[0]) {
     int dx = 0, dy = 0;
     get_draw_offset(&dx, &dy);
-    int idx =
-        editbox_registry_place(&(EditboxRegistryPlace){.state = state, .name = name, .buffer = buffer, .buffer_size = buffer_size, .x = spec->x + dx, .y = spec->y + dy, .w = copy.w, .h = spec->h});
+    int idx = editbox_registry_place(
+        &(EditboxRegistryPlace){.state = state,
+                                .name = name,
+                                .buffer = buffer,
+                                .buffer_size = buffer_size,
+                                .x = spec->x + dx,
+                                .y = spec->y + dy,
+                                .w = copy.w,
+                                .h = spec->h});
     if (idx >= 0) {
       PromptEditbox *entry = &state->editboxes[idx];
       if (state->active_editbox < 0)
@@ -947,4 +967,3 @@ bool place_editbox(const EditSpec *spec) {
   }
   return Platform_PlaceEditbox(&copy);
 }
-

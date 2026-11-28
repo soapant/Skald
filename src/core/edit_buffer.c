@@ -62,7 +62,8 @@ char edit_buffer_pair_for(char c) {
 
 size_t edit_buffer_insert_text(EditBufferInsertText *argspec) {
 
-  if (!argspec->buf || !argspec->cursor || !argspec->text || argspec->len == 0 || argspec->cap == 0)
+  if (!argspec->buf || !argspec->cursor || !argspec->text ||
+      argspec->len == 0 || argspec->cap == 0)
     return 0;
   size_t n = strlen(argspec->buf);
   if (*argspec->cursor > n)
@@ -70,11 +71,13 @@ size_t edit_buffer_insert_text(EditBufferInsertText *argspec) {
 
   char closer = 0;
   if (EnableAutoPairing && argspec->len == 1) {
-    if (edit_is_closer(argspec->text[0]) && *argspec->cursor < n && argspec->buf[*argspec->cursor] == argspec->text[0]) {
+    if (edit_is_closer(argspec->text[0]) && *argspec->cursor < n &&
+        argspec->buf[*argspec->cursor] == argspec->text[0]) {
       (*argspec->cursor)++;
       return 0;
     }
-    if (!edit_is_quote(argspec->text[0]) || edit_quote_at_word_start(argspec->buf, *argspec->cursor)) {
+    if (!edit_is_quote(argspec->text[0]) ||
+        edit_quote_at_word_start(argspec->buf, *argspec->cursor)) {
       closer = edit_buffer_pair_for(argspec->text[0]);
     }
   }
@@ -82,7 +85,8 @@ size_t edit_buffer_insert_text(EditBufferInsertText *argspec) {
   size_t total = argspec->len + (closer ? (size_t)1 : (size_t)0);
   if (n + total >= argspec->cap)
     return 0;
-  memmove(argspec->buf + *argspec->cursor + total, argspec->buf + *argspec->cursor, n - *argspec->cursor + 1);
+  memmove(argspec->buf + *argspec->cursor + total,
+          argspec->buf + *argspec->cursor, n - *argspec->cursor + 1);
   memcpy(argspec->buf + *argspec->cursor, argspec->text, argspec->len);
   if (closer)
     argspec->buf[*argspec->cursor + argspec->len] = closer;
@@ -120,4 +124,3 @@ bool cursor_forward(size_t *cursor, size_t text_len) {
   (*cursor)++;
   return true;
 }
-

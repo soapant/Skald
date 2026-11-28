@@ -132,4 +132,3 @@ DrawRect wm_get_window_geometry(WindowHandle window);
 bool wm_set_window_geometry(WindowHandle window, DrawRect rect);
 
 #endif
-

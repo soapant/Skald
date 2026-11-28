@@ -188,8 +188,9 @@ static bool remap_register_internal_locked(const char *src, const char *dst,
 
 bool remap_register_internal(RemapRegisterInternal *argspec) {
   remap_lock();
-  bool ok =
-      remap_register_internal_locked(argspec->src, argspec->dst, argspec->whitelist, argspec->windows, argspec->caller);
+  bool ok = remap_register_internal_locked(argspec->src, argspec->dst,
+                                           argspec->whitelist, argspec->windows,
+                                           argspec->caller);
   remap_unlock();
   return ok;
 }
@@ -601,4 +602,3 @@ void remap_purge_owner(const char *path_a, const char *path_b) {
   OWNER_PURGE_STRUCT(remaps, RemapBinding, path_a, path_b, 0, remap_destroy_cb);
   remap_unlock();
 }
-

@@ -132,14 +132,25 @@ LRESULT CALLBACK win32_display_message_proc(HWND hwnd, UINT msg, WPARAM wParam,
     if (data && data->no_bg) {
       win32_fill_rounded_rect(dc, &rect, RGB(0, 0, 0), 0);
     } else if (win32_bg_image_enabled() &&
-               win32_draw_bg_image_slice(&(Win32DrawBgImageSlice){.hdc = dc, .rc = &rect, .containerW = rect.right, .containerH = rect.bottom, .originX = 0, .originY = 0})) {
+               win32_draw_bg_image_slice(
+                   &(Win32DrawBgImageSlice){.hdc = dc,
+                                            .rc = &rect,
+                                            .containerW = rect.right,
+                                            .containerH = rect.bottom,
+                                            .originX = 0,
+                                            .originY = 0})) {
     } else {
       HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG);
       FillRect(dc, &rect, hBackgroundBrush);
       DeleteObject(hBackgroundBrush);
     }
     if (!(data && data->no_bg)) {
-      win32_draw_window_border(&(Win32DrawWindowBorder){.hdc = dc, .ox = 0, .oy = 0, .ww = rect.right, .wh = rect.bottom, .region = NULL});
+      win32_draw_window_border(&(Win32DrawWindowBorder){.hdc = dc,
+                                                        .ox = 0,
+                                                        .oy = 0,
+                                                        .ww = rect.right,
+                                                        .wh = rect.bottom,
+                                                        .region = NULL});
     }
 
     if (data && data->render) {
@@ -272,10 +283,18 @@ bool win32_message_popup_create(int x, int y, int w, int h) {
   }
   s_msg_show_data = NULL;
   if (!s_msg_show_no_bg) {
-    win32_apply_rounded(&(Win32ApplyRounded){.hwnd = hPopupWnd, .w = w, .h = h, .rounded = s_msg_rounded, .radius = s_msg_radius});
+    win32_apply_rounded(&(Win32ApplyRounded){.hwnd = hPopupWnd,
+                                             .w = w,
+                                             .h = h,
+                                             .rounded = s_msg_rounded,
+                                             .radius = s_msg_radius});
     SetLayeredWindowAttributes(hPopupWnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
   } else {
-    win32_apply_rounded(&(Win32ApplyRounded){.hwnd = hPopupWnd, .w = w, .h = h, .rounded = s_msg_rounded, .radius = s_msg_radius});
+    win32_apply_rounded(&(Win32ApplyRounded){.hwnd = hPopupWnd,
+                                             .w = w,
+                                             .h = h,
+                                             .rounded = s_msg_rounded,
+                                             .radius = s_msg_radius});
     SetLayeredWindowAttributes(hPopupWnd, 0, 0, LWA_COLORKEY);
   }
   ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
@@ -346,7 +365,12 @@ void win32_msg_hover_present(HoverMessage spec) {
   if (!(winWidth > 0 && winHeight > 0)) {
     FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
     int textWidth = 0, textHeight = 0;
-    Platform_GetTextExtents(&(PlatformGetTextExtents){.font = msgFont, .text = message, .max_width = max_width - 30, .outWidth = &textWidth, .outHeight = &textHeight});
+    Platform_GetTextExtents(
+        &(PlatformGetTextExtents){.font = msgFont,
+                                  .text = message,
+                                  .max_width = max_width - 30,
+                                  .outWidth = &textWidth,
+                                  .outHeight = &textHeight});
     Platform_DestroyFont(msgFont);
     winWidth = textWidth + 30;
     winHeight = textHeight + 30;
@@ -359,15 +383,15 @@ void win32_msg_hover_present(HoverMessage spec) {
   win32_msg_hover_release(hover_key);
   Platform_CreateDisplayMessageWindow(
       (CreateDisplayMessageWindow){.message = message,
-                                       .x = center_x,
-                                       .y = center_y,
-                                       .max_width = winWidth,
-                                       .max_height = winHeight,
-                                       .timeout = MSG_TIMEOUT_INDEFINITE,
-                                       .color = color,
-                                       .no_bg = no_bg,
-                                       .render = NULL,
-                                       .name = NULL});
+                                   .x = center_x,
+                                   .y = center_y,
+                                   .max_width = winWidth,
+                                   .max_height = winHeight,
+                                   .timeout = MSG_TIMEOUT_INDEFINITE,
+                                   .color = color,
+                                   .no_bg = no_bg,
+                                   .render = NULL,
+                                   .name = NULL});
   win32_msg_w = winWidth;
   win32_msg_h = winHeight;
   snprintf(hover_key, sizeof(hover_key), "%s", key);
@@ -382,5 +406,3 @@ void win32_msg_hover_present(HoverMessage spec) {
     InvalidateRect(hw, NULL, TRUE);
   }
 }
-
-

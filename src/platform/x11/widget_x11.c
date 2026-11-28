@@ -135,7 +135,12 @@ static void x11_widget_frame(void *ud) {
   if (widget->base.fn)
     widget->base.fn(widget->base.ud);
   Platform_FlushDraw();
-  x11_draw_window_border(&(X11DrawWindowBorder){.dpy = dpy, .drw = widget->win, .vis = NULL, .w = widget->base.w, .h = widget->base.h, .no_bg = widget->base.no_bg});
+  x11_draw_window_border(&(X11DrawWindowBorder){.dpy = dpy,
+                                                .drw = widget->win,
+                                                .vis = NULL,
+                                                .w = widget->base.w,
+                                                .h = widget->base.h,
+                                                .no_bg = widget->base.no_bg});
   XFlush(dpy);
 }
 
@@ -156,19 +161,37 @@ PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
   if (!widget)
     return NULL;
   widget->dpy = dpy;
-  widget_init_base(&(WidgetInitBase){.base = &widget->base, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h, .fps = argspec->fps, .no_bg = argspec->no_bg, .on_click = argspec->on_click, .name = argspec->name});
+  widget_init_base(&(WidgetInitBase){.base = &widget->base,
+                                     .x = argspec->x,
+                                     .y = argspec->y,
+                                     .w = argspec->w,
+                                     .h = argspec->h,
+                                     .fps = argspec->fps,
+                                     .no_bg = argspec->no_bg,
+                                     .on_click = argspec->on_click,
+                                     .name = argspec->name});
   widget->last_draw_w = 0;
   widget->last_draw_h = 0;
 
   set_transparent_window(argspec->no_bg);
-  widget->win =
-      x11_create_display_message_window(&(X11CreateDisplayMessageWindow){.dpy = dpy, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h, .clickable = argspec->on_click != NULL});
+  widget->win = x11_create_display_message_window(
+      &(X11CreateDisplayMessageWindow){.dpy = dpy,
+                                       .x = argspec->x,
+                                       .y = argspec->y,
+                                       .w = argspec->w,
+                                       .h = argspec->h,
+                                       .clickable = argspec->on_click != NULL});
   set_transparent_window(false);
   if (!widget->win) {
     free(widget);
     return NULL;
   }
-  if (!x11_get_drawable_visual(&(X11GetDrawableVisual){.dpy = dpy, .d = widget->win, .vis_out = &widget->vis, .cmap_out = &widget->cmap, .depth_out = NULL})) {
+  if (!x11_get_drawable_visual(
+          &(X11GetDrawableVisual){.dpy = dpy,
+                                  .d = widget->win,
+                                  .vis_out = &widget->vis,
+                                  .cmap_out = &widget->cmap,
+                                  .depth_out = NULL})) {
     int screen = DefaultScreen(dpy);
     widget->vis = DefaultVisual(dpy, screen);
     widget->cmap = DefaultColormap(dpy, screen);
@@ -300,4 +323,3 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
 }
 
 void Platform_Widget_FlushDestruction(void) {}
-

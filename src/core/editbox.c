@@ -199,7 +199,13 @@ void editbox_build_spec(EditboxSpec *out, const EditboxInit *in) {
   out->text_color = in->text_color;
   out->bg_color = in->bg_color;
   out->font = in->font;
-  editbox_resolve_selection(&(EditboxResolveSelection){.state = in->state, .text_len = in->text_len, .prefer_state = true, .out_start = &out->sel_start, .out_end = &out->sel_end, .out_has = &out->has_selection});
+  editbox_resolve_selection(
+      &(EditboxResolveSelection){.state = in->state,
+                                 .text_len = in->text_len,
+                                 .prefer_state = true,
+                                 .out_start = &out->sel_start,
+                                 .out_end = &out->sel_end,
+                                 .out_has = &out->has_selection});
 }
 
 int editbox_caret_y(int box_top, int ascent, int descent, int font_size) {
@@ -234,7 +240,12 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   FontHandle font = metrics->font;
   int sel_start = 0, sel_end = 0;
   bool has_sel = false;
-  editbox_resolve_selection(&(EditboxResolveSelection){.state = state, .text_len = text_len, .prefer_state = true, .out_start = &sel_start, .out_end = &sel_end, .out_has = &has_sel});
+  editbox_resolve_selection(&(EditboxResolveSelection){.state = state,
+                                                       .text_len = text_len,
+                                                       .prefer_state = true,
+                                                       .out_start = &sel_start,
+                                                       .out_end = &sel_end,
+                                                       .out_has = &has_sel});
   memset(spec, 0, sizeof(*spec));
   spec->wrap_cache = editbox_prompt_wrap_cache(state);
   spec->metrics = editbox_state_metrics(state);
@@ -275,20 +286,27 @@ void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
   int edit_h = ascent + descent;
   if (edit_h <= 0)
     edit_h = FontSize > 0 ? FontSize : 16;
-  editbox_legacy_tick(&(EditboxLegacyTick){.state = state, .x = 0, .y = edit_y, .w = state->width, .h = edit_h, .font_size = FontSize});
+  editbox_legacy_tick(&(EditboxLegacyTick){.state = state,
+                                           .x = 0,
+                                           .y = edit_y,
+                                           .w = state->width,
+                                           .h = edit_h,
+                                           .font_size = FontSize});
 }
 
 void editbox_resolve_selection(EditboxResolveSelection *argspec) {
   int sel_start = 0;
   int sel_end = 0;
   bool has = false;
-  if (argspec->prefer_state && argspec->state && argspec->state->eb->sel_start >= 0 &&
+  if (argspec->prefer_state && argspec->state &&
+      argspec->state->eb->sel_start >= 0 &&
       argspec->state->eb->sel_end > argspec->state->eb->sel_start) {
     sel_start = argspec->state->eb->sel_start;
     sel_end = argspec->state->eb->sel_end;
     has = true;
   } else {
-    has = edit_state_get_selection(&sel_start, &sel_end) && argspec->text_len > 0;
+    has =
+        edit_state_get_selection(&sel_start, &sel_end) && argspec->text_len > 0;
   }
   if (argspec->out_start)
     *argspec->out_start = sel_start;
@@ -408,7 +426,15 @@ static const Pos *editbox_wrap_positions(const EditboxSpec *spec,
   }
   Pos *out = *buf;
   EditboxWrapCtx ctx = {spec, src};
-  int n = text_wrap_layout(&(TextWrapLayout){.text = src, .x0 = 0, .y0 = 0, .max_width = max_width, .line_height = line_h, .measure = editbox_wrap_measure, .ctx = &ctx, .out = out, .maxout = need});
+  int n = text_wrap_layout(&(TextWrapLayout){.text = src,
+                                             .x0 = 0,
+                                             .y0 = 0,
+                                             .max_width = max_width,
+                                             .line_height = line_h,
+                                             .measure = editbox_wrap_measure,
+                                             .ctx = &ctx,
+                                             .out = out,
+                                             .maxout = need});
   if (cache) {
     cache->key = key;
     cache->len = len;
@@ -485,15 +511,14 @@ static void editbox_wrap_draw_text(const EditboxSpec *spec, int draw_y,
         n = (int)sizeof(line) - 1;
       memcpy(line, text + start, (size_t)n);
       line[n] = '\0';
-      Platform_DrawTextRaw(
-          (DrawTextRaw){.x = x0 + positions[start].x,
-                            .y = y0 + positions[start].y - draw_y,
-                            .text = line,
-                            .color = color,
-                            .font = spec->font,
-                            .align = "",
-                            .pad = 0,
-                            .font_size = spec->font_size});
+      Platform_DrawTextRaw((DrawTextRaw){.x = x0 + positions[start].x,
+                                         .y = y0 + positions[start].y - draw_y,
+                                         .text = line,
+                                         .color = color,
+                                         .font = spec->font,
+                                         .align = "",
+                                         .pad = 0,
+                                         .font_size = spec->font_size});
     }
     start = i;
   }
@@ -683,13 +708,13 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
           memcpy(ch, src + spec->cursor, (size_t)cl);
           ch[cl] = '\0';
           Platform_DrawTextRaw((DrawTextRaw){.x = layout->caret_x,
-                                                 .y = layout->caret_text_y,
-                                                 .text = ch,
-                                                 .color = bg,
-                                                 .font = spec->font,
-                                                 .align = "",
-                                                 .pad = 0,
-                                                 .font_size = spec->font_size});
+                                             .y = layout->caret_text_y,
+                                             .text = ch,
+                                             .color = bg,
+                                             .font = spec->font,
+                                             .align = "",
+                                             .pad = 0,
+                                             .font_size = spec->font_size});
         }
       }
     }
@@ -716,25 +741,25 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
   if (parts & EDITBOX_PART_TEXT) {
     if (spec->text_len > 0 && !spec->password_mode) {
       Platform_DrawTextRaw((DrawTextRaw){.x = layout->draw_x,
-                                             .y = spec->text_y,
-                                             .text = spec->text,
-                                             .color = spec->text_color,
-                                             .font = spec->font,
-                                             .align = "",
-                                             .pad = 0,
-                                             .font_size = spec->font_size});
+                                         .y = spec->text_y,
+                                         .text = spec->text,
+                                         .color = spec->text_color,
+                                         .font = spec->font,
+                                         .align = "",
+                                         .pad = 0,
+                                         .font_size = spec->font_size});
     } else if (spec->placeholder && spec->placeholder[0]) {
       unsigned long ph =
           color_lerp(rgb_to_hex(COLOR_TEXT), rgb_to_hex(RGB(0, 0, 0)), 0.45f);
       Platform_DrawTextRaw(
           (DrawTextRaw){.x = layout->draw_x,
-                            .y = spec->text_y + spec->placeholder_dy,
-                            .text = spec->placeholder,
-                            .color = ph,
-                            .font = spec->font,
-                            .align = "",
-                            .pad = 0,
-                            .font_size = spec->font_size});
+                        .y = spec->text_y + spec->placeholder_dy,
+                        .text = spec->placeholder,
+                        .color = ph,
+                        .font = spec->font,
+                        .align = "",
+                        .pad = 0,
+                        .font_size = spec->font_size});
     }
   }
 
@@ -772,13 +797,13 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
         int ty =
             is_placeholder ? spec->text_y + spec->placeholder_dy : spec->text_y;
         Platform_DrawTextRaw((DrawTextRaw){.x = layout->caret_x,
-                                               .y = ty,
-                                               .text = ch,
-                                               .color = bg,
-                                               .font = spec->font,
-                                               .align = "",
-                                               .pad = 0,
-                                               .font_size = spec->font_size});
+                                           .y = ty,
+                                           .text = ch,
+                                           .color = bg,
+                                           .font = spec->font,
+                                           .align = "",
+                                           .pad = 0,
+                                           .font_size = spec->font_size});
       }
     }
   }
@@ -846,10 +871,12 @@ int editbox_registry_place(EditboxRegistryPlace *argspec) {
     entry->eb.sel_start = -1;
     entry->eb.sel_end = -1;
   }
-  if (entry->buffer != argspec->buffer || entry->buffer_size != argspec->buffer_size) {
+  if (entry->buffer != argspec->buffer ||
+      entry->buffer_size != argspec->buffer_size) {
     entry->buffer = argspec->buffer;
     entry->buffer_size = argspec->buffer_size;
-    size_t cap = argspec->buffer_size > 0 ? argspec->buffer_size : sizeof(entry->eb.filter);
+    size_t cap = argspec->buffer_size > 0 ? argspec->buffer_size
+                                          : sizeof(entry->eb.filter);
     size_t n = argspec->buffer ? strnlen(argspec->buffer, cap - 1) : 0;
     if (n >= sizeof(entry->eb.filter))
       n = sizeof(entry->eb.filter) - 1;
@@ -915,7 +942,15 @@ void editbox_registry_register_focus(PromptState *state) {
       continue;
     char name[160];
     editbox_focus_name(name, sizeof(name), entry);
-    focus_register(&(FocusRegister){.name = name, .kind = FOCUS_KIND_EDITBOX, .x = entry->x, .y = entry->y, .w = entry->w, .h = entry->h, .owner = state, .activate = editbox_focus_activate, .adjust = NULL});
+    focus_register(&(FocusRegister){.name = name,
+                                    .kind = FOCUS_KIND_EDITBOX,
+                                    .x = entry->x,
+                                    .y = entry->y,
+                                    .w = entry->w,
+                                    .h = entry->h,
+                                    .owner = state,
+                                    .activate = editbox_focus_activate,
+                                    .adjust = NULL});
   }
 }
 
@@ -1128,7 +1163,15 @@ void editbox_registry_tick(PromptState *state) {
 void editbox_legacy_tick(EditboxLegacyTick *argspec) {
   if (!argspec->state || !argspec->state->eb)
     return;
-  int idx = editbox_registry_place(&(EditboxRegistryPlace){.state = argspec->state, .name = PROMPT_PRIMARY_EDITBOX_NAME, .buffer = argspec->state->eb->filter, .buffer_size = sizeof(argspec->state->eb->filter), .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h});
+  int idx = editbox_registry_place(
+      &(EditboxRegistryPlace){.state = argspec->state,
+                              .name = PROMPT_PRIMARY_EDITBOX_NAME,
+                              .buffer = argspec->state->eb->filter,
+                              .buffer_size = sizeof(argspec->state->eb->filter),
+                              .x = argspec->x,
+                              .y = argspec->y,
+                              .w = argspec->w,
+                              .h = argspec->h});
   if (idx < 0)
     return;
   PromptEditbox *entry = &argspec->state->editboxes[idx];
@@ -1245,5 +1288,3 @@ const char *editbox_registry_active_name(const PromptState *state) {
     return NULL;
   return state->editboxes[state->active_editbox].name;
 }
-
-

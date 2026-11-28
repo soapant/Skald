@@ -50,6 +50,7 @@ TEST(content_hash_detects_change) {
 
 static int purge_hook_calls;
 static unsigned purge_hook_gen;
+
 static void test_purge_hook(const char *a, const char *b, unsigned gen) {
   (void)a;
   (void)b;
@@ -71,8 +72,7 @@ TEST(library_track_remove_checked) {
   library_track_add(fake, "mod_a");
   ASSERT_EQ_INT(library_track_remove_checked(fake, "mod_a"),
                 LIB_TRACK_SELF_CALLER);
-  ASSERT_EQ_INT(library_track_remove_checked(fake, "mod_b"),
-                LIB_TRACK_REMOVED);
+  ASSERT_EQ_INT(library_track_remove_checked(fake, "mod_b"), LIB_TRACK_REMOVED);
   ASSERT_EQ_INT(library_track_remove_checked(fake, "mod_b"),
                 LIB_TRACK_NOT_FOUND);
 }

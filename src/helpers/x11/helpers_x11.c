@@ -581,8 +581,9 @@ int x11_measure_utf8_fallback(X11MeasureUtf8Fallback *argspec) {
       if (all)
         width = xft_width(argspec->dpy, argspec->xf, argspec->s, argspec->n);
       else
-        width = x11_utf8_fallback_runs(argspec->dpy, argspec->xf, (const unsigned char *)argspec->s, argspec->n, argspec->px,
-                                       x11_measure_run, NULL);
+        width = x11_utf8_fallback_runs(
+            argspec->dpy, argspec->xf, (const unsigned char *)argspec->s,
+            argspec->n, argspec->px, x11_measure_run, NULL);
     }
     pthread_mutex_lock(&measure_mtx);
     if (epoch == g_measure_epoch)
@@ -605,7 +606,8 @@ int x11_measure_utf8_fallback(X11MeasureUtf8Fallback *argspec) {
   }
   if (all)
     return xft_width(argspec->dpy, argspec->xf, argspec->s, argspec->n);
-  return x11_utf8_fallback_runs(argspec->dpy, argspec->xf, b, argspec->n, argspec->px, x11_measure_run, NULL);
+  return x11_utf8_fallback_runs(argspec->dpy, argspec->xf, b, argspec->n,
+                                argspec->px, x11_measure_run, NULL);
 }
 
 int x11_draw_utf8_fallback(X11DrawUtf8Fallback *argspec) {
@@ -613,8 +615,9 @@ int x11_draw_utf8_fallback(X11DrawUtf8Fallback *argspec) {
     return 0;
   argspec->px = x11_font_px(argspec->xf, argspec->px);
   X11DrawRunCtx ctx = {argspec->xd, argspec->color, argspec->y, argspec->x};
-  x11_utf8_fallback_runs(argspec->dpy, argspec->xf, (const unsigned char *)argspec->s, argspec->n, argspec->px, x11_draw_run,
-                         &ctx);
+  x11_utf8_fallback_runs(argspec->dpy, argspec->xf,
+                         (const unsigned char *)argspec->s, argspec->n,
+                         argspec->px, x11_draw_run, &ctx);
   return ctx.cx - argspec->x;
 }
 
@@ -622,7 +625,8 @@ static void x11_wrap_flush_line(Display *dpy, XftDraw *xd, XftColor *color,
                                 XftFont *xf, const char *line_start,
                                 int line_len, int alignment, int box_width,
                                 int max_width, int x_offset, int y) {
-  int lw = x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){.dpy = dpy, .xf = xf, .s = line_start, .n = line_len, .px = 0});
+  int lw = x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){
+      .dpy = dpy, .xf = xf, .s = line_start, .n = line_len, .px = 0});
   int draw_x = 0;
   if (alignment == 1)
     draw_x =
@@ -631,7 +635,15 @@ static void x11_wrap_flush_line(Display *dpy, XftDraw *xd, XftColor *color,
     draw_x = box_width > 0 ? max_width - lw : max_width - lw - x_offset;
   else
     draw_x = x_offset;
-  x11_draw_utf8_fallback(&(X11DrawUtf8Fallback){.dpy = dpy, .xd = xd, .color = color, .x = draw_x, .y = y, .xf = xf, .s = line_start, .n = line_len, .px = 0});
+  x11_draw_utf8_fallback(&(X11DrawUtf8Fallback){.dpy = dpy,
+                                                .xd = xd,
+                                                .color = color,
+                                                .x = draw_x,
+                                                .y = y,
+                                                .xf = xf,
+                                                .s = line_start,
+                                                .n = line_len,
+                                                .px = 0});
 }
 
 void x11_draw_wrapped_text(X11DrawWrappedText *argspec) {
@@ -652,10 +664,12 @@ void x11_draw_wrapped_text(X11DrawWrappedText *argspec) {
   if (argspec->centered_to != NULL) {
     if (string_contains_ci(argspec->centered_to, "CENTER")) {
       alignment = 1;
-      max_width = argspec->box_width > 0 ? argspec->box_width : PROMPT_WRAP_BOX_CENTER;
+      max_width =
+          argspec->box_width > 0 ? argspec->box_width : PROMPT_WRAP_BOX_CENTER;
     } else if (string_contains_ci(argspec->centered_to, "RIGHT")) {
       alignment = 2;
-      max_width = argspec->box_width > 0 ? argspec->box_width : PROMPT_WRAP_BOX_RIGHT;
+      max_width =
+          argspec->box_width > 0 ? argspec->box_width : PROMPT_WRAP_BOX_RIGHT;
     } else {
       alignment = 0;
       max_width = 1 << 20;
@@ -673,13 +687,18 @@ void x11_draw_wrapped_text(X11DrawWrappedText *argspec) {
     const char *word_start = p;
     while (*p && *p != ' ')
       p++;
-    int word_width = x11_measure_utf8_fallback(&(X11MeasureUtf8Fallback){.dpy = argspec->dpy, .xf = xf, .s = word_start, .n = (int)(p - word_start), .px = 0});
+    int word_width = x11_measure_utf8_fallback(
+        &(X11MeasureUtf8Fallback){.dpy = argspec->dpy,
+                                  .xf = xf,
+                                  .s = word_start,
+                                  .n = (int)(p - word_start),
+                                  .px = 0});
     int add = word_width + (line_width > 0 ? space_width : 0);
 
     if (line_width > 0 && line_width + add > max_width) {
-      x11_wrap_flush_line(argspec->dpy, argspec->xd, argspec->color, xf, line_start,
-                          (int)(word_start - line_start), alignment, argspec->box_width,
-                          max_width, argspec->x_offset, y);
+      x11_wrap_flush_line(argspec->dpy, argspec->xd, argspec->color, xf,
+                          line_start, (int)(word_start - line_start), alignment,
+                          argspec->box_width, max_width, argspec->x_offset, y);
       y += line_height;
       line_start = word_start;
       line_width = word_width;
@@ -691,8 +710,9 @@ void x11_draw_wrapped_text(X11DrawWrappedText *argspec) {
   }
 
   if (p > line_start) {
-    x11_wrap_flush_line(argspec->dpy, argspec->xd, argspec->color, xf, line_start, (int)(p - line_start),
-                        alignment, argspec->box_width, max_width, argspec->x_offset, y);
+    x11_wrap_flush_line(argspec->dpy, argspec->xd, argspec->color, xf,
+                        line_start, (int)(p - line_start), alignment,
+                        argspec->box_width, max_width, argspec->x_offset, y);
   }
 }
 
@@ -741,8 +761,9 @@ bool x11_xft_color_cached(X11XftColorCached *argspec) {
   unsigned long oldest = ~0UL;
   for (i = 0; i < XFT_COLOR_CACHE_SLOTS; i++) {
     XftColorSlot *s = &xft_color_slots[i];
-    if (s->used && s->dpy == argspec->dpy && s->vis == argspec->vis && s->cmap == argspec->cmap &&
-        s->hex == argspec->hex && s->alpha == argspec->alpha) {
+    if (s->used && s->dpy == argspec->dpy && s->vis == argspec->vis &&
+        s->cmap == argspec->cmap && s->hex == argspec->hex &&
+        s->alpha == argspec->alpha) {
       s->stamp = ++xft_color_tick;
       *argspec->out = s->color;
       pthread_mutex_unlock(&xft_color_cache_mtx);
@@ -759,10 +780,12 @@ bool x11_xft_color_cached(X11XftColorCached *argspec) {
   if (slot < 0)
     slot = 0;
   XftColorSlot *s = &xft_color_slots[slot];
-  XRenderColor rc = {((argspec->hex >> 16) & 0xFF) * 0x101, ((argspec->hex >> 8) & 0xFF) * 0x101,
+  XRenderColor rc = {((argspec->hex >> 16) & 0xFF) * 0x101,
+                     ((argspec->hex >> 8) & 0xFF) * 0x101,
                      (argspec->hex & 0xFF) * 0x101, argspec->alpha};
   memset(&s->color, 0, sizeof(s->color));
-  if (!XftColorAllocValue(argspec->dpy, argspec->vis, argspec->cmap, &rc, &s->color)) {
+  if (!XftColorAllocValue(argspec->dpy, argspec->vis, argspec->cmap, &rc,
+                          &s->color)) {
     pthread_mutex_unlock(&xft_color_cache_mtx);
     return false;
   }
@@ -909,11 +932,19 @@ bool x11_upload_argb(X11UploadArgb *argspec) {
     return false;
   if (!argspec->ref)
     argspec->ref = DefaultRootWindow(argspec->dpy);
-  Pixmap pm = XCreatePixmap(argspec->dpy, argspec->ref, argspec->w, argspec->h, 32);
+  Pixmap pm =
+      XCreatePixmap(argspec->dpy, argspec->ref, argspec->w, argspec->h, 32);
   if (!pm)
     return false;
   XImage img;
-  x11_init_argb_image(&(X11InitArgbImage){.dpy = argspec->dpy, .img = &img, .data = argspec->argb, .w = argspec->w, .h = argspec->h, .red_mask = 0xff0000, .green_mask = 0x00ff00, .blue_mask = 0x0000ff});
+  x11_init_argb_image(&(X11InitArgbImage){.dpy = argspec->dpy,
+                                          .img = &img,
+                                          .data = argspec->argb,
+                                          .w = argspec->w,
+                                          .h = argspec->h,
+                                          .red_mask = 0xff0000,
+                                          .green_mask = 0x00ff00,
+                                          .blue_mask = 0x0000ff});
   if (!XInitImage(&img)) {
     XFreePixmap(argspec->dpy, pm);
     return false;
@@ -922,7 +953,8 @@ bool x11_upload_argb(X11UploadArgb *argspec) {
   XPutImage(argspec->dpy, pm, gc, &img, 0, 0, 0, 0, argspec->w, argspec->h);
   XFreeGC(argspec->dpy, gc);
   Picture pic = XRenderCreatePicture(
-      argspec->dpy, pm, XRenderFindStandardFormat(argspec->dpy, PictStandardARGB32), 0, NULL);
+      argspec->dpy, pm,
+      XRenderFindStandardFormat(argspec->dpy, PictStandardARGB32), 0, NULL);
   if (!pic) {
     XFreePixmap(argspec->dpy, pm);
     return false;
@@ -1057,7 +1089,13 @@ static bool image_cache_store(Display *dpy, Drawable ref, const char *path,
     argb_disk_store(path, mtime, size, w, h, argb);
   Pixmap pm = 0;
   Picture pic = 0;
-  bool uploaded = x11_upload_argb(&(X11UploadArgb){.dpy = dpy, .ref = ref, .argb = argb, .w = w, .h = h, .out_pm = &pm, .out_pic = &pic});
+  bool uploaded = x11_upload_argb(&(X11UploadArgb){.dpy = dpy,
+                                                   .ref = ref,
+                                                   .argb = argb,
+                                                   .w = w,
+                                                   .h = h,
+                                                   .out_pm = &pm,
+                                                   .out_pic = &pic});
   if (from_disk)
     free(argb);
   pthread_mutex_unlock(&decode_mtx);
@@ -1105,7 +1143,8 @@ bool x11_draw_image_scaled(X11DrawImageScaled *argspec) {
   bool hit = x11_img_cache_get(argspec->path, cw, ch, &cpm, &cpic);
   Drawable drw = XftDrawDrawable(argspec->xd);
   if (hit) {
-    bool ok = x11_blit_cached(argspec->dpy, drw, argspec->vis, cpic, cw, ch, argspec->x, argspec->y);
+    bool ok = x11_blit_cached(argspec->dpy, drw, argspec->vis, cpic, cw, ch,
+                              argspec->x, argspec->y);
     pthread_mutex_unlock(&img_cache_mtx);
     return ok;
   }
@@ -1114,7 +1153,8 @@ bool x11_draw_image_scaled(X11DrawImageScaled *argspec) {
   if (!ok) {
     return false;
   }
-  ok = x11_blit_cached(argspec->dpy, drw, argspec->vis, cpic, cw, ch, argspec->x, argspec->y);
+  ok = x11_blit_cached(argspec->dpy, drw, argspec->vis, cpic, cw, ch,
+                       argspec->x, argspec->y);
   pthread_mutex_unlock(&img_cache_mtx);
   return ok;
 }
@@ -1533,14 +1573,24 @@ void x11_draw_listbox_item_text(X11DrawListboxItemText *argspec) {
     int iconX = XOffset;
     int icon_y = argspec->y + (prompt_row_height() - IconSize) / 2;
     XOffset += IconSize + XOffset;
-    x11_draw_image_scaled(&(X11DrawImageScaled){.dpy = argspec->dpy, .xd = argspec->xd, .vis = argspec->vis, .path = argspec->icon_path, .x = iconX, .y = icon_y, .tw = IconSize, .th = IconSize});
+    x11_draw_image_scaled(&(X11DrawImageScaled){.dpy = argspec->dpy,
+                                                .xd = argspec->xd,
+                                                .vis = argspec->vis,
+                                                .path = argspec->icon_path,
+                                                .x = iconX,
+                                                .y = icon_y,
+                                                .tw = IconSize,
+                                                .th = IconSize});
   }
   char trunc[512];
-  x11_listbox_item_display_text(argspec->lb, argspec->idx, trunc, sizeof(trunc));
+  x11_listbox_item_display_text(argspec->lb, argspec->idx, trunc,
+                                sizeof(trunc));
 
   const char *draw_text = trunc;
   int draw_x = XOffset;
-  int h_scroll = (argspec->lb && argspec->idx == argspec->lb->selected_index) ? argspec->lb->text_hscroll : 0;
+  int h_scroll = (argspec->lb && argspec->idx == argspec->lb->selected_index)
+                     ? argspec->lb->text_hscroll
+                     : 0;
   if (h_scroll > 0)
     draw_x -= h_scroll;
 
@@ -1549,13 +1599,13 @@ void x11_draw_listbox_item_text(X11DrawListboxItemText *argspec) {
     pcol = rgb_to_hex(COLOR_TEXT);
   x11_set_draw_context(argspec->dpy, argspec->xd, argspec->vis, argspec->cmap);
   Platform_DrawTextRaw((DrawTextRaw){.x = draw_x,
-                                         .y = text_y,
-                                         .text = draw_text,
-                                         .color = pcol,
-                                         .font = argspec->font,
-                                         .align = "LEFT",
-                                         .pad = XOffset,
-                                         .font_size = FontSize});
+                                     .y = text_y,
+                                     .text = draw_text,
+                                     .color = pcol,
+                                     .font = argspec->font,
+                                     .align = "LEFT",
+                                     .pad = XOffset,
+                                     .font_size = FontSize});
 }
 
 static Window x11_create_window_ex_or(Display *dpy, int x, int y, int w, int h,
@@ -1586,7 +1636,9 @@ void x11_set_fixed_size_hints(Display *dpy, Window win, int w, int h) {
 }
 
 Window x11_create_window_ex(X11CreateWindowEx *argspec) {
-  return x11_create_window_ex_or(argspec->dpy, argspec->x, argspec->y, argspec->w, argspec->h, argspec->bg_color, argspec->res_name, argspec->res_class,
+  return x11_create_window_ex_or(argspec->dpy, argspec->x, argspec->y,
+                                 argspec->w, argspec->h, argspec->bg_color,
+                                 argspec->res_name, argspec->res_class,
                                  argspec->event_mask, false);
 }
 
@@ -1825,10 +1877,17 @@ void x11_fill_rounded_rect(X11FillRoundedRect *argspec) {
                        (unsigned short)(clip_h > 65535 ? 65535 : clip_h)};
     XftDrawSetClipRectangles(argspec->xd, 0, 0, &clip, 1);
   }
-  if (!RoundedCorners || argspec->radius <= 0 || argspec->w <= 0 || argspec->h <= 0) {
+  if (!RoundedCorners || argspec->radius <= 0 || argspec->w <= 0 ||
+      argspec->h <= 0) {
     XftColor c;
-    x11_xft_color_cached(&(X11XftColorCached){.dpy = argspec->dpy, .vis = argspec->vis, .cmap = argspec->cmap, .hex = argspec->hex, .alpha = argspec->alpha16, .out = &c});
-    XftDrawRect(argspec->xd, &c, argspec->x, argspec->y, argspec->w, argspec->h);
+    x11_xft_color_cached(&(X11XftColorCached){.dpy = argspec->dpy,
+                                              .vis = argspec->vis,
+                                              .cmap = argspec->cmap,
+                                              .hex = argspec->hex,
+                                              .alpha = argspec->alpha16,
+                                              .out = &c});
+    XftDrawRect(argspec->xd, &c, argspec->x, argspec->y, argspec->w,
+                argspec->h);
     if (clipped)
       XftDrawSetClip(argspec->xd, None);
     return;
@@ -1838,23 +1897,35 @@ void x11_fill_rounded_rect(X11FillRoundedRect *argspec) {
   if (argspec->radius > argspec->h / 2)
     argspec->radius = argspec->h / 2;
   XftColor solid;
-  x11_xft_color_cached(&(X11XftColorCached){.dpy = argspec->dpy, .vis = argspec->vis, .cmap = argspec->cmap, .hex = argspec->hex, .alpha = argspec->alpha16, .out = &solid});
+  x11_xft_color_cached(&(X11XftColorCached){.dpy = argspec->dpy,
+                                            .vis = argspec->vis,
+                                            .cmap = argspec->cmap,
+                                            .hex = argspec->hex,
+                                            .alpha = argspec->alpha16,
+                                            .out = &solid});
 
-  XftDrawRect(argspec->xd, &solid, argspec->x + argspec->radius, argspec->y, argspec->w - 2 * argspec->radius, argspec->h);
-  XftDrawRect(argspec->xd, &solid, argspec->x, argspec->y + argspec->radius, argspec->radius, argspec->h - 2 * argspec->radius);
-  XftDrawRect(argspec->xd, &solid, argspec->x + argspec->w - argspec->radius, argspec->y + argspec->radius, argspec->radius, argspec->h - 2 * argspec->radius);
+  XftDrawRect(argspec->xd, &solid, argspec->x + argspec->radius, argspec->y,
+              argspec->w - 2 * argspec->radius, argspec->h);
+  XftDrawRect(argspec->xd, &solid, argspec->x, argspec->y + argspec->radius,
+              argspec->radius, argspec->h - 2 * argspec->radius);
+  XftDrawRect(argspec->xd, &solid, argspec->x + argspec->w - argspec->radius,
+              argspec->y + argspec->radius, argspec->radius,
+              argspec->h - 2 * argspec->radius);
 
   const unsigned long backdrop = x11_background_color_at();
   XftColor corner_colors[256];
   bool corner_color_ready[256] = {false};
 
   for (int corner = 0; corner < 4; corner++) {
-    int ox0 = (corner & 1) ? argspec->x + argspec->w - argspec->radius : argspec->x;
-    int oy0 = (corner & 2) ? argspec->y + argspec->h - argspec->radius : argspec->y;
+    int ox0 =
+        (corner & 1) ? argspec->x + argspec->w - argspec->radius : argspec->x;
+    int oy0 =
+        (corner & 2) ? argspec->y + argspec->h - argspec->radius : argspec->y;
     const unsigned char *mask = x11_round_mask(corner, argspec->radius);
     unsigned char *local_mask = NULL;
     if (!mask && argspec->radius > ROUND_MASK_MAX_RADIUS) {
-      local_mask = (unsigned char *)malloc((size_t)argspec->radius * (size_t)argspec->radius);
+      local_mask = (unsigned char *)malloc((size_t)argspec->radius *
+                                           (size_t)argspec->radius);
       if (local_mask) {
         x11_round_mask_fill(local_mask, corner, argspec->radius);
         mask = local_mask;
@@ -1866,7 +1937,8 @@ void x11_fill_rounded_rect(X11FillRoundedRect *argspec) {
       int run_start = 0;
       unsigned char run_cov = mask[dy * argspec->radius];
       for (int dx = 1; dx <= argspec->radius; dx++) {
-        unsigned char cov = (dx < argspec->radius) ? mask[dy * argspec->radius + dx] : 0;
+        unsigned char cov =
+            (dx < argspec->radius) ? mask[dy * argspec->radius + dx] : 0;
         if (cov == run_cov)
           continue;
         if (run_cov) {
@@ -1881,8 +1953,8 @@ void x11_fill_rounded_rect(X11FillRoundedRect *argspec) {
             corner_colors[run_cov] = c;
             corner_color_ready[run_cov] = true;
           }
-          XftDrawRect(argspec->xd, &corner_colors[run_cov], ox0 + run_start, oy0 + dy,
-                      dx - run_start, 1);
+          XftDrawRect(argspec->xd, &corner_colors[run_cov], ox0 + run_start,
+                      oy0 + dy, dx - run_start, 1);
         }
         run_start = dx;
         run_cov = cov;
@@ -2025,7 +2097,8 @@ static Pixmap x11_create_background_pixmap(Display *dpy, Window win, int w,
   XFreeGC(dpy, gc);
   XDestroyImage(img);
   if (x11_bg_image_enabled()) {
-    x11_bg_image_blit(&(X11BgImageBlit){.dpy = dpy, .dst = pm, .vis = vis, .w = w, .h = h});
+    x11_bg_image_blit(
+        &(X11BgImageBlit){.dpy = dpy, .dst = pm, .vis = vis, .w = w, .h = h});
   }
   if (rounded && R > 0) {
     XImage *img2 = XGetImage(dpy, pm, 0, 0, w, h, AllPlanes, ZPixmap);
@@ -2117,7 +2190,11 @@ void x11_draw_background_to_drawable(Display *dpy, Drawable drw, int w, int h) {
   Visual *vis = DefaultVisual(dpy, screen);
   int depth = DefaultDepth(dpy, screen);
   Colormap cmap = DefaultColormap(dpy, screen);
-  if (!x11_get_drawable_visual(&(X11GetDrawableVisual){.dpy = dpy, .d = drw, .vis_out = &vis, .cmap_out = &cmap, .depth_out = &depth})) {
+  if (!x11_get_drawable_visual(&(X11GetDrawableVisual){.dpy = dpy,
+                                                       .d = drw,
+                                                       .vis_out = &vis,
+                                                       .cmap_out = &cmap,
+                                                       .depth_out = &depth})) {
     vis = DefaultVisual(dpy, screen);
     depth = DefaultDepth(dpy, screen);
   }
@@ -2184,7 +2261,12 @@ void x11_draw_selection_background(X11DrawSelectionBackground *argspec) {
     XftDrawSetClipRectangles(argspec->xd, 0, 0, &clip, 1);
   }
   XftColor c;
-  x11_xft_color_cached(&(X11XftColorCached){.dpy = argspec->dpy, .vis = argspec->vis, .cmap = argspec->cmap, .hex = argspec->baseHex, .alpha = opacity_alpha16(), .out = &c});
+  x11_xft_color_cached(&(X11XftColorCached){.dpy = argspec->dpy,
+                                            .vis = argspec->vis,
+                                            .cmap = argspec->cmap,
+                                            .hex = argspec->baseHex,
+                                            .alpha = opacity_alpha16(),
+                                            .out = &c});
   XftDrawRect(argspec->xd, &c, argspec->x, argspec->y, argspec->w, argspec->h);
   if (clipped)
     XftDrawSetClip(argspec->xd, None);
@@ -2304,7 +2386,13 @@ static Picture border_slot_get_or_create(Display *dpy, int w, int h) {
   }
   Pixmap pm = 0;
   Picture pic = 0;
-  bool ok = x11_upload_argb(&(X11UploadArgb){.dpy = dpy, .ref = DefaultRootWindow(dpy), .argb = buf, .w = w, .h = h, .out_pm = &pm, .out_pic = &pic});
+  bool ok = x11_upload_argb(&(X11UploadArgb){.dpy = dpy,
+                                             .ref = DefaultRootWindow(dpy),
+                                             .argb = buf,
+                                             .w = w,
+                                             .h = h,
+                                             .out_pm = &pm,
+                                             .out_pic = &pic});
   free(buf);
   if (!ok)
     return 0;
@@ -2342,9 +2430,11 @@ void x11_draw_window_border(X11DrawWindowBorder *argspec) {
   pthread_mutex_lock(&border_mtx);
   Picture src = border_slot_get_or_create(argspec->dpy, argspec->w, argspec->h);
   if (dst_fmt && src) {
-    Picture dst = XRenderCreatePicture(argspec->dpy, argspec->drw, dst_fmt, 0, NULL);
+    Picture dst =
+        XRenderCreatePicture(argspec->dpy, argspec->drw, dst_fmt, 0, NULL);
     if (dst) {
-      XRenderComposite(argspec->dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, 0, 0, argspec->w, argspec->h);
+      XRenderComposite(argspec->dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, 0,
+                       0, argspec->w, argspec->h);
       XRenderFreePicture(argspec->dpy, dst);
     }
   }
@@ -2355,13 +2445,24 @@ Window x11_create_prompt_window(X11CreatePromptWindow *argspec) {
   unsigned long bg = rgb_to_hex(COLOR_BG);
   Window win;
   if (niri_is_active()) {
-    log_error("niri override_redirect prompt w=%d h=%d", argspec->w, argspec->h);
+    log_error("niri override_redirect prompt w=%d h=%d", argspec->w,
+              argspec->h);
     win = x11_create_window_ex_or(
-        argspec->dpy, argspec->x, argspec->y, argspec->w, argspec->h, bg, "colored", "colored",
+        argspec->dpy, argspec->x, argspec->y, argspec->w, argspec->h, bg,
+        "colored", "colored",
         KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask, true);
   } else {
-    win = x11_create_window_ex(&(X11CreateWindowEx){.dpy = argspec->dpy, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h, .bg_color = bg, .res_name = "colored", .res_class = "colored", .event_mask = KeyPressMask | KeyReleaseMask | ExposureMask |
-                                   FocusChangeMask});
+    win = x11_create_window_ex(
+        &(X11CreateWindowEx){.dpy = argspec->dpy,
+                             .x = argspec->x,
+                             .y = argspec->y,
+                             .w = argspec->w,
+                             .h = argspec->h,
+                             .bg_color = bg,
+                             .res_name = "colored",
+                             .res_class = "colored",
+                             .event_mask = KeyPressMask | KeyReleaseMask |
+                                           ExposureMask | FocusChangeMask});
     Window focus_win = None;
     int revert_to = 0;
     XGetInputFocus(argspec->dpy, &focus_win, &revert_to);
@@ -2370,7 +2471,8 @@ Window x11_create_prompt_window(X11CreatePromptWindow *argspec) {
     x11_set_fixed_size_hints(argspec->dpy, win, argspec->w, argspec->h);
   }
   if (RoundedCorners && CornerRadius > 0)
-    x11_apply_shape_rounded(argspec->dpy, win, argspec->w, argspec->h, CornerRadius);
+    x11_apply_shape_rounded(argspec->dpy, win, argspec->w, argspec->h,
+                            CornerRadius);
   return win;
 }
 
@@ -2381,13 +2483,16 @@ void x11_apply_shape_rounded_window(Display *dpy, Window win, int w, int h) {
 }
 
 void x11_apply_shape(X11ApplyShape *argspec) {
-  if (!argspec->dpy || argspec->win == None || argspec->w <= 0 || argspec->h <= 0)
+  if (!argspec->dpy || argspec->win == None || argspec->w <= 0 ||
+      argspec->h <= 0)
     return;
   if (argspec->rounded && argspec->radius > 0) {
-    x11_apply_shape_rounded(argspec->dpy, argspec->win, argspec->w, argspec->h, argspec->radius);
+    x11_apply_shape_rounded(argspec->dpy, argspec->win, argspec->w, argspec->h,
+                            argspec->radius);
     return;
   }
-  Pixmap mask = XCreatePixmap(argspec->dpy, argspec->win, argspec->w, argspec->h, 1);
+  Pixmap mask =
+      XCreatePixmap(argspec->dpy, argspec->win, argspec->w, argspec->h, 1);
   if (!mask)
     return;
   GC gc = XCreateGC(argspec->dpy, mask, 0, NULL);
@@ -2397,7 +2502,8 @@ void x11_apply_shape(X11ApplyShape *argspec) {
   }
   XSetForeground(argspec->dpy, gc, 1);
   XFillRectangle(argspec->dpy, mask, gc, 0, 0, argspec->w, argspec->h);
-  XShapeCombineMask(argspec->dpy, argspec->win, ShapeBounding, 0, 0, mask, ShapeSet);
+  XShapeCombineMask(argspec->dpy, argspec->win, ShapeBounding, 0, 0, mask,
+                    ShapeSet);
   XFreeGC(argspec->dpy, gc);
   XFreePixmap(argspec->dpy, mask);
 }
@@ -2409,7 +2515,8 @@ void x11_apply_click_through(Display *dpy, Window win) {
                           Unsorted);
 }
 
-Window x11_create_display_message_window_ex(X11CreateDisplayMessageWindowEx *argspec) {
+Window
+x11_create_display_message_window_ex(X11CreateDisplayMessageWindowEx *argspec) {
   unsigned long bg = 0;
   if (!get_transparent_window()) {
     bg = get_draw_bg_color();
@@ -2418,7 +2525,8 @@ Window x11_create_display_message_window_ex(X11CreateDisplayMessageWindowEx *arg
   }
   x11_set_draw_context(argspec->dpy, NULL, NULL, 0);
   long mask = ExposureMask | (argspec->clickable ? ButtonPressMask : 0L);
-  Window win = x11_create_window_ex_or(argspec->dpy, argspec->x, argspec->y, argspec->w, argspec->h, bg, "flashtext",
+  Window win = x11_create_window_ex_or(argspec->dpy, argspec->x, argspec->y,
+                                       argspec->w, argspec->h, bg, "flashtext",
                                        "flashtext", mask, true);
   if (win != None && !argspec->clickable)
     x11_apply_click_through(argspec->dpy, win);
@@ -2426,20 +2534,39 @@ Window x11_create_display_message_window_ex(X11CreateDisplayMessageWindowEx *arg
   x11_set_draw_context(NULL, NULL, NULL, 0);
   if (win != None) {
     bool want_rounded = argspec->rounded ? argspec->rounded : RoundedCorners;
-    x11_apply_shape(&(X11ApplyShape){.dpy = argspec->dpy, .win = win, .w = argspec->w, .h = argspec->h, .rounded = want_rounded, .radius = argspec->radius > 0 ? argspec->radius : CornerRadius});
+    x11_apply_shape(&(X11ApplyShape){
+        .dpy = argspec->dpy,
+        .win = win,
+        .w = argspec->w,
+        .h = argspec->h,
+        .rounded = want_rounded,
+        .radius = argspec->radius > 0 ? argspec->radius : CornerRadius});
   }
   return win;
 }
 
-Window x11_create_display_message_window(X11CreateDisplayMessageWindow *argspec) {
-  return x11_create_display_message_window_ex(&(X11CreateDisplayMessageWindowEx){.dpy = argspec->dpy, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h, .clickable = argspec->clickable, .rounded = RoundedCorners, .radius = CornerRadius});
+Window
+x11_create_display_message_window(X11CreateDisplayMessageWindow *argspec) {
+  return x11_create_display_message_window_ex(
+      &(X11CreateDisplayMessageWindowEx){.dpy = argspec->dpy,
+                                         .x = argspec->x,
+                                         .y = argspec->y,
+                                         .w = argspec->w,
+                                         .h = argspec->h,
+                                         .clickable = argspec->clickable,
+                                         .rounded = RoundedCorners,
+                                         .radius = CornerRadius});
 }
 
 XftDraw *x11_create_xft_draw(Display *dpy, Window win) {
   Visual *vis = NULL;
   Colormap cmap = 0;
   int depth = 0;
-  if (x11_get_drawable_visual(&(X11GetDrawableVisual){.dpy = dpy, .d = win, .vis_out = &vis, .cmap_out = &cmap, .depth_out = &depth})) {
+  if (x11_get_drawable_visual(&(X11GetDrawableVisual){.dpy = dpy,
+                                                      .d = win,
+                                                      .vis_out = &vis,
+                                                      .cmap_out = &cmap,
+                                                      .depth_out = &depth})) {
     return XftDrawCreate(dpy, win, vis, cmap);
   }
   int screen = DefaultScreen(dpy);
@@ -2580,7 +2707,9 @@ bool x11_resolve_desktop_exec(X11ResolveDesktopExec *argspec) {
   if (!token[0])
     return false;
 
-  const char *base = (argspec->workdir && argspec->workdir[0]) ? argspec->workdir : argspec->desktop_dir;
+  const char *base = (argspec->workdir && argspec->workdir[0])
+                         ? argspec->workdir
+                         : argspec->desktop_dir;
   char prog[1024];
   if (strchr(token, '/')) {
     if (token[0] == '/')
@@ -2637,5 +2766,3 @@ int x11_run_status(char *const argv[], const X11SessionEnv *env,
     return -1;
   return WEXITSTATUS(st);
 }
-
-

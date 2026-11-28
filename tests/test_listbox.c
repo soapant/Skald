@@ -11,15 +11,17 @@
 #include "platform/platform.h"
 
 #define POPULATE(f_lb, f_filter, f_items, f_count, f_match)                    \
-  populate_listbox(&(PopulateListbox){                                         \
-      .lb = (f_lb), .filter = (f_filter), .items = (f_items),                  \
-      .item_count = (f_count), .filter_match = (f_match)})
+  populate_listbox(&(PopulateListbox){.lb = (f_lb),                            \
+                                      .filter = (f_filter),                    \
+                                      .items = (f_items),                      \
+                                      .item_count = (f_count),                 \
+                                      .filter_match = (f_match)})
 
 TEST(populate_normal_mode_selects_first) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana", "apricot"};
-  POPULATE(&lb,"", items, 3, NULL);
+  POPULATE(&lb, "", items, 3, NULL);
   ASSERT_EQ_INT(lb.total_matches, 3);
   ASSERT_EQ_INT(lb.item_count, 3);
   ASSERT_EQ_INT(lb.selected_index, -1);
@@ -29,7 +31,7 @@ TEST(populate_insert_mode_empty_filter_no_selection) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana", "apricot"};
-  POPULATE(&lb,"", items, 3, NULL);
+  POPULATE(&lb, "", items, 3, NULL);
   ASSERT_EQ_INT(lb.total_matches, 3);
   ASSERT_EQ_INT(lb.selected_index, -1);
 }
@@ -38,7 +40,7 @@ TEST(populate_filter_narrows) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana", "apricot"};
-  POPULATE(&lb,"ap", items, 3, NULL);
+  POPULATE(&lb, "ap", items, 3, NULL);
   ASSERT_EQ_INT(lb.total_matches, 2);
   ASSERT_EQ_INT(lb.item_count, 2);
 }
@@ -47,7 +49,7 @@ TEST(populate_no_match) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
-  POPULATE(&lb,"zzz", items, 2, NULL);
+  POPULATE(&lb, "zzz", items, 2, NULL);
   ASSERT_EQ_INT(lb.total_matches, 0);
   ASSERT_EQ_INT(lb.item_count, 0);
 }
@@ -55,7 +57,7 @@ TEST(populate_no_match) {
 TEST(populate_empty_items) {
   static ListBox lb;
   listbox_info_init(&lb);
-  POPULATE(&lb,"", NULL, 0, NULL);
+  POPULATE(&lb, "", NULL, 0, NULL);
   ASSERT_EQ_INT(lb.total_matches, 0);
   ASSERT_EQ_INT(lb.item_count, 0);
 }
@@ -65,13 +67,13 @@ TEST(filter_handles_double_spaces) {
   listbox_info_init(&lb);
   const char *items[] = {"hello world", "hello  world", "hello   world",
                          "helloworld"};
-  POPULATE(&lb,"hello  world", items, 4, NULL);
+  POPULATE(&lb, "hello  world", items, 4, NULL);
   ASSERT_TRUE(lb.total_matches >= 2);
   listbox_info_init(&lb);
-  POPULATE(&lb,"hello world", items, 4, NULL);
+  POPULATE(&lb, "hello world", items, 4, NULL);
   ASSERT_TRUE(lb.total_matches >= 2);
   listbox_info_init(&lb);
-  POPULATE(&lb,"  hello   world  ", items, 4, NULL);
+  POPULATE(&lb, "  hello   world  ", items, 4, NULL);
   ASSERT_TRUE(lb.total_matches >= 2);
 }
 
@@ -79,7 +81,7 @@ TEST(ui_set_selection_unchanged_index_keeps_hscroll) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
-  POPULATE(&lb,"", items, 2, NULL);
+  POPULATE(&lb, "", items, 2, NULL);
   lb.text_hscroll = 120;
   lb.selected_index = 1;
   UI_SetSelection(&lb, 1);
@@ -91,7 +93,7 @@ TEST(ui_set_selection_new_index_resets_hscroll) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
-  POPULATE(&lb,"", items, 2, NULL);
+  POPULATE(&lb, "", items, 2, NULL);
   lb.text_hscroll = 120;
   lb.selected_index = 1;
   UI_SetSelection(&lb, 0);
@@ -103,7 +105,7 @@ TEST(ui_navigate_to_same_index_keeps_hscroll) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
-  POPULATE(&lb,"", items, 2, NULL);
+  POPULATE(&lb, "", items, 2, NULL);
   lb.selected_index = 1;
   lb.text_hscroll = 90;
   UI_NavigateTo(&lb, 1);
@@ -115,7 +117,7 @@ TEST(ui_navigate_to_new_index_resets_hscroll) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *items[] = {"apple", "banana"};
-  POPULATE(&lb,"", items, 2, NULL);
+  POPULATE(&lb, "", items, 2, NULL);
   lb.selected_index = 1;
   lb.text_hscroll = 90;
   UI_NavigateTo(&lb, 0);
@@ -129,9 +131,13 @@ TEST(listbox_layout_includes_partial_last_row) {
   spec.y = 0;
   spec.h = 25;
   ListboxLayout lay = {0};
-  listbox_compute_layout(&(ListboxComputeLayout){
-      .spec = &spec, .default_y0 = 0, .item_h = 10, .popup_w = 100,
-      .popup_h = 100, .count = 10, .out = &lay});
+  listbox_compute_layout(&(ListboxComputeLayout){.spec = &spec,
+                                                 .default_y0 = 0,
+                                                 .item_h = 10,
+                                                 .popup_w = 100,
+                                                 .popup_h = 100,
+                                                 .count = 10,
+                                                 .out = &lay});
   ASSERT_EQ_INT(lay.visible, 3);
 }
 
@@ -151,11 +157,11 @@ TEST(populate_repairs_selected_text_after_row_rebuild) {
   static ListBox lb;
   listbox_info_init(&lb);
   const char *before[] = {"alpha", "beta"};
-  POPULATE(&lb,"", before, 2, NULL);
+  POPULATE(&lb, "", before, 2, NULL);
   UI_SetSelection(&lb, 1);
   ASSERT_EQ_STR(lb.selected_text, "beta");
   const char *after[] = {"alpha", "BETA2", "gamma"};
-  POPULATE(&lb,"", after, 3, NULL);
+  POPULATE(&lb, "", after, 3, NULL);
   ASSERT_EQ_STR(lb.selected_text, "BETA2");
   listbox_info_free(&lb);
 }
@@ -173,7 +179,7 @@ TEST(populate_grows_beyond_fixed_limits) {
   long_row[sizeof(long_row) - 1] = '\0';
   for (int i = 0; i < n; i++)
     items[i] = (i == 0) ? long_row : "short";
-  POPULATE(&lb,"", items, n, NULL);
+  POPULATE(&lb, "", items, n, NULL);
   ASSERT_EQ_INT(lb.total_matches, n);
   ASSERT_EQ_INT(lb.item_count, n);
   ASSERT_TRUE(lb.matches_cap >= n);
@@ -203,5 +209,3 @@ int main(void) {
   RUN(populate_grows_beyond_fixed_limits);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
-
-

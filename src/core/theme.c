@@ -24,7 +24,8 @@ static const struct {
 };
 
 static _Atomic(ColorRef) *theme_targets[] = {
-    &COLOR_BG, &COLOR_TEXT, &COLOR_SELECTION_HIGHLIGHT, &COLOR_CURSOR, &COLOR_BORDER,
+    &COLOR_BG,     &COLOR_TEXT,   &COLOR_SELECTION_HIGHLIGHT,
+    &COLOR_CURSOR, &COLOR_BORDER,
 };
 
 #define THEME_SLOT_COUNT (sizeof(theme_slots) / sizeof(theme_slots[0]))

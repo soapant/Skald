@@ -69,7 +69,8 @@ TEST(insert_into_middle) {
   EnableAutoPairing = false;
   char buf[16] = "ac";
   size_t cur = 1;
-  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){.buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "b", .len = 1});
+  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){
+      .buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "b", .len = 1});
   ASSERT_EQ_INT(total, 1);
   ASSERT_EQ_STR(buf, "abc");
   ASSERT_EQ_INT(cur, 2);
@@ -79,13 +80,20 @@ TEST(insert_respects_capacity) {
   EnableAutoPairing = false;
   char buf[4] = "abc";
   size_t cur = 3;
-  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){.buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "yy", .len = 2});
+  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){
+      .buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "yy", .len = 2});
   ASSERT_EQ_INT(total, 0);
   ASSERT_EQ_STR(buf, "abc");
 
   char small[4] = "abc";
   size_t end = 3;
-  ASSERT_EQ_INT(edit_buffer_insert_text(&(EditBufferInsertText){.buf = small, .cap = sizeof(small), .cursor = &end, .text = "y", .len = 1}), 0);
+  ASSERT_EQ_INT(
+      edit_buffer_insert_text(&(EditBufferInsertText){.buf = small,
+                                                      .cap = sizeof(small),
+                                                      .cursor = &end,
+                                                      .text = "y",
+                                                      .len = 1}),
+      0);
   ASSERT_EQ_STR(small, "abc");
 }
 
@@ -94,14 +102,21 @@ TEST(insert_autopair_opener) {
 
   char buf[16] = "";
   size_t cur = 0;
-  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){.buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "{", .len = 1});
+  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){
+      .buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "{", .len = 1});
   ASSERT_EQ_INT(total, 2);
   ASSERT_EQ_STR(buf, "{}");
   ASSERT_EQ_INT(cur, 1);
 
   char b4[16] = "";
   size_t start = 0;
-  ASSERT_EQ_INT(edit_buffer_insert_text(&(EditBufferInsertText){.buf = b4, .cap = sizeof(b4), .cursor = &start, .text = "\"", .len = 1}), 2);
+  ASSERT_EQ_INT(
+      edit_buffer_insert_text(&(EditBufferInsertText){.buf = b4,
+                                                      .cap = sizeof(b4),
+                                                      .cursor = &start,
+                                                      .text = "\"",
+                                                      .len = 1}),
+      2);
   ASSERT_EQ_STR(b4, "\"\"");
   ASSERT_EQ_INT(start, 1);
 
@@ -113,7 +128,8 @@ TEST(insert_quote_after_letter_is_not_paired) {
 
   char buf[16] = "ab";
   size_t cur = strlen(buf);
-  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){.buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "\"", .len = 1});
+  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){
+      .buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "\"", .len = 1});
   ASSERT_EQ_INT(total, 1);
   ASSERT_EQ_STR(buf, "ab\"");
   ASSERT_EQ_INT(cur, 3);
@@ -126,7 +142,8 @@ TEST(insert_skips_over_closer) {
 
   char buf[16] = "()";
   size_t cur = 1;
-  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){.buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = ")", .len = 1});
+  size_t total = edit_buffer_insert_text(&(EditBufferInsertText){
+      .buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = ")", .len = 1});
   ASSERT_EQ_INT(total, 0);
   ASSERT_EQ_STR(buf, "()");
   ASSERT_EQ_INT(cur, 2);
@@ -139,7 +156,8 @@ TEST(insert_closer_at_end_appends) {
 
   char buf[16] = "ab";
   size_t cur = strlen(buf);
-  edit_buffer_insert_text(&(EditBufferInsertText){.buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "}", .len = 1});
+  edit_buffer_insert_text(&(EditBufferInsertText){
+      .buf = buf, .cap = sizeof(buf), .cursor = &cur, .text = "}", .len = 1});
   ASSERT_EQ_STR(buf, "ab}");
   ASSERT_EQ_INT(cur, 3);
 
@@ -189,4 +207,3 @@ int main(void) {
   RUN(backspace_pair_disabled_or_empty);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
-

@@ -38,8 +38,8 @@ static atomic_bool hotkeys_suspended = false;
 
 #define HOTKEYS_LOCK()                                                         \
   do {                                                                         \
-    hotkeys_mutex = lazy_mutex_get(&hotkeys_mutex);                             \
-    Platform_MutexLock(hotkeys_mutex);                                          \
+    hotkeys_mutex = lazy_mutex_get(&hotkeys_mutex);                            \
+    Platform_MutexLock(hotkeys_mutex);                                         \
   } while (0)
 #define HOTKEYS_UNLOCK() Platform_MutexUnlock(hotkeys_mutex)
 

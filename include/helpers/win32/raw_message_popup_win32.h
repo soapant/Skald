@@ -52,4 +52,3 @@ extern FadeWindowData *s_msg_show_data;
 extern bool s_msg_show_no_bg;
 
 #endif
-

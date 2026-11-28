@@ -252,4 +252,3 @@ void scroll_area_purge_owner(const char *path_a, const char *path_b) {
   OWNER_PURGE_PTRS(g_slots, ScrollSlot, path_a, path_b, 0, scroll_slot_destroy);
   SCROLL_UNLOCK();
 }
-

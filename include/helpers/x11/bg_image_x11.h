@@ -24,4 +24,3 @@ typedef struct {
 bool x11_bg_image_blit(X11BgImageBlit *argspec);
 
 #endif
-

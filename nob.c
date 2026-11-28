@@ -579,8 +579,8 @@ static bool write_compile_commands(void) {
                    WIN_FEATURE_LINK_FLAGS);
 #else
 #if defined(__APPLE__)
-    nob_cmd_append(&cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-dynamiclib", src,
-                   "-MF", feature_dep_path(src));
+    nob_cmd_append(&cmd, SDK_CC_FLAGS, "-I", sdk_dir, "-dynamiclib", src, "-MF",
+                   feature_dep_path(src));
     append_dep_cflags(&cmd);
     nob_cmd_append(&cmd, "-Wl,-undefined,dynamic_lookup");
 #else
@@ -609,16 +609,13 @@ static bool write_compile_commands(void) {
     char *dot = strrchr(name, '.');
     if (dot)
       *dot = '\0';
-    const char *test_obj =
-        nob_temp_sprintf("%s/%s.o", test_build_folder, name);
+    const char *test_obj = nob_temp_sprintf("%s/%s.o", test_build_folder, name);
     Nob_Cmd cmd = {0};
     append_cc(&cmd);
-    nob_cmd_append(&cmd, "-I", "include", "-I", "tests", "-Wall", "-MMD",
-                   "-MP", "-MF",
-                   nob_temp_sprintf("%s/%s.d", test_build_folder, name), "-c",
-                   src,
-                   nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"",
-                                    test_build_folder));
+    nob_cmd_append(
+        &cmd, "-I", "include", "-I", "tests", "-Wall", "-MMD", "-MP", "-MF",
+        nob_temp_sprintf("%s/%s.d", test_build_folder, name), "-c", src,
+        nob_temp_sprintf("-DTEST_BUILD_DIR=\"%s\"", test_build_folder));
     append_san_flags(&cmd);
     append_dep_cflags(&cmd);
     write_compile_commands_entry(f, cwd, src, test_obj, &cmd, first);
@@ -631,8 +628,8 @@ static bool write_compile_commands(void) {
     Nob_Cmd cmd = {0};
     append_cc(&cmd);
     nob_cmd_append(&cmd, CC_FLAGS, "-c", src);
-    write_compile_commands_entry(f, cwd, src,
-                                 BUILD_FOLDER "/gen_skapi_lua.o", &cmd, first);
+    write_compile_commands_entry(f, cwd, src, BUILD_FOLDER "/gen_skapi_lua.o",
+                                 &cmd, first);
     first = false;
     nob_cmd_free(cmd);
   }
@@ -764,7 +761,8 @@ static void append_plugin_build_cmd(Nob_Cmd *cmd, const char *src,
   if (target_win32) {
     nob_cmd_append(cmd, CROSS_CC, WIN_SDK_FLAGS);
     append_cross_sysroot_include(cmd);
-    nob_cmd_append(cmd, "-I", sdk_dir, "-shared", "-o", so, src, main_implib, WIN_FEATURE_LINK_FLAGS);
+    nob_cmd_append(cmd, "-I", sdk_dir, "-shared", "-o", so, src, main_implib,
+                   WIN_FEATURE_LINK_FLAGS);
     if (release)
       nob_cmd_append(cmd, "-O3");
     else
@@ -1723,9 +1721,9 @@ static void chk_finish_decl(const char *path, int lineno, bool is_h) {
         commas++;
       }
     }
-    bool no_params =
-        open + 2 < chk_tok_count && chk_tok_is(open + 1, buf, "void") &&
-        chk_toks[open + 2].kind == CHK_RPAREN;
+    bool no_params = open + 2 < chk_tok_count &&
+                     chk_tok_is(open + 1, buf, "void") &&
+                     chk_toks[open + 2].kind == CHK_RPAREN;
     int params = no_params ? 0 : commas + 1;
     bool vendored = strstr(norm, "include/deps/") || strstr(norm, "src/deps/");
     if (params >= 5 && !vendored) {
@@ -2092,8 +2090,8 @@ static bool bytes_equal_ignore_cr(const char *a, size_t an, const char *b,
 static bool generated_files_equal(const char *tracked, const char *fresh) {
   Nob_String_Builder a = {0};
   Nob_String_Builder b = {0};
-  bool read_ok = nob_read_entire_file(tracked, &a) &&
-                 nob_read_entire_file(fresh, &b);
+  bool read_ok =
+      nob_read_entire_file(tracked, &a) && nob_read_entire_file(fresh, &b);
   bool equal =
       read_ok && bytes_equal_ignore_cr(a.items, a.count, b.items, b.count);
   nob_sb_free(a);
@@ -2108,8 +2106,8 @@ static bool check_generated(void) {
   snprintf(tmp_include_dir, sizeof(tmp_include_dir), "%s/include", tmp);
   snprintf(tmp_hdr_dir, sizeof(tmp_hdr_dir), "%s/include/core", tmp);
   snprintf(tmp_src_dir, sizeof(tmp_src_dir), "%s/src", tmp);
-  snprintf(fresh_hdr, sizeof(fresh_hdr), "%s/include/core/skapi_lua_generated.h",
-           tmp);
+  snprintf(fresh_hdr, sizeof(fresh_hdr),
+           "%s/include/core/skapi_lua_generated.h", tmp);
   snprintf(fresh_lua, sizeof(fresh_lua), "%s/src/skapi.lua", tmp);
   snprintf(fresh_cfg, sizeof(fresh_cfg), "%s/config.toml", tmp);
   if (!nob_mkdir_if_not_exists(tmp) ||
@@ -2131,7 +2129,8 @@ static bool check_generated(void) {
 
   int stale = 0;
   if (!generated_files_equal("include/core/skapi_lua_generated.h", fresh_hdr)) {
-    nob_log(NOB_ERROR, "generated artifact is stale: include/core/skapi_lua_generated.h");
+    nob_log(NOB_ERROR,
+            "generated artifact is stale: include/core/skapi_lua_generated.h");
     stale++;
   }
   if (!generated_files_equal("src/skapi.lua", fresh_lua)) {
@@ -2209,8 +2208,7 @@ int main(int argc, char **argv) {
       sanitize = true;
     if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--check") == 0)
       do_check = 1;
-    if (strcmp(argv[i], "-g") == 0 ||
-        strcmp(argv[i], "--check-generated") == 0)
+    if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--check-generated") == 0)
       do_check_generated = 1;
     if (strcmp(argv[i], "--wayland") == 0)
       want_wayland = true;
@@ -2300,10 +2298,9 @@ int main(int argc, char **argv) {
           nob_temp_sprintf("%s/lib/libmcfgthread.a", cross_sysroot);
       if (nob_file_exists(mcfg)) {
         Nob_Cmd sh = {0};
-        nob_cmd_append(
-            &sh, "sh", "-c",
-            nob_temp_sprintf("ln -sf '%s' build/winlibs/libmcfgthread.a",
-                             mcfg));
+        nob_cmd_append(&sh, "sh", "-c",
+                       nob_temp_sprintf(
+                           "ln -sf '%s' build/winlibs/libmcfgthread.a", mcfg));
         if (!nob_cmd_run(&sh))
           nob_log(NOB_ERROR, "Failed to stage libmcfgthread");
       }
@@ -2532,4 +2529,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
-

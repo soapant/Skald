@@ -24,6 +24,7 @@ void Platform_DrawPromptEditText(PromptState *state);
 void Platform_DrawPromptEditCursor(PromptState *state);
 bool Platform_WindowToRoot(WindowHandle h, int *out_x, int *out_y);
 bool Platform_SetWindowRounded(WindowHandle win, bool rounded, int radius);
+
 typedef struct {
   const char *path;
   int x;
@@ -37,6 +38,7 @@ bool Platform_GetImageSize(const char *path, int *w, int *h);
 ImageBuffer *Platform_CaptureWindowByTitle(const char *title);
 ImageBuffer *Platform_CaptureWindowById(const char *id);
 void Platform_FreeImage(ImageBuffer *image);
+
 typedef struct {
   const ImageBuffer *image;
   int x;
@@ -123,5 +125,3 @@ void Platform_GetTextLayoutMetrics(int *line_h, int *row_h, int *list_top);
 int Platform_GetTextLineHeight(int font_size);
 
 #endif
-
-

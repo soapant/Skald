@@ -214,6 +214,7 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b);
 FontHandle Platform_CreateFont(int size, const char *face_name);
 void Platform_DestroyFont(FontHandle font);
 int Platform_EditboxPlaceholderOffset(void);
+
 typedef struct {
   FontHandle font;
   const char *text;
@@ -237,6 +238,7 @@ typedef struct {
 
 bool Platform_ListboxBackendBegin(int item_height_override,
                                   ListboxBackendInit *out);
+
 typedef struct {
   int bx;
   int bw;
@@ -366,6 +368,3 @@ bool Platform_AtomicRename(const char *old_path, const char *new_path);
 
 void Platform_InvalidatePrompt(void);
 #endif
-
-
-

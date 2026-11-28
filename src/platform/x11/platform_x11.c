@@ -32,7 +32,12 @@ bool Platform_LaunchTerminalAtPath(const char *working_dir,
   X11SessionEnv env;
   x11_env_get_session_env(&env);
   char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-  x11_env_build_env_strings(&(X11EnvBuildEnvStrings){.env = &env, .disp_env = disp_env, .xauth_env = xauth_env, .runtime_env = runtime_env, .wayland_env = wayland_env});
+  x11_env_build_env_strings(
+      &(X11EnvBuildEnvStrings){.env = &env,
+                               .disp_env = disp_env,
+                               .xauth_env = xauth_env,
+                               .runtime_env = runtime_env,
+                               .wayland_env = wayland_env});
 
   pid_t pid = fork();
   if (pid < 0) {
@@ -526,8 +531,8 @@ void Platform_GetTextExtents(PlatformGetTextExtents *argspec) {
   if (!FH_TO_XFT(argspec->font) || !argspec->text) {
     *argspec->outWidth = 0;
     *argspec->outHeight = 0;
-    log_info("Platform_GetTextExtents text='%s' max_width=%d", argspec->text ? argspec->text : "",
-             argspec->max_width);
+    log_info("Platform_GetTextExtents text='%s' max_width=%d",
+             argspec->text ? argspec->text : "", argspec->max_width);
     return;
   }
   Display *dpy = FH_TO_DPY(argspec->font);
@@ -1256,11 +1261,12 @@ static int singleton_lock_fd = -1;
 bool Platform_TryAcquireSingleInstance(void) {
   char lock_path[128];
   snprintf(lock_path, sizeof(lock_path), "/tmp/skald-%d.lock", (int)getuid());
-  singleton_lock_fd = open(lock_path, O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC,
-                           0600);
+  singleton_lock_fd =
+      open(lock_path, O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0600);
   if (singleton_lock_fd < 0) {
     if (errno == ELOOP)
-      log_error("Singleton lock %s is a symlink; refusing to use it", lock_path);
+      log_error("Singleton lock %s is a symlink; refusing to use it",
+                lock_path);
     else
       log_error("Cannot open singleton lock %s (%s)", lock_path,
                 strerror(errno));
@@ -2252,19 +2258,24 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
   }
 
   EditboxUi ui = {.color_text = spec->color_text,
-                      .color_bg = spec->color_bg,
-                      .placeholder = spec->placeholder,
-                      .caret_h = spec->caret_h,
-                      .caret_w = spec->caret_w,
-                      .caret_x = spec->caret_x,
-                      .caret_y = spec->caret_y,
-                      .caret_pos = spec->caret_pos};
+                  .color_bg = spec->color_bg,
+                  .placeholder = spec->placeholder,
+                  .caret_h = spec->caret_h,
+                  .caret_w = spec->caret_w,
+                  .caret_x = spec->caret_x,
+                  .caret_y = spec->caret_y,
+                  .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_spec_from_place(&(EditboxSpecFromPlace){.out = &eb, .place = &place, .state = state, .ui = &ui, .metrics = &(EditboxMetrics){.text_w = text_w,
-                                            .cursor_x = cursor_x,
-                                            .ascent = xf ? xf->ascent : 0,
-                                            .descent = xf ? xf->descent : 0,
-                                            .font = fh}});
+  editbox_spec_from_place(&(EditboxSpecFromPlace){
+      .out = &eb,
+      .place = &place,
+      .state = state,
+      .ui = &ui,
+      .metrics = &(EditboxMetrics){.text_w = text_w,
+                                   .cursor_x = cursor_x,
+                                   .ascent = xf ? xf->ascent : 0,
+                                   .descent = xf ? xf->descent : 0,
+                                   .font = fh}});
   eb.text_y += spec->text_y;
   eb.caret_y += spec->text_y;
   eb.measure = x11_editbox_measure;
@@ -2284,19 +2295,16 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
       x11_set_draw_context(dpy, xd, vis, cmap);
       Platform_DrawTextRaw(
           (DrawTextRaw){.x = PROMPT_FOOTER_X,
-                            .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
-                            .text = state->window_title,
-                            .color = title_col,
-                            .font = fh,
-                            .align = "LEFT",
-                            .pad = PROMPT_FOOTER_PAD,
-                            .font_size = FontSize});
+                        .y = state->height - PROMPT_FOOTER_Y_FROM_BOTTOM,
+                        .text = state->window_title,
+                        .color = title_col,
+                        .font = fh,
+                        .align = "LEFT",
+                        .pad = PROMPT_FOOTER_PAD,
+                        .font_size = FontSize});
     }
   }
   if (needDestroy)
     Platform_DestroyFont(fh);
   return true;
 }
-
-
-

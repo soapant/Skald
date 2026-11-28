@@ -1871,7 +1871,13 @@ static char *win32_lookup_walk_programs(const char *name) {
     if (!win32_lookup_is_dir(roots[i]))
       continue;
     ListOfFiles found = {0};
-    if (file_walk_all_files_from_dir(&(FileWalkAllFilesFromDir){.dir_path = (char *)roots[i], .list_of_allowed_extensions = allowed, .list_of_files = &found, .list_of_names_to_ignore = NULL, .strip_extension = true, .max_depth = 3})) {
+    if (file_walk_all_files_from_dir(
+            &(FileWalkAllFilesFromDir){.dir_path = (char *)roots[i],
+                                       .list_of_allowed_extensions = allowed,
+                                       .list_of_files = &found,
+                                       .list_of_names_to_ignore = NULL,
+                                       .strip_extension = true,
+                                       .max_depth = 3})) {
       for (size_t j = 0; j < found.count; j++) {
         if (string_equals_ci(found.files[j].name, name)) {
           char *hit = _strdup(found.files[j].path);
@@ -1992,8 +1998,11 @@ bool Platform_SnapActiveWindow(SnapPreset preset) {
   if (IsIconic(hwnd) || IsZoomed(hwnd))
     ShowWindow(hwnd, SW_RESTORE);
   RECT w = mi.rcWork;
-  SnapRect r =
-      wm_snap_rect(&(WmSnapRect){.mx = w.left, .my = w.top, .mw = w.right - w.left, .mh = w.bottom - w.top, .p = preset});
+  SnapRect r = wm_snap_rect(&(WmSnapRect){.mx = w.left,
+                                          .my = w.top,
+                                          .mw = w.right - w.left,
+                                          .mh = w.bottom - w.top,
+                                          .p = preset});
   SetWindowPos(hwnd, HWND_TOP, r.x, r.y, r.w, r.h,
                SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
   return true;
@@ -2291,19 +2300,24 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
   }
   EditboxUi ui = {.color_text = spec->color_text,
-                      .color_bg = spec->color_bg,
-                      .placeholder = spec->placeholder,
-                      .caret_h = spec->caret_h,
-                      .caret_w = spec->caret_w,
-                      .caret_x = spec->caret_x,
-                      .caret_y = spec->caret_y,
-                      .caret_pos = spec->caret_pos};
+                  .color_bg = spec->color_bg,
+                  .placeholder = spec->placeholder,
+                  .caret_h = spec->caret_h,
+                  .caret_w = spec->caret_w,
+                  .caret_x = spec->caret_x,
+                  .caret_y = spec->caret_y,
+                  .caret_pos = spec->caret_pos};
   EditboxSpec eb;
-  editbox_spec_from_place(&(EditboxSpecFromPlace){.out = &eb, .place = &place, .state = state, .ui = &ui, .metrics = &(EditboxMetrics){.text_w = text_w,
-                                            .cursor_x = cursor_x,
-                                            .ascent = ascent,
-                                            .descent = descent,
-                                            .font = spec->font}});
+  editbox_spec_from_place(&(EditboxSpecFromPlace){
+      .out = &eb,
+      .place = &place,
+      .state = state,
+      .ui = &ui,
+      .metrics = &(EditboxMetrics){.text_w = text_w,
+                                   .cursor_x = cursor_x,
+                                   .ascent = ascent,
+                                   .descent = descent,
+                                   .font = spec->font}});
   eb.text_y += spec->text_y;
   eb.caret_y += spec->text_y;
 
@@ -2324,6 +2338,3 @@ bool Platform_PlaceEditbox(const EditSpec *spec) {
     DeleteObject(hfont_created);
   return true;
 }
-
-
-

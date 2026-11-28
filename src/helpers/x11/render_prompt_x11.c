@@ -126,12 +126,22 @@ static bool x11_pbuf_acquire(Display *dpy, Window win, int w, int h, int depth,
   return true;
 }
 
-void x11_draw_prompt_user_edit_control_on_draw(X11DrawPromptUserEditControlOnDraw *argspec) {
-  x11_draw_editbox(&(X11DrawEditbox){.state = argspec->state, .dpy = argspec->dpy, .xd = argspec->xd, .vis = argspec->vis, .cmap = argspec->cmap});
+void x11_draw_prompt_user_edit_control_on_draw(
+    X11DrawPromptUserEditControlOnDraw *argspec) {
+  x11_draw_editbox(&(X11DrawEditbox){.state = argspec->state,
+                                     .dpy = argspec->dpy,
+                                     .xd = argspec->xd,
+                                     .vis = argspec->vis,
+                                     .cmap = argspec->cmap});
 }
 
-void x11_draw_prompt_user_listbox_on_draw(X11DrawPromptUserListboxOnDraw *argspec) {
-  x11_draw_listbox(&(X11DrawListbox){.state = argspec->state, .dpy = argspec->dpy, .xd = argspec->xd, .vis = argspec->vis, .cmap = argspec->cmap});
+void x11_draw_prompt_user_listbox_on_draw(
+    X11DrawPromptUserListboxOnDraw *argspec) {
+  x11_draw_listbox(&(X11DrawListbox){.state = argspec->state,
+                                     .dpy = argspec->dpy,
+                                     .xd = argspec->xd,
+                                     .vis = argspec->vis,
+                                     .cmap = argspec->cmap});
 }
 
 static XftDraw *x11_prompt_create_draw(Display *dpy, Window *win,
@@ -159,7 +169,9 @@ void x11_draw_prompt_user_edit_control(Display *dpy, Window *win,
   XftDraw *xd = x11_prompt_create_draw(dpy, win, &vis, &cmap);
   if (!xd)
     return;
-  x11_draw_prompt_user_edit_control_on_draw(&(X11DrawPromptUserEditControlOnDraw){.dpy = dpy, .xd = xd, .vis = vis, .cmap = cmap, .state = state});
+  x11_draw_prompt_user_edit_control_on_draw(
+      &(X11DrawPromptUserEditControlOnDraw){
+          .dpy = dpy, .xd = xd, .vis = vis, .cmap = cmap, .state = state});
   XftDrawDestroy(xd);
 }
 
@@ -170,7 +182,8 @@ void x11_draw_prompt_user_listbox(Display *dpy, Window *win,
   XftDraw *xd = x11_prompt_create_draw(dpy, win, &vis, &cmap);
   if (!xd)
     return;
-  x11_draw_prompt_user_listbox_on_draw(&(X11DrawPromptUserListboxOnDraw){.dpy = dpy, .xd = xd, .vis = vis, .cmap = cmap, .state = state});
+  x11_draw_prompt_user_listbox_on_draw(&(X11DrawPromptUserListboxOnDraw){
+      .dpy = dpy, .xd = xd, .vis = vis, .cmap = cmap, .state = state});
   XftDrawDestroy(xd);
 }
 
@@ -184,8 +197,13 @@ static void prompt_render_frame(Display *dpy, Window *win, XftDraw *xd,
     prompt_state_update_delta(state);
     checkbox_frame_begin();
     slider_frame_begin();
-    focus_frame_begin(&(FocusFrameBegin){.include_listbox = state->lb != NULL, .lb_x = 0, .lb_y = prompt_list_top(), .lb_w = state->width, .lb_h = state->height - prompt_list_top() -
-                          prompt_list_bottom_margin()});
+    focus_frame_begin(&(FocusFrameBegin){.include_listbox = state->lb != NULL,
+                                         .lb_x = 0,
+                                         .lb_y = prompt_list_top(),
+                                         .lb_w = state->width,
+                                         .lb_h = state->height -
+                                                 prompt_list_top() -
+                                                 prompt_list_bottom_margin()});
     editbox_registry_register_focus(state);
     if (clear_ctx)
       x11_set_draw_context(dpy, NULL, NULL, 0);
@@ -199,19 +217,27 @@ static void prompt_render_frame(Display *dpy, Window *win, XftDraw *xd,
     focus_frame_end();
     draw_state_get()->suppress_separators = sep_prev;
   } else {
-    focus_frame_begin(&(FocusFrameBegin){.include_listbox = state->lb != NULL, .lb_x = 0, .lb_y = prompt_list_top(), .lb_w = state->width, .lb_h = state->height - prompt_list_top() -
-                          prompt_list_bottom_margin()});
+    focus_frame_begin(&(FocusFrameBegin){.include_listbox = state->lb != NULL,
+                                         .lb_x = 0,
+                                         .lb_y = prompt_list_top(),
+                                         .lb_w = state->width,
+                                         .lb_h = state->height -
+                                                 prompt_list_top() -
+                                                 prompt_list_bottom_margin()});
     editbox_registry_register_focus(state);
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
     if (state->lb) {
       if (on_draw)
-        x11_draw_prompt_user_listbox_on_draw(&(X11DrawPromptUserListboxOnDraw){.dpy = dpy, .xd = xd, .vis = vis, .cmap = cmap, .state = state});
+        x11_draw_prompt_user_listbox_on_draw(&(X11DrawPromptUserListboxOnDraw){
+            .dpy = dpy, .xd = xd, .vis = vis, .cmap = cmap, .state = state});
       else
         x11_draw_prompt_user_listbox(dpy, win, state);
     }
     if (on_draw)
-      x11_draw_prompt_user_edit_control_on_draw(&(X11DrawPromptUserEditControlOnDraw){.dpy = dpy, .xd = xd, .vis = vis, .cmap = cmap, .state = state});
+      x11_draw_prompt_user_edit_control_on_draw(
+          &(X11DrawPromptUserEditControlOnDraw){
+              .dpy = dpy, .xd = xd, .vis = vis, .cmap = cmap, .state = state});
     else
       x11_draw_prompt_user_edit_control(dpy, win, state);
     draw_state_get()->suppress_separators = sep_prev;
@@ -265,7 +291,8 @@ static bool x11_render_prompt_user_locked(Display *dpy, Window *win,
     XFillRectangle(dpy, dbl, gc, 0, 0, w, h);
     XFreeGC(dpy, gc);
   } else if (!(pss && pss->no_bg)) {
-    if (!x11_bg_image_blit(&(X11BgImageBlit){.dpy = dpy, .dst = dbl, .vis = vis, .w = w, .h = h})) {
+    if (!x11_bg_image_blit(&(X11BgImageBlit){
+            .dpy = dpy, .dst = dbl, .vis = vis, .w = w, .h = h})) {
       Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
       if (bg) {
         GC gc = XCreateGC(dpy, dbl, 0, NULL);
@@ -287,7 +314,13 @@ static bool x11_render_prompt_user_locked(Display *dpy, Window *win,
                       suppress_content);
   x11_set_draw_context(NULL, NULL, NULL, 0);
   x11_clear_dbl_visual();
-  x11_draw_window_border(&(X11DrawWindowBorder){.dpy = dpy, .drw = dbl, .vis = vis, .w = w, .h = h, .no_bg = state && state->no_bg});
+  x11_draw_window_border(
+      &(X11DrawWindowBorder){.dpy = dpy,
+                             .drw = dbl,
+                             .vis = vis,
+                             .w = w,
+                             .h = h,
+                             .no_bg = state && state->no_bg});
   GC gc = XCreateGC(dpy, *win, 0, NULL);
   XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
   XFreeGC(dpy, gc);
@@ -302,4 +335,3 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state,
   x11_prompt_render_unlock();
   return ok;
 }
-

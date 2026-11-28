@@ -19,6 +19,7 @@ typedef struct {
 } X11CreateWindowEx;
 
 Window x11_create_window_ex(X11CreateWindowEx *argspec);
+
 typedef struct {
   Display *dpy;
   int x;
@@ -28,6 +29,7 @@ typedef struct {
 } X11CreatePromptWindow;
 
 Window x11_create_prompt_window(X11CreatePromptWindow *argspec);
+
 typedef struct {
   Display *dpy;
   Drawable drw;
@@ -38,6 +40,7 @@ typedef struct {
 } X11DrawWindowBorder;
 
 void x11_draw_window_border(X11DrawWindowBorder *argspec);
+
 typedef struct {
   Display *dpy;
   int x;
@@ -47,7 +50,9 @@ typedef struct {
   bool clickable;
 } X11CreateDisplayMessageWindow;
 
-Window x11_create_display_message_window(X11CreateDisplayMessageWindow *argspec);
+Window
+x11_create_display_message_window(X11CreateDisplayMessageWindow *argspec);
+
 typedef struct {
   Display *dpy;
   int x;
@@ -59,10 +64,12 @@ typedef struct {
   int radius;
 } X11CreateDisplayMessageWindowEx;
 
-Window x11_create_display_message_window_ex(X11CreateDisplayMessageWindowEx *argspec);
+Window
+x11_create_display_message_window_ex(X11CreateDisplayMessageWindowEx *argspec);
 void x11_apply_click_through(Display *dpy, Window win);
 void x11_set_fixed_size_hints(Display *dpy, Window win, int w, int h);
 void x11_apply_shape_rounded_window(Display *dpy, Window win, int w, int h);
+
 typedef struct {
   Display *dpy;
   Window win;
@@ -75,4 +82,3 @@ typedef struct {
 void x11_apply_shape(X11ApplyShape *argspec);
 XftDraw *x11_create_xft_draw(Display *dpy, Window win);
 #endif
-

@@ -53,8 +53,10 @@ static void prompt_popup_on_show(Popup *self) {
            data->spec.title ? data->spec.title : "(null)", data->x, data->y,
            wm->popup_count);
 
-  Platform_PromptPopupShowWindow(&(PlatformPromptPopupShowWindow){.self = self, .x = data->x, .y = data->y, .w = data->w, .h = data->h});
-  Platform_PromptPopupResize(&(PlatformPromptPopupResize){.self = self, .x = data->x, .y = data->y, .w = data->w, .h = data->h});
+  Platform_PromptPopupShowWindow(&(PlatformPromptPopupShowWindow){
+      .self = self, .x = data->x, .y = data->y, .w = data->w, .h = data->h});
+  Platform_PromptPopupResize(&(PlatformPromptPopupResize){
+      .self = self, .x = data->x, .y = data->y, .w = data->w, .h = data->h});
   {
     bool want_rounded =
         data->spec.rounded ? data->spec.rounded : RoundedCorners;
@@ -247,7 +249,8 @@ static bool prompt_popup_apply_bounds(Popup *p, int x, int y, int w, int h,
                                       bool from_animation) {
   if (w <= 0 || h <= 0)
     return false;
-  if (!Platform_PromptPopupResize(&(PlatformPromptPopupResize){.self = p, .x = x, .y = y, .w = w, .h = h}))
+  if (!Platform_PromptPopupResize(&(PlatformPromptPopupResize){
+          .self = p, .x = x, .y = y, .w = w, .h = h}))
     return false;
   PromptPopupData *data = (PromptPopupData *)p;
   data->x = x;
@@ -279,7 +282,8 @@ bool prompt_popup_resize_current(int x, int y, int w, int h) {
   return prompt_popup_apply_bounds(p, x, y, w, h, false);
 }
 
-bool prompt_popup_resize_current_animated(PromptPopupResizeCurrentAnimated *argspec) {
+bool prompt_popup_resize_current_animated(
+    PromptPopupResizeCurrentAnimated *argspec) {
   if (argspec->w <= 0 || argspec->h <= 0)
     return false;
   WindowManager *wm = WindowManager_Get();
@@ -520,4 +524,3 @@ PromptState *prompt_popup_get_top_prompt_state(void) {
     return (PromptState *)top->user_data;
   return NULL;
 }
-

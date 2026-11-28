@@ -261,7 +261,11 @@ void checkbox_draw(const Checkbox *spec) {
       int m = w < h ? w : h;
       int pad = m / 8;
       int s = m - 2 * pad;
-      Platform_DrawImageAt(&(PlatformDrawImageAt){.path = CHECKBOX_ICON_PATH, .x = spec->x + (w - s) / 2, .y = spec->y + (h - s) / 2, .w = s, .h = s});
+      Platform_DrawImageAt(&(PlatformDrawImageAt){.path = CHECKBOX_ICON_PATH,
+                                                  .x = spec->x + (w - s) / 2,
+                                                  .y = spec->y + (h - s) / 2,
+                                                  .w = s,
+                                                  .h = s});
     }
   } else if (spec->button) {
     int w = spec->w > 0 ? spec->w : 100;
@@ -325,7 +329,16 @@ bool checkbox_place(const Checkbox *spec) {
   cb->text_color = spec->text_color;
   cb->render = spec->render;
 
-  focus_register(&(FocusRegister){.name = spec->name, .kind = spec->button ? FOCUS_KIND_BUTTON : FOCUS_KIND_CHECKBOX, .x = x, .y = y, .w = w, .h = h, .owner = cb, .activate = checkbox_focus_activate, .adjust = NULL});
+  focus_register(&(FocusRegister){.name = spec->name,
+                                  .kind = spec->button ? FOCUS_KIND_BUTTON
+                                                       : FOCUS_KIND_CHECKBOX,
+                                  .x = x,
+                                  .y = y,
+                                  .w = w,
+                                  .h = h,
+                                  .owner = cb,
+                                  .activate = checkbox_focus_activate,
+                                  .adjust = NULL});
   cb->focused = focus_is(spec->name);
 
   int mx = 0, my = 0;
@@ -359,5 +372,3 @@ bool checkbox_place(const Checkbox *spec) {
     cb->on_hover();
   return true;
 }
-
-

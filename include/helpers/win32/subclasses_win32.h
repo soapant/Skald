@@ -38,4 +38,3 @@ LRESULT CALLBACK win32_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam,
                                 LPARAM lParam);
 
 #endif
-

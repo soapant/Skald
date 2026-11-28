@@ -31,4 +31,3 @@ bool remap_is_virt_held(int vk);
 bool remap_check_strict_order(int trigger_vk, int mods);
 
 #endif
-

@@ -76,9 +76,9 @@ bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD ex_style = WS_EX_TOOLWINDOW | WS_EX_LAYERED;
-  SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(
-      CreateWindowExA(ex_style, SKALD_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN,
-                      argspec->x, argspec->y, argspec->w, argspec->h, NULL, NULL, hInstance, NULL));
+  SkaldContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
+      ex_style, SKALD_CLASS, NULL, WS_POPUP | WS_CLIPCHILDREN, argspec->x,
+      argspec->y, argspec->w, argspec->h, NULL, NULL, hInstance, NULL));
   if (WH_TO_HWND(SkaldContext_Get()->window.hPopupWnd) == NULL) {
     return false;
   }
@@ -162,8 +162,13 @@ void Platform_PromptPopupRender(Popup *self) {
     prompt_band_take_placed();
     bool sep_prev = draw_state_get()->suppress_separators;
     draw_state_get()->suppress_separators = state->no_separators;
-    focus_frame_begin(&(FocusFrameBegin){.include_listbox = state->lb != NULL, .lb_x = 0, .lb_y = prompt_list_top(), .lb_w = state->width, .lb_h = state->height - prompt_list_top() -
-                          prompt_list_bottom_margin()});
+    focus_frame_begin(&(FocusFrameBegin){.include_listbox = state->lb != NULL,
+                                         .lb_x = 0,
+                                         .lb_y = prompt_list_top(),
+                                         .lb_w = state->width,
+                                         .lb_h = state->height -
+                                                 prompt_list_top() -
+                                                 prompt_list_bottom_margin()});
     editbox_registry_register_focus(state);
     editbox_registry_tick(state);
     editbox_registry_begin_frame(state);
@@ -181,4 +186,3 @@ void Platform_PromptPopupDestroyWindow(Popup *self) {
 bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   return false;
 }
-

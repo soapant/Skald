@@ -68,7 +68,12 @@ static int section_parse_entry_line(const char *line, size_t line_len,
   char key[384];
   char raw[1024];
   TomlKeyValueStatus st =
-      toml_parse_key_value(&(TomlParseKeyValue){.line = line, .len = line_len, .key = key, .key_cap = sizeof(key), .value = raw, .value_cap = sizeof(raw)});
+      toml_parse_key_value(&(TomlParseKeyValue){.line = line,
+                                                .len = line_len,
+                                                .key = key,
+                                                .key_cap = sizeof(key),
+                                                .value = raw,
+                                                .value_cap = sizeof(raw)});
   if (st == TOML_KV_EMPTY)
     return 0;
   if (st != TOML_KV_OK)
@@ -348,13 +353,17 @@ static bool section_apply(const char *path, const char *section,
 
 ConfigTomlStatus config_section_set_ex(ConfigSectionSetEx *argspec) {
   config_toml_error_clear(argspec->err);
-  if (!argspec->path || !argspec->path[0] || !argspec->section || !argspec->section[0] || !argspec->name || !argspec->name[0] ||
+  if (!argspec->path || !argspec->path[0] || !argspec->section ||
+      !argspec->section[0] || !argspec->name || !argspec->name[0] ||
       !argspec->value || !argspec->value[0])
     return section_fail(argspec->err, CONFIG_TOML_ERR_ARG,
                         "missing path/section/name/value");
-  if (!toml_is_bare_key(argspec->section) || strlen(argspec->section) >= CONFIG_SECTION_NAME_MAX)
-    return section_fail(argspec->err, CONFIG_TOML_ERR_PARSE, "invalid section name");
-  if (!section_apply(argspec->path, argspec->section, argspec->name, argspec->value, false))
+  if (!toml_is_bare_key(argspec->section) ||
+      strlen(argspec->section) >= CONFIG_SECTION_NAME_MAX)
+    return section_fail(argspec->err, CONFIG_TOML_ERR_PARSE,
+                        "invalid section name");
+  if (!section_apply(argspec->path, argspec->section, argspec->name,
+                     argspec->value, false))
     return section_fail(argspec->err, CONFIG_TOML_ERR_IO,
                         "could not update config section");
   return CONFIG_TOML_OK;
@@ -376,7 +385,11 @@ ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
 
 bool config_section_set(const char *path, const char *section, const char *name,
                         const char *value) {
-  return config_section_set_ex(&(ConfigSectionSetEx){.path = path, .section = section, .name = name, .value = value, .err = NULL}) ==
+  return config_section_set_ex(&(ConfigSectionSetEx){.path = path,
+                                                     .section = section,
+                                                     .name = name,
+                                                     .value = value,
+                                                     .err = NULL}) ==
          CONFIG_TOML_OK;
 }
 
@@ -870,7 +883,13 @@ void config_init_locked(void) {
 static void unregister_hotkey_string(const char *hotkey) {
   if (!hotkey)
     return;
-  HotkeyBinding binding = hotkey_convert_into_binding(&(HotkeyConvertIntoBinding){.hotkey_string = (char *)hotkey, .on_hotkey_trigger = NULL, .optional_condition_for_hotkey = NULL, .optional_blacklistedwindows = NULL, .whitelist = false, .user_ud = NULL});
+  HotkeyBinding binding = hotkey_convert_into_binding(
+      &(HotkeyConvertIntoBinding){.hotkey_string = (char *)hotkey,
+                                  .on_hotkey_trigger = NULL,
+                                  .optional_condition_for_hotkey = NULL,
+                                  .optional_blacklistedwindows = NULL,
+                                  .whitelist = false,
+                                  .user_ud = NULL});
   if (binding.valid)
     hotkey_unregister_internal(binding.vk, binding.modifiers);
 }
@@ -880,8 +899,13 @@ static void hotkey_bind_live(const char *name, const char *hotkey,
   if (!name || !hotkey || !cb)
     return;
   unregister_hotkey_string(hotkey);
-  HotkeyBinding binding =
-      hotkey_convert_into_binding(&(HotkeyConvertIntoBinding){.hotkey_string = (char *)hotkey, .on_hotkey_trigger = NULL, .optional_condition_for_hotkey = NULL, .optional_blacklistedwindows = NULL, .whitelist = false, .user_ud = ud});
+  HotkeyBinding binding = hotkey_convert_into_binding(
+      &(HotkeyConvertIntoBinding){.hotkey_string = (char *)hotkey,
+                                  .on_hotkey_trigger = NULL,
+                                  .optional_condition_for_hotkey = NULL,
+                                  .optional_blacklistedwindows = NULL,
+                                  .whitelist = false,
+                                  .user_ud = ud});
   if (binding.valid) {
     binding.hotkey_callback_ud = (HotkeyCallbackUd)cb;
     binding.hold = false;
@@ -1081,7 +1105,13 @@ static bool config_hotkey_binding_bind(ConfigHotkeyBinding *b) {
   const char *const *windows = NULL;
   bool whitelist = false;
   resolve_window_list(wl, bl, &windows, &whitelist);
-  HotkeyBinding binding = hotkey_convert_into_binding(&(HotkeyConvertIntoBinding){.hotkey_string = hotkey, .on_hotkey_trigger = b->cb, .optional_condition_for_hotkey = NULL, .optional_blacklistedwindows = windows, .whitelist = whitelist, .user_ud = b->ud});
+  HotkeyBinding binding = hotkey_convert_into_binding(
+      &(HotkeyConvertIntoBinding){.hotkey_string = hotkey,
+                                  .on_hotkey_trigger = b->cb,
+                                  .optional_condition_for_hotkey = NULL,
+                                  .optional_blacklistedwindows = windows,
+                                  .whitelist = whitelist,
+                                  .user_ud = b->ud});
   if (!binding.valid) {
     arrfree(wl);
     arrfree(bl);
@@ -1262,7 +1292,12 @@ bool config_feature_shortcut_set(const char *name, const char *target) {
   }
   char feature[128];
   char filter[CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
-  if (!feature_shortcut_parse(&(FeatureShortcutParse){.target = target, .feature = feature, .feature_cap = sizeof(feature), .filter = filter, .filter_cap = sizeof(filter)})) {
+  if (!feature_shortcut_parse(
+          &(FeatureShortcutParse){.target = target,
+                                  .feature = feature,
+                                  .feature_cap = sizeof(feature),
+                                  .filter = filter,
+                                  .filter_cap = sizeof(filter)})) {
     config_unlock();
     return false;
   }
@@ -1287,7 +1322,12 @@ bool feature_shortcut_run(const char *name) {
   }
   char feature[128];
   char filter[CONFIG_FEATURE_SHORTCUT_TARGET_MAX];
-  if (!feature_shortcut_parse(&(FeatureShortcutParse){.target = feature_shortcut_entries[index].target, .feature = feature, .feature_cap = sizeof(feature), .filter = filter, .filter_cap = sizeof(filter)})) {
+  if (!feature_shortcut_parse(&(FeatureShortcutParse){
+          .target = feature_shortcut_entries[index].target,
+          .feature = feature,
+          .feature_cap = sizeof(feature),
+          .filter = filter,
+          .filter_cap = sizeof(filter)})) {
     log_error("feature_shortcut: bad target '%s'",
               feature_shortcut_entries[index].target);
     goto done;
@@ -1396,5 +1436,3 @@ done:
   }
   return should_close;
 }
-
-

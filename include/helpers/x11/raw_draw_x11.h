@@ -34,6 +34,7 @@ typedef struct {
 } X11DrawEditBackground;
 
 void x11_draw_edit_background(X11DrawEditBackground *argspec);
+
 typedef struct {
   PromptState *state;
   Display *dpy;
@@ -44,6 +45,7 @@ typedef struct {
 } X11DrawEditTint;
 
 void x11_draw_edit_tint(X11DrawEditTint *argspec);
+
 typedef struct {
   PromptState *state;
   Display *dpy;
@@ -54,6 +56,7 @@ typedef struct {
 } X11DrawEditText;
 
 void x11_draw_edit_text(X11DrawEditText *argspec);
+
 typedef struct {
   PromptState *state;
   Display *dpy;
@@ -64,6 +67,7 @@ typedef struct {
 } X11DrawEditCursor;
 
 void x11_draw_edit_cursor(X11DrawEditCursor *argspec);
+
 typedef struct {
   Display *dpy;
   XftDraw *xd;
@@ -85,6 +89,7 @@ extern __thread Visual *g_draw_vis;
 extern __thread Colormap g_draw_cmap;
 
 void x11_raw_line_flush(void);
+
 typedef struct {
   int x;
   int y;
@@ -107,5 +112,3 @@ GC x11_raw_gc_for(Display *dpy, Drawable d);
 GC x11_raw_prepare(unsigned long color, int thickness);
 
 #endif
-
-

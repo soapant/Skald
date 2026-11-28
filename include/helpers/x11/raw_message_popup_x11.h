@@ -67,6 +67,7 @@ extern int g_msg_slot_count;
 void x11_msg_remove_slot_locked(Display *dpy, int idx);
 int x11_msg_find_key_locked(const char *key);
 void x11_msg_remove_indefinite_locked(Display *dpy);
+
 typedef struct {
   Display *dpy;
   XftFont *xf;
@@ -77,6 +78,7 @@ typedef struct {
 } X11MsgWrapText;
 
 int x11_msg_wrap_text(X11MsgWrapText *argspec);
+
 typedef struct {
   int x;
   int y;
@@ -86,6 +88,7 @@ typedef struct {
 } X11MsgStackAdjustY;
 
 int x11_msg_stack_adjust_y(X11MsgStackAdjustY *argspec);
+
 typedef struct {
   Display *dpy;
   const char *message;
@@ -105,6 +108,7 @@ typedef struct {
 } X11MsgPresent;
 
 void x11_msg_present(X11MsgPresent *argspec);
+
 typedef struct {
   Display *dpy;
   const char *key;
@@ -118,6 +122,7 @@ typedef struct {
 } X11MsgHoverPresent;
 
 void x11_msg_hover_present(X11MsgHoverPresent *argspec);
+
 typedef struct {
   Display *dpy;
   const char *message;
@@ -131,4 +136,3 @@ void x11_msg_measure(X11MsgMeasure *argspec);
 bool x11_msg_set_text(Display *dpy, const char *name, const char *text);
 
 #endif
-

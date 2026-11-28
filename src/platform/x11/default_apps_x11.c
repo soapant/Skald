@@ -55,7 +55,13 @@ static const char *get_default_browser(int slot) {
                                      "Internet Explorer",
                                      "Zen"};
   ListOfFiles browser_files = {0};
-  file_walk_all_files_from_dir(&(FileWalkAllFilesFromDir){.dir_path = "/usr/share/applications", .list_of_allowed_extensions = NULL, .list_of_files = &browser_files, .list_of_names_to_ignore = NULL, .strip_extension = true, .max_depth = 0});
+  file_walk_all_files_from_dir(
+      &(FileWalkAllFilesFromDir){.dir_path = "/usr/share/applications",
+                                 .list_of_allowed_extensions = NULL,
+                                 .list_of_files = &browser_files,
+                                 .list_of_names_to_ignore = NULL,
+                                 .strip_extension = true,
+                                 .max_depth = 0});
   for (size_t i = 0; i < browser_files.count; i++) {
     const char *name = browser_files.files[i].name;
     for (size_t j = 0;
@@ -180,4 +186,3 @@ bool Platform_ResolveDesktopExec(const char *desktop_id, char *out,
   string_list_free(&dir_list);
   return false;
 }
-

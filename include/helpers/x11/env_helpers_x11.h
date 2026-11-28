@@ -19,6 +19,7 @@ const char *x11_env_home_dir(void);
 const char *x11_env_xdg_runtime_dir(void);
 bool x11_env_is_wayland(void);
 bool x11_env_is_compositor(void);
+
 typedef struct {
   const X11SessionEnv *env;
   char *disp_env;
@@ -39,6 +40,7 @@ bool x11_desktop_parse(const char *desktop_path, char exec_line[1024],
                        char workdir[1024], bool *is_terminal);
 void x11_desktop_clean_exec(char exec_line[1024]);
 bool x11_exe_in_path(const char *name);
+
 typedef struct {
   const char *exec_line;
   const char *desktop_dir;
@@ -54,4 +56,3 @@ int x11_run_status(char *const argv[], const X11SessionEnv *env,
 char *x11_paste_wtype(const char *content);
 
 #endif
-

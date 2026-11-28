@@ -28,7 +28,13 @@ static ListOfFiles *x11_applications_dir_files(const char *dir) {
     ad_cache[slot].count = 0;
     ad_cache[slot].capacity = 0;
   }
-  file_walk_all_files_from_dir(&(FileWalkAllFilesFromDir){.dir_path = dir, .list_of_allowed_extensions = NULL, .list_of_files = &ad_cache[slot], .list_of_names_to_ignore = NULL, .strip_extension = true, .max_depth = 0});
+  file_walk_all_files_from_dir(
+      &(FileWalkAllFilesFromDir){.dir_path = dir,
+                                 .list_of_allowed_extensions = NULL,
+                                 .list_of_files = &ad_cache[slot],
+                                 .list_of_names_to_ignore = NULL,
+                                 .strip_extension = true,
+                                 .max_depth = 0});
   snprintf(ad_path[slot], sizeof(ad_path[slot]), "%s", dir);
   ad_valid[slot] = true;
   return &ad_cache[slot];
@@ -186,4 +192,3 @@ int x11_default_apps_exec_token(const char *line, char *out, size_t cap) {
   out[n] = '\0';
   return n > 0;
 }
-

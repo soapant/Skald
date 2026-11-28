@@ -67,8 +67,7 @@ static Slider *slider_find(const char *name) {
   return NULL;
 }
 
-static Slider *slider_intern(const char *name, float seed,
-                                 bool *out_fresh) {
+static Slider *slider_intern(const char *name, float seed, bool *out_fresh) {
 
   if (out_fresh)
     *out_fresh = false;
@@ -175,9 +174,8 @@ bool slider_set_value(const char *name, float value) {
   return true;
 }
 
-static void slider_track_geometry(const Slider *sl, int *tx, int *ty,
-                                  int *tw, int *th, int *rx, int *ry,
-                                  int *rsize) {
+static void slider_track_geometry(const Slider *sl, int *tx, int *ty, int *tw,
+                                  int *th, int *rx, int *ry, int *rsize) {
   int t = sl->thickness > 0 ? sl->thickness : 4;
   int ts;
   if (sl->orientation == SLIDER_VERTICAL) {
@@ -390,7 +388,15 @@ bool slider_place(const Slider *spec) {
   sl->on_hover = spec->on_hover;
   sl->render = spec->render;
 
-  focus_register(&(FocusRegister){.name = spec->name, .kind = FOCUS_KIND_SLIDER, .x = x, .y = y, .w = w, .h = h, .owner = sl, .activate = slider_focus_activate, .adjust = slider_focus_step});
+  focus_register(&(FocusRegister){.name = spec->name,
+                                  .kind = FOCUS_KIND_SLIDER,
+                                  .x = x,
+                                  .y = y,
+                                  .w = w,
+                                  .h = h,
+                                  .owner = sl,
+                                  .activate = slider_focus_activate,
+                                  .adjust = slider_focus_step});
   sl->focused = focus_is(spec->name);
 
   if (fresh)
@@ -449,5 +455,3 @@ bool slider_place(const Slider *spec) {
     sl->on_hover();
   return true;
 }
-
-

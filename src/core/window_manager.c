@@ -184,7 +184,8 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w,
   Popup *top = WindowManager_GetTopPopup(WindowManager_Get());
   int pw = 0, ph = 0, px = -1, py = -1;
   if (top && top->type == POPUP_PROMPT)
-    prompt_popup_get_bounds(&(PromptPopupGetBounds){.p = top, .x = &px, .y = &py, .w = &pw, .h = &ph});
+    prompt_popup_get_bounds(&(PromptPopupGetBounds){
+        .p = top, .x = &px, .y = &py, .w = &pw, .h = &ph});
   if (pw <= 0 || ph <= 0) {
     pw = (int)(PromptW * Platform_GetUIScale());
     ph = (int)(PromptH * Platform_GetUIScale());
@@ -285,4 +286,3 @@ void event_bus_trigger(Event event) {
     }
   }
 }
-

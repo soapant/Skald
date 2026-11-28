@@ -99,15 +99,12 @@ typedef struct {
 SettingsEntry *settings_entry_add(const SettingsEntrySpec *spec);
 int settings_entry_add_checkbox(SettingsEntry *entry,
                                 const SettingsCheckbox *spec);
-int settings_entry_add_button(SettingsEntry *entry,
-                              const SettingsButton *spec);
-int settings_entry_add_slider(SettingsEntry *entry,
-                              const SettingsSlider *spec);
+int settings_entry_add_button(SettingsEntry *entry, const SettingsButton *spec);
+int settings_entry_add_slider(SettingsEntry *entry, const SettingsSlider *spec);
 int settings_entry_add_dropdown(SettingsEntry *entry,
                                 const SettingsDropdown *spec);
-SettingsEditboxGroup
-settings_entry_add_editbox(SettingsEntry *entry,
-                           const SettingsEditbox *spec);
+SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
+                                                const SettingsEditbox *spec);
 const char *settings_editbox_get(SettingsEditboxGroup group, const char *name);
 bool settings_editbox_set(SettingsEditboxGroup group, const char *name,
                           const char *value);
@@ -127,4 +124,3 @@ void settings_dispatch_focus_click(void);
 void settings_dispatch_focus_change(float value);
 
 #endif
-

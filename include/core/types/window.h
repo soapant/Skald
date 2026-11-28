@@ -139,4 +139,3 @@ typedef enum {
 } SnapPreset;
 
 #endif
-

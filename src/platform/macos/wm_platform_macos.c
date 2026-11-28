@@ -51,4 +51,3 @@ bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   (void)key;
   return false;
 }
-

@@ -96,7 +96,11 @@ static bool settings_capture_text(const char *text) {
   if (!settings_capturing())
     return false;
   if (text && text[0])
-    search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = text, .kind = SEARCH_KIND_TEXT, .widget_name = NULL, .value = NULL});
+    search_index_add_text(&(SearchIndexAddText){.idx = NULL,
+                                                .text = text,
+                                                .kind = SEARCH_KIND_TEXT,
+                                                .widget_name = NULL,
+                                                .value = NULL});
   return true;
 }
 
@@ -164,11 +168,11 @@ static bool settings_draw_text_local(const SettingsDrawText *spec) {
   const char *align = spec->align ? spec->align : "LEFT";
   return Platform_DrawTextRaw(
       (DrawTextRaw){.x = spec->x,
-                        .y = spec->y,
-                        .text = spec->text,
-                        .color = settings_color(spec->color),
-                        .align = (char *)align,
-                        .font_size = spec->font_size});
+                    .y = spec->y,
+                    .text = spec->text,
+                    .color = settings_color(spec->color),
+                    .align = (char *)align,
+                    .font_size = spec->font_size});
 }
 
 static bool
@@ -179,12 +183,12 @@ settings_draw_text_centered_local(const SettingsDrawTextCentered *spec) {
     return true;
   Platform_DrawTextCentered(
       (DrawTextCentered){.x = spec->x,
-                             .y = spec->y,
-                             .w = spec->w,
-                             .h = spec->h,
-                             .text = spec->text,
-                             .color = settings_color(spec->color),
-                             .font_size = spec->font_size});
+                         .y = spec->y,
+                         .w = spec->w,
+                         .h = spec->h,
+                         .text = spec->text,
+                         .color = settings_color(spec->color),
+                         .font_size = spec->font_size});
   return true;
 }
 
@@ -196,7 +200,8 @@ static bool settings_draw_image_local(const SettingsDrawImage *spec) {
   char asset[MAX_PATH];
   const char *path = feature_path_resolve_asset_or_path(
       __builtin_return_address(0), spec->path, asset, sizeof(asset));
-  return Platform_DrawImageAt(&(PlatformDrawImageAt){.path = path, .x = spec->x, .y = spec->y, .w = spec->w, .h = spec->h});
+  return Platform_DrawImageAt(&(PlatformDrawImageAt){
+      .path = path, .x = spec->x, .y = spec->y, .w = spec->w, .h = spec->h});
 }
 
 static bool settings_draw_line_local(const Line *spec) {
@@ -206,11 +211,11 @@ static bool settings_draw_line_local(const Line *spec) {
     return true;
   return Platform_DrawLineRaw(
       (DrawLineRaw){.x1 = spec->x1,
-                        .y1 = spec->y1,
-                        .x2 = spec->x2,
-                        .y2 = spec->y2,
-                        .color = settings_color(spec->color),
-                        .thickness = spec->thickness});
+                    .y1 = spec->y1,
+                    .x2 = spec->x2,
+                    .y2 = spec->y2,
+                    .color = settings_color(spec->color),
+                    .thickness = spec->thickness});
 }
 
 static const char *settings_editbox_text(const char *name) {
@@ -270,7 +275,12 @@ static bool settings_place_checkbox_impl(const SettingsPlaceCheckbox *spec,
     return false;
   if (settings_capturing()) {
     const char *text = (spec->text && spec->text[0]) ? spec->text : spec->name;
-    search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = text, .kind = button ? SEARCH_KIND_BUTTON : SEARCH_KIND_CHECKBOX, .widget_name = spec->name, .value = NULL});
+    search_index_add_text(&(SearchIndexAddText){
+        .idx = NULL,
+        .text = text,
+        .kind = button ? SEARCH_KIND_BUTTON : SEARCH_KIND_CHECKBOX,
+        .widget_name = spec->name,
+        .value = NULL});
     return true;
   }
   Checkbox cb = {0};
@@ -299,7 +309,11 @@ static bool settings_place_slider_impl(const SettingsPlaceSlider *spec) {
   if (settings_capturing()) {
     char value[32];
     snprintf(value, sizeof(value), "%g", spec->value);
-    search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = spec->name, .kind = SEARCH_KIND_SLIDER, .widget_name = spec->name, .value = value});
+    search_index_add_text(&(SearchIndexAddText){.idx = NULL,
+                                                .text = spec->name,
+                                                .kind = SEARCH_KIND_SLIDER,
+                                                .widget_name = spec->name,
+                                                .value = value});
     return true;
   }
   Slider sl = {0};
@@ -332,15 +346,26 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditbox *spec) {
     name = PROMPT_PRIMARY_EDITBOX_NAME;
   if (settings_capturing()) {
     if (strncmp(name, "settings-search:", 16) != 0)
-      search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = spec->buffer, .kind = SEARCH_KIND_EDITBOX, .widget_name = name, .value = NULL});
+      search_index_add_text(&(SearchIndexAddText){.idx = NULL,
+                                                  .text = spec->buffer,
+                                                  .kind = SEARCH_KIND_EDITBOX,
+                                                  .widget_name = name,
+                                                  .value = NULL});
     return true;
   }
   SkaldContext_Get()->window.editbox_placed = true;
   PromptState *state = prompt_popup_get_top_prompt_state();
   int dx = 0, dy = 0;
   get_draw_offset(&dx, &dy);
-  int idx =
-      editbox_registry_place(&(EditboxRegistryPlace){.state = state, .name = name, .buffer = spec->buffer, .buffer_size = spec->buffer_size, .x = spec->x + dx, .y = spec->y + dy + 2, .w = spec->w, .h = spec->h});
+  int idx = editbox_registry_place(
+      &(EditboxRegistryPlace){.state = state,
+                              .name = name,
+                              .buffer = spec->buffer,
+                              .buffer_size = spec->buffer_size,
+                              .x = spec->x + dx,
+                              .y = spec->y + dy + 2,
+                              .w = spec->w,
+                              .h = spec->h});
   if (idx < 0)
     return false;
   PromptEditbox *entry = &state->editboxes[idx];
@@ -371,14 +396,19 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditbox *spec) {
       .text = place.buf, .len = place.text_len, .font_size = fs});
   int line_h = Platform_GetTextLineHeight(fs);
   EditboxUi ui = {.color_text = COLOR_TEXT,
-                      .placeholder = spec->placeholder,
-                      .caret_h = spec->caret_h};
+                  .placeholder = spec->placeholder,
+                  .caret_h = spec->caret_h};
   EditboxSpec eb;
-  editbox_spec_from_place(&(EditboxSpecFromPlace){.out = &eb, .place = &place, .state = state, .ui = &ui, .metrics = &(EditboxMetrics){.text_w = text_w,
-                        .cursor_x = cursor_x,
-                        .ascent = (line_h * 3) / 4,
-                        .descent = line_h - (line_h * 3) / 4,
-                        .font = FH_NULL}});
+  editbox_spec_from_place(&(EditboxSpecFromPlace){
+      .out = &eb,
+      .place = &place,
+      .state = state,
+      .ui = &ui,
+      .metrics = &(EditboxMetrics){.text_w = text_w,
+                                   .cursor_x = cursor_x,
+                                   .ascent = (line_h * 3) / 4,
+                                   .descent = line_h - (line_h * 3) / 4,
+                                   .font = FH_NULL}});
   int y_off = Platform_EditboxPlaceholderOffset();
   eb.placeholder_dy = 0;
   eb.caret_y += y_off;
@@ -408,8 +438,7 @@ static bool settings_place_editbox_impl(const SettingsPlaceEditbox *spec) {
 #define settings_draw_text(...)                                                \
   settings_draw_text_local(&(SettingsDrawText){__VA_ARGS__})
 #define settings_draw_text_centered(...)                                       \
-  settings_draw_text_centered_local(                                           \
-      &(SettingsDrawTextCentered){__VA_ARGS__})
+  settings_draw_text_centered_local(&(SettingsDrawTextCentered){__VA_ARGS__})
 #define settings_draw_image(...)                                               \
   settings_draw_image_local(&(SettingsDrawImage){__VA_ARGS__})
 #define settings_draw_line(...) settings_draw_line_local(&(Line){__VA_ARGS__})
@@ -948,9 +977,8 @@ static void settings_editbox_persist(const SettingsEditboxFieldBlock *f) {
   settings_config_set(f->meta->config_key, f->buffer);
 }
 
-SettingsEditboxGroup
-settings_entry_add_editbox(SettingsEntry *entry,
-                           const SettingsEditbox *spec) {
+SettingsEditboxGroup settings_entry_add_editbox(SettingsEntry *entry,
+                                                const SettingsEditbox *spec) {
   SettingsEditboxGroup invalid = SETTINGS_EDITBOX_INVALID;
   if (!spec || !spec->fields || spec->field_count < 1)
     return invalid;
@@ -1471,7 +1499,12 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
       int count = dropdown_options(b, &options);
       if (capturing) {
         for (int oi = 0; oi < count; oi++)
-          search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = options ? options[oi] : NULL, .kind = SEARCH_KIND_DROPDOWN, .widget_name = pretty_title, .value = NULL});
+          search_index_add_text(
+              &(SearchIndexAddText){.idx = NULL,
+                                    .text = options ? options[oi] : NULL,
+                                    .kind = SEARCH_KIND_DROPDOWN,
+                                    .widget_name = pretty_title,
+                                    .value = NULL});
       }
       if (b->selected >= count)
         b->selected = count > 0 ? 0 : -1;
@@ -1593,12 +1626,9 @@ static void settings_entry_builtin_render(SettingsEntry *entry, void *ud) {
   s_dispatch_option = -1;
 }
 
-
 void settings_config_sync(const char *key, const char *value) {
   config_lock();
   config_init_locked();
   config_setting_entries_set(key, value);
   config_unlock();
 }
-
-

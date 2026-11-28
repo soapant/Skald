@@ -34,12 +34,31 @@ void Platform_DisplayMessage(DisplayMessage spec) {
       max_width = MSG_AUTO_WRAP_MAX_W;
     if (max_height <= 0)
       max_height = MSG_AUTO_WRAP_MAX_H;
-    x11_msg_measure(&(X11MsgMeasure){.dpy = dpy, .message = message, .max_width = max_width, .max_height = max_height, .out_w = &win_w, .out_h = &win_h});
+    x11_msg_measure(&(X11MsgMeasure){.dpy = dpy,
+                                     .message = message,
+                                     .max_width = max_width,
+                                     .max_height = max_height,
+                                     .out_w = &win_w,
+                                     .out_h = &win_h});
   }
 
   int x = abs(center_x - win_w / 2);
   int y = abs(center_y - win_h / 2);
-  x11_msg_present(&(X11MsgPresent){.dpy = dpy, .message = message, .x = x, .y = y, .win_w = win_w, .win_h = win_h, .timeout = timeout, .color = color, .no_bg = no_bg, .render = render, .render_data = render_data, .name = name, .rounded = rounded, .radius = radius, .fps = fps});
+  x11_msg_present(&(X11MsgPresent){.dpy = dpy,
+                                   .message = message,
+                                   .x = x,
+                                   .y = y,
+                                   .win_w = win_w,
+                                   .win_h = win_h,
+                                   .timeout = timeout,
+                                   .color = color,
+                                   .no_bg = no_bg,
+                                   .render = render,
+                                   .render_data = render_data,
+                                   .name = name,
+                                   .rounded = rounded,
+                                   .radius = radius,
+                                   .fps = fps});
 }
 
 void Platform_HoverMessage(HoverMessage spec) {
@@ -59,9 +78,22 @@ void Platform_HoverMessage(HoverMessage spec) {
     win_w = w;
     win_h = h;
   } else {
-    x11_msg_measure(&(X11MsgMeasure){.dpy = dpy, .message = message, .max_width = max_width, .max_height = max_height, .out_w = &win_w, .out_h = &win_h});
+    x11_msg_measure(&(X11MsgMeasure){.dpy = dpy,
+                                     .message = message,
+                                     .max_width = max_width,
+                                     .max_height = max_height,
+                                     .out_w = &win_w,
+                                     .out_h = &win_h});
   }
-  x11_msg_hover_present(&(X11MsgHoverPresent){.dpy = dpy, .key = key, .message = message, .center_x = center_x, .center_y = center_y, .win_w = win_w, .win_h = win_h, .color = color, .no_bg = no_bg});
+  x11_msg_hover_present(&(X11MsgHoverPresent){.dpy = dpy,
+                                              .key = key,
+                                              .message = message,
+                                              .center_x = center_x,
+                                              .center_y = center_y,
+                                              .win_w = win_w,
+                                              .win_h = win_h,
+                                              .color = color,
+                                              .no_bg = no_bg});
 }
 
 void Platform_DisplayMessageAnchored(AnchoredMessage spec) {
@@ -81,7 +113,12 @@ void Platform_DisplayMessageAnchored(AnchoredMessage spec) {
     max_height = MSG_AUTO_WRAP_MAX_H;
   int win_w = 0;
   int win_h = 0;
-  x11_msg_measure(&(X11MsgMeasure){.dpy = dpy, .message = message, .max_width = max_width, .max_height = max_height, .out_w = &win_w, .out_h = &win_h});
+  x11_msg_measure(&(X11MsgMeasure){.dpy = dpy,
+                                   .message = message,
+                                   .max_width = max_width,
+                                   .max_height = max_height,
+                                   .out_w = &win_w,
+                                   .out_h = &win_h});
   if (render) {
     if (want_width > 0 && want_height > 0 && !outward) {
       win_w = want_width;
@@ -91,15 +128,40 @@ void Platform_DisplayMessageAnchored(AnchoredMessage spec) {
       win_h = 48;
     }
   }
-  int center_x = msg_anchor_center(&(MsgAnchorCenter){.rect = rect_x, .rect_size = rect_w, .slot = h_slot, .gap = gap, .outward = outward, .win_size = win_w});
-  int center_y = msg_anchor_center(&(MsgAnchorCenter){.rect = rect_y, .rect_size = rect_h, .slot = v_slot, .gap = gap, .outward = outward, .win_size = win_h});
+  int center_x = msg_anchor_center(&(MsgAnchorCenter){.rect = rect_x,
+                                                      .rect_size = rect_w,
+                                                      .slot = h_slot,
+                                                      .gap = gap,
+                                                      .outward = outward,
+                                                      .win_size = win_w});
+  int center_y = msg_anchor_center(&(MsgAnchorCenter){.rect = rect_y,
+                                                      .rect_size = rect_h,
+                                                      .slot = v_slot,
+                                                      .gap = gap,
+                                                      .outward = outward,
+                                                      .win_size = win_h});
   int x = center_x - win_w / 2;
   int y = center_y - win_h / 2;
   int ax, ay, aw, ah;
   WindowManager_GetMainMonitorGeometry(&ax, &ay, &aw, &ah);
   int stack_dir = msg_stack_dir(v_slot, outward);
-  y = x11_msg_stack_adjust_y(&(X11MsgStackAdjustY){.x = x, .y = y, .w = win_w, .h = win_h, .dir = stack_dir});
-  x11_msg_present(&(X11MsgPresent){.dpy = dpy, .message = message, .x = x - ax, .y = y - ay, .win_w = win_w, .win_h = win_h, .timeout = timeout, .color = color, .no_bg = no_bg, .render = render, .render_data = render_data, .name = name, .rounded = rounded, .radius = radius, .fps = fps});
+  y = x11_msg_stack_adjust_y(&(X11MsgStackAdjustY){
+      .x = x, .y = y, .w = win_w, .h = win_h, .dir = stack_dir});
+  x11_msg_present(&(X11MsgPresent){.dpy = dpy,
+                                   .message = message,
+                                   .x = x - ax,
+                                   .y = y - ay,
+                                   .win_w = win_w,
+                                   .win_h = win_h,
+                                   .timeout = timeout,
+                                   .color = color,
+                                   .no_bg = no_bg,
+                                   .render = render,
+                                   .render_data = render_data,
+                                   .name = name,
+                                   .rounded = rounded,
+                                   .radius = radius,
+                                   .fps = fps});
 }
 
 bool Platform_DismissMessage(const char *name) {
@@ -169,5 +231,3 @@ void Platform_MessagePopup_PurgeOwner(const char *path_a, const char *path_b) {
   (void)path_a;
   (void)path_b;
 }
-
-

@@ -83,7 +83,8 @@ bool snippet_register_internal(SnippetRegisterInternal *argspec) {
     return false;
 
   for (size_t i = 0; i < snippet_count; i++) {
-    if (snippets[i].trigger && strcmp(snippets[i].trigger, argspec->trigger) == 0) {
+    if (snippets[i].trigger &&
+        strcmp(snippets[i].trigger, argspec->trigger) == 0) {
       int nwin = 0;
       if (argspec->windows) {
         while (argspec->windows[nwin])
@@ -324,4 +325,3 @@ bool snippet_feed_vk(int vk, int value, bool can_swallow) {
     fire_fn(idx, del);
   return true;
 }
-

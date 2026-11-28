@@ -247,8 +247,8 @@ const char *library_track_canon(size_t idx) {
   return canon;
 }
 
-LibraryTrackRemoveResult library_track_remove_checked(void *lib,
-                                                      const char *caller_canon) {
+LibraryTrackRemoveResult
+library_track_remove_checked(void *lib, const char *caller_canon) {
   library_track_lock();
   LibraryTrackRemoveResult result = LIB_TRACK_NOT_FOUND;
   size_t found = arrlenu(library_track);

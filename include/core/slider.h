@@ -63,4 +63,3 @@ void slider_draw(const Slider *spec);
 bool slider_place(const Slider *spec);
 
 #endif
-

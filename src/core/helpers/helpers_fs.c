@@ -58,7 +58,8 @@ static void path_fold_exe(char *out) {
 }
 
 bool temp_file_write(TempFileWrite *argspec) {
-  if (!argspec->name || !argspec->name[0] || !argspec->out_path || argspec->out_len == 0)
+  if (!argspec->name || !argspec->name[0] || !argspec->out_path ||
+      argspec->out_len == 0)
     return false;
   if (!argspec->data && argspec->len > 0)
     return false;
@@ -79,7 +80,8 @@ bool temp_file_write(TempFileWrite *argspec) {
   if (!f)
     return false;
   bool ok = true;
-  if (argspec->len > 0 && fwrite(argspec->data, 1, argspec->len, f) != argspec->len)
+  if (argspec->len > 0 &&
+      fwrite(argspec->data, 1, argspec->len, f) != argspec->len)
     ok = false;
   if (fclose(f) != 0)
     ok = false;
@@ -195,4 +197,3 @@ bool file_remove_path(const char *path) {
     return false;
   return remove(path) == 0;
 }
-

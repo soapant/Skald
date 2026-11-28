@@ -92,7 +92,12 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     X11SessionEnv env;
     x11_env_get_session_env(&env);
     char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-    x11_env_build_env_strings(&(X11EnvBuildEnvStrings){.env = &env, .disp_env = disp_env, .xauth_env = xauth_env, .runtime_env = runtime_env, .wayland_env = wayland_env});
+    x11_env_build_env_strings(
+        &(X11EnvBuildEnvStrings){.env = &env,
+                                 .disp_env = disp_env,
+                                 .xauth_env = xauth_env,
+                                 .runtime_env = runtime_env,
+                                 .wayland_env = wayland_env});
     bool as_root = x11_env_is_running_as_root();
     log_info("desktop '%s' exec='%s' workdir='%s' run_dir='%s' as_root=%d",
              expanded, exec_line, workdir, run_dir, as_root);
@@ -114,7 +119,12 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     }
 
     char cmd[4096];
-    if (!x11_resolve_desktop_exec(&(X11ResolveDesktopExec){.exec_line = exec_line, .desktop_dir = desktop_dir, .workdir = workdir, .out = cmd, .out_size = sizeof(cmd)})) {
+    if (!x11_resolve_desktop_exec(
+            &(X11ResolveDesktopExec){.exec_line = exec_line,
+                                     .desktop_dir = desktop_dir,
+                                     .workdir = workdir,
+                                     .out = cmd,
+                                     .out_size = sizeof(cmd)})) {
       log_warn(
           "desktop '%s': cannot resolve Exec '%s' via PATH or desktop dir '%s'",
           expanded, exec_line, desktop_dir);
@@ -145,7 +155,12 @@ bool sk_launch_with_args_platform(const char *path, const char *args) {
     X11SessionEnv env;
     x11_env_get_session_env(&env);
     char disp_env[256], xauth_env[512], runtime_env[512];
-    x11_env_build_env_strings(&(X11EnvBuildEnvStrings){.env = &env, .disp_env = disp_env, .xauth_env = xauth_env, .runtime_env = runtime_env, .wayland_env = NULL});
+    x11_env_build_env_strings(
+        &(X11EnvBuildEnvStrings){.env = &env,
+                                 .disp_env = disp_env,
+                                 .xauth_env = xauth_env,
+                                 .runtime_env = runtime_env,
+                                 .wayland_env = NULL});
     struct stat pst;
     bool is_regular_file = (stat(path, &pst) == 0 && S_ISREG(pst.st_mode));
     bool is_executable = (access(path, X_OK) == 0);
@@ -364,4 +379,3 @@ bool sk_dismiss_message_platform(const char *name) {
 }
 
 int sk_get_pid_platform(void) { return (int)getpid(); }
-

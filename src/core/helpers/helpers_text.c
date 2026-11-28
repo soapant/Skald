@@ -56,8 +56,7 @@ bool safe_cat(char *dst, size_t cap, const char *src) {
   return true;
 }
 
-HotkeyBinding
-hotkey_convert_into_binding(HotkeyConvertIntoBinding *argspec) {
+HotkeyBinding hotkey_convert_into_binding(HotkeyConvertIntoBinding *argspec) {
   HotkeyBinding output = {0};
   HotkeyKey key = {0};
 
@@ -758,8 +757,9 @@ static bool file_walk_dir(const char *dir_path,
 bool file_walk_all_files_from_dir(FileWalkAllFilesFromDir *argspec) {
   if (!argspec->dir_path || !argspec->list_of_files)
     return false;
-  return file_walk_dir(argspec->dir_path, argspec->list_of_allowed_extensions, argspec->list_of_files,
-                       argspec->list_of_names_to_ignore, argspec->strip_extension, argspec->max_depth);
+  return file_walk_dir(argspec->dir_path, argspec->list_of_allowed_extensions,
+                       argspec->list_of_files, argspec->list_of_names_to_ignore,
+                       argspec->strip_extension, argspec->max_depth);
 }
 
 #include <sys/time.h>
@@ -939,7 +939,8 @@ int text_wrap_layout(TextWrapLayout *argspec) {
   bool has = false;
   while (p < len) {
     if (argspec->text[p] == '\n') {
-      text_wrap_record(argspec->out, argspec->maxout, &count, argspec->x0, argspec->y0 + (row + 1) * argspec->line_height);
+      text_wrap_record(argspec->out, argspec->maxout, &count, argspec->x0,
+                       argspec->y0 + (row + 1) * argspec->line_height);
       row++;
       lw = 0;
       has = false;
@@ -950,7 +951,8 @@ int text_wrap_layout(TextWrapLayout *argspec) {
     while (ws < len && (argspec->text[ws] == ' ' || argspec->text[ws] == '\t'))
       ws++;
     for (int m = p; m < ws; m++)
-      text_wrap_record(argspec->out, argspec->maxout, &count, argspec->x0 + (has ? lw : 0),
+      text_wrap_record(argspec->out, argspec->maxout, &count,
+                       argspec->x0 + (has ? lw : 0),
                        argspec->y0 + row * argspec->line_height);
     if (ws >= len)
       break;
@@ -959,7 +961,8 @@ int text_wrap_layout(TextWrapLayout *argspec) {
       continue;
     }
     int we = ws;
-    while (we < len && argspec->text[we] != ' ' && argspec->text[we] != '\t' && argspec->text[we] != '\n')
+    while (we < len && argspec->text[we] != ' ' && argspec->text[we] != '\t' &&
+           argspec->text[we] != '\n')
       we++;
     int ww = argspec->measure(argspec->ctx, argspec->text + ws, we - ws);
     int rowtop = argspec->y0 + row * argspec->line_height;
@@ -989,13 +992,15 @@ int text_wrap_layout(TextWrapLayout *argspec) {
             n = we - c;
         }
         if (c + n >= we) {
-          lw = text_wrap_place_word(argspec->measure, argspec->ctx, argspec->text, c, we, argspec->x0, rowtop, argspec->out,
-                                    argspec->maxout, &count);
+          lw = text_wrap_place_word(argspec->measure, argspec->ctx,
+                                    argspec->text, c, we, argspec->x0, rowtop,
+                                    argspec->out, argspec->maxout, &count);
           has = true;
           c = we;
           break;
         }
-        text_wrap_place_word(argspec->measure, argspec->ctx, argspec->text, c, c + n, argspec->x0, rowtop, argspec->out,
+        text_wrap_place_word(argspec->measure, argspec->ctx, argspec->text, c,
+                             c + n, argspec->x0, rowtop, argspec->out,
                              argspec->maxout, &count);
         row++;
         rowtop = argspec->y0 + row * argspec->line_height;
@@ -1012,8 +1017,9 @@ int text_wrap_layout(TextWrapLayout *argspec) {
       has = false;
     }
     int wx = argspec->x0 + (has ? lw + space_w : 0);
-    int pxw = text_wrap_place_word(argspec->measure, argspec->ctx, argspec->text, ws, we, wx, rowtop, argspec->out,
-                                   argspec->maxout, &count);
+    int pxw = text_wrap_place_word(argspec->measure, argspec->ctx,
+                                   argspec->text, ws, we, wx, rowtop,
+                                   argspec->out, argspec->maxout, &count);
     lw = has ? lw + space_w + pxw : pxw;
     has = true;
     p = we;
@@ -1085,7 +1091,11 @@ bool capture_text(const char *text) {
   if (!search_index_current())
     return false;
   if (text[0])
-    search_index_add_text(&(SearchIndexAddText){.idx = NULL, .text = text, .kind = SEARCH_KIND_TEXT, .widget_name = NULL, .value = NULL});
+    search_index_add_text(&(SearchIndexAddText){.idx = NULL,
+                                                .text = text,
+                                                .kind = SEARCH_KIND_TEXT,
+                                                .widget_name = NULL,
+                                                .value = NULL});
   return true;
 }
 
@@ -1095,8 +1105,8 @@ int text_segment_width(const void *seg_ptr, int font_size) {
     return 0;
   return Platform_MeasureTextWidth(
       (MeasureTextWidth){.text = seg->text,
-                             .len = (int)strlen(seg->text),
-                             .font_size = font_size});
+                         .len = (int)strlen(seg->text),
+                         .font_size = font_size});
 }
 
 void wrapped_word_push(WrappedWordPush *argspec) {
@@ -1104,7 +1114,8 @@ void wrapped_word_push(WrappedWordPush *argspec) {
     return;
   if (*argspec->count >= *argspec->cap) {
     int nc = *argspec->cap ? *argspec->cap * 2 : 32;
-    WrappedWord *grown = realloc(*argspec->words, (size_t)nc * sizeof(**argspec->words));
+    WrappedWord *grown =
+        realloc(*argspec->words, (size_t)nc * sizeof(**argspec->words));
     if (!grown)
       return;
     *argspec->words = grown;
@@ -1116,8 +1127,10 @@ void wrapped_word_push(WrappedWordPush *argspec) {
   memcpy(w->text, argspec->s, argspec->len);
   w->text[argspec->len] = '\0';
   w->color = argspec->color;
-  w->width = Platform_MeasureTextWidth((MeasureTextWidth){
-      .text = w->text, .len = (int)argspec->len, .font_size = argspec->font_size});
+  w->width = Platform_MeasureTextWidth(
+      (MeasureTextWidth){.text = w->text,
+                         .len = (int)argspec->len,
+                         .font_size = argspec->font_size});
   w->lead = argspec->lead;
   w->breaks = argspec->breaks;
   w->x = 0;
@@ -1129,5 +1142,3 @@ int wrap_measure_thunk(void *ctx, const char *s, int n) {
   return Platform_MeasureTextWidth(
       (MeasureTextWidth){.text = s, .len = n, .font_size = c->font_size});
 }
-
-

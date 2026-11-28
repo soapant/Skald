@@ -30,7 +30,8 @@ void win32_apply_rounded(Win32ApplyRounded *argspec) {
     if (pDwmSetWindowAttribute) {
       const DWORD DWMWA_BORDER_COLOR = 34;
       COLORREF border = 0xFFFFFFFE;
-      pDwmSetWindowAttribute(argspec->hwnd, DWMWA_BORDER_COLOR, &border, sizeof(border));
+      pDwmSetWindowAttribute(argspec->hwnd, DWMWA_BORDER_COLOR, &border,
+                             sizeof(border));
       if (!argspec->rounded) {
         FreeLibrary(dwm);
         return;
@@ -56,13 +57,18 @@ void win32_apply_rounded(Win32ApplyRounded *argspec) {
     argspec->radius = argspec->h / 2;
   if (argspec->radius <= 0)
     return;
-  HRGN rgn = CreateRoundRectRgn(0, 0, argspec->w + 1, argspec->h + 1, argspec->radius * 2, argspec->radius * 2);
+  HRGN rgn = CreateRoundRectRgn(0, 0, argspec->w + 1, argspec->h + 1,
+                                argspec->radius * 2, argspec->radius * 2);
   if (rgn)
     SetWindowRgn(argspec->hwnd, rgn, TRUE);
 }
 
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
-  win32_apply_rounded(&(Win32ApplyRounded){.hwnd = hwnd, .w = w, .h = h, .rounded = RoundedCorners, .radius = CornerRadius});
+  win32_apply_rounded(&(Win32ApplyRounded){.hwnd = hwnd,
+                                           .w = w,
+                                           .h = h,
+                                           .rounded = RoundedCorners,
+                                           .radius = CornerRadius});
 }
 
 static void win32_border_edge(HDC hdc, HBRUSH brush, int ex0, int ey0, int ex1,
@@ -107,14 +113,18 @@ void win32_draw_window_border(Win32DrawWindowBorder *argspec) {
   HBRUSH brush = CreateSolidBrush(COLOR_BORDER);
   if (!brush)
     return;
-  win32_border_edge(argspec->hdc, brush, r, 0, argspec->ww - r, t, argspec->ox, argspec->oy, rx0, ry0, rx1, ry1);
-  win32_border_edge(argspec->hdc, brush, r, argspec->wh - t, argspec->ww - r, argspec->wh, argspec->ox, argspec->oy, rx0, ry0, rx1,
-                    ry1);
-  win32_border_edge(argspec->hdc, brush, 0, r, t, argspec->wh - r, argspec->ox, argspec->oy, rx0, ry0, rx1, ry1);
-  win32_border_edge(argspec->hdc, brush, argspec->ww - t, r, argspec->ww, argspec->wh - r, argspec->ox, argspec->oy, rx0, ry0, rx1,
+  win32_border_edge(argspec->hdc, brush, r, 0, argspec->ww - r, t, argspec->ox,
+                    argspec->oy, rx0, ry0, rx1, ry1);
+  win32_border_edge(argspec->hdc, brush, r, argspec->wh - t, argspec->ww - r,
+                    argspec->wh, argspec->ox, argspec->oy, rx0, ry0, rx1, ry1);
+  win32_border_edge(argspec->hdc, brush, 0, r, t, argspec->wh - r, argspec->ox,
+                    argspec->oy, rx0, ry0, rx1, ry1);
+  win32_border_edge(argspec->hdc, brush, argspec->ww - t, r, argspec->ww,
+                    argspec->wh - r, argspec->ox, argspec->oy, rx0, ry0, rx1,
                     ry1);
   if (r > t) {
-    HRGN shape = CreateRoundRectRgn(0, 0, argspec->ww + 1, argspec->wh + 1, r * 2, r * 2);
+    HRGN shape = CreateRoundRectRgn(0, 0, argspec->ww + 1, argspec->wh + 1,
+                                    r * 2, r * 2);
     if (shape) {
       for (int y = 0; y < argspec->wh; y++) {
         if (y >= r && y < argspec->wh - r)
@@ -217,4 +227,3 @@ void win32_force_window_focus(WindowHandle hwndTarget) {
   if (targetThreadID != currentThreadID)
     AttachThreadInput(currentThreadID, targetThreadID, FALSE);
 }
-

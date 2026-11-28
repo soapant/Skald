@@ -7,6 +7,7 @@
 void edit_buffer_backspace(char *buf, size_t *cursor);
 bool edit_buffer_delete_char(char *buf, size_t *cursor);
 char edit_buffer_pair_for(char c);
+
 typedef struct {
   char *buf;
   size_t cap;
@@ -21,4 +22,3 @@ bool cursor_back(size_t *cursor);
 bool cursor_forward(size_t *cursor, size_t text_len);
 
 #endif
-

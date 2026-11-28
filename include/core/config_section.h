@@ -87,5 +87,3 @@ ConfigTomlStatus config_section_clear_ex(const char *path, const char *section,
                                          ConfigTomlError *err);
 
 #endif
-
-

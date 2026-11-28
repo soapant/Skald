@@ -30,7 +30,12 @@ bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
   struct timespec _t0, _t1, _t2, _t3;
   clock_gettime(CLOCK_MONOTONIC, &_t0);
   listbox_invalidate_mouse_pos();
-  argspec->self->handle.xid = x11_create_prompt_window(&(X11CreatePromptWindow){.dpy = dpy, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h});
+  argspec->self->handle.xid =
+      x11_create_prompt_window(&(X11CreatePromptWindow){.dpy = dpy,
+                                                        .x = argspec->x,
+                                                        .y = argspec->y,
+                                                        .w = argspec->w,
+                                                        .h = argspec->h});
   SkaldContext_Get()->window.hPopupWnd = WH_FROM_XID(argspec->self->handle.xid);
   XSelectInput(dpy, argspec->self->handle.xid,
                KeyPressMask | KeyReleaseMask | ExposureMask | FocusChangeMask |
@@ -55,9 +60,11 @@ bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
     XWindowAttributes _a;
     if (XGetWindowAttributes(dpy, argspec->self->handle.xid, &_a)) {
       log_info("prompt mapped req=(%d,%d %dx%d) actual=(%d,%d %dx%d) state=%d",
-               argspec->x, argspec->y, argspec->w, argspec->h, _a.x, _a.y, _a.width, _a.height, (int)_a.map_state);
+               argspec->x, argspec->y, argspec->w, argspec->h, _a.x, _a.y,
+               _a.width, _a.height, (int)_a.map_state);
     } else {
-      log_info("prompt mapped req=(%d,%d %dx%d) actual=unknown", argspec->x, argspec->y, argspec->w, argspec->h);
+      log_info("prompt mapped req=(%d,%d %dx%d) actual=unknown", argspec->x,
+               argspec->y, argspec->w, argspec->h);
     }
   }
   {
@@ -70,13 +77,15 @@ bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec) {
     XGetInputFocus(dpy, &_fw, &_rev);
     if (_fw != argspec->self->handle.xid) {
       old = XSetErrorHandler(x11_error_handler);
-      XSetInputFocus(dpy, argspec->self->handle.xid, RevertToParent, CurrentTime);
+      XSetInputFocus(dpy, argspec->self->handle.xid, RevertToParent,
+                     CurrentTime);
       XSync(dpy, False);
       XSetErrorHandler(old);
       XGetInputFocus(dpy, &_fw, &_rev);
     }
     log_info("prompt focus win=%lu want=%lu ok=%d", (unsigned long)_fw,
-             (unsigned long)argspec->self->handle.xid, _fw == argspec->self->handle.xid);
+             (unsigned long)argspec->self->handle.xid,
+             _fw == argspec->self->handle.xid);
     char *_nm = NULL;
     if (XFetchName(dpy, argspec->self->handle.xid, &_nm) && _nm) {
       wm_focus_by_title(_nm);
@@ -96,8 +105,15 @@ bool Platform_PromptPopupResize(PlatformPromptPopupResize *argspec) {
   if (!dpy || win == None)
     return false;
   x11_set_fixed_size_hints(dpy, win, argspec->w, argspec->h);
-  XMoveResizeWindow(dpy, win, argspec->x, argspec->y, (unsigned)argspec->w, (unsigned)argspec->h);
-  x11_apply_shape(&(X11ApplyShape){.dpy = dpy, .win = win, .w = argspec->w, .h = argspec->h, .rounded = RoundedCorners, .radius = RoundedCorners ? CornerRadius : 0});
+  XMoveResizeWindow(dpy, win, argspec->x, argspec->y, (unsigned)argspec->w,
+                    (unsigned)argspec->h);
+  x11_apply_shape(
+      &(X11ApplyShape){.dpy = dpy,
+                       .win = win,
+                       .w = argspec->w,
+                       .h = argspec->h,
+                       .rounded = RoundedCorners,
+                       .radius = RoundedCorners ? CornerRadius : 0});
   x11_release_prompt_buffer(dpy, win);
   XSync(dpy, False);
   return true;
@@ -163,4 +179,3 @@ bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key) {
   }
   return false;
 }
-

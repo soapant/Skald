@@ -11,6 +11,7 @@ void Platform_OnPopEmpty(void);
 void Platform_GetMonitorGeometry(int *x, int *y, int *w, int *h);
 
 void Platform_PromptFlushDisplay(WindowManager *wm);
+
 typedef struct {
   Popup *self;
   int x;
@@ -20,6 +21,7 @@ typedef struct {
 } PlatformPromptPopupShowWindow;
 
 bool Platform_PromptPopupShowWindow(PlatformPromptPopupShowWindow *argspec);
+
 typedef struct {
   Popup *self;
   int x;
@@ -34,4 +36,3 @@ void Platform_PromptPopupRender(Popup *self);
 void Platform_PromptPopupDestroyWindow(Popup *self);
 bool Platform_PromptPopupOnKey(const Popup *self, const PopupKeyEvent *key);
 #endif
-

@@ -33,6 +33,7 @@ typedef struct {
 
 void focus_frame_begin(FocusFrameBegin *argspec);
 void focus_frame_end(void);
+
 typedef struct {
   const char *name;
   FocusKind kind;
@@ -62,4 +63,3 @@ void focus_set_pseudo_passive(FocusKind kind);
 void focus_clear(void);
 
 #endif
-

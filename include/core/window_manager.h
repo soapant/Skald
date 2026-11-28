@@ -69,6 +69,7 @@ bool WindowManager_IsPointInTopPopup(WindowManager *wm, int root_x, int root_y);
 char *WindowManager_ShowPrompt(WindowManager *wm, const PromptSpec *spec);
 
 Popup *prompt_popup_create(WindowManager *wm, const PromptSpec *spec);
+
 typedef struct {
   Popup *p;
   int *x;
@@ -79,6 +80,7 @@ typedef struct {
 
 int prompt_popup_get_bounds(PromptPopupGetBounds *argspec);
 bool prompt_popup_resize_current(int x, int y, int w, int h);
+
 typedef struct {
   int x;
   int y;
@@ -87,7 +89,8 @@ typedef struct {
   int duration_ms;
 } PromptPopupResizeCurrentAnimated;
 
-bool prompt_popup_resize_current_animated(PromptPopupResizeCurrentAnimated *argspec);
+bool prompt_popup_resize_current_animated(
+    PromptPopupResizeCurrentAnimated *argspec);
 bool prompt_popup_resize_animating(const Popup *p);
 void prompt_popup_tick_resize_animation_popup(Popup *p);
 void (*prompt_popup_take_on_close(Popup *p))(void);
@@ -101,4 +104,3 @@ void event_bus_purge_owner(const char *path_a, const char *path_b);
 void event_bus_trigger(Event event);
 
 #endif
-

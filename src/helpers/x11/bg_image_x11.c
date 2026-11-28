@@ -163,7 +163,8 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
     return false;
 
   int dw = 0, dh = 0;
-  if (!cover_scale(&(CoverScale){.sw = sw, .sh = sh, .tw = w, .th = h, .dw = &dw, .dh = &dh}))
+  if (!cover_scale(&(CoverScale){
+          .sw = sw, .sh = sh, .tw = w, .th = h, .dw = &dw, .dh = &dh}))
     return false;
 
   int cw = dw, ch = dh;
@@ -191,7 +192,13 @@ static bool bg_tile_compose(Display *dpy, const char *path, int w, int h,
 
   Pixmap pm = 0;
   Picture pic = 0;
-  bool ok = x11_upload_argb(&(X11UploadArgb){.dpy = dpy, .ref = DefaultRootWindow(dpy), .argb = crop, .w = w, .h = h, .out_pm = &pm, .out_pic = &pic});
+  bool ok = x11_upload_argb(&(X11UploadArgb){.dpy = dpy,
+                                             .ref = DefaultRootWindow(dpy),
+                                             .argb = crop,
+                                             .w = w,
+                                             .h = h,
+                                             .out_pm = &pm,
+                                             .out_pic = &pic});
   free(crop);
   if (!ok)
     return false;
@@ -258,8 +265,12 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
 
   BgTileSlot *slot = fresh;
   if (!slot) {
-    slot =
-        &bg_tiles[bg_tile_lru_pick(&(BgTileLruPick){.slots = bg_tiles, .count = BG_TILE_SLOTS, .stride = sizeof(bg_tiles[0]), .is_empty = bg_slot_empty, .stamp = bg_slot_stamp})];
+    slot = &bg_tiles[bg_tile_lru_pick(
+        &(BgTileLruPick){.slots = bg_tiles,
+                         .count = BG_TILE_SLOTS,
+                         .stride = sizeof(bg_tiles[0]),
+                         .is_empty = bg_slot_empty,
+                         .stamp = bg_slot_stamp})];
   }
 
   bg_slot_release(dpy, slot);
@@ -286,7 +297,8 @@ Pixmap x11_bg_image_tile(Display *dpy, int w, int h) {
 }
 
 bool x11_bg_image_blit(X11BgImageBlit *argspec) {
-  if (!x11_bg_image_enabled() || !argspec->dpy || !argspec->dst || argspec->w <= 0 || argspec->h <= 0)
+  if (!x11_bg_image_enabled() || !argspec->dpy || !argspec->dst ||
+      argspec->w <= 0 || argspec->h <= 0)
     return false;
   Pixmap pm = x11_bg_image_tile(argspec->dpy, argspec->w, argspec->h);
   if (!pm)
@@ -303,11 +315,16 @@ bool x11_bg_image_blit(X11BgImageBlit *argspec) {
   bool ok = false;
   if (src) {
     if (!argspec->vis)
-      argspec->vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(argspec->dpy));
-    XRenderPictFormat *dfmt = XRenderFindVisualFormat(argspec->dpy, argspec->vis);
-    Picture dp = dfmt ? XRenderCreatePicture(argspec->dpy, argspec->dst, dfmt, 0, NULL) : 0;
+      argspec->vis =
+          DefaultVisualOfScreen(DefaultScreenOfDisplay(argspec->dpy));
+    XRenderPictFormat *dfmt =
+        XRenderFindVisualFormat(argspec->dpy, argspec->vis);
+    Picture dp =
+        dfmt ? XRenderCreatePicture(argspec->dpy, argspec->dst, dfmt, 0, NULL)
+             : 0;
     if (dp) {
-      XRenderComposite(argspec->dpy, PictOpOver, src, None, dp, 0, 0, 0, 0, 0, 0, argspec->w, argspec->h);
+      XRenderComposite(argspec->dpy, PictOpOver, src, None, dp, 0, 0, 0, 0, 0,
+                       0, argspec->w, argspec->h);
       XRenderFreePicture(argspec->dpy, dp);
       ok = true;
     }
@@ -321,4 +338,3 @@ int x11_bg_image_prewarm(Display *dpy, int w, int h) {
     return 0;
   return x11_bg_image_tile(dpy, w, h) ? 1 : 0;
 }
-

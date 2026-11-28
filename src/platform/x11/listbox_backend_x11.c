@@ -35,18 +35,38 @@ bool Platform_ListboxBackendBegin(int item_height_override,
   return true;
 }
 
-void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) {
+void Platform_ListboxBackendDrawSelection(
+    ListboxBackendDrawSelection *argspec) {
   if (RoundedCorners && CornerRadius > 0) {
     if (argspec->sel) {
       int R = PROMPT_SEL_RADIUS;
       int t = PROMPT_SEL_INSET;
-      x11_fill_rounded_rect(&(X11FillRoundedRect){.dpy = b_dpy, .xd = b_xd, .vis = b_vis, .cmap = b_cmap, .hex = rgb_to_hex(COLOR_SELECTION_HIGHLIGHT), .alpha16 = 0xFFFF, .x = argspec->bx + t, .y = argspec->y + PROMPT_SEL_TOP_INSET + t, .w = argspec->bw - 2 * t, .h = argspec->item_h - 2 - 2 * t, .radius = R - 1});
+      x11_fill_rounded_rect(
+          &(X11FillRoundedRect){.dpy = b_dpy,
+                                .xd = b_xd,
+                                .vis = b_vis,
+                                .cmap = b_cmap,
+                                .hex = rgb_to_hex(COLOR_SELECTION_HIGHLIGHT),
+                                .alpha16 = 0xFFFF,
+                                .x = argspec->bx + t,
+                                .y = argspec->y + PROMPT_SEL_TOP_INSET + t,
+                                .w = argspec->bw - 2 * t,
+                                .h = argspec->item_h - 2 - 2 * t,
+                                .radius = R - 1});
     }
   } else {
     PromptState tmp = {0};
     tmp.width = argspec->fw;
     tmp.height = argspec->frame_h;
-    x11_draw_list_background(&(X11DrawListBackground){.state = &tmp, .dpy = b_dpy, .xd = b_xd, .vis = b_vis, .cmap = b_cmap, .y = argspec->y, .h = argspec->item_h, .selected = argspec->sel});
+    x11_draw_list_background(
+        &(X11DrawListBackground){.state = &tmp,
+                                 .dpy = b_dpy,
+                                 .xd = b_xd,
+                                 .vis = b_vis,
+                                 .cmap = b_cmap,
+                                 .y = argspec->y,
+                                 .h = argspec->item_h,
+                                 .selected = argspec->sel});
   }
 }
 
@@ -64,4 +84,3 @@ void Platform_ListboxBackendEnd(void) {
 PromptState *Platform_ListboxBackendPromptState(const ListBox *lb) {
   return prompt_popup_find_state(lb);
 }
-

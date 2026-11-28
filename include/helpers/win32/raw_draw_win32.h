@@ -83,6 +83,7 @@ HFONT win32_symbol_font(int size, const wchar_t *wide, int len);
 bool win32_text_is_symbolic(const wchar_t *wide, int len);
 bool win32_font_covers(HFONT f, const wchar_t *wide, int len);
 bool win32_text_needs_boost(const wchar_t *wide, int len);
+
 typedef struct {
   const wchar_t *wide;
   int len;
@@ -101,6 +102,7 @@ void win32_gdip_dispose(void *img);
 HDC win32_screen_dc(void);
 void win32_img_cache_lock(void);
 void win32_img_cache_unlock(void);
+
 typedef struct {
   const char *path;
   HDC screen;
@@ -111,6 +113,7 @@ typedef struct {
 } Win32ImgCacheGet;
 
 void *win32_img_cache_get(Win32ImgCacheGet *argspec);
+
 typedef struct {
   const char *path;
   HDC screen;
@@ -126,6 +129,7 @@ void win32_img_cache_put(Win32ImgCachePut *argspec);
 void *win32_src_cache_get(const char *path);
 void win32_src_cache_put(const char *path, void *src);
 void win32_img_cache_free_all(void);
+
 typedef struct {
   const char *path;
   int w;
@@ -144,4 +148,3 @@ void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
                                EditboxSpec *eb);
 
 #endif
-

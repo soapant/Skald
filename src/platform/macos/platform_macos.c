@@ -227,7 +227,8 @@ bool Platform_ListboxBackendBegin(int item_height_override,
   return false;
 }
 
-void Platform_ListboxBackendDrawSelection(ListboxBackendDrawSelection *argspec) {
+void Platform_ListboxBackendDrawSelection(
+    ListboxBackendDrawSelection *argspec) {
   UNUSED(argspec->bx);
   UNUSED(argspec->bw);
   UNUSED(argspec->y);
@@ -605,8 +606,8 @@ Timer Platform_StartTimer(void) {
 
 double Platform_EndTimer(Timer t) {
   int64_t now = Platform_TimerNowTicks();
-  double seconds = (double)(now - (int64_t)t.ticks) /
-                   (double)Platform_TimerTickFrequency();
+  double seconds =
+      (double)(now - (int64_t)t.ticks) / (double)Platform_TimerTickFrequency();
   return seconds * 1000.0;
 }
 
@@ -716,6 +717,3 @@ void Platform_SleepSeconds(double seconds) {
 }
 
 bool Platform_PlaceEditbox(const EditSpec *spec) { return false; }
-
-
-

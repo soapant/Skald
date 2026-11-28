@@ -393,10 +393,13 @@ static void populate_update_ui(ListBox *lb, int total_matches,
 }
 
 void populate_listbox(PopulateListbox *argspec) {
-  populate_listbox_ranked(&(PopulateListboxRanked){
-      .lb = argspec->lb, .filter = argspec->filter,
-      .items = argspec->items, .item_count = argspec->item_count,
-      .filter_match = argspec->filter_match, .item_rank = NULL});
+  populate_listbox_ranked(
+      &(PopulateListboxRanked){.lb = argspec->lb,
+                               .filter = argspec->filter,
+                               .items = argspec->items,
+                               .item_count = argspec->item_count,
+                               .filter_match = argspec->filter_match,
+                               .item_rank = NULL});
 }
 
 void populate_listbox_ranked(PopulateListboxRanked *argspec) {
@@ -416,11 +419,14 @@ void populate_listbox_ranked(PopulateListboxRanked *argspec) {
   int total_matches = 0;
 
   total_matches =
-      populate_filter(argspec->lb, argspec->items, argspec->item_count, clean_filter, argspec->filter_match);
+      populate_filter(argspec->lb, argspec->items, argspec->item_count,
+                      clean_filter, argspec->filter_match);
 
-  populate_rank_matches(argspec->lb, argspec->items, clean_filter, total_matches, argspec->item_rank);
+  populate_rank_matches(argspec->lb, argspec->items, clean_filter,
+                        total_matches, argspec->item_rank);
 
-  populate_ensure_matches(argspec->lb, argspec->item_count, clean_filter, &total_matches);
+  populate_ensure_matches(argspec->lb, argspec->item_count, clean_filter,
+                          &total_matches);
 
   populate_build_cache(argspec->lb, argspec->items, total_matches);
 
@@ -428,7 +434,8 @@ void populate_listbox_ranked(PopulateListboxRanked *argspec) {
 
   argspec->lb->total_matches = total_matches;
 
-  log_info("populate_listbox completed for filter='%s'", argspec->filter ? argspec->filter : "");
+  log_info("populate_listbox completed for filter='%s'",
+           argspec->filter ? argspec->filter : "");
   UI_LB_EndUpdate();
 }
 
@@ -491,27 +498,27 @@ void display_message_slot(const MessageSlotSpec *spec) {
   SlotRect r = message_slot_to_rect(spec->slot, spec->prompt_gap);
   Platform_DisplayMessageAnchored(
       (AnchoredMessage){.message = message,
-                            .x = r.x,
-                            .y = r.y,
-                            .w = r.w,
-                            .h = r.h,
-                            .h_slot = r.h_slot,
-                            .v_slot = r.v_slot,
-                            .gap = r.gap,
-                            .outward = r.outward,
-                            .max_width = spec->max_w,
-                            .max_height = spec->max_h,
-                            .timeout = spec->timeout,
-                            .color = spec->color,
-                            .no_bg = spec->no_bg,
-                            .render = render,
-                            .render_data = spec->render_data,
-                            .width = spec->win_w,
-                            .height = spec->win_h,
-                            .name = spec->name,
-                            .rounded = spec->rounded,
-                            .radius = spec->radius,
-                            .fps = spec->fps});
+                        .x = r.x,
+                        .y = r.y,
+                        .w = r.w,
+                        .h = r.h,
+                        .h_slot = r.h_slot,
+                        .v_slot = r.v_slot,
+                        .gap = r.gap,
+                        .outward = r.outward,
+                        .max_width = spec->max_w,
+                        .max_height = spec->max_h,
+                        .timeout = spec->timeout,
+                        .color = spec->color,
+                        .no_bg = spec->no_bg,
+                        .render = render,
+                        .render_data = spec->render_data,
+                        .width = spec->win_w,
+                        .height = spec->win_h,
+                        .name = spec->name,
+                        .rounded = spec->rounded,
+                        .radius = spec->radius,
+                        .fps = spec->fps});
 }
 
 void listbox_compute_layout(ListboxComputeLayout *argspec) {
@@ -527,23 +534,28 @@ void listbox_compute_layout(ListboxComputeLayout *argspec) {
   argspec->out->y0 = argspec->spec->y ? argspec->spec->y : argspec->default_y0;
   argspec->out->item_h = argspec->item_h > 0 ? argspec->item_h : 1;
   argspec->out->list_h =
-      argspec->spec->h ? argspec->spec->h
-              : (argspec->popup_h > 0 ? (argspec->popup_h - argspec->out->y0 - prompt_list_bottom_margin())
-                             : PROMPT_CUSTOM_FALLBACK_LIST_H);
+      argspec->spec->h
+          ? argspec->spec->h
+          : (argspec->popup_h > 0 ? (argspec->popup_h - argspec->out->y0 -
+                                     prompt_list_bottom_margin())
+                                  : PROMPT_CUSTOM_FALLBACK_LIST_H);
   if (!argspec->spec->x && !argspec->spec->w) {
     argspec->out->bx = PROMPT_SEL_X;
-    argspec->out->bw = (argspec->popup_w > 0 ? argspec->popup_w : PROMPT_CUSTOM_FALLBACK_W) -
-              PROMPT_SEL_W_SHRINK;
+    argspec->out->bw =
+        (argspec->popup_w > 0 ? argspec->popup_w : PROMPT_CUSTOM_FALLBACK_W) -
+        PROMPT_SEL_W_SHRINK;
     argspec->out->fw = argspec->popup_w > 0 ? argspec->popup_w : PromptW;
     argspec->out->fh = argspec->popup_h > 0 ? argspec->popup_h : PromptH;
   } else {
     argspec->out->bx = argspec->spec->x + PROMPT_SEL_INSET;
-    argspec->out->bw = (argspec->spec->w ? argspec->spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
+    argspec->out->bw =
+        (argspec->spec->w ? argspec->spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) -
+        2;
     argspec->out->fw = argspec->spec->w ? argspec->spec->w : PromptW;
     argspec->out->fh = argspec->spec->h ? argspec->spec->h : PromptH;
   }
-  int visible = (argspec->out->list_h + argspec->out->item_h - 1) /
-                argspec->out->item_h;
+  int visible =
+      (argspec->out->list_h + argspec->out->item_h - 1) / argspec->out->item_h;
   if (visible < 1)
     visible = 1;
   if (argspec->count > 0 && visible > argspec->count)
@@ -741,8 +753,12 @@ int draw_line_prep(DrawLinePrep *argspec) {
   *argspec->y2 = argspec->spec->y2 + argspec->off_y;
   int bx = *argspec->x1 < *argspec->x2 ? *argspec->x1 : *argspec->x2;
   int by = *argspec->y1 < *argspec->y2 ? *argspec->y1 : *argspec->y2;
-  int bw = (*argspec->x1 > *argspec->x2 ? *argspec->x1 - *argspec->x2 : *argspec->x2 - *argspec->x1) + t;
-  int bh = (*argspec->y1 > *argspec->y2 ? *argspec->y1 - *argspec->y2 : *argspec->y2 - *argspec->y1) + t;
+  int bw = (*argspec->x1 > *argspec->x2 ? *argspec->x1 - *argspec->x2
+                                        : *argspec->x2 - *argspec->x1) +
+           t;
+  int bh = (*argspec->y1 > *argspec->y2 ? *argspec->y1 - *argspec->y2
+                                        : *argspec->y2 - *argspec->y1) +
+           t;
   draw_measure_track(bx - t / 2, by - t / 2, bw, bh);
   return t;
 }
@@ -751,51 +767,58 @@ int draw_circle_prep(DrawCirclePrep *argspec) {
   int t = draw_thickness_px(argspec->spec->thickness);
   *argspec->cx = argspec->spec->cx + argspec->off_x;
   *argspec->cy = argspec->spec->cy + argspec->off_y;
-  draw_measure_track(*argspec->cx - argspec->spec->radius, *argspec->cy - argspec->spec->radius, argspec->spec->radius * 2,
-                     argspec->spec->radius * 2);
+  draw_measure_track(*argspec->cx - argspec->spec->radius,
+                     *argspec->cy - argspec->spec->radius,
+                     argspec->spec->radius * 2, argspec->spec->radius * 2);
   return t;
 }
 
 int bg_tile_lru_pick(BgTileLruPick *argspec) {
   int i;
   for (i = 0; i < argspec->count; i++)
-    if (argspec->is_empty((const char *)argspec->slots + (size_t)i * argspec->stride))
+    if (argspec->is_empty((const char *)argspec->slots +
+                          (size_t)i * argspec->stride))
       return i;
 
   int oldest = 0;
   for (i = 1; i < argspec->count; i++) {
-    const void *cand = (const char *)argspec->slots + (size_t)i * argspec->stride;
-    const void *best = (const char *)argspec->slots + (size_t)oldest * argspec->stride;
+    const void *cand =
+        (const char *)argspec->slots + (size_t)i * argspec->stride;
+    const void *best =
+        (const char *)argspec->slots + (size_t)oldest * argspec->stride;
     if (argspec->stamp(cand) < argspec->stamp(best))
       oldest = i;
   }
   return oldest;
 }
 
-void draw_text_centered_impl(const DrawTextCentered *spec,
-                             int line_height) {
+void draw_text_centered_impl(const DrawTextCentered *spec, int line_height) {
   int tw = Platform_MeasureTextWidth(
       (MeasureTextWidth){.text = spec->text,
-                             .len = (int)strlen(spec->text),
-                             .font_size = spec->font_size});
+                         .len = (int)strlen(spec->text),
+                         .font_size = spec->font_size});
   int tx = spec->x + (spec->w - tw) / 2;
   int ty = spec->y + (spec->h - line_height) / 2;
   Platform_DrawTextRaw((DrawTextRaw){.x = tx,
-                                         .y = ty,
-                                         .text = spec->text,
-                                         .color = spec->color,
-                                         .font = spec->font,
-                                         .align = "LEFT",
-                                         .pad = 0,
-                                         .font_size = spec->font_size});
+                                     .y = ty,
+                                     .text = spec->text,
+                                     .color = spec->color,
+                                     .font = spec->font,
+                                     .align = "LEFT",
+                                     .pad = 0,
+                                     .font_size = spec->font_size});
 }
 
 int msg_anchor_center(MsgAnchorCenter *argspec) {
   if (argspec->slot == 0)
-    return argspec->outward ? argspec->rect - argspec->gap - argspec->win_size / 2 : argspec->rect + argspec->gap + argspec->win_size / 2;
+    return argspec->outward
+               ? argspec->rect - argspec->gap - argspec->win_size / 2
+               : argspec->rect + argspec->gap + argspec->win_size / 2;
   if (argspec->slot == 2)
-    return argspec->outward ? argspec->rect + argspec->rect_size + argspec->gap + argspec->win_size / 2
-                   : argspec->rect + argspec->rect_size - argspec->gap - argspec->win_size / 2;
+    return argspec->outward ? argspec->rect + argspec->rect_size +
+                                  argspec->gap + argspec->win_size / 2
+                            : argspec->rect + argspec->rect_size -
+                                  argspec->gap - argspec->win_size / 2;
   return argspec->rect + argspec->rect_size / 2;
 }
 
@@ -819,6 +842,3 @@ int prompt_list_bottom_margin(void) { return 40; }
 int64_t timer_now_ticks(void) { return Platform_TimerNowTicks(); }
 
 int64_t timer_tick_frequency(void) { return Platform_TimerTickFrequency(); }
-
-
-

@@ -45,4 +45,3 @@ TomlKeyValueStatus toml_parse_key_value(TomlParseKeyValue *argspec);
 bool toml_next_line(const char **cursor, const char **line, size_t *len);
 
 #endif
-

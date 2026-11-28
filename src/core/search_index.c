@@ -81,14 +81,17 @@ void search_index_add_text(SearchIndexAddText *argspec) {
     argspec->idx = g_capture_index;
   if (!argspec->idx)
     return;
-  if ((!argspec->text || !argspec->text[0]) && (!argspec->value || !argspec->value[0]) &&
+  if ((!argspec->text || !argspec->text[0]) &&
+      (!argspec->value || !argspec->value[0]) &&
       (!argspec->widget_name || !argspec->widget_name[0]))
     return;
 
   char combined[256];
   if (argspec->text && argspec->text[0]) {
-    if (argspec->value && argspec->value[0] && strcmp(argspec->text, argspec->value) != 0)
-      snprintf(combined, sizeof(combined), "%s: %s", argspec->text, argspec->value);
+    if (argspec->value && argspec->value[0] &&
+        strcmp(argspec->text, argspec->value) != 0)
+      snprintf(combined, sizeof(combined), "%s: %s", argspec->text,
+               argspec->value);
     else
       search_copy(combined, sizeof(combined), argspec->text);
   } else if (argspec->value && argspec->value[0]) {
@@ -279,4 +282,3 @@ void search_index_activate(SearchIndex *idx, int hit_i) {
   const SearchHit *h = &idx->hits[hit_i];
   idx->activate(idx->ud, h->source_id, h->kind, h->widget_name);
 }
-

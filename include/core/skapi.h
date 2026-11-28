@@ -406,16 +406,15 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 #define sk_slider_clicked sk_slider_is_clicked
 #define sk_slider_dragging sk_slider_is_dragging
 #define sk_place_button(...)                                                   \
-  ski_place_checkbox(                                                          \
-      &(SkCheckbox){.border = true, __VA_ARGS__, .button = true})
+  ski_place_checkbox(&(SkCheckbox){.border = true, __VA_ARGS__, .button = true})
 #define sk_place_checkbox(...)                                                 \
   ski_place_checkbox(                                                          \
       &(SkCheckbox){.border = true, __VA_ARGS__, .checkbox = true})
 #define sk_place_slider(...)                                                   \
-  ski_place_slider(&(SkSlider){                                            \
+  ski_place_slider(&(SkSlider){                                                \
       .border = true, __VA_ARGS__, .orientation = SLIDER_HORIZONTAL})
 #define sk_place_vslider(...)                                                  \
-  ski_place_slider(&(SkSlider){                                            \
+  ski_place_slider(&(SkSlider){                                                \
       .border = true, __VA_ARGS__, .orientation = SLIDER_VERTICAL})
 #define sk_checkbox_checked sk_checkbox_is_checked
 #define sk_button_hovered sk_button_is_hovered
@@ -480,8 +479,8 @@ typedef bool (*SkKeyInterceptorFn)(const PopupKeyEvent *key);
 #define sk_settings_entry_add_editbox(entry, ...)                              \
   ski_settings_entry_add_editbox(                                              \
       entry,                                                                   \
-      &(SkSettingsEditbox){                                                \
-          .x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT, __VA_ARGS__})
+      &(SkSettingsEditbox){.x_offset = SK_SETTINGS_EDITBOX_X_OFFSET_DEFAULT,   \
+                           __VA_ARGS__})
 #define sk_config_set_hotkey(...)                                              \
   ski_config_set_hotkey(&(SkConfigHotkeySpec){__VA_ARGS__})
 #define sk_add_dep(...) ski_add_dep(__VA_ARGS__, __FILE__)
@@ -1416,5 +1415,3 @@ bool ski_resize_window_animated(const SkRect *rect, int duration_ms);
 SkRect sk_get_window_bounds(void);
 
 #endif
-
-

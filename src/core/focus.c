@@ -61,7 +61,15 @@ void focus_frame_begin(FocusFrameBegin *argspec) {
   s_current = -1;
   s_saved_seen = false;
   if (argspec->include_listbox) {
-    focus_register(&(FocusRegister){.name = FOCUS_LISTBOX_NAME, .kind = FOCUS_KIND_LISTBOX, .x = argspec->lb_x, .y = argspec->lb_y, .w = argspec->lb_w, .h = argspec->lb_h, .owner = NULL, .activate = NULL, .adjust = NULL});
+    focus_register(&(FocusRegister){.name = FOCUS_LISTBOX_NAME,
+                                    .kind = FOCUS_KIND_LISTBOX,
+                                    .x = argspec->lb_x,
+                                    .y = argspec->lb_y,
+                                    .w = argspec->lb_w,
+                                    .h = argspec->lb_h,
+                                    .owner = NULL,
+                                    .activate = NULL,
+                                    .adjust = NULL});
     if (!s_saved_name[0] && s_saved_kind != FOCUS_KIND_EDITBOX)
       focus_select(FOCUS_LISTBOX_NAME);
   }
@@ -304,4 +312,3 @@ void focus_clear(void) {
   s_saved_kind = FOCUS_KIND_NONE;
   s_saved_seen = false;
 }
-

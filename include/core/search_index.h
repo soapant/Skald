@@ -37,6 +37,7 @@ SearchIndex *search_index_current(void);
 void search_index_push_context(SearchIndex *idx, int source_id,
                                const char *context);
 void search_index_pop_context(SearchIndex *idx);
+
 typedef struct {
   SearchIndex *idx;
   const char *text;
@@ -56,4 +57,3 @@ const SearchHit *search_index_hit_at(const SearchIndex *idx, int i);
 void search_index_activate(SearchIndex *idx, int hit_i);
 
 #endif
-

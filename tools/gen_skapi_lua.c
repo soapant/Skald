@@ -854,8 +854,9 @@ static void gen_wrapper(FILE *out, const char *name, const char *rest,
 
   if (raw_thunk && strncmp(rest, "ski_", 4) == 0 &&
       is_struct_type(func_for(raw)->ret)) {
-    fprintf(out, "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
-                 "v[k] = x end ",
+    fprintf(out,
+            "M.%s = function(t) local v = {} for k,x in pairs(t or {}) do "
+            "v[k] = x end ",
             name);
     emit_defaults(out, rest);
     fprintf(out, "return native.%s(v) end\n", raw);
@@ -1311,8 +1312,9 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
               out_struct_type(t), i, i, i);
     } else if (in_struct) {
       if (strstr(t, "const ") != NULL)
-        fprintf(out, "  %s a%d; memset(&a%d, 0, sizeof(a%d)); "
-                     "slua_fill_struct(L, \"%s\", %d, &a%d);\n",
+        fprintf(out,
+                "  %s a%d; memset(&a%d, 0, sizeof(a%d)); "
+                "slua_fill_struct(L, \"%s\", %d, &a%d);\n",
                 in_struct, i, i, i, in_struct, idx, i);
       else
         fprintf(out, "  %s *a%d = (%s *)slua_raw_ptr(L, %d);\n", in_struct, i,
@@ -1390,8 +1392,7 @@ static void gen_thunk(FILE *out, const FuncDesc *fd) {
         fprintf(out, "&a%d", i);
       else
         fprintf(out, "a%d", i);
-    }
-    else if (callback_kind_for_type(t) >= 0) {
+    } else if (callback_kind_for_type(t) >= 0) {
       char ct[512];
       callback_cast_type(t, ct, sizeof(ct));
       fprintf(out, "(%s)a%d", ct, i);

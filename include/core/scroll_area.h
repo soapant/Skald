@@ -21,4 +21,3 @@ bool scroll_area_dispatch_wheel(int root_x, int root_y, int dx, int dy);
 void scroll_area_purge_owner(const char *path_a, const char *path_b);
 
 #endif
-

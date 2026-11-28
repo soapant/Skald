@@ -155,7 +155,14 @@ static void hover_widget_apply(const char *key, void (*render)(void *ud),
   s->h_px = h;
 
   PlatformWidget *pw =
-      Platform_Widget_Create(&(PlatformWidgetCreate){.x = x - w / 2, .y = y - h / 2, .w = w, .h = h, .fps = fps, .no_bg = no_bg, .on_click = NULL, .name = key});
+      Platform_Widget_Create(&(PlatformWidgetCreate){.x = x - w / 2,
+                                                     .y = y - h / 2,
+                                                     .w = w,
+                                                     .h = h,
+                                                     .fps = fps,
+                                                     .no_bg = no_bg,
+                                                     .on_click = NULL,
+                                                     .name = key});
   if (!pw) {
     hover_widget_destroy_slot(s);
     return;
@@ -361,5 +368,3 @@ PromptSpec text_prompt_spec(TextPrompt *argspec) {
   spec.h = argspec->h;
   return spec;
 }
-
-

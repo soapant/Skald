@@ -57,7 +57,8 @@ bool owner_tag_should_purge(const OwnerTag *tag, const char *path_a,
 }
 
 size_t owner_purge_array(OwnerPurgeArray *argspec) {
-  if (!argspec->arr || !argspec->elem_size || owner_purge_inactive(argspec->path_a, argspec->path_b))
+  if (!argspec->arr || !argspec->elem_size ||
+      owner_purge_inactive(argspec->path_a, argspec->path_b))
     return 0;
   char *a = owner_strdup(argspec->path_a);
   char *b = owner_strdup(argspec->path_b);
@@ -94,7 +95,8 @@ size_t owner_purge_pointers(OwnerPurgePointers *argspec) {
   size_t removed = 0;
   for (size_t i = 0; i < n; i++) {
     char *element = (char *)argspec->arr[i];
-    OwnerTag *tag = element ? (OwnerTag *)(element + argspec->tag_offset) : NULL;
+    OwnerTag *tag =
+        element ? (OwnerTag *)(element + argspec->tag_offset) : NULL;
     if (owner_tag_should_purge(tag, a, b, argspec->max_gen)) {
       if (argspec->destroy)
         argspec->destroy(argspec->arr[i]);
@@ -116,7 +118,8 @@ bool owner_array_has_active(OwnerArrayHasActive *argspec) {
     return false;
   const char *base = (const char *)argspec->arr;
   for (size_t i = 0; i < argspec->count; i++) {
-    const OwnerTag *tag = (const OwnerTag *)(base + i * argspec->elem_size + argspec->tag_offset);
+    const OwnerTag *tag =
+        (const OwnerTag *)(base + i * argspec->elem_size + argspec->tag_offset);
     if (owner_tag_active(tag, argspec->path))
       return true;
   }
@@ -137,4 +140,3 @@ bool owner_pointers_have_active(void *const *arr, size_t count,
   }
   return false;
 }
-

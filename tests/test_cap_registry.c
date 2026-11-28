@@ -8,6 +8,7 @@
 #define TEST_CAP_KEY "test.registry.cap"
 
 static void cap_fn_a(void) {}
+
 static void cap_fn_b(void) {}
 
 TEST(cap_resolve_requires_exact_key_and_abi) {

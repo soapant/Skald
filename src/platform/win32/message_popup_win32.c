@@ -50,19 +50,19 @@ void Platform_DisplayMessage(DisplayMessage spec) {
   }
   Platform_CreateDisplayMessageWindow(
       (CreateDisplayMessageWindow){.message = message,
-                                       .x = center_x,
-                                       .y = center_y,
-                                       .max_width = useMaxW,
-                                       .max_height = useMaxH,
-                                       .timeout = timeout,
-                                       .color = color,
-                                       .no_bg = no_bg,
-                                       .render = render,
-                                       .render_data = render_data,
-                                       .rounded = rounded,
-                                       .radius = radius,
-                                       .name = name,
-                                       .fps = fps});
+                                   .x = center_x,
+                                   .y = center_y,
+                                   .max_width = useMaxW,
+                                   .max_height = useMaxH,
+                                   .timeout = timeout,
+                                   .color = color,
+                                   .no_bg = no_bg,
+                                   .render = render,
+                                   .render_data = render_data,
+                                   .rounded = rounded,
+                                   .radius = radius,
+                                   .name = name,
+                                   .fps = fps});
 }
 
 void Platform_DismissDisplayMessage(void) {
@@ -130,9 +130,12 @@ bool Platform_MessageSetText(const char *name, const char *text) {
 
   FontHandle font = Platform_CreateFont(FontSize, UsedFont);
   int tw = 0, th = 0;
-  Platform_GetTextExtents(&(PlatformGetTextExtents){
-      .font = font, .text = copy, .max_width = MSG_AUTO_WRAP_MAX_W - 30,
-      .outWidth = &tw, .outHeight = &th});
+  Platform_GetTextExtents(
+      &(PlatformGetTextExtents){.font = font,
+                                .text = copy,
+                                .max_width = MSG_AUTO_WRAP_MAX_W - 30,
+                                .outWidth = &tw,
+                                .outHeight = &th});
   Platform_DestroyFont(font);
   int w = tw + 30, h = th + 30;
   if (w > MSG_AUTO_WRAP_MAX_W)
@@ -150,9 +153,11 @@ bool Platform_MessageSetText(const char *name, const char *text) {
   int cy = (r.top + r.bottom) / 2;
   SetWindowPos(hwnd, HWND_TOPMOST, cx - w / 2, cy - h / 2, w, h,
                SWP_NOACTIVATE | SWP_NOZORDER);
-  win32_apply_rounded(&(Win32ApplyRounded){
-      .hwnd = hwnd, .w = w, .h = h, .rounded = s_msg_rounded,
-      .radius = s_msg_radius});
+  win32_apply_rounded(&(Win32ApplyRounded){.hwnd = hwnd,
+                                           .w = w,
+                                           .h = h,
+                                           .rounded = s_msg_rounded,
+                                           .radius = s_msg_radius});
   InvalidateRect(hwnd, NULL, TRUE);
   return true;
 }
@@ -161,9 +166,7 @@ void Platform_HoverMessageRelease(const char *key) {
   win32_msg_hover_release(key);
 }
 
-void Platform_HoverMessage(HoverMessage spec) {
-  win32_msg_hover_present(spec);
-}
+void Platform_HoverMessage(HoverMessage spec) { win32_msg_hover_present(spec); }
 
 static int win32_msg_stack_adjust_y(int x, int y, int w, int h, int dir) {
   for (;;) {
@@ -201,7 +204,11 @@ void Platform_DisplayMessageAnchored(AnchoredMessage spec) {
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
   int textWidth = 0, textHeight = 0;
-  Platform_GetTextExtents(&(PlatformGetTextExtents){.font = msgFont, .text = message, .max_width = max_width - 30, .outWidth = &textWidth, .outHeight = &textHeight});
+  Platform_GetTextExtents(&(PlatformGetTextExtents){.font = msgFont,
+                                                    .text = message,
+                                                    .max_width = max_width - 30,
+                                                    .outWidth = &textWidth,
+                                                    .outHeight = &textHeight});
   Platform_DestroyFont(msgFont);
 
   int winWidth = textWidth + 30;
@@ -224,10 +231,18 @@ void Platform_DisplayMessageAnchored(AnchoredMessage spec) {
     max_height = winHeight;
   }
 
-  int center_x =
-      msg_anchor_center(&(MsgAnchorCenter){.rect = rect_x, .rect_size = rect_w, .slot = h_slot, .gap = gap, .outward = outward, .win_size = winWidth});
-  int center_y =
-      msg_anchor_center(&(MsgAnchorCenter){.rect = rect_y, .rect_size = rect_h, .slot = v_slot, .gap = gap, .outward = outward, .win_size = winHeight});
+  int center_x = msg_anchor_center(&(MsgAnchorCenter){.rect = rect_x,
+                                                      .rect_size = rect_w,
+                                                      .slot = h_slot,
+                                                      .gap = gap,
+                                                      .outward = outward,
+                                                      .win_size = winWidth});
+  int center_y = msg_anchor_center(&(MsgAnchorCenter){.rect = rect_y,
+                                                      .rect_size = rect_h,
+                                                      .slot = v_slot,
+                                                      .gap = gap,
+                                                      .outward = outward,
+                                                      .win_size = winHeight});
 
   {
     int stack_dir = msg_stack_dir(v_slot, outward);
@@ -243,21 +258,21 @@ void Platform_DisplayMessageAnchored(AnchoredMessage spec) {
            outward, center_x, center_y, winWidth, winHeight);
 
   Platform_DisplayMessage((DisplayMessage){.message = message,
-                                               .x = center_x,
-                                               .y = center_y,
-                                               .no_bg = no_bg,
-                                               .w = winWidth,
-                                               .h = winHeight,
-                                               .max_width = max_width,
-                                               .max_height = max_height,
-                                               .timeout = timeout,
-                                               .color = color,
-                                               .render = render,
-                                               .render_data = render_data,
-                                               .rounded = rounded,
-                                               .radius = radius,
-                                               .name = name,
-                                               .fps = fps});
+                                           .x = center_x,
+                                           .y = center_y,
+                                           .no_bg = no_bg,
+                                           .w = winWidth,
+                                           .h = winHeight,
+                                           .max_width = max_width,
+                                           .max_height = max_height,
+                                           .timeout = timeout,
+                                           .color = color,
+                                           .render = render,
+                                           .render_data = render_data,
+                                           .rounded = rounded,
+                                           .radius = radius,
+                                           .name = name,
+                                           .fps = fps});
 }
 
 void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindow spec) {
@@ -290,7 +305,12 @@ void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindow spec) {
     winWidth = max_width;
     winHeight = max_height;
   } else {
-    Platform_GetTextExtents(&(PlatformGetTextExtents){.font = msgFont, .text = message, .max_width = max_width - 30, .outWidth = &textWidth, .outHeight = &textHeight});
+    Platform_GetTextExtents(
+        &(PlatformGetTextExtents){.font = msgFont,
+                                  .text = message,
+                                  .max_width = max_width - 30,
+                                  .outWidth = &textWidth,
+                                  .outHeight = &textHeight});
     int padding = 30;
     winWidth = textWidth + padding;
     winHeight = textHeight + padding;
@@ -361,5 +381,3 @@ void Platform_CreateDisplayMessageWindow(CreateDisplayMessageWindow spec) {
            textHeight, winWidth, winHeight, topLeftX, topLeftY);
   return;
 }
-
-

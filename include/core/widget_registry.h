@@ -156,4 +156,3 @@ typedef struct {
 
 void widget_init_base(WidgetInitBase *argspec);
 #endif
-

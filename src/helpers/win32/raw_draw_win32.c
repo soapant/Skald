@@ -259,9 +259,9 @@ HFONT win32_font_for_text(Win32FontForText *argspec) {
     *argspec->out_dy = 0;
   if (win32_text_is_symbolic(argspec->wide, argspec->len)) {
     bool boost = win32_text_needs_boost(argspec->wide, argspec->len);
-    int want = boost
-                   ? (argspec->font_size * WIN32_SYMBOL_SIZE_NUM / WIN32_SYMBOL_SIZE_DEN)
-                   : argspec->font_size;
+    int want = boost ? (argspec->font_size * WIN32_SYMBOL_SIZE_NUM /
+                        WIN32_SYMBOL_SIZE_DEN)
+                     : argspec->font_size;
     HFONT sf = win32_symbol_font(want, argspec->wide, argspec->len);
     if (sf) {
       HFONT nf = win32_sized_font(argspec->font_size);
@@ -444,11 +444,13 @@ void *win32_img_cache_get(Win32ImgCacheGet *argspec) {
     Win32ImgSlot *s = &img_cache[i];
     if (!s->bmp && !s->failed)
       continue;
-    if (s->screen != argspec->screen || s->w != argspec->w || s->h != argspec->h)
+    if (s->screen != argspec->screen || s->w != argspec->w ||
+        s->h != argspec->h)
       continue;
     if (strcmp(s->key, argspec->path) != 0)
       continue;
-    if (win32_entry_changed(now, &s->checked_ms, argspec->path, &s->mtime, s->size)) {
+    if (win32_entry_changed(now, &s->checked_ms, argspec->path, &s->mtime,
+                            s->size)) {
       win32_gdip_dispose(s->bmp);
       win32_dib_release(s->dc, s->dib);
       s->bmp = NULL;
@@ -483,8 +485,8 @@ void win32_img_cache_put(Win32ImgCachePut *argspec) {
       slot = i;
       break;
     }
-    if (s->screen != argspec->screen || s->w != argspec->w || s->h != argspec->h ||
-        strcmp(s->key, argspec->path) != 0)
+    if (s->screen != argspec->screen || s->w != argspec->w ||
+        s->h != argspec->h || strcmp(s->key, argspec->path) != 0)
       continue;
     if (s->stamp < oldest) {
       oldest = s->stamp;
@@ -659,8 +661,8 @@ void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec) {
         GdipDisposeImage(src);
       src = win32_load_shell_icon_bitmap(native);
       if (!src) {
-        log_error("img: cannot decode '%s' st=%d and no shell icon", argspec->path,
-                  (int)_fs);
+        log_error("img: cannot decode '%s' st=%d and no shell icon",
+                  argspec->path, (int)_fs);
         return NULL;
       }
     }
@@ -678,7 +680,8 @@ void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec) {
   HBITMAP dib = NULL;
   HDC dc = NULL;
   void *bits = NULL;
-  GpBitmap *out = win32_create_dib_bitmap(argspec->w, argspec->h, &dib, &dc, &bits);
+  GpBitmap *out =
+      win32_create_dib_bitmap(argspec->w, argspec->h, &dib, &dc, &bits);
   if (!out) {
     log_error("img: cannot create dib %dx%d", argspec->w, argspec->h);
     return NULL;
@@ -699,7 +702,8 @@ void *win32_load_scaled_bitmap(Win32LoadScaledBitmap *argspec) {
   if (argspec->out_dc)
     *argspec->out_dc = dc;
   if (argspec->out_opaque)
-    *argspec->out_opaque = source_opaque || win32_bits_opaque(bits, argspec->w, argspec->h);
+    *argspec->out_opaque =
+        source_opaque || win32_bits_opaque(bits, argspec->w, argspec->h);
   return out;
 }
 
@@ -751,4 +755,3 @@ void win32_prompt_editbox_spec(PromptState *state, FontHandle font,
                                                   .descent = descent,
                                                   .font = font});
 }
-

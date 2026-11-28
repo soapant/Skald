@@ -27,6 +27,7 @@ bool cover_scale(CoverScale *argspec);
 
 int draw_thickness_px(float thickness);
 void draw_measure_track(int x, int y, int w, int h);
+
 typedef struct {
   const DrawLineRaw *spec;
   int off_x;
@@ -38,6 +39,7 @@ typedef struct {
 } DrawLinePrep;
 
 int draw_line_prep(DrawLinePrep *argspec);
+
 typedef struct {
   const DrawCircleRaw *spec;
   int off_x;
@@ -47,6 +49,7 @@ typedef struct {
 } DrawCirclePrep;
 
 int draw_circle_prep(DrawCirclePrep *argspec);
+
 typedef struct {
   ListBox *lb;
   const char *filter;
@@ -56,13 +59,13 @@ typedef struct {
 } PopulateListbox;
 
 void populate_listbox(PopulateListbox *argspec);
+
 typedef struct {
   ListBox *lb;
   const char *filter;
   const char **items;
   int item_count;
-  bool (*filter_match)(const char *item,
-                                                  const char *filter);
+  bool (*filter_match)(const char *item, const char *filter);
   int (*item_rank)(int item_index);
 } PopulateListboxRanked;
 
@@ -117,6 +120,7 @@ Metrics *metrics_get(void);
 void draw_prompt_separator(DrawPromptSeparator spec);
 bool prompt_band_take_placed(void);
 void prompt_band_commit_placed(void);
+
 typedef struct {
   const List *spec;
   int default_y0;
@@ -222,6 +226,7 @@ typedef struct {
 int bg_tile_lru_pick(BgTileLruPick *argspec);
 
 void draw_text_centered_impl(const DrawTextCentered *spec, int line_height);
+
 typedef struct {
   int rect;
   int rect_size;
@@ -235,6 +240,3 @@ int msg_anchor_center(MsgAnchorCenter *argspec);
 int msg_stack_dir(int v_slot, bool outward);
 
 #endif
-
-
-

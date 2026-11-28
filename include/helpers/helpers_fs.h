@@ -9,6 +9,7 @@
 bool data_dir(char *out, size_t out_len);
 void data_dir_set_override(const char *path);
 bool expand_path(const char *template_path, char *out, size_t out_size);
+
 typedef struct {
   const char *name;
   const void *data;
@@ -26,4 +27,3 @@ bool file_copy_path(const char *src, const char *dst);
 bool file_remove_path(const char *path);
 
 #endif
-

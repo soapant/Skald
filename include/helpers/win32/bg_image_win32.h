@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 bool win32_bg_image_enabled(void);
+
 typedef struct {
   HDC hdc;
   const RECT *rc;

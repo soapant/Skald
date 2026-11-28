@@ -55,4 +55,3 @@ bool checkbox_place(const Checkbox *spec);
 void checkbox_draw(const Checkbox *spec);
 
 #endif
-

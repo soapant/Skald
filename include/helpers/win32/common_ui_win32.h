@@ -9,6 +9,7 @@
 #define WIDGET_CLASS "WidgetClass"
 
 void win32_force_window_focus(WindowHandle hwndTarget);
+
 typedef struct {
   HDC hdc;
   int ox;
@@ -20,6 +21,7 @@ typedef struct {
 
 void win32_draw_window_border(Win32DrawWindowBorder *argspec);
 void win32_apply_rounded_corners(HWND hwnd, int w, int h);
+
 typedef struct {
   HWND hwnd;
   int w;
@@ -32,4 +34,3 @@ void win32_apply_rounded(Win32ApplyRounded *argspec);
 void win32_fill_rounded_rect(HDC hdc, RECT *rc, COLORREF col, int radius);
 
 #endif
-

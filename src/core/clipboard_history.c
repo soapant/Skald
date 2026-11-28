@@ -244,9 +244,7 @@ bool clipboard_history_push_image(const char *path) {
   return true;
 }
 
-size_t clipboard_history_count(void) {
-  return clipboard_history.count;
-}
+size_t clipboard_history_count(void) { return clipboard_history.count; }
 
 const ClipboardEntry *clipboard_history_get(size_t index) {
   if (index >= clipboard_history.count)
@@ -299,4 +297,3 @@ bool clipboard_set_path(const char *path) {
     clipboard_history_push_image(path);
   return ok;
 }
-

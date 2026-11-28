@@ -21,5 +21,3 @@ bool http_download(const char *url, const char *save_path);
 void http_get_async(const char *url, PlatformHttpCallback cb, void *userdata);
 
 #endif
-
-

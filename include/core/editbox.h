@@ -185,6 +185,7 @@ typedef struct {
 void editbox_init_from_spec(EditboxInit *out, const EditboxInitFrom *args);
 
 void editbox_build_spec(EditboxSpec *out, const EditboxInit *in);
+
 typedef struct {
   EditboxSpec *out;
   const EditboxPlace *place;
@@ -197,6 +198,7 @@ void editbox_spec_from_place(EditboxSpecFromPlace *argspec);
 int editbox_caret_y(int box_top, int ascent, int descent, int font_size);
 void editbox_spec_fill_from_prompt(EditboxSpec *spec, PromptState *state,
                                    int text_len, const EditboxMetrics *metrics);
+
 typedef struct {
   PromptState *state;
   int text_len;
@@ -214,6 +216,7 @@ void editbox_draw(const EditboxSpec *spec, const EditboxLayout *layout,
 
 void editbox_registry_begin(PromptState *state);
 void editbox_registry_begin_frame(PromptState *state);
+
 typedef struct {
   PromptState *state;
   const char *name;
@@ -229,6 +232,7 @@ int editbox_registry_place(EditboxRegistryPlace *argspec);
 PromptEditbox *editbox_registry_find(PromptState *state, const char *name);
 EditBox *editbox_registry_lookup(PromptState *state, const char *name);
 void editbox_registry_tick(PromptState *state);
+
 typedef struct {
   PromptState *state;
   int x;
@@ -247,5 +251,3 @@ const char *editbox_registry_active_name(const PromptState *state);
 bool editbox_wrap_move_vertical(PromptState *state, int dir);
 
 #endif
-
-

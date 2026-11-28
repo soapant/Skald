@@ -44,7 +44,7 @@
   X(bool, AllowWindowOverride, false)                                          \
   X(ColorRef, COLOR_BG, RGB(15, 15, 15))                                       \
   X(ColorRef, COLOR_TEXT, RGB(255, 255, 255))                                  \
-  X(ColorRef, COLOR_SELECTION_HIGHLIGHT, RGB(0, 0, 0))                          \
+  X(ColorRef, COLOR_SELECTION_HIGHLIGHT, RGB(0, 0, 0))                         \
   X(ColorRef, COLOR_CURSOR, RGB(255, 255, 255))                                \
   X(ColorRef, COLOR_BORDER, RGB(128, 128, 128))
 

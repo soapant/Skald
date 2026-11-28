@@ -237,8 +237,13 @@ TEST(set_overlong_section_name_is_rejected) {
   section[sizeof(section) - 1] = '\0';
   file_remove_path(PATH);
   ConfigTomlError err;
-  ASSERT_EQ_INT((int)config_section_set_ex(&(ConfigSectionSetEx){.path = PATH, .section = section, .name = "Key", .value = "value", .err = &err}),
-                (int)CONFIG_TOML_ERR_PARSE);
+  ASSERT_EQ_INT(
+      (int)config_section_set_ex(&(ConfigSectionSetEx){.path = PATH,
+                                                       .section = section,
+                                                       .name = "Key",
+                                                       .value = "value",
+                                                       .err = &err}),
+      (int)CONFIG_TOML_ERR_PARSE);
   char *s = slurp();
   ASSERT_TRUE(s == NULL);
   free(s);
@@ -280,4 +285,3 @@ int main(void) {
   RUN(set_preserves_last_line_without_newline);
   return TEST_SUMMARY() != 0 ? 1 : 0;
 }
-

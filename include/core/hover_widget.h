@@ -59,5 +59,3 @@ typedef struct {
 PromptSpec text_prompt_spec(TextPrompt *argspec);
 
 #endif
-
-

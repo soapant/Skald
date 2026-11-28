@@ -51,4 +51,3 @@ bool Platform_Widget_DispatchClick(long window_id) {
 void Platform_Widget_DrainClicks(void) {}
 
 void Platform_Widget_FlushDestruction(void) {}
-

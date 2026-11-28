@@ -50,4 +50,3 @@ const ClipboardEntry *clipboard_history_get(size_t index);
 void clipboard_clear_history(void);
 
 #endif
-

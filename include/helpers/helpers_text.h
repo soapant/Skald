@@ -26,6 +26,7 @@ typedef struct {
 const char *text_resolve(const char *text, char tmp[2]);
 bool capture_text(const char *text);
 int text_segment_width(const void *seg, int font_size);
+
 typedef struct {
   WrappedWord **words;
   int *count;
@@ -111,4 +112,3 @@ bool list_append(WindowList *list, const char *item);
 bool window_list_allows(int window_count, bool whitelist, char *const *windows,
                         const char *title);
 #endif
-

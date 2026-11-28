@@ -180,8 +180,8 @@ done:
       snprintf(message, sizeof(message), "malformed manifest on line %d",
                bad_line);
     else if (status == CONFIG_TOML_ERR_IO && alloc_failed)
-      snprintf(message, sizeof(message),
-               "out of memory parsing manifest '%s'", path ? path : "(null)");
+      snprintf(message, sizeof(message), "out of memory parsing manifest '%s'",
+               path ? path : "(null)");
     else if (status == CONFIG_TOML_ERR_IO)
       snprintf(message, sizeof(message), "cannot read manifest '%s'",
                path ? path : "(null)");

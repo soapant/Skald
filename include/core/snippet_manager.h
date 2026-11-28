@@ -37,4 +37,3 @@ int snippet_binding_count(void);
 void snippet_purge_owner(const char *path_a, const char *path_b);
 
 #endif
-

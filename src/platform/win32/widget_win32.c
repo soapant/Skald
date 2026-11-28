@@ -36,15 +36,24 @@ PlatformWidget *Platform_Widget_Create(PlatformWidgetCreate *argspec) {
   PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
   if (!widget)
     return NULL;
-  widget_init_base(&(WidgetInitBase){.base = &widget->base, .x = argspec->x, .y = argspec->y, .w = argspec->w, .h = argspec->h, .fps = argspec->fps, .no_bg = argspec->no_bg, .on_click = argspec->on_click, .name = argspec->name});
+  widget_init_base(&(WidgetInitBase){.base = &widget->base,
+                                     .x = argspec->x,
+                                     .y = argspec->y,
+                                     .w = argspec->w,
+                                     .h = argspec->h,
+                                     .fps = argspec->fps,
+                                     .no_bg = argspec->no_bg,
+                                     .on_click = argspec->on_click,
+                                     .name = argspec->name});
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exstyle =
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
   if (!argspec->on_click)
     exstyle |= WS_EX_TRANSPARENT;
-  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP, argspec->x, argspec->y, argspec->w,
-                                 argspec->h, NULL, NULL, hInstance, widget);
+  widget->hwnd = CreateWindowExA(exstyle, WIDGET_CLASS, NULL, WS_POPUP,
+                                 argspec->x, argspec->y, argspec->w, argspec->h,
+                                 NULL, NULL, hInstance, widget);
   if (!widget->hwnd) {
     log_warn("widget: CreateWindowExA failed err=%lu", GetLastError());
     free(widget);
@@ -154,4 +163,3 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
                SWP_NOACTIVATE);
   widget_invalidate(widget);
 }
-

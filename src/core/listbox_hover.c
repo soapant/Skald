@@ -149,7 +149,8 @@ bool listbox_client_mouse_pos(int *out_x, int *out_y) {
 
 int listbox_row_at_y(ListboxRowAtY *argspec) {
 
-  if (!argspec->lb || argspec->item_height <= 0 || argspec->visible_count <= 0) {
+  if (!argspec->lb || argspec->item_height <= 0 ||
+      argspec->visible_count <= 0) {
     return -1;
   }
   int rel = argspec->mouse_y - argspec->list_top;
@@ -188,7 +189,13 @@ bool listbox_hover_focus(ListboxHoverFocus *argspec) {
     return false;
   listbox_focus_by_mouse();
   focus_set_pseudo_passive(FOCUS_KIND_LISTBOX);
-  int idx = listbox_row_at_y(&(ListboxRowAtY){.lb = argspec->lb, .list_top = argspec->list_top, .item_height = argspec->item_height, .top_index = argspec->top_index, .visible_count = argspec->visible_count, .mouse_y = my});
+  int idx =
+      listbox_row_at_y(&(ListboxRowAtY){.lb = argspec->lb,
+                                        .list_top = argspec->list_top,
+                                        .item_height = argspec->item_height,
+                                        .top_index = argspec->top_index,
+                                        .visible_count = argspec->visible_count,
+                                        .mouse_y = my});
   if (idx < 0 || idx == argspec->lb->selected_index)
     return false;
   UI_SetSelection(argspec->lb, idx);
@@ -421,7 +428,14 @@ bool listbox_begin_common(const List *spec) {
   item_h = item_h > 0 ? item_h : bi.item_h;
   PromptState *st = Platform_ListboxBackendPromptState(lb);
   ListboxLayout lay;
-  listbox_compute_layout(&(ListboxComputeLayout){.spec = spec, .default_y0 = bi.list_top, .item_h = item_h, .popup_w = st ? st->width : PromptW, .popup_h = st ? st->height : PromptH, .count = lb->item_count, .out = &lay});
+  listbox_compute_layout(
+      &(ListboxComputeLayout){.spec = spec,
+                              .default_y0 = bi.list_top,
+                              .item_h = item_h,
+                              .popup_w = st ? st->width : PromptW,
+                              .popup_h = st ? st->height : PromptH,
+                              .count = lb->item_count,
+                              .out = &lay});
   common_spec = *spec;
   common_lb = lb;
   common_item_h = item_h;
@@ -437,7 +451,13 @@ bool listbox_begin_common(const List *spec) {
   UI_LB_SetVisibleCount(lay.visible);
   listbox_apply_pending_scroll(lb, lay.visible);
   listbox_set_geometry(common_y0, common_item_h, lay.visible);
-  listbox_hover_focus(&(ListboxHoverFocus){.lb = lb, .list_top = common_y0, .item_height = common_item_h, .top_index = lb->view_offset, .visible_count = lay.visible, .left_x = common_bx, .right_x = common_bx + common_bw});
+  listbox_hover_focus(&(ListboxHoverFocus){.lb = lb,
+                                           .list_top = common_y0,
+                                           .item_height = common_item_h,
+                                           .top_index = lb->view_offset,
+                                           .visible_count = lay.visible,
+                                           .left_x = common_bx,
+                                           .right_x = common_bx + common_bw});
   draw_state_get()->listbox_rows = true;
   draw_state_set_clip(common_y0, common_y0 + common_h);
   SkaldContext_Get()->window.listbox_placed = true;
@@ -463,7 +483,14 @@ bool listbox_next_common(ListItemCtx *out) {
     draw_prompt_separator(
         (DrawPromptSeparator){.y = common_y0, .width = common_fw});
   bool sel = (idx == common_lb->selected_index);
-  Platform_ListboxBackendDrawSelection(&(ListboxBackendDrawSelection){.bx = common_bx, .bw = common_bw, .y = y, .item_h = row_h, .fw = common_fw, .frame_h = common_fh, .sel = sel});
+  Platform_ListboxBackendDrawSelection(
+      &(ListboxBackendDrawSelection){.bx = common_bx,
+                                     .bw = common_bw,
+                                     .y = y,
+                                     .item_h = row_h,
+                                     .fw = common_fw,
+                                     .frame_h = common_fh,
+                                     .sel = sel});
   listbox_set_row_h_scroll(sel ? common_lb->text_hscroll : 0);
   out->idx = idx;
   out->selected = sel;
@@ -480,8 +507,8 @@ void listbox_common_end(void) {
   listbox_set_row_h_scroll(0);
   draw_state_clear_clip();
   if (common_separators && prompt_list_bottom_margin() > 0 && common_y0 >= 0) {
-    draw_prompt_separator((DrawPromptSeparator){.y = common_y0 + common_h,
-                                                    .width = common_fw});
+    draw_prompt_separator(
+        (DrawPromptSeparator){.y = common_y0 + common_h, .width = common_fw});
   }
   Platform_ListboxBackendEnd();
   common_lb = NULL;
@@ -492,5 +519,3 @@ void listbox_common_end(void) {
 }
 
 int listbox_common_item_height(void) { return common_item_h; }
-
-

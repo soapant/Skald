@@ -729,7 +729,8 @@ bool snap_active_window_sway(SnapPreset preset) {
   int mx = 0, my = 0, mw = 0, mh = 0;
   if (!sway_focused_output_geom(&mx, &my, &mw, &mh))
     return false;
-  SnapRect r = wm_snap_rect(&(WmSnapRect){.mx = mx, .my = my, .mw = mw, .mh = mh, .p = preset});
+  SnapRect r = wm_snap_rect(
+      &(WmSnapRect){.mx = mx, .my = my, .mw = mw, .mh = mh, .p = preset});
   int w = r.w, h = r.h, x = r.x, y = r.y;
   char cmd[512];
   snprintf(cmd, sizeof(cmd),
@@ -984,4 +985,3 @@ bool get_active_window_geometry_sway(DrawRect *out) {
   free(json);
   return ok;
 }
-
